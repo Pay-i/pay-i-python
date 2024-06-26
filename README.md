@@ -15,12 +15,9 @@ The REST API documentation can be found [on docs.payi.com](https://docs.payi.com
 ## Installation
 
 ```sh
-# install from the production repo
-pip install git+ssh://git@github.com/undefined/sdk.git
+# install from PyPI
+pip install --pre payi
 ```
-
-> [!NOTE]
-> Once this package is [published to PyPI](https://app.stainlessapi.com/docs/guides/publish), this will become: `pip install --pre payi`
 
 ## Usage
 
