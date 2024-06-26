@@ -1,0 +1,28 @@
+# File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+
+from __future__ import annotations
+
+from typing import Optional
+from typing_extensions import Annotated, TypedDict
+
+from .._utils import PropertyInfo
+
+__all__ = ["IngestRequestCreateParams", "Units"]
+
+
+class IngestRequestCreateParams(TypedDict, total=False):
+    category: Optional[str]
+
+    resource: Optional[str]
+
+    units: Units
+
+    x_proxy_budget_ids: Annotated[str, PropertyInfo(alias="xProxy-Budget-IDs")]
+
+    x_proxy_request_tags: Annotated[str, PropertyInfo(alias="xProxy-Request-Tags")]
+
+
+class Units(TypedDict, total=False):
+    input: int
+
+    output: int
