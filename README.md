@@ -27,9 +27,13 @@ pip install git+ssh://git@github.com/undefined/sdk.git
 The full API of this library can be found in [api.md](api.md).
 
 ```python
+import os
 from payi import Payi
 
-client = Payi()
+client = Payi(
+    # This is the default and can be omitted
+    payi_api_key=os.environ.get("PAYI_API_KEY"),
+)
 
 budget_response = client.budgets.create(
     budget_name="x",
@@ -38,15 +42,24 @@ budget_response = client.budgets.create(
 print(budget_response.request_id)
 ```
 
+While you can provide a `payi_api_key` keyword argument,
+we recommend using [python-dotenv](https://pypi.org/project/python-dotenv/)
+to add `PAYI_API_KEY="My Payi API Key"` to your `.env` file
+so that your Payi API Key is not stored in source control.
+
 ## Async usage
 
 Simply import `AsyncPayi` instead of `Payi` and use `await` with each API call:
 
 ```python
+import os
 import asyncio
 from payi import AsyncPayi
 
-client = AsyncPayi()
+client = AsyncPayi(
+    # This is the default and can be omitted
+    payi_api_key=os.environ.get("PAYI_API_KEY"),
+)
 
 
 async def main() -> None:
