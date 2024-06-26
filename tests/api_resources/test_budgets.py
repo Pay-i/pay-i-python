@@ -26,6 +26,7 @@ class TestBudgets:
     def test_method_create(self, client: Payi) -> None:
         budget = client.budgets.create(
             budget_name="x",
+            max=0,
         )
         assert_matches_type(BudgetResponse, budget, path=["response"])
 
@@ -33,11 +34,11 @@ class TestBudgets:
     def test_method_create_with_all_params(self, client: Payi) -> None:
         budget = client.budgets.create(
             budget_name="x",
+            max=0,
             base_cost_estimate="Max",
             budget_response_type="Block",
-            budget_tags=["string", "string", "string"],
+            budget_tags=["tag1", "tag2"],
             budget_type="Conservative",
-            max=0,
             x_proxy_application_key="string",
         )
         assert_matches_type(BudgetResponse, budget, path=["response"])
@@ -46,6 +47,7 @@ class TestBudgets:
     def test_raw_response_create(self, client: Payi) -> None:
         response = client.budgets.with_raw_response.create(
             budget_name="x",
+            max=0,
         )
 
         assert response.is_closed is True
@@ -57,6 +59,7 @@ class TestBudgets:
     def test_streaming_response_create(self, client: Payi) -> None:
         with client.budgets.with_streaming_response.create(
             budget_name="x",
+            max=0,
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -117,6 +120,7 @@ class TestBudgets:
         budget = client.budgets.update(
             "string",
             budget_name="x",
+            max=0,
         )
         assert_matches_type(BudgetResponse, budget, path=["response"])
 
@@ -135,6 +139,7 @@ class TestBudgets:
         response = client.budgets.with_raw_response.update(
             "string",
             budget_name="x",
+            max=0,
         )
 
         assert response.is_closed is True
@@ -147,6 +152,7 @@ class TestBudgets:
         with client.budgets.with_streaming_response.update(
             "string",
             budget_name="x",
+            max=0,
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -162,6 +168,7 @@ class TestBudgets:
             client.budgets.with_raw_response.update(
                 "",
                 budget_name="x",
+                max=0,
             )
 
     @parametrize
@@ -302,6 +309,7 @@ class TestAsyncBudgets:
     async def test_method_create(self, async_client: AsyncPayi) -> None:
         budget = await async_client.budgets.create(
             budget_name="x",
+            max=0,
         )
         assert_matches_type(BudgetResponse, budget, path=["response"])
 
@@ -309,11 +317,11 @@ class TestAsyncBudgets:
     async def test_method_create_with_all_params(self, async_client: AsyncPayi) -> None:
         budget = await async_client.budgets.create(
             budget_name="x",
+            max=0,
             base_cost_estimate="Max",
             budget_response_type="Block",
-            budget_tags=["string", "string", "string"],
+            budget_tags=["tag1", "tag2"],
             budget_type="Conservative",
-            max=0,
             x_proxy_application_key="string",
         )
         assert_matches_type(BudgetResponse, budget, path=["response"])
@@ -322,6 +330,7 @@ class TestAsyncBudgets:
     async def test_raw_response_create(self, async_client: AsyncPayi) -> None:
         response = await async_client.budgets.with_raw_response.create(
             budget_name="x",
+            max=0,
         )
 
         assert response.is_closed is True
@@ -333,6 +342,7 @@ class TestAsyncBudgets:
     async def test_streaming_response_create(self, async_client: AsyncPayi) -> None:
         async with async_client.budgets.with_streaming_response.create(
             budget_name="x",
+            max=0,
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -393,6 +403,7 @@ class TestAsyncBudgets:
         budget = await async_client.budgets.update(
             "string",
             budget_name="x",
+            max=0,
         )
         assert_matches_type(BudgetResponse, budget, path=["response"])
 
@@ -411,6 +422,7 @@ class TestAsyncBudgets:
         response = await async_client.budgets.with_raw_response.update(
             "string",
             budget_name="x",
+            max=0,
         )
 
         assert response.is_closed is True
@@ -423,6 +435,7 @@ class TestAsyncBudgets:
         async with async_client.budgets.with_streaming_response.update(
             "string",
             budget_name="x",
+            max=0,
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -438,6 +451,7 @@ class TestAsyncBudgets:
             await async_client.budgets.with_raw_response.update(
                 "",
                 budget_name="x",
+                max=0,
             )
 
     @parametrize

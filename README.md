@@ -33,6 +33,7 @@ client = Payi()
 
 budget_response = client.budgets.create(
     budget_name="x",
+    max=0,
 )
 print(budget_response.request_id)
 ```
@@ -51,6 +52,7 @@ client = AsyncPayi()
 async def main() -> None:
     budget_response = await client.budgets.create(
         budget_name="x",
+        max=0,
     )
     print(budget_response.request_id)
 
@@ -87,6 +89,7 @@ client = Payi()
 try:
     client.budgets.create(
         budget_name="x",
+        max=0,
     )
 except payi.APIConnectionError as e:
     print("The server could not be reached")
@@ -132,6 +135,7 @@ client = Payi(
 # Or, configure per-request:
 client.with_options(max_retries=5).budgets.create(
     budget_name="x",
+    max=0,
 )
 ```
 
@@ -157,6 +161,7 @@ client = Payi(
 # Override per-request:
 client.with_options(timeout=5.0).budgets.create(
     budget_name="x",
+    max=0,
 )
 ```
 
@@ -198,6 +203,7 @@ from payi import Payi
 client = Payi()
 response = client.budgets.with_raw_response.create(
     budget_name="x",
+    max=0,
 )
 print(response.headers.get('X-My-Header'))
 
@@ -218,6 +224,7 @@ To stream the response body, use `.with_streaming_response` instead, which requi
 ```python
 with client.budgets.with_streaming_response.create(
     budget_name="x",
+    max=0,
 ) as response:
     print(response.headers.get("X-My-Header"))
 

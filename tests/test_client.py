@@ -665,7 +665,7 @@ class TestPayi:
         with pytest.raises(APITimeoutError):
             self.client.post(
                 "/api/v1/budgets",
-                body=cast(object, dict(budget_name="x")),
+                body=cast(object, dict(budget_name="x", max=0)),
                 cast_to=httpx.Response,
                 options={"headers": {RAW_RESPONSE_HEADER: "stream"}},
             )
@@ -680,7 +680,7 @@ class TestPayi:
         with pytest.raises(APIStatusError):
             self.client.post(
                 "/api/v1/budgets",
-                body=cast(object, dict(budget_name="x")),
+                body=cast(object, dict(budget_name="x", max=0)),
                 cast_to=httpx.Response,
                 options={"headers": {RAW_RESPONSE_HEADER: "stream"}},
             )
@@ -1314,7 +1314,7 @@ class TestAsyncPayi:
         with pytest.raises(APITimeoutError):
             await self.client.post(
                 "/api/v1/budgets",
-                body=cast(object, dict(budget_name="x")),
+                body=cast(object, dict(budget_name="x", max=0)),
                 cast_to=httpx.Response,
                 options={"headers": {RAW_RESPONSE_HEADER: "stream"}},
             )
@@ -1329,7 +1329,7 @@ class TestAsyncPayi:
         with pytest.raises(APIStatusError):
             await self.client.post(
                 "/api/v1/budgets",
-                body=cast(object, dict(budget_name="x")),
+                body=cast(object, dict(budget_name="x", max=0)),
                 cast_to=httpx.Response,
                 options={"headers": {RAW_RESPONSE_HEADER: "stream"}},
             )

@@ -57,11 +57,11 @@ class BudgetHistoryTotalsCostTotal(BaseModel):
 
 
 class BudgetHistoryTotalsCost(BaseModel):
-    input: BudgetHistoryTotalsCostInput
+    input: Optional[BudgetHistoryTotalsCostInput] = None
 
-    output: BudgetHistoryTotalsCostOutput
+    output: Optional[BudgetHistoryTotalsCostOutput] = None
 
-    total: BudgetHistoryTotalsCostTotal
+    total: Optional[BudgetHistoryTotalsCostTotal] = None
 
 
 class BudgetHistoryTotalsRequests(BaseModel):
@@ -77,17 +77,17 @@ class BudgetHistoryTotalsRequests(BaseModel):
 
 
 class BudgetHistoryTotals(BaseModel):
-    cost: BudgetHistoryTotalsCost
+    cost: Optional[BudgetHistoryTotalsCost] = None
 
-    requests: BudgetHistoryTotalsRequests
+    requests: Optional[BudgetHistoryTotalsRequests] = None
 
 
 class BudgetHistory(BaseModel):
-    budget_name: Optional[str] = None
-
     base_cost_estimate: Optional[Literal["Max"]] = None
 
     budget_id: Optional[str] = None
+
+    budget_name: Optional[str] = None
 
     budget_response_type: Optional[Literal["Block", "Allow"]] = None
 
@@ -105,6 +105,6 @@ class BudgetHistory(BaseModel):
 class BudgetHistoryResponse(BaseModel):
     budget_history: BudgetHistory
 
-    message: Optional[str] = None
+    request_id: str
 
-    request_id: Optional[str] = None
+    message: Optional[str] = None
