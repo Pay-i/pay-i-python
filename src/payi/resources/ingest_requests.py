@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 import httpx
 
 from ..types import ingest_request_create_params
@@ -41,9 +39,9 @@ class IngestRequestsResource(SyncAPIResource):
     def create(
         self,
         *,
-        category: Optional[str] | NotGiven = NOT_GIVEN,
-        resource: Optional[str] | NotGiven = NOT_GIVEN,
-        units: ingest_request_create_params.Units | NotGiven = NOT_GIVEN,
+        category: str,
+        resource: str,
+        units: ingest_request_create_params.Units,
         x_proxy_budget_ids: str | NotGiven = NOT_GIVEN,
         x_proxy_request_tags: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
@@ -103,9 +101,9 @@ class AsyncIngestRequestsResource(AsyncAPIResource):
     async def create(
         self,
         *,
-        category: Optional[str] | NotGiven = NOT_GIVEN,
-        resource: Optional[str] | NotGiven = NOT_GIVEN,
-        units: ingest_request_create_params.Units | NotGiven = NOT_GIVEN,
+        category: str,
+        resource: str,
+        units: ingest_request_create_params.Units,
         x_proxy_budget_ids: str | NotGiven = NOT_GIVEN,
         x_proxy_request_tags: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.

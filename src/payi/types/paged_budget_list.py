@@ -21,73 +21,73 @@ __all__ = [
 
 
 class ItemTotalsCostInputCost(BaseModel):
-    base: float
+    base: Optional[float] = None
 
-    overrun_base: float
+    overrun_base: Optional[float] = None
 
 
 class ItemTotalsCostOutputCost(BaseModel):
-    base: float
+    base: Optional[float] = None
 
-    overrun_base: float
+    overrun_base: Optional[float] = None
 
 
 class ItemTotalsCostTotalCost(BaseModel):
-    base: float
+    base: Optional[float] = None
 
-    overrun_base: float
+    overrun_base: Optional[float] = None
 
 
 class ItemTotalsCost(BaseModel):
-    input_cost: ItemTotalsCostInputCost = FieldInfo(alias="inputCost")
+    input_cost: Optional[ItemTotalsCostInputCost] = FieldInfo(alias="inputCost", default=None)
 
-    output_cost: ItemTotalsCostOutputCost = FieldInfo(alias="outputCost")
+    output_cost: Optional[ItemTotalsCostOutputCost] = FieldInfo(alias="outputCost", default=None)
 
-    total_cost: ItemTotalsCostTotalCost = FieldInfo(alias="totalCost")
+    total_cost: Optional[ItemTotalsCostTotalCost] = FieldInfo(alias="totalCost", default=None)
 
 
 class ItemTotalsRequests(BaseModel):
-    blocked: int
-
-    exceeded: int
-
-    failed: int
-
-    successful: int
-
-    total: int
+    blocked: Optional[int] = None
 
     error: Optional[int] = None
 
+    exceeded: Optional[int] = None
+
+    failed: Optional[int] = None
+
+    successful: Optional[int] = None
+
+    total: Optional[int] = None
+
 
 class ItemTotals(BaseModel):
-    cost: ItemTotalsCost
+    cost: Optional[ItemTotalsCost] = None
 
-    requests: ItemTotalsRequests
+    requests: Optional[ItemTotalsRequests] = None
 
 
 class Item(BaseModel):
-    budget_name: Optional[str] = None
+    base_cost_estimate: Literal["Max"]
 
-    base_cost_estimate: Optional[Literal["Max"]] = None
+    budget_creation_timestamp: datetime
 
-    budget_creation_timestamp: Optional[datetime] = None
+    budget_id: str
 
-    budget_id: Optional[str] = None
+    budget_name: str
 
-    budget_response_type: Optional[Literal["Block", "Allow"]] = None
+    budget_response_type: Literal["Block", "Allow"]
+
+    budget_type: Literal["Conservative", "Liberal"]
+
+    budget_update_timestamp: datetime
+
+    currency: str
+
+    max: float
+
+    totals: ItemTotals
 
     budget_tags: Optional[List[str]] = None
-
-    budget_type: Optional[Literal["Conservative", "Liberal"]] = None
-
-    budget_update_timestamp: Optional[datetime] = None
-
-    currency: Optional[str] = None
-
-    max: Optional[float] = None
-
-    totals: Optional[ItemTotals] = None
 
 
 class PagedBudgetList(BaseModel):

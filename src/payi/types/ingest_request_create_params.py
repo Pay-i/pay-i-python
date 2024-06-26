@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Optional
-from typing_extensions import Annotated, TypedDict
+from typing_extensions import Required, Annotated, TypedDict
 
 from .._utils import PropertyInfo
 
@@ -11,11 +10,11 @@ __all__ = ["IngestRequestCreateParams", "Units"]
 
 
 class IngestRequestCreateParams(TypedDict, total=False):
-    category: Optional[str]
+    category: Required[str]
 
-    resource: Optional[str]
+    resource: Required[str]
 
-    units: Units
+    units: Required[Units]
 
     x_proxy_budget_ids: Annotated[str, PropertyInfo(alias="xProxy-Budget-IDs")]
 

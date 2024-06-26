@@ -19,14 +19,18 @@ class TestIngestRequests:
 
     @parametrize
     def test_method_create(self, client: Payi) -> None:
-        ingest_request = client.ingest_requests.create()
+        ingest_request = client.ingest_requests.create(
+            category="x",
+            resource="x",
+            units={},
+        )
         assert_matches_type(SuccessfulProxyResult, ingest_request, path=["response"])
 
     @parametrize
     def test_method_create_with_all_params(self, client: Payi) -> None:
         ingest_request = client.ingest_requests.create(
-            category="string",
-            resource="string",
+            category="x",
+            resource="x",
             units={
                 "input": 0,
                 "output": 0,
@@ -38,7 +42,11 @@ class TestIngestRequests:
 
     @parametrize
     def test_raw_response_create(self, client: Payi) -> None:
-        response = client.ingest_requests.with_raw_response.create()
+        response = client.ingest_requests.with_raw_response.create(
+            category="x",
+            resource="x",
+            units={},
+        )
 
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -47,7 +55,11 @@ class TestIngestRequests:
 
     @parametrize
     def test_streaming_response_create(self, client: Payi) -> None:
-        with client.ingest_requests.with_streaming_response.create() as response:
+        with client.ingest_requests.with_streaming_response.create(
+            category="x",
+            resource="x",
+            units={},
+        ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
@@ -62,14 +74,18 @@ class TestAsyncIngestRequests:
 
     @parametrize
     async def test_method_create(self, async_client: AsyncPayi) -> None:
-        ingest_request = await async_client.ingest_requests.create()
+        ingest_request = await async_client.ingest_requests.create(
+            category="x",
+            resource="x",
+            units={},
+        )
         assert_matches_type(SuccessfulProxyResult, ingest_request, path=["response"])
 
     @parametrize
     async def test_method_create_with_all_params(self, async_client: AsyncPayi) -> None:
         ingest_request = await async_client.ingest_requests.create(
-            category="string",
-            resource="string",
+            category="x",
+            resource="x",
             units={
                 "input": 0,
                 "output": 0,
@@ -81,7 +97,11 @@ class TestAsyncIngestRequests:
 
     @parametrize
     async def test_raw_response_create(self, async_client: AsyncPayi) -> None:
-        response = await async_client.ingest_requests.with_raw_response.create()
+        response = await async_client.ingest_requests.with_raw_response.create(
+            category="x",
+            resource="x",
+            units={},
+        )
 
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -90,7 +110,11 @@ class TestAsyncIngestRequests:
 
     @parametrize
     async def test_streaming_response_create(self, async_client: AsyncPayi) -> None:
-        async with async_client.ingest_requests.with_streaming_response.create() as response:
+        async with async_client.ingest_requests.with_streaming_response.create(
+            category="x",
+            resource="x",
+            units={},
+        ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 

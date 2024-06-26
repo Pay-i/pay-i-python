@@ -27,7 +27,7 @@ class TestTags:
     def test_method_create(self, client: Payi) -> None:
         tag = client.budgets.tags.create(
             "string",
-            budget_tags=["string"],
+            budget_tags=["tag1", "tag2"],
         )
         assert_matches_type(TagCreateResponse, tag, path=["response"])
 
@@ -35,7 +35,7 @@ class TestTags:
     def test_method_create_with_all_params(self, client: Payi) -> None:
         tag = client.budgets.tags.create(
             "string",
-            budget_tags=["string"],
+            budget_tags=["tag1", "tag2"],
             x_proxy_application_key="string",
         )
         assert_matches_type(TagCreateResponse, tag, path=["response"])
@@ -44,7 +44,7 @@ class TestTags:
     def test_raw_response_create(self, client: Payi) -> None:
         response = client.budgets.tags.with_raw_response.create(
             "string",
-            budget_tags=["string"],
+            budget_tags=["tag1", "tag2"],
         )
 
         assert response.is_closed is True
@@ -56,7 +56,7 @@ class TestTags:
     def test_streaming_response_create(self, client: Payi) -> None:
         with client.budgets.tags.with_streaming_response.create(
             "string",
-            budget_tags=["string"],
+            budget_tags=["tag1", "tag2"],
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -71,14 +71,14 @@ class TestTags:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `budget_id` but received ''"):
             client.budgets.tags.with_raw_response.create(
                 "",
-                budget_tags=["string"],
+                budget_tags=["tag1", "tag2"],
             )
 
     @parametrize
     def test_method_update(self, client: Payi) -> None:
         tag = client.budgets.tags.update(
             "string",
-            budget_tags=["string"],
+            budget_tags=["tag1", "tag2"],
         )
         assert_matches_type(TagUpdateResponse, tag, path=["response"])
 
@@ -86,7 +86,7 @@ class TestTags:
     def test_method_update_with_all_params(self, client: Payi) -> None:
         tag = client.budgets.tags.update(
             "string",
-            budget_tags=["string"],
+            budget_tags=["tag1", "tag2"],
             x_proxy_application_key="string",
         )
         assert_matches_type(TagUpdateResponse, tag, path=["response"])
@@ -95,7 +95,7 @@ class TestTags:
     def test_raw_response_update(self, client: Payi) -> None:
         response = client.budgets.tags.with_raw_response.update(
             "string",
-            budget_tags=["string"],
+            budget_tags=["tag1", "tag2"],
         )
 
         assert response.is_closed is True
@@ -107,7 +107,7 @@ class TestTags:
     def test_streaming_response_update(self, client: Payi) -> None:
         with client.budgets.tags.with_streaming_response.update(
             "string",
-            budget_tags=["string"],
+            budget_tags=["tag1", "tag2"],
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -122,7 +122,7 @@ class TestTags:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `budget_id` but received ''"):
             client.budgets.tags.with_raw_response.update(
                 "",
-                budget_tags=["string"],
+                budget_tags=["tag1", "tag2"],
             )
 
     @parametrize
@@ -221,7 +221,7 @@ class TestTags:
     def test_method_remove(self, client: Payi) -> None:
         tag = client.budgets.tags.remove(
             "string",
-            budget_tags=["string"],
+            budget_tags=["tag1", "tag2"],
         )
         assert_matches_type(TagRemoveResponse, tag, path=["response"])
 
@@ -229,7 +229,7 @@ class TestTags:
     def test_method_remove_with_all_params(self, client: Payi) -> None:
         tag = client.budgets.tags.remove(
             "string",
-            budget_tags=["string"],
+            budget_tags=["tag1", "tag2"],
             x_proxy_application_key="string",
         )
         assert_matches_type(TagRemoveResponse, tag, path=["response"])
@@ -238,7 +238,7 @@ class TestTags:
     def test_raw_response_remove(self, client: Payi) -> None:
         response = client.budgets.tags.with_raw_response.remove(
             "string",
-            budget_tags=["string"],
+            budget_tags=["tag1", "tag2"],
         )
 
         assert response.is_closed is True
@@ -250,7 +250,7 @@ class TestTags:
     def test_streaming_response_remove(self, client: Payi) -> None:
         with client.budgets.tags.with_streaming_response.remove(
             "string",
-            budget_tags=["string"],
+            budget_tags=["tag1", "tag2"],
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -265,7 +265,7 @@ class TestTags:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `budget_id` but received ''"):
             client.budgets.tags.with_raw_response.remove(
                 "",
-                budget_tags=["string"],
+                budget_tags=["tag1", "tag2"],
             )
 
 
@@ -276,7 +276,7 @@ class TestAsyncTags:
     async def test_method_create(self, async_client: AsyncPayi) -> None:
         tag = await async_client.budgets.tags.create(
             "string",
-            budget_tags=["string"],
+            budget_tags=["tag1", "tag2"],
         )
         assert_matches_type(TagCreateResponse, tag, path=["response"])
 
@@ -284,7 +284,7 @@ class TestAsyncTags:
     async def test_method_create_with_all_params(self, async_client: AsyncPayi) -> None:
         tag = await async_client.budgets.tags.create(
             "string",
-            budget_tags=["string"],
+            budget_tags=["tag1", "tag2"],
             x_proxy_application_key="string",
         )
         assert_matches_type(TagCreateResponse, tag, path=["response"])
@@ -293,7 +293,7 @@ class TestAsyncTags:
     async def test_raw_response_create(self, async_client: AsyncPayi) -> None:
         response = await async_client.budgets.tags.with_raw_response.create(
             "string",
-            budget_tags=["string"],
+            budget_tags=["tag1", "tag2"],
         )
 
         assert response.is_closed is True
@@ -305,7 +305,7 @@ class TestAsyncTags:
     async def test_streaming_response_create(self, async_client: AsyncPayi) -> None:
         async with async_client.budgets.tags.with_streaming_response.create(
             "string",
-            budget_tags=["string"],
+            budget_tags=["tag1", "tag2"],
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -320,14 +320,14 @@ class TestAsyncTags:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `budget_id` but received ''"):
             await async_client.budgets.tags.with_raw_response.create(
                 "",
-                budget_tags=["string"],
+                budget_tags=["tag1", "tag2"],
             )
 
     @parametrize
     async def test_method_update(self, async_client: AsyncPayi) -> None:
         tag = await async_client.budgets.tags.update(
             "string",
-            budget_tags=["string"],
+            budget_tags=["tag1", "tag2"],
         )
         assert_matches_type(TagUpdateResponse, tag, path=["response"])
 
@@ -335,7 +335,7 @@ class TestAsyncTags:
     async def test_method_update_with_all_params(self, async_client: AsyncPayi) -> None:
         tag = await async_client.budgets.tags.update(
             "string",
-            budget_tags=["string"],
+            budget_tags=["tag1", "tag2"],
             x_proxy_application_key="string",
         )
         assert_matches_type(TagUpdateResponse, tag, path=["response"])
@@ -344,7 +344,7 @@ class TestAsyncTags:
     async def test_raw_response_update(self, async_client: AsyncPayi) -> None:
         response = await async_client.budgets.tags.with_raw_response.update(
             "string",
-            budget_tags=["string"],
+            budget_tags=["tag1", "tag2"],
         )
 
         assert response.is_closed is True
@@ -356,7 +356,7 @@ class TestAsyncTags:
     async def test_streaming_response_update(self, async_client: AsyncPayi) -> None:
         async with async_client.budgets.tags.with_streaming_response.update(
             "string",
-            budget_tags=["string"],
+            budget_tags=["tag1", "tag2"],
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -371,7 +371,7 @@ class TestAsyncTags:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `budget_id` but received ''"):
             await async_client.budgets.tags.with_raw_response.update(
                 "",
-                budget_tags=["string"],
+                budget_tags=["tag1", "tag2"],
             )
 
     @parametrize
@@ -470,7 +470,7 @@ class TestAsyncTags:
     async def test_method_remove(self, async_client: AsyncPayi) -> None:
         tag = await async_client.budgets.tags.remove(
             "string",
-            budget_tags=["string"],
+            budget_tags=["tag1", "tag2"],
         )
         assert_matches_type(TagRemoveResponse, tag, path=["response"])
 
@@ -478,7 +478,7 @@ class TestAsyncTags:
     async def test_method_remove_with_all_params(self, async_client: AsyncPayi) -> None:
         tag = await async_client.budgets.tags.remove(
             "string",
-            budget_tags=["string"],
+            budget_tags=["tag1", "tag2"],
             x_proxy_application_key="string",
         )
         assert_matches_type(TagRemoveResponse, tag, path=["response"])
@@ -487,7 +487,7 @@ class TestAsyncTags:
     async def test_raw_response_remove(self, async_client: AsyncPayi) -> None:
         response = await async_client.budgets.tags.with_raw_response.remove(
             "string",
-            budget_tags=["string"],
+            budget_tags=["tag1", "tag2"],
         )
 
         assert response.is_closed is True
@@ -499,7 +499,7 @@ class TestAsyncTags:
     async def test_streaming_response_remove(self, async_client: AsyncPayi) -> None:
         async with async_client.budgets.tags.with_streaming_response.remove(
             "string",
-            budget_tags=["string"],
+            budget_tags=["tag1", "tag2"],
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -514,5 +514,5 @@ class TestAsyncTags:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `budget_id` but received ''"):
             await async_client.budgets.tags.with_raw_response.remove(
                 "",
-                budget_tags=["string"],
+                budget_tags=["tag1", "tag2"],
             )

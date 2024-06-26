@@ -8,6 +8,6 @@ __all__ = ["DefaultResponse"]
 
 
 class DefaultResponse(BaseModel):
-    message: Optional[str] = None
+    request_id: str
 
-    request_id: Optional[str] = None
+    message: Optional[str] = None
