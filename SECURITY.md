@@ -20,7 +20,7 @@ or products provided by Payi please follow the respective company's security rep
 
 ### Payi Terms and Policies
 
-Please contact dev-feedback@payi.com for any questions or concerns regarding security of our services.
+Please contact support@payi.com for any questions or concerns regarding security of our services.
 
 ---
 
