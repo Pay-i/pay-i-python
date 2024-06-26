@@ -12,6 +12,6 @@ __all__ = ["BudgetUpdateParams"]
 class BudgetUpdateParams(TypedDict, total=False):
     budget_name: Required[str]
 
-    max: Required[float]
+    max: float
 
     x_proxy_application_key: Annotated[str, PropertyInfo(alias="xProxy-Application-Key")]

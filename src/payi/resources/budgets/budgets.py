@@ -149,7 +149,7 @@ class BudgetsResource(SyncAPIResource):
         budget_id: str,
         *,
         budget_name: str,
-        max: float,
+        max: float | NotGiven = NOT_GIVEN,
         x_proxy_application_key: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -431,7 +431,7 @@ class AsyncBudgetsResource(AsyncAPIResource):
         budget_id: str,
         *,
         budget_name: str,
-        max: float,
+        max: float | NotGiven = NOT_GIVEN,
         x_proxy_application_key: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
