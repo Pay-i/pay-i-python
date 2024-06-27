@@ -32,15 +32,6 @@ class TestTags:
         assert_matches_type(TagCreateResponse, tag, path=["response"])
 
     @parametrize
-    def test_method_create_with_all_params(self, client: Payi) -> None:
-        tag = client.budgets.tags.create(
-            "string",
-            budget_tags=["tag1", "tag2"],
-            x_proxy_application_key="string",
-        )
-        assert_matches_type(TagCreateResponse, tag, path=["response"])
-
-    @parametrize
     def test_raw_response_create(self, client: Payi) -> None:
         response = client.budgets.tags.with_raw_response.create(
             "string",
@@ -79,15 +70,6 @@ class TestTags:
         tag = client.budgets.tags.update(
             "string",
             budget_tags=["tag1", "tag2"],
-        )
-        assert_matches_type(TagUpdateResponse, tag, path=["response"])
-
-    @parametrize
-    def test_method_update_with_all_params(self, client: Payi) -> None:
-        tag = client.budgets.tags.update(
-            "string",
-            budget_tags=["tag1", "tag2"],
-            x_proxy_application_key="string",
         )
         assert_matches_type(TagUpdateResponse, tag, path=["response"])
 
@@ -133,14 +115,6 @@ class TestTags:
         assert_matches_type(TagListResponse, tag, path=["response"])
 
     @parametrize
-    def test_method_list_with_all_params(self, client: Payi) -> None:
-        tag = client.budgets.tags.list(
-            "string",
-            x_proxy_application_key="string",
-        )
-        assert_matches_type(TagListResponse, tag, path=["response"])
-
-    @parametrize
     def test_raw_response_list(self, client: Payi) -> None:
         response = client.budgets.tags.with_raw_response.list(
             "string",
@@ -175,14 +149,6 @@ class TestTags:
     def test_method_delete(self, client: Payi) -> None:
         tag = client.budgets.tags.delete(
             "string",
-        )
-        assert_matches_type(TagDeleteResponse, tag, path=["response"])
-
-    @parametrize
-    def test_method_delete_with_all_params(self, client: Payi) -> None:
-        tag = client.budgets.tags.delete(
-            "string",
-            x_proxy_application_key="string",
         )
         assert_matches_type(TagDeleteResponse, tag, path=["response"])
 
@@ -222,15 +188,6 @@ class TestTags:
         tag = client.budgets.tags.remove(
             "string",
             budget_tags=["tag1", "tag2"],
-        )
-        assert_matches_type(TagRemoveResponse, tag, path=["response"])
-
-    @parametrize
-    def test_method_remove_with_all_params(self, client: Payi) -> None:
-        tag = client.budgets.tags.remove(
-            "string",
-            budget_tags=["tag1", "tag2"],
-            x_proxy_application_key="string",
         )
         assert_matches_type(TagRemoveResponse, tag, path=["response"])
 
@@ -281,15 +238,6 @@ class TestAsyncTags:
         assert_matches_type(TagCreateResponse, tag, path=["response"])
 
     @parametrize
-    async def test_method_create_with_all_params(self, async_client: AsyncPayi) -> None:
-        tag = await async_client.budgets.tags.create(
-            "string",
-            budget_tags=["tag1", "tag2"],
-            x_proxy_application_key="string",
-        )
-        assert_matches_type(TagCreateResponse, tag, path=["response"])
-
-    @parametrize
     async def test_raw_response_create(self, async_client: AsyncPayi) -> None:
         response = await async_client.budgets.tags.with_raw_response.create(
             "string",
@@ -328,15 +276,6 @@ class TestAsyncTags:
         tag = await async_client.budgets.tags.update(
             "string",
             budget_tags=["tag1", "tag2"],
-        )
-        assert_matches_type(TagUpdateResponse, tag, path=["response"])
-
-    @parametrize
-    async def test_method_update_with_all_params(self, async_client: AsyncPayi) -> None:
-        tag = await async_client.budgets.tags.update(
-            "string",
-            budget_tags=["tag1", "tag2"],
-            x_proxy_application_key="string",
         )
         assert_matches_type(TagUpdateResponse, tag, path=["response"])
 
@@ -382,14 +321,6 @@ class TestAsyncTags:
         assert_matches_type(TagListResponse, tag, path=["response"])
 
     @parametrize
-    async def test_method_list_with_all_params(self, async_client: AsyncPayi) -> None:
-        tag = await async_client.budgets.tags.list(
-            "string",
-            x_proxy_application_key="string",
-        )
-        assert_matches_type(TagListResponse, tag, path=["response"])
-
-    @parametrize
     async def test_raw_response_list(self, async_client: AsyncPayi) -> None:
         response = await async_client.budgets.tags.with_raw_response.list(
             "string",
@@ -424,14 +355,6 @@ class TestAsyncTags:
     async def test_method_delete(self, async_client: AsyncPayi) -> None:
         tag = await async_client.budgets.tags.delete(
             "string",
-        )
-        assert_matches_type(TagDeleteResponse, tag, path=["response"])
-
-    @parametrize
-    async def test_method_delete_with_all_params(self, async_client: AsyncPayi) -> None:
-        tag = await async_client.budgets.tags.delete(
-            "string",
-            x_proxy_application_key="string",
         )
         assert_matches_type(TagDeleteResponse, tag, path=["response"])
 
@@ -471,15 +394,6 @@ class TestAsyncTags:
         tag = await async_client.budgets.tags.remove(
             "string",
             budget_tags=["tag1", "tag2"],
-        )
-        assert_matches_type(TagRemoveResponse, tag, path=["response"])
-
-    @parametrize
-    async def test_method_remove_with_all_params(self, async_client: AsyncPayi) -> None:
-        tag = await async_client.budgets.tags.remove(
-            "string",
-            budget_tags=["tag1", "tag2"],
-            x_proxy_application_key="string",
         )
         assert_matches_type(TagRemoveResponse, tag, path=["response"])
 

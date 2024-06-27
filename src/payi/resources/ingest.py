@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import httpx
 
-from ..types import ingest_request_create_params
+from ..types import ingest_units_params
 from .._types import NOT_GIVEN, Body, Query, Headers, NotGiven
 from .._utils import (
     maybe_transform,
@@ -24,24 +24,24 @@ from .._base_client import (
 )
 from ..types.successful_proxy_result import SuccessfulProxyResult
 
-__all__ = ["IngestRequestsResource", "AsyncIngestRequestsResource"]
+__all__ = ["IngestResource", "AsyncIngestResource"]
 
 
-class IngestRequestsResource(SyncAPIResource):
+class IngestResource(SyncAPIResource):
     @cached_property
-    def with_raw_response(self) -> IngestRequestsResourceWithRawResponse:
-        return IngestRequestsResourceWithRawResponse(self)
+    def with_raw_response(self) -> IngestResourceWithRawResponse:
+        return IngestResourceWithRawResponse(self)
 
     @cached_property
-    def with_streaming_response(self) -> IngestRequestsResourceWithStreamingResponse:
-        return IngestRequestsResourceWithStreamingResponse(self)
+    def with_streaming_response(self) -> IngestResourceWithStreamingResponse:
+        return IngestResourceWithStreamingResponse(self)
 
-    def create(
+    def units(
         self,
         *,
         category: str,
         resource: str,
-        units: ingest_request_create_params.Units,
+        units: ingest_units_params.Units,
         x_proxy_budget_ids: str | NotGiven = NOT_GIVEN,
         x_proxy_request_tags: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
@@ -80,7 +80,7 @@ class IngestRequestsResource(SyncAPIResource):
                     "resource": resource,
                     "units": units,
                 },
-                ingest_request_create_params.IngestRequestCreateParams,
+                ingest_units_params.IngestUnitsParams,
             ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
@@ -89,21 +89,21 @@ class IngestRequestsResource(SyncAPIResource):
         )
 
 
-class AsyncIngestRequestsResource(AsyncAPIResource):
+class AsyncIngestResource(AsyncAPIResource):
     @cached_property
-    def with_raw_response(self) -> AsyncIngestRequestsResourceWithRawResponse:
-        return AsyncIngestRequestsResourceWithRawResponse(self)
+    def with_raw_response(self) -> AsyncIngestResourceWithRawResponse:
+        return AsyncIngestResourceWithRawResponse(self)
 
     @cached_property
-    def with_streaming_response(self) -> AsyncIngestRequestsResourceWithStreamingResponse:
-        return AsyncIngestRequestsResourceWithStreamingResponse(self)
+    def with_streaming_response(self) -> AsyncIngestResourceWithStreamingResponse:
+        return AsyncIngestResourceWithStreamingResponse(self)
 
-    async def create(
+    async def units(
         self,
         *,
         category: str,
         resource: str,
-        units: ingest_request_create_params.Units,
+        units: ingest_units_params.Units,
         x_proxy_budget_ids: str | NotGiven = NOT_GIVEN,
         x_proxy_request_tags: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
@@ -142,7 +142,7 @@ class AsyncIngestRequestsResource(AsyncAPIResource):
                     "resource": resource,
                     "units": units,
                 },
-                ingest_request_create_params.IngestRequestCreateParams,
+                ingest_units_params.IngestUnitsParams,
             ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
@@ -151,37 +151,37 @@ class AsyncIngestRequestsResource(AsyncAPIResource):
         )
 
 
-class IngestRequestsResourceWithRawResponse:
-    def __init__(self, ingest_requests: IngestRequestsResource) -> None:
-        self._ingest_requests = ingest_requests
+class IngestResourceWithRawResponse:
+    def __init__(self, ingest: IngestResource) -> None:
+        self._ingest = ingest
 
-        self.create = to_raw_response_wrapper(
-            ingest_requests.create,
+        self.units = to_raw_response_wrapper(
+            ingest.units,
         )
 
 
-class AsyncIngestRequestsResourceWithRawResponse:
-    def __init__(self, ingest_requests: AsyncIngestRequestsResource) -> None:
-        self._ingest_requests = ingest_requests
+class AsyncIngestResourceWithRawResponse:
+    def __init__(self, ingest: AsyncIngestResource) -> None:
+        self._ingest = ingest
 
-        self.create = async_to_raw_response_wrapper(
-            ingest_requests.create,
+        self.units = async_to_raw_response_wrapper(
+            ingest.units,
         )
 
 
-class IngestRequestsResourceWithStreamingResponse:
-    def __init__(self, ingest_requests: IngestRequestsResource) -> None:
-        self._ingest_requests = ingest_requests
+class IngestResourceWithStreamingResponse:
+    def __init__(self, ingest: IngestResource) -> None:
+        self._ingest = ingest
 
-        self.create = to_streamed_response_wrapper(
-            ingest_requests.create,
+        self.units = to_streamed_response_wrapper(
+            ingest.units,
         )
 
 
-class AsyncIngestRequestsResourceWithStreamingResponse:
-    def __init__(self, ingest_requests: AsyncIngestRequestsResource) -> None:
-        self._ingest_requests = ingest_requests
+class AsyncIngestResourceWithStreamingResponse:
+    def __init__(self, ingest: AsyncIngestResource) -> None:
+        self._ingest = ingest
 
-        self.create = async_to_streamed_response_wrapper(
-            ingest_requests.create,
+        self.units = async_to_streamed_response_wrapper(
+            ingest.units,
         )
