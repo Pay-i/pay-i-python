@@ -1,5 +1,13 @@
 # File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
+from .ingest import (
+    IngestResource,
+    AsyncIngestResource,
+    IngestResourceWithRawResponse,
+    AsyncIngestResourceWithRawResponse,
+    IngestResourceWithStreamingResponse,
+    AsyncIngestResourceWithStreamingResponse,
+)
 from .budgets import (
     BudgetsResource,
     AsyncBudgetsResource,
@@ -7,14 +15,6 @@ from .budgets import (
     AsyncBudgetsResourceWithRawResponse,
     BudgetsResourceWithStreamingResponse,
     AsyncBudgetsResourceWithStreamingResponse,
-)
-from .ingest_requests import (
-    IngestRequestsResource,
-    AsyncIngestRequestsResource,
-    IngestRequestsResourceWithRawResponse,
-    AsyncIngestRequestsResourceWithRawResponse,
-    IngestRequestsResourceWithStreamingResponse,
-    AsyncIngestRequestsResourceWithStreamingResponse,
 )
 
 __all__ = [
@@ -24,10 +24,10 @@ __all__ = [
     "AsyncBudgetsResourceWithRawResponse",
     "BudgetsResourceWithStreamingResponse",
     "AsyncBudgetsResourceWithStreamingResponse",
-    "IngestRequestsResource",
-    "AsyncIngestRequestsResource",
-    "IngestRequestsResourceWithRawResponse",
-    "AsyncIngestRequestsResourceWithRawResponse",
-    "IngestRequestsResourceWithStreamingResponse",
-    "AsyncIngestRequestsResourceWithStreamingResponse",
+    "IngestResource",
+    "AsyncIngestResource",
+    "IngestResourceWithRawResponse",
+    "AsyncIngestResourceWithRawResponse",
+    "IngestResourceWithStreamingResponse",
+    "AsyncIngestResourceWithStreamingResponse",
 ]

@@ -19,7 +19,6 @@ from ...types import budget_list_params, budget_create_params, budget_update_par
 from ..._types import NOT_GIVEN, Body, Query, Headers, NotGiven
 from ..._utils import (
     maybe_transform,
-    strip_not_given,
     async_maybe_transform,
 )
 from ..._compat import cached_property
@@ -63,7 +62,6 @@ class BudgetsResource(SyncAPIResource):
         budget_response_type: Literal["Block", "Allow"] | NotGiven = NOT_GIVEN,
         budget_tags: Optional[List[str]] | NotGiven = NOT_GIVEN,
         budget_type: Literal["Conservative", "Liberal"] | NotGiven = NOT_GIVEN,
-        x_proxy_application_key: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -83,10 +81,6 @@ class BudgetsResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        extra_headers = {
-            **strip_not_given({"xProxy-Application-Key": x_proxy_application_key}),
-            **(extra_headers or {}),
-        }
         return self._post(
             "/api/v1/budgets",
             body=maybe_transform(
@@ -110,7 +104,6 @@ class BudgetsResource(SyncAPIResource):
         self,
         budget_id: str,
         *,
-        x_proxy_application_key: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -132,10 +125,6 @@ class BudgetsResource(SyncAPIResource):
         """
         if not budget_id:
             raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
-        extra_headers = {
-            **strip_not_given({"xProxy-Application-Key": x_proxy_application_key}),
-            **(extra_headers or {}),
-        }
         return self._get(
             f"/api/v1/budgets/{budget_id}",
             options=make_request_options(
@@ -150,7 +139,6 @@ class BudgetsResource(SyncAPIResource):
         *,
         budget_name: str,
         max: float | NotGiven = NOT_GIVEN,
-        x_proxy_application_key: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -172,10 +160,6 @@ class BudgetsResource(SyncAPIResource):
         """
         if not budget_id:
             raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
-        extra_headers = {
-            **strip_not_given({"xProxy-Application-Key": x_proxy_application_key}),
-            **(extra_headers or {}),
-        }
         return self._put(
             f"/api/v1/budgets/{budget_id}",
             body=maybe_transform(
@@ -200,7 +184,6 @@ class BudgetsResource(SyncAPIResource):
         sort_ascending: bool | NotGiven = NOT_GIVEN,
         sort_by: str | NotGiven = NOT_GIVEN,
         tags: str | NotGiven = NOT_GIVEN,
-        x_proxy_application_key: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -220,10 +203,6 @@ class BudgetsResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        extra_headers = {
-            **strip_not_given({"xProxy-Application-Key": x_proxy_application_key}),
-            **(extra_headers or {}),
-        }
         return self._get(
             "/api/v1/budgets",
             options=make_request_options(
@@ -250,7 +229,6 @@ class BudgetsResource(SyncAPIResource):
         self,
         budget_id: str,
         *,
-        x_proxy_application_key: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -272,10 +250,6 @@ class BudgetsResource(SyncAPIResource):
         """
         if not budget_id:
             raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
-        extra_headers = {
-            **strip_not_given({"xProxy-Application-Key": x_proxy_application_key}),
-            **(extra_headers or {}),
-        }
         return self._delete(
             f"/api/v1/budgets/{budget_id}",
             options=make_request_options(
@@ -288,7 +262,6 @@ class BudgetsResource(SyncAPIResource):
         self,
         budget_id: str,
         *,
-        x_proxy_application_key: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -310,10 +283,6 @@ class BudgetsResource(SyncAPIResource):
         """
         if not budget_id:
             raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
-        extra_headers = {
-            **strip_not_given({"xProxy-Application-Key": x_proxy_application_key}),
-            **(extra_headers or {}),
-        }
         return self._post(
             f"/api/v1/budgets/{budget_id}/reset",
             options=make_request_options(
@@ -345,7 +314,6 @@ class AsyncBudgetsResource(AsyncAPIResource):
         budget_response_type: Literal["Block", "Allow"] | NotGiven = NOT_GIVEN,
         budget_tags: Optional[List[str]] | NotGiven = NOT_GIVEN,
         budget_type: Literal["Conservative", "Liberal"] | NotGiven = NOT_GIVEN,
-        x_proxy_application_key: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -365,10 +333,6 @@ class AsyncBudgetsResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        extra_headers = {
-            **strip_not_given({"xProxy-Application-Key": x_proxy_application_key}),
-            **(extra_headers or {}),
-        }
         return await self._post(
             "/api/v1/budgets",
             body=await async_maybe_transform(
@@ -392,7 +356,6 @@ class AsyncBudgetsResource(AsyncAPIResource):
         self,
         budget_id: str,
         *,
-        x_proxy_application_key: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -414,10 +377,6 @@ class AsyncBudgetsResource(AsyncAPIResource):
         """
         if not budget_id:
             raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
-        extra_headers = {
-            **strip_not_given({"xProxy-Application-Key": x_proxy_application_key}),
-            **(extra_headers or {}),
-        }
         return await self._get(
             f"/api/v1/budgets/{budget_id}",
             options=make_request_options(
@@ -432,7 +391,6 @@ class AsyncBudgetsResource(AsyncAPIResource):
         *,
         budget_name: str,
         max: float | NotGiven = NOT_GIVEN,
-        x_proxy_application_key: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -454,10 +412,6 @@ class AsyncBudgetsResource(AsyncAPIResource):
         """
         if not budget_id:
             raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
-        extra_headers = {
-            **strip_not_given({"xProxy-Application-Key": x_proxy_application_key}),
-            **(extra_headers or {}),
-        }
         return await self._put(
             f"/api/v1/budgets/{budget_id}",
             body=await async_maybe_transform(
@@ -482,7 +436,6 @@ class AsyncBudgetsResource(AsyncAPIResource):
         sort_ascending: bool | NotGiven = NOT_GIVEN,
         sort_by: str | NotGiven = NOT_GIVEN,
         tags: str | NotGiven = NOT_GIVEN,
-        x_proxy_application_key: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -502,10 +455,6 @@ class AsyncBudgetsResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        extra_headers = {
-            **strip_not_given({"xProxy-Application-Key": x_proxy_application_key}),
-            **(extra_headers or {}),
-        }
         return await self._get(
             "/api/v1/budgets",
             options=make_request_options(
@@ -532,7 +481,6 @@ class AsyncBudgetsResource(AsyncAPIResource):
         self,
         budget_id: str,
         *,
-        x_proxy_application_key: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -554,10 +502,6 @@ class AsyncBudgetsResource(AsyncAPIResource):
         """
         if not budget_id:
             raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
-        extra_headers = {
-            **strip_not_given({"xProxy-Application-Key": x_proxy_application_key}),
-            **(extra_headers or {}),
-        }
         return await self._delete(
             f"/api/v1/budgets/{budget_id}",
             options=make_request_options(
@@ -570,7 +514,6 @@ class AsyncBudgetsResource(AsyncAPIResource):
         self,
         budget_id: str,
         *,
-        x_proxy_application_key: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -592,10 +535,6 @@ class AsyncBudgetsResource(AsyncAPIResource):
         """
         if not budget_id:
             raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
-        extra_headers = {
-            **strip_not_given({"xProxy-Application-Key": x_proxy_application_key}),
-            **(extra_headers or {}),
-        }
         return await self._post(
             f"/api/v1/budgets/{budget_id}/reset",
             options=make_request_options(

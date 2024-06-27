@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from typing_extensions import Required, Annotated, TypedDict
-
-from .._utils import PropertyInfo
+from typing_extensions import Required, TypedDict
 
 __all__ = ["BudgetUpdateParams"]
 
@@ -13,5 +11,3 @@ class BudgetUpdateParams(TypedDict, total=False):
     budget_name: Required[str]
 
     max: float
-
-    x_proxy_application_key: Annotated[str, PropertyInfo(alias="xProxy-Application-Key")]

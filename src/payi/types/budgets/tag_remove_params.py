@@ -3,14 +3,10 @@
 from __future__ import annotations
 
 from typing import List
-from typing_extensions import Required, Annotated, TypedDict
-
-from ..._utils import PropertyInfo
+from typing_extensions import Required, TypedDict
 
 __all__ = ["TagRemoveParams"]
 
 
 class TagRemoveParams(TypedDict, total=False):
     budget_tags: Required[List[str]]
-
-    x_proxy_application_key: Annotated[str, PropertyInfo(alias="xProxy-Application-Key")]

@@ -21,5 +21,3 @@ class BudgetListParams(TypedDict, total=False):
     sort_by: Annotated[str, PropertyInfo(alias="SortBy")]
 
     tags: Annotated[str, PropertyInfo(alias="Tags")]
-
-    x_proxy_application_key: Annotated[str, PropertyInfo(alias="xProxy-Application-Key")]
