@@ -1,0 +1,19 @@
+# Changelog
+
+## 0.1.0-alpha.1 (2024-06-27)
+
+Full Changelog: [v0.0.1-alpha.0...v0.1.0-alpha.1](https://github.com/Pay-i/pay-i-python/compare/v0.0.1-alpha.0...v0.1.0-alpha.1)
+
+### Features
+
+* **api:** update via SDK Studio ([ba34638](https://github.com/Pay-i/pay-i-python/commit/ba3463802b7366b450058f6ccdb13419b3bdbfe1))
+* **api:** update via SDK Studio ([d87c30c](https://github.com/Pay-i/pay-i-python/commit/d87c30c4d5c3d7dee3a4b96596c8df9e319ca690))
+* **api:** update via SDK Studio ([96d12c3](https://github.com/Pay-i/pay-i-python/commit/96d12c3c114642a13469ece184eaec8feee50b1a))
+* **api:** update via SDK Studio ([ba169b1](https://github.com/Pay-i/pay-i-python/commit/ba169b1e70894cb2a2f0497e4781121a334716cd))
+
+
+### Chores
+
+* go live ([#2](https://github.com/Pay-i/pay-i-python/issues/2)) ([81ba939](https://github.com/Pay-i/pay-i-python/commit/81ba93934fc18d2ac642af4ce1a7772996cb5030))
+* update SDK settings ([8ff0351](https://github.com/Pay-i/pay-i-python/commit/8ff0351ba46df46381eb41cf4eadf655ddb82049))
+* update SDK settings ([441d968](https://github.com/Pay-i/pay-i-python/commit/441d9681112eae338ced67f5186a4a2e371cb99c))
