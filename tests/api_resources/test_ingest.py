@@ -36,7 +36,7 @@ class TestIngest:
                 "output": 0,
             },
             budget_ids="budgetId1, budgetId_2",
-            x_proxy_request_tags="requestTag1, request_tag_2",
+            request_tags="requestTag1, request_tag_2",
         )
         assert_matches_type(SuccessfulProxyResult, ingest, path=["response"])
 
@@ -91,7 +91,7 @@ class TestAsyncIngest:
                 "output": 0,
             },
             budget_ids="budgetId1, budgetId_2",
-            x_proxy_request_tags="requestTag1, request_tag_2",
+            request_tags="requestTag1, request_tag_2",
         )
         assert_matches_type(SuccessfulProxyResult, ingest, path=["response"])
 
