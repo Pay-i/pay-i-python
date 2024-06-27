@@ -18,6 +18,6 @@ class IngestUnitsParams(TypedDict, total=False):
 
     resource: Required[str]
 
-    x_proxy_budget_ids: Annotated[str, PropertyInfo(alias="xProxy-Budget-IDs")]
+    budget_ids: Annotated[str, PropertyInfo(alias="xProxy-Budget-IDs")]
 
-    x_proxy_request_tags: Annotated[str, PropertyInfo(alias="xProxy-Request-Tags")]
+    request_tags: Annotated[str, PropertyInfo(alias="xProxy-Request-Tags")]

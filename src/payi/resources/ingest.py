@@ -43,8 +43,8 @@ class IngestResource(SyncAPIResource):
         input: int,
         output: int,
         resource: str,
-        x_proxy_budget_ids: str | NotGiven = NOT_GIVEN,
-        x_proxy_request_tags: str | NotGiven = NOT_GIVEN,
+        budget_ids: str | NotGiven = NOT_GIVEN,
+        request_tags: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -67,8 +67,8 @@ class IngestResource(SyncAPIResource):
         extra_headers = {
             **strip_not_given(
                 {
-                    "xProxy-Budget-IDs": x_proxy_budget_ids,
-                    "xProxy-Request-Tags": x_proxy_request_tags,
+                    "xProxy-Budget-IDs": budget_ids,
+                    "xProxy-Request-Tags": request_tags,
                 }
             ),
             **(extra_headers or {}),
@@ -107,8 +107,8 @@ class AsyncIngestResource(AsyncAPIResource):
         input: int,
         output: int,
         resource: str,
-        x_proxy_budget_ids: str | NotGiven = NOT_GIVEN,
-        x_proxy_request_tags: str | NotGiven = NOT_GIVEN,
+        budget_ids: str | NotGiven = NOT_GIVEN,
+        request_tags: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -131,8 +131,8 @@ class AsyncIngestResource(AsyncAPIResource):
         extra_headers = {
             **strip_not_given(
                 {
-                    "xProxy-Budget-IDs": x_proxy_budget_ids,
-                    "xProxy-Request-Tags": x_proxy_request_tags,
+                    "xProxy-Budget-IDs": budget_ids,
+                    "xProxy-Request-Tags": request_tags,
                 }
             ),
             **(extra_headers or {}),
