@@ -42,7 +42,7 @@ class IngestResource(SyncAPIResource):
         category: str,
         resource: str,
         units: ingest_units_params.Units,
-        budget_ids:: str | NotGiven = NOT_GIVEN,
+        budget_ids: str | NotGiven = NOT_GIVEN,
         x_proxy_request_tags: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -66,7 +66,7 @@ class IngestResource(SyncAPIResource):
         extra_headers = {
             **strip_not_given(
                 {
-                    "xProxy-Budget-IDs": budget_ids:,
+                    "xProxy-Budget-IDs": budget_ids,
                     "xProxy-Request-Tags": x_proxy_request_tags,
                 }
             ),
@@ -104,7 +104,7 @@ class AsyncIngestResource(AsyncAPIResource):
         category: str,
         resource: str,
         units: ingest_units_params.Units,
-        budget_ids:: str | NotGiven = NOT_GIVEN,
+        budget_ids: str | NotGiven = NOT_GIVEN,
         x_proxy_request_tags: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -128,7 +128,7 @@ class AsyncIngestResource(AsyncAPIResource):
         extra_headers = {
             **strip_not_given(
                 {
-                    "xProxy-Budget-IDs": budget_ids:,
+                    "xProxy-Budget-IDs": budget_ids,
                     "xProxy-Request-Tags": x_proxy_request_tags,
                 }
             ),
