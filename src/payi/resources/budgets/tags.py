@@ -9,7 +9,6 @@ import httpx
 from ..._types import NOT_GIVEN, Body, Query, Headers, NotGiven
 from ..._utils import (
     maybe_transform,
-    strip_not_given,
     async_maybe_transform,
 )
 from ..._compat import cached_property
@@ -47,7 +46,6 @@ class TagsResource(SyncAPIResource):
         budget_id: str,
         *,
         budget_tags: List[str],
-        x_proxy_application_key: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -69,10 +67,6 @@ class TagsResource(SyncAPIResource):
         """
         if not budget_id:
             raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
-        extra_headers = {
-            **strip_not_given({"xProxy-Application-Key": x_proxy_application_key}),
-            **(extra_headers or {}),
-        }
         return self._post(
             f"/api/v1/budgets/{budget_id}/tags",
             body=maybe_transform({"budget_tags": budget_tags}, tag_create_params.TagCreateParams),
@@ -87,7 +81,6 @@ class TagsResource(SyncAPIResource):
         budget_id: str,
         *,
         budget_tags: List[str],
-        x_proxy_application_key: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -109,10 +102,6 @@ class TagsResource(SyncAPIResource):
         """
         if not budget_id:
             raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
-        extra_headers = {
-            **strip_not_given({"xProxy-Application-Key": x_proxy_application_key}),
-            **(extra_headers or {}),
-        }
         return self._put(
             f"/api/v1/budgets/{budget_id}/tags",
             body=maybe_transform({"budget_tags": budget_tags}, tag_update_params.TagUpdateParams),
@@ -126,7 +115,6 @@ class TagsResource(SyncAPIResource):
         self,
         budget_id: str,
         *,
-        x_proxy_application_key: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -148,10 +136,6 @@ class TagsResource(SyncAPIResource):
         """
         if not budget_id:
             raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
-        extra_headers = {
-            **strip_not_given({"xProxy-Application-Key": x_proxy_application_key}),
-            **(extra_headers or {}),
-        }
         return self._get(
             f"/api/v1/budgets/{budget_id}/tags",
             options=make_request_options(
@@ -164,7 +148,6 @@ class TagsResource(SyncAPIResource):
         self,
         budget_id: str,
         *,
-        x_proxy_application_key: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -186,10 +169,6 @@ class TagsResource(SyncAPIResource):
         """
         if not budget_id:
             raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
-        extra_headers = {
-            **strip_not_given({"xProxy-Application-Key": x_proxy_application_key}),
-            **(extra_headers or {}),
-        }
         return self._delete(
             f"/api/v1/budgets/{budget_id}/tags",
             options=make_request_options(
@@ -203,7 +182,6 @@ class TagsResource(SyncAPIResource):
         budget_id: str,
         *,
         budget_tags: List[str],
-        x_proxy_application_key: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -225,10 +203,6 @@ class TagsResource(SyncAPIResource):
         """
         if not budget_id:
             raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
-        extra_headers = {
-            **strip_not_given({"xProxy-Application-Key": x_proxy_application_key}),
-            **(extra_headers or {}),
-        }
         return self._patch(
             f"/api/v1/budgets/{budget_id}/tags/remove",
             body=maybe_transform({"budget_tags": budget_tags}, tag_remove_params.TagRemoveParams),
@@ -253,7 +227,6 @@ class AsyncTagsResource(AsyncAPIResource):
         budget_id: str,
         *,
         budget_tags: List[str],
-        x_proxy_application_key: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -275,10 +248,6 @@ class AsyncTagsResource(AsyncAPIResource):
         """
         if not budget_id:
             raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
-        extra_headers = {
-            **strip_not_given({"xProxy-Application-Key": x_proxy_application_key}),
-            **(extra_headers or {}),
-        }
         return await self._post(
             f"/api/v1/budgets/{budget_id}/tags",
             body=await async_maybe_transform({"budget_tags": budget_tags}, tag_create_params.TagCreateParams),
@@ -293,7 +262,6 @@ class AsyncTagsResource(AsyncAPIResource):
         budget_id: str,
         *,
         budget_tags: List[str],
-        x_proxy_application_key: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -315,10 +283,6 @@ class AsyncTagsResource(AsyncAPIResource):
         """
         if not budget_id:
             raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
-        extra_headers = {
-            **strip_not_given({"xProxy-Application-Key": x_proxy_application_key}),
-            **(extra_headers or {}),
-        }
         return await self._put(
             f"/api/v1/budgets/{budget_id}/tags",
             body=await async_maybe_transform({"budget_tags": budget_tags}, tag_update_params.TagUpdateParams),
@@ -332,7 +296,6 @@ class AsyncTagsResource(AsyncAPIResource):
         self,
         budget_id: str,
         *,
-        x_proxy_application_key: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -354,10 +317,6 @@ class AsyncTagsResource(AsyncAPIResource):
         """
         if not budget_id:
             raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
-        extra_headers = {
-            **strip_not_given({"xProxy-Application-Key": x_proxy_application_key}),
-            **(extra_headers or {}),
-        }
         return await self._get(
             f"/api/v1/budgets/{budget_id}/tags",
             options=make_request_options(
@@ -370,7 +329,6 @@ class AsyncTagsResource(AsyncAPIResource):
         self,
         budget_id: str,
         *,
-        x_proxy_application_key: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -392,10 +350,6 @@ class AsyncTagsResource(AsyncAPIResource):
         """
         if not budget_id:
             raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
-        extra_headers = {
-            **strip_not_given({"xProxy-Application-Key": x_proxy_application_key}),
-            **(extra_headers or {}),
-        }
         return await self._delete(
             f"/api/v1/budgets/{budget_id}/tags",
             options=make_request_options(
@@ -409,7 +363,6 @@ class AsyncTagsResource(AsyncAPIResource):
         budget_id: str,
         *,
         budget_tags: List[str],
-        x_proxy_application_key: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -431,10 +384,6 @@ class AsyncTagsResource(AsyncAPIResource):
         """
         if not budget_id:
             raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
-        extra_headers = {
-            **strip_not_given({"xProxy-Application-Key": x_proxy_application_key}),
-            **(extra_headers or {}),
-        }
         return await self._patch(
             f"/api/v1/budgets/{budget_id}/tags/remove",
             body=await async_maybe_transform({"budget_tags": budget_tags}, tag_remove_params.TagRemoveParams),
