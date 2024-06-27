@@ -40,8 +40,9 @@ class IngestResource(SyncAPIResource):
         self,
         *,
         category: str,
+        input: int,
+        output: int,
         resource: str,
-        units: ingest_units_params.Units,
         budget_ids: str | NotGiven = NOT_GIVEN,
         request_tags: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
@@ -77,8 +78,9 @@ class IngestResource(SyncAPIResource):
             body=maybe_transform(
                 {
                     "category": category,
+                    "input": input,
+                    "output": output,
                     "resource": resource,
-                    "units": units,
                 },
                 ingest_units_params.IngestUnitsParams,
             ),
@@ -102,8 +104,9 @@ class AsyncIngestResource(AsyncAPIResource):
         self,
         *,
         category: str,
+        input: int,
+        output: int,
         resource: str,
-        units: ingest_units_params.Units,
         budget_ids: str | NotGiven = NOT_GIVEN,
         request_tags: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
@@ -139,8 +142,9 @@ class AsyncIngestResource(AsyncAPIResource):
             body=await async_maybe_transform(
                 {
                     "category": category,
+                    "input": input,
+                    "output": output,
                     "resource": resource,
-                    "units": units,
                 },
                 ingest_units_params.IngestUnitsParams,
             ),
