@@ -6,10 +6,10 @@ from typing_extensions import Required, Annotated, TypedDict
 
 from .._utils import PropertyInfo
 
-__all__ = ["IngestRequestCreateParams", "Units"]
+__all__ = ["IngestUnitsParams", "Units"]
 
 
-class IngestRequestCreateParams(TypedDict, total=False):
+class IngestUnitsParams(TypedDict, total=False):
     category: Required[str]
 
     resource: Required[str]

@@ -39,7 +39,6 @@ class TestBudgets:
             budget_response_type="Block",
             budget_tags=["tag1", "tag2"],
             budget_type="Conservative",
-            x_proxy_application_key="string",
         )
         assert_matches_type(BudgetResponse, budget, path=["response"])
 
@@ -73,14 +72,6 @@ class TestBudgets:
     def test_method_retrieve(self, client: Payi) -> None:
         budget = client.budgets.retrieve(
             "string",
-        )
-        assert_matches_type(BudgetResponse, budget, path=["response"])
-
-    @parametrize
-    def test_method_retrieve_with_all_params(self, client: Payi) -> None:
-        budget = client.budgets.retrieve(
-            "string",
-            x_proxy_application_key="string",
         )
         assert_matches_type(BudgetResponse, budget, path=["response"])
 
@@ -129,7 +120,6 @@ class TestBudgets:
             "string",
             budget_name="x",
             max=1,
-            x_proxy_application_key="string",
         )
         assert_matches_type(BudgetResponse, budget, path=["response"])
 
@@ -181,7 +171,6 @@ class TestBudgets:
             sort_ascending=True,
             sort_by="string",
             tags="string",
-            x_proxy_application_key="string",
         )
         assert_matches_type(PagedBudgetList, budget, path=["response"])
 
@@ -209,14 +198,6 @@ class TestBudgets:
     def test_method_delete(self, client: Payi) -> None:
         budget = client.budgets.delete(
             "string",
-        )
-        assert_matches_type(DefaultResponse, budget, path=["response"])
-
-    @parametrize
-    def test_method_delete_with_all_params(self, client: Payi) -> None:
-        budget = client.budgets.delete(
-            "string",
-            x_proxy_application_key="string",
         )
         assert_matches_type(DefaultResponse, budget, path=["response"])
 
@@ -255,14 +236,6 @@ class TestBudgets:
     def test_method_reset(self, client: Payi) -> None:
         budget = client.budgets.reset(
             "string",
-        )
-        assert_matches_type(BudgetHistoryResponse, budget, path=["response"])
-
-    @parametrize
-    def test_method_reset_with_all_params(self, client: Payi) -> None:
-        budget = client.budgets.reset(
-            "string",
-            x_proxy_application_key="string",
         )
         assert_matches_type(BudgetHistoryResponse, budget, path=["response"])
 
@@ -318,7 +291,6 @@ class TestAsyncBudgets:
             budget_response_type="Block",
             budget_tags=["tag1", "tag2"],
             budget_type="Conservative",
-            x_proxy_application_key="string",
         )
         assert_matches_type(BudgetResponse, budget, path=["response"])
 
@@ -352,14 +324,6 @@ class TestAsyncBudgets:
     async def test_method_retrieve(self, async_client: AsyncPayi) -> None:
         budget = await async_client.budgets.retrieve(
             "string",
-        )
-        assert_matches_type(BudgetResponse, budget, path=["response"])
-
-    @parametrize
-    async def test_method_retrieve_with_all_params(self, async_client: AsyncPayi) -> None:
-        budget = await async_client.budgets.retrieve(
-            "string",
-            x_proxy_application_key="string",
         )
         assert_matches_type(BudgetResponse, budget, path=["response"])
 
@@ -408,7 +372,6 @@ class TestAsyncBudgets:
             "string",
             budget_name="x",
             max=1,
-            x_proxy_application_key="string",
         )
         assert_matches_type(BudgetResponse, budget, path=["response"])
 
@@ -460,7 +423,6 @@ class TestAsyncBudgets:
             sort_ascending=True,
             sort_by="string",
             tags="string",
-            x_proxy_application_key="string",
         )
         assert_matches_type(PagedBudgetList, budget, path=["response"])
 
@@ -488,14 +450,6 @@ class TestAsyncBudgets:
     async def test_method_delete(self, async_client: AsyncPayi) -> None:
         budget = await async_client.budgets.delete(
             "string",
-        )
-        assert_matches_type(DefaultResponse, budget, path=["response"])
-
-    @parametrize
-    async def test_method_delete_with_all_params(self, async_client: AsyncPayi) -> None:
-        budget = await async_client.budgets.delete(
-            "string",
-            x_proxy_application_key="string",
         )
         assert_matches_type(DefaultResponse, budget, path=["response"])
 
@@ -534,14 +488,6 @@ class TestAsyncBudgets:
     async def test_method_reset(self, async_client: AsyncPayi) -> None:
         budget = await async_client.budgets.reset(
             "string",
-        )
-        assert_matches_type(BudgetHistoryResponse, budget, path=["response"])
-
-    @parametrize
-    async def test_method_reset_with_all_params(self, async_client: AsyncPayi) -> None:
-        budget = await async_client.budgets.reset(
-            "string",
-            x_proxy_application_key="string",
         )
         assert_matches_type(BudgetHistoryResponse, budget, path=["response"])
 

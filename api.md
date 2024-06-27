@@ -38,7 +38,7 @@ Methods:
 - <code title="delete /api/v1/budgets/{budget_id}/tags">client.budgets.tags.<a href="./src/payi/resources/budgets/tags.py">delete</a>(budget_id) -> <a href="./src/payi/types/budgets/tag_delete_response.py">TagDeleteResponse</a></code>
 - <code title="patch /api/v1/budgets/{budget_id}/tags/remove">client.budgets.tags.<a href="./src/payi/resources/budgets/tags.py">remove</a>(budget_id, \*\*<a href="src/payi/types/budgets/tag_remove_params.py">params</a>) -> <a href="./src/payi/types/budgets/tag_remove_response.py">TagRemoveResponse</a></code>
 
-# IngestRequests
+# Ingest
 
 Types:
 
@@ -48,4 +48,4 @@ from payi.types import SuccessfulProxyResult
 
 Methods:
 
-- <code title="post /api/v1/ingest">client.ingest_requests.<a href="./src/payi/resources/ingest_requests.py">create</a>(\*\*<a href="src/payi/types/ingest_request_create_params.py">params</a>) -> <a href="./src/payi/types/successful_proxy_result.py">SuccessfulProxyResult</a></code>
+- <code title="post /api/v1/ingest">client.ingest.<a href="./src/payi/resources/ingest.py">units</a>(\*\*<a href="src/payi/types/ingest_units_params.py">params</a>) -> <a href="./src/payi/types/successful_proxy_result.py">SuccessfulProxyResult</a></code>
