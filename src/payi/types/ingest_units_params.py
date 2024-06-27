@@ -18,7 +18,7 @@ class IngestUnitsParams(TypedDict, total=False):
 
     budget_ids: Annotated[str, PropertyInfo(alias="xProxy-Budget-IDs")]
 
-    x_proxy_request_tags: Annotated[str, PropertyInfo(alias="xProxy-Request-Tags")]
+    request_tags: Annotated[str, PropertyInfo(alias="xProxy-Request-Tags")]
 
 
 class Units(TypedDict, total=False):
