@@ -6,22 +6,18 @@ from typing_extensions import Required, Annotated, TypedDict
 
 from .._utils import PropertyInfo
 
-__all__ = ["IngestUnitsParams", "Units"]
+__all__ = ["IngestUnitsParams"]
 
 
 class IngestUnitsParams(TypedDict, total=False):
     category: Required[str]
 
-    resource: Required[str]
+    input: Required[int]
 
-    units: Required[Units]
+    output: Required[int]
+
+    resource: Required[str]
 
     budget_ids: Annotated[str, PropertyInfo(alias="xProxy-Budget-IDs")]
 
     request_tags: Annotated[str, PropertyInfo(alias="xProxy-Request-Tags")]
-
-
-class Units(TypedDict, total=False):
-    input: int
-
-    output: int
