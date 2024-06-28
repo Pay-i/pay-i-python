@@ -34,8 +34,8 @@ class TestIngest:
             input=1,
             output=1,
             resource="x",
-            budget_ids="budgetId1, budgetId_2",
-            request_tags="requestTag1, request_tag_2",
+            budget_ids=["budgetId1", "budgetId_2"],
+            request_tags=["requestTag1", "request_tag_2"],
         )
         assert_matches_type(SuccessfulProxyResult, ingest, path=["response"])
 
@@ -90,8 +90,8 @@ class TestAsyncIngest:
             input=1,
             output=1,
             resource="x",
-            budget_ids="budgetId1, budgetId_2",
-            request_tags="requestTag1, request_tag_2",
+            budget_ids=["budgetId1", "budgetId_2"],
+            request_tags=["requestTag1", "request_tag_2"],
         )
         assert_matches_type(SuccessfulProxyResult, ingest, path=["response"])
 
