@@ -43,8 +43,8 @@ class IngestResource(SyncAPIResource):
         input: int,
         output: int,
         resource: str,
-        budget_ids: str | NotGiven = NOT_GIVEN,
-        request_tags: str | NotGiven = NOT_GIVEN,
+        budget_ids: list[str] | NotGiven = NOT_GIVEN,
+        request_tags: list[str] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -64,11 +64,27 @@ class IngestResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
+        valid_ids_str: str | NotGiven = NOT_GIVEN
+        valid_tags_str: str | NotGiven = NOT_GIVEN
+
+        if isinstance(budget_ids, NotGiven):
+            valid_ids_str = NOT_GIVEN
+        else:
+            # Proceed with the list comprehension if budget_ids is not NotGiven
+            valid_ids = [id.strip() for id in budget_ids if id.strip()]
+            valid_ids_str = ",".join(valid_ids) if valid_ids else NOT_GIVEN
+        if isinstance(request_tags, NotGiven):
+            valid_tags_str = NOT_GIVEN
+        else:
+            # Proceed with the list comprehension if budget_ids is not NotGiven
+            valid_tags = [tag.strip() for tag in request_tags if tag.strip()]
+            valid_tags_str = ",".join(valid_tags) if valid_tags else NOT_GIVEN
+
         extra_headers = {
             **strip_not_given(
                 {
-                    "xProxy-Budget-IDs": budget_ids,
-                    "xProxy-Request-Tags": request_tags,
+                    "xProxy-Budget-IDs": valid_ids_str,
+                    "xProxy-Request-Tags": valid_tags_str,
                 }
             ),
             **(extra_headers or {}),
@@ -107,8 +123,8 @@ class AsyncIngestResource(AsyncAPIResource):
         input: int,
         output: int,
         resource: str,
-        budget_ids: str | NotGiven = NOT_GIVEN,
-        request_tags: str | NotGiven = NOT_GIVEN,
+        budget_ids: list[str] | NotGiven = NOT_GIVEN,
+        request_tags: list[str] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -128,11 +144,27 @@ class AsyncIngestResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
+        valid_ids_str: str | NotGiven = NOT_GIVEN
+        valid_tags_str: str | NotGiven = NOT_GIVEN
+
+        if isinstance(budget_ids, NotGiven):
+            valid_ids_str = NOT_GIVEN
+        else:
+            # Proceed with the list comprehension if budget_ids is not NotGiven
+            valid_ids = [id.strip() for id in budget_ids if id.strip()]
+            valid_ids_str = ",".join(valid_ids) if valid_ids else NOT_GIVEN
+        if isinstance(request_tags, NotGiven):
+            valid_tags_str = NOT_GIVEN
+        else:
+            # Proceed with the list comprehension if budget_ids is not NotGiven
+            valid_tags = [tag.strip() for tag in request_tags if tag.strip()]
+            valid_tags_str = ",".join(valid_tags) if valid_tags else NOT_GIVEN
+
         extra_headers = {
             **strip_not_given(
                 {
-                    "xProxy-Budget-IDs": budget_ids,
-                    "xProxy-Request-Tags": request_tags,
+                    "xProxy-Budget-IDs": valid_ids_str,
+                    "xProxy-Request-Tags": valid_tags_str,
                 }
             ),
             **(extra_headers or {}),
