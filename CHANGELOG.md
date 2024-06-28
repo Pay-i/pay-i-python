@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-alpha.5 (2024-06-28)
+
+Full Changelog: [v0.1.0-alpha.4...v0.1.0-alpha.5](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.4...v0.1.0-alpha.5)
+
+### Features
+
+* change ingest bugdet_ids and request_tags from str -&gt; list[str] ([bb70818](https://github.com/Pay-i/pay-i-python/commit/bb7081850e14648db2ad753a0aef461cdd7b1940))
+* update types and tests ([02af29a](https://github.com/Pay-i/pay-i-python/commit/02af29aa209c434083c3ea335ccfc80450deda8c))
+
 ## 0.1.0-alpha.4 (2024-06-27)
 
 Full Changelog: [v0.1.0-alpha.3...v0.1.0-alpha.4](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.3...v0.1.0-alpha.4)
