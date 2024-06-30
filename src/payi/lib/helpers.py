@@ -1,6 +1,7 @@
 # Step 1: Define the new methods outside of the Payi class definition
 from typing import Dict, List, Union
 
+
 def create_budget_header_from_ids(budget_ids: List[str]) -> Dict[str, str]:
     if not isinstance(budget_ids, list): # type: ignore
         raise TypeError("budget_ids must be a list")
