@@ -32,10 +32,10 @@ from ..._response import (
 from ..._base_client import (
     make_request_options,
 )
-from ...types.budget_response import BudgetResponse
+from ...types.budget import Budget
+from ...types.budget_history import BudgetHistory
 from ...types.default_response import DefaultResponse
 from ...types.paged_budget_list import PagedBudgetList
-from ...types.budget_history_response import BudgetHistoryResponse
 
 __all__ = ["BudgetsResource", "AsyncBudgetsResource"]
 
@@ -68,7 +68,7 @@ class BudgetsResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> BudgetResponse:
+    ) -> Budget:
         """
         Create a Budget
 
@@ -97,7 +97,7 @@ class BudgetsResource(SyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=BudgetResponse,
+            cast_to=Budget,
         )
 
     def retrieve(
@@ -110,7 +110,7 @@ class BudgetsResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> BudgetResponse:
+    ) -> Budget:
         """
         Get a Budget's details
 
@@ -130,7 +130,7 @@ class BudgetsResource(SyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=BudgetResponse,
+            cast_to=Budget,
         )
 
     def update(
@@ -145,7 +145,7 @@ class BudgetsResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> BudgetResponse:
+    ) -> Budget:
         """
         Update a Budget
 
@@ -172,7 +172,7 @@ class BudgetsResource(SyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=BudgetResponse,
+            cast_to=Budget,
         )
 
     def list(
@@ -268,7 +268,7 @@ class BudgetsResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> BudgetHistoryResponse:
+    ) -> BudgetHistory:
         """
         Reset the Budget
 
@@ -288,7 +288,7 @@ class BudgetsResource(SyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=BudgetHistoryResponse,
+            cast_to=BudgetHistory,
         )
 
 
@@ -320,7 +320,7 @@ class AsyncBudgetsResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> BudgetResponse:
+    ) -> Budget:
         """
         Create a Budget
 
@@ -349,7 +349,7 @@ class AsyncBudgetsResource(AsyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=BudgetResponse,
+            cast_to=Budget,
         )
 
     async def retrieve(
@@ -362,7 +362,7 @@ class AsyncBudgetsResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> BudgetResponse:
+    ) -> Budget:
         """
         Get a Budget's details
 
@@ -382,7 +382,7 @@ class AsyncBudgetsResource(AsyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=BudgetResponse,
+            cast_to=Budget,
         )
 
     async def update(
@@ -397,7 +397,7 @@ class AsyncBudgetsResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> BudgetResponse:
+    ) -> Budget:
         """
         Update a Budget
 
@@ -424,7 +424,7 @@ class AsyncBudgetsResource(AsyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=BudgetResponse,
+            cast_to=Budget,
         )
 
     async def list(
@@ -520,7 +520,7 @@ class AsyncBudgetsResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> BudgetHistoryResponse:
+    ) -> BudgetHistory:
         """
         Reset the Budget
 
@@ -540,7 +540,7 @@ class AsyncBudgetsResource(AsyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=BudgetHistoryResponse,
+            cast_to=BudgetHistory,
         )
 
 
