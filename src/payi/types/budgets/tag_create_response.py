@@ -2,8 +2,8 @@
 
 from typing import List
 
-from .budget_tags_response import BudgetTagsResponse
+from .budget_tags import BudgetTags
 
 __all__ = ["TagCreateResponse"]
 
-TagCreateResponse = List[BudgetTagsResponse]
+TagCreateResponse = List[BudgetTags]

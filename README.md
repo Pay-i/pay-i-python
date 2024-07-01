@@ -32,11 +32,11 @@ client = Payi(
     payi_api_key=os.environ.get("PAYI_API_KEY"),
 )
 
-budget_response = client.budgets.create(
+budget = client.budgets.create(
     budget_name="x",
     max=0,
 )
-print(budget_response.request_id)
+print(budget.request_id)
 ```
 
 While you can provide a `payi_api_key` keyword argument,
@@ -60,11 +60,11 @@ client = AsyncPayi(
 
 
 async def main() -> None:
-    budget_response = await client.budgets.create(
+    budget = await client.budgets.create(
         budget_name="x",
         max=0,
     )
-    print(budget_response.request_id)
+    print(budget.request_id)
 
 
 asyncio.run(main())
