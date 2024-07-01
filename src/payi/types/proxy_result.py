@@ -4,7 +4,7 @@ from typing import Dict, List, Optional
 
 from .._models import BaseModel
 
-__all__ = ["SuccessfulProxyResult", "Budgets", "Cost", "CostInput", "CostOutput", "CostTotal"]
+__all__ = ["ProxyResult", "Budgets", "Cost", "CostInput", "CostOutput", "CostTotal"]
 
 
 class Budgets(BaseModel):
@@ -33,7 +33,7 @@ class Cost(BaseModel):
     total: Optional[CostTotal] = None
 
 
-class SuccessfulProxyResult(BaseModel):
+class ProxyResult(BaseModel):
     budgets: Optional[Dict[str, Budgets]] = None
 
     cost: Optional[Cost] = None
