@@ -13,37 +13,37 @@ __all__ = [
     "Item",
     "ItemTotals",
     "ItemTotalsCost",
-    "ItemTotalsCostInput",
-    "ItemTotalsCostOutput",
-    "ItemTotalsCostTotal",
+    "ItemTotalsCostInputCost",
+    "ItemTotalsCostOutputCost",
+    "ItemTotalsCostTotalCost",
     "ItemTotalsRequests",
 ]
 
 
-class ItemTotalsCostInput(BaseModel):
+class ItemTotalsCostInputCost(BaseModel):
     base: Optional[float] = None
 
     overrun_base: Optional[float] = None
 
 
-class ItemTotalsCostOutput(BaseModel):
+class ItemTotalsCostOutputCost(BaseModel):
     base: Optional[float] = None
 
     overrun_base: Optional[float] = None
 
 
-class ItemTotalsCostTotal(BaseModel):
+class ItemTotalsCostTotalCost(BaseModel):
     base: Optional[float] = None
 
     overrun_base: Optional[float] = None
 
 
 class ItemTotalsCost(BaseModel):
-    input: ItemTotalsCostInput
+    input_cost: Optional[ItemTotalsCostInputCost] = FieldInfo(alias="inputCost", default=None)
 
-    output: ItemTotalsCostOutput
+    output_cost: Optional[ItemTotalsCostOutputCost] = FieldInfo(alias="outputCost", default=None)
 
-    total: ItemTotalsCostTotal
+    total_cost: Optional[ItemTotalsCostTotalCost] = FieldInfo(alias="totalCost", default=None)
 
 
 class ItemTotalsRequests(BaseModel):

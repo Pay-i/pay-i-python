@@ -4,6 +4,8 @@ from typing import List, Optional
 from datetime import datetime
 from typing_extensions import Literal
 
+from pydantic import Field as FieldInfo
+
 from .._models import BaseModel
 
 __all__ = [
@@ -11,37 +13,37 @@ __all__ = [
     "Budget",
     "BudgetTotals",
     "BudgetTotalsCost",
-    "BudgetTotalsCostInput",
-    "BudgetTotalsCostOutput",
-    "BudgetTotalsCostTotal",
+    "BudgetTotalsCostInputCost",
+    "BudgetTotalsCostOutputCost",
+    "BudgetTotalsCostTotalCost",
     "BudgetTotalsRequests",
 ]
 
 
-class BudgetTotalsCostInput(BaseModel):
+class BudgetTotalsCostInputCost(BaseModel):
     base: Optional[float] = None
 
     overrun_base: Optional[float] = None
 
 
-class BudgetTotalsCostOutput(BaseModel):
+class BudgetTotalsCostOutputCost(BaseModel):
     base: Optional[float] = None
 
     overrun_base: Optional[float] = None
 
 
-class BudgetTotalsCostTotal(BaseModel):
+class BudgetTotalsCostTotalCost(BaseModel):
     base: Optional[float] = None
 
     overrun_base: Optional[float] = None
 
 
 class BudgetTotalsCost(BaseModel):
-    input: BudgetTotalsCostInput
+    input_cost: Optional[BudgetTotalsCostInputCost] = FieldInfo(alias="inputCost", default=None)
 
-    output: BudgetTotalsCostOutput
+    output_cost: Optional[BudgetTotalsCostOutputCost] = FieldInfo(alias="outputCost", default=None)
 
-    total: BudgetTotalsCostTotal
+    total_cost: Optional[BudgetTotalsCostTotalCost] = FieldInfo(alias="totalCost", default=None)
 
 
 class BudgetTotalsRequests(BaseModel):
