@@ -4,66 +4,17 @@ from typing import List, Optional
 from datetime import datetime
 from typing_extensions import Literal
 
-from pydantic import Field as FieldInfo
-
 from .._models import BaseModel
+from .cost_data import CostData
+from .requests_data import RequestsData
 
-__all__ = [
-    "BudgetResponse",
-    "Budget",
-    "BudgetTotals",
-    "BudgetTotalsCost",
-    "BudgetTotalsCostInputCost",
-    "BudgetTotalsCostOutputCost",
-    "BudgetTotalsCostTotalCost",
-    "BudgetTotalsRequests",
-]
-
-
-class BudgetTotalsCostInputCost(BaseModel):
-    base: Optional[float] = None
-
-    overrun_base: Optional[float] = None
-
-
-class BudgetTotalsCostOutputCost(BaseModel):
-    base: Optional[float] = None
-
-    overrun_base: Optional[float] = None
-
-
-class BudgetTotalsCostTotalCost(BaseModel):
-    base: Optional[float] = None
-
-    overrun_base: Optional[float] = None
-
-
-class BudgetTotalsCost(BaseModel):
-    input_cost: Optional[BudgetTotalsCostInputCost] = FieldInfo(alias="inputCost", default=None)
-
-    output_cost: Optional[BudgetTotalsCostOutputCost] = FieldInfo(alias="outputCost", default=None)
-
-    total_cost: Optional[BudgetTotalsCostTotalCost] = FieldInfo(alias="totalCost", default=None)
-
-
-class BudgetTotalsRequests(BaseModel):
-    blocked: Optional[int] = None
-
-    error: Optional[int] = None
-
-    exceeded: Optional[int] = None
-
-    failed: Optional[int] = None
-
-    successful: Optional[int] = None
-
-    total: Optional[int] = None
+__all__ = ["BudgetResponse", "Budget", "BudgetTotals"]
 
 
 class BudgetTotals(BaseModel):
-    cost: Optional[BudgetTotalsCost] = None
+    cost: Optional[CostData] = None
 
-    requests: Optional[BudgetTotalsRequests] = None
+    requests: Optional[RequestsData] = None
 
 
 class Budget(BaseModel):

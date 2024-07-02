@@ -3,7 +3,15 @@
 Types:
 
 ```python
-from payi.types import BudgetHistoryResponse, BudgetResponse, DefaultResponse, PagedBudgetList
+from payi.types import (
+    BudgetHistoryResponse,
+    BudgetResponse,
+    CostData,
+    CostDetails,
+    DefaultResponse,
+    PagedBudgetList,
+    RequestsData,
+)
 ```
 
 Methods:
