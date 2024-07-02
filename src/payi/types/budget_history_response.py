@@ -83,21 +83,21 @@ class BudgetHistoryTotals(BaseModel):
 
 
 class BudgetHistory(BaseModel):
-    base_cost_estimate: Optional[Literal["Max"]] = None
+    base_cost_estimate: Optional[Literal["max"]] = None
 
     budget_id: Optional[str] = None
 
     budget_name: Optional[str] = None
 
-    budget_response_type: Optional[Literal["Block", "Allow"]] = None
+    budget_reset_timestamp: Optional[datetime] = None
+
+    budget_response_type: Optional[Literal["block", "allow"]] = None
 
     budget_tags: Optional[List[str]] = None
 
-    budget_type: Optional[Literal["Conservative", "Liberal"]] = None
+    budget_type: Optional[Literal["conservative", "liberal"]] = None
 
     max: Optional[float] = None
-
-    reset_date: Optional[datetime] = None
 
     totals: Optional[BudgetHistoryTotals] = None
 
