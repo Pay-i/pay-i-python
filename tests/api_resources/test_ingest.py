@@ -8,7 +8,7 @@ from typing import Any, cast
 import pytest
 
 from payi import Payi, AsyncPayi
-from payi.types import SuccessfulProxyResult
+from payi.types import ProxyResult
 from tests.utils import assert_matches_type
 
 base_url = os.environ.get("TEST_API_BASE_URL", "http://127.0.0.1:4010")
@@ -25,7 +25,7 @@ class TestIngest:
             output=1,
             resource="x",
         )
-        assert_matches_type(SuccessfulProxyResult, ingest, path=["response"])
+        assert_matches_type(ProxyResult, ingest, path=["response"])
 
     @parametrize
     def test_method_units_with_all_params(self, client: Payi) -> None:
@@ -37,7 +37,7 @@ class TestIngest:
             budget_ids=["budgetId1", "budgetId_2"],
             request_tags=["requestTag1", "request_tag_2"],
         )
-        assert_matches_type(SuccessfulProxyResult, ingest, path=["response"])
+        assert_matches_type(ProxyResult, ingest, path=["response"])
 
     @parametrize
     def test_raw_response_units(self, client: Payi) -> None:
@@ -51,7 +51,7 @@ class TestIngest:
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
         ingest = response.parse()
-        assert_matches_type(SuccessfulProxyResult, ingest, path=["response"])
+        assert_matches_type(ProxyResult, ingest, path=["response"])
 
     @parametrize
     def test_streaming_response_units(self, client: Payi) -> None:
@@ -65,7 +65,7 @@ class TestIngest:
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
             ingest = response.parse()
-            assert_matches_type(SuccessfulProxyResult, ingest, path=["response"])
+            assert_matches_type(ProxyResult, ingest, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
@@ -81,7 +81,7 @@ class TestAsyncIngest:
             output=1,
             resource="x",
         )
-        assert_matches_type(SuccessfulProxyResult, ingest, path=["response"])
+        assert_matches_type(ProxyResult, ingest, path=["response"])
 
     @parametrize
     async def test_method_units_with_all_params(self, async_client: AsyncPayi) -> None:
@@ -93,7 +93,7 @@ class TestAsyncIngest:
             budget_ids=["budgetId1", "budgetId_2"],
             request_tags=["requestTag1", "request_tag_2"],
         )
-        assert_matches_type(SuccessfulProxyResult, ingest, path=["response"])
+        assert_matches_type(ProxyResult, ingest, path=["response"])
 
     @parametrize
     async def test_raw_response_units(self, async_client: AsyncPayi) -> None:
@@ -107,7 +107,7 @@ class TestAsyncIngest:
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
         ingest = await response.parse()
-        assert_matches_type(SuccessfulProxyResult, ingest, path=["response"])
+        assert_matches_type(ProxyResult, ingest, path=["response"])
 
     @parametrize
     async def test_streaming_response_units(self, async_client: AsyncPayi) -> None:
@@ -121,6 +121,6 @@ class TestAsyncIngest:
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
             ingest = await response.parse()
-            assert_matches_type(SuccessfulProxyResult, ingest, path=["response"])
+            assert_matches_type(ProxyResult, ingest, path=["response"])
 
         assert cast(Any, response.is_closed) is True

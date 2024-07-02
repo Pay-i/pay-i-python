@@ -21,7 +21,7 @@ Types:
 
 ```python
 from payi.types.budgets import (
-    BudgetTagsResponse,
+    BudgetTags,
     TagCreateResponse,
     TagUpdateResponse,
     TagListResponse,
@@ -43,9 +43,9 @@ Methods:
 Types:
 
 ```python
-from payi.types import SuccessfulProxyResult
+from payi.types import ProxyResult
 ```
 
 Methods:
 
-- <code title="post /api/v1/ingest">client.ingest.<a href="./src/payi/resources/ingest.py">units</a>(\*\*<a href="src/payi/types/ingest_units_params.py">params</a>) -> <a href="./src/payi/types/successful_proxy_result.py">SuccessfulProxyResult</a></code>
+- <code title="post /api/v1/ingest">client.ingest.<a href="./src/payi/resources/ingest.py">units</a>(\*\*<a href="src/payi/types/ingest_units_params.py">params</a>) -> <a href="./src/payi/types/proxy_result.py">ProxyResult</a></code>

@@ -22,7 +22,7 @@ from .._response import (
 from .._base_client import (
     make_request_options,
 )
-from ..types.successful_proxy_result import SuccessfulProxyResult
+from ..types.proxy_result import ProxyResult
 
 __all__ = ["IngestResource", "AsyncIngestResource"]
 
@@ -51,7 +51,7 @@ class IngestResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> SuccessfulProxyResult:
+    ) -> ProxyResult:
         """
         Ingest a request
 
@@ -103,7 +103,7 @@ class IngestResource(SyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=SuccessfulProxyResult,
+            cast_to=ProxyResult,
         )
 
 
@@ -131,7 +131,7 @@ class AsyncIngestResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> SuccessfulProxyResult:
+    ) -> ProxyResult:
         """
         Ingest a request
 
@@ -183,7 +183,7 @@ class AsyncIngestResource(AsyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=SuccessfulProxyResult,
+            cast_to=ProxyResult,
         )
 
 
