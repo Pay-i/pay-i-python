@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from .budget import Budget as Budget
 from .proxy_result import ProxyResult as ProxyResult
 from .budget_history import BudgetHistory as BudgetHistory
+from .budget_response import BudgetResponse as BudgetResponse
 from .default_response import DefaultResponse as DefaultResponse
 from .paged_budget_list import PagedBudgetList as PagedBudgetList
 from .budget_list_params import BudgetListParams as BudgetListParams
