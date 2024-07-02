@@ -18,7 +18,7 @@ class BudgetTotals(BaseModel):
 
 
 class Budget(BaseModel):
-    base_cost_estimate: Literal["Max"]
+    base_cost_estimate: Literal["max"]
 
     budget_creation_timestamp: datetime
 
@@ -26,9 +26,9 @@ class Budget(BaseModel):
 
     budget_name: str
 
-    budget_response_type: Literal["Block", "Allow"]
+    budget_response_type: Literal["block", "allow"]
 
-    budget_type: Literal["Conservative", "Liberal"]
+    budget_type: Literal["conservative", "liberal"]
 
     budget_update_timestamp: datetime
 

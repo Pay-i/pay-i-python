@@ -35,10 +35,10 @@ class TestBudgets:
         budget = client.budgets.create(
             budget_name="x",
             max=1,
-            base_cost_estimate="Max",
-            budget_response_type="Block",
+            base_cost_estimate="max",
+            budget_response_type="block",
             budget_tags=["tag1", "tag2"],
-            budget_type="Conservative",
+            budget_type="conservative",
         )
         assert_matches_type(BudgetResponse, budget, path=["response"])
 
@@ -287,10 +287,10 @@ class TestAsyncBudgets:
         budget = await async_client.budgets.create(
             budget_name="x",
             max=1,
-            base_cost_estimate="Max",
-            budget_response_type="Block",
+            base_cost_estimate="max",
+            budget_response_type="block",
             budget_tags=["tag1", "tag2"],
-            budget_type="Conservative",
+            budget_type="conservative",
         )
         assert_matches_type(BudgetResponse, budget, path=["response"])
 
