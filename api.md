@@ -3,14 +3,14 @@
 Types:
 
 ```python
-from payi.types import Budget, BudgetHistory, DefaultResponse, PagedBudgetList
+from payi.types import BudgetHistory, BudgetResponse, DefaultResponse, PagedBudgetList
 ```
 
 Methods:
 
-- <code title="post /api/v1/budgets">client.budgets.<a href="./src/payi/resources/budgets/budgets.py">create</a>(\*\*<a href="src/payi/types/budget_create_params.py">params</a>) -> <a href="./src/payi/types/budget.py">Budget</a></code>
-- <code title="get /api/v1/budgets/{budget_id}">client.budgets.<a href="./src/payi/resources/budgets/budgets.py">retrieve</a>(budget_id) -> <a href="./src/payi/types/budget.py">Budget</a></code>
-- <code title="put /api/v1/budgets/{budget_id}">client.budgets.<a href="./src/payi/resources/budgets/budgets.py">update</a>(budget_id, \*\*<a href="src/payi/types/budget_update_params.py">params</a>) -> <a href="./src/payi/types/budget.py">Budget</a></code>
+- <code title="post /api/v1/budgets">client.budgets.<a href="./src/payi/resources/budgets/budgets.py">create</a>(\*\*<a href="src/payi/types/budget_create_params.py">params</a>) -> <a href="./src/payi/types/budget_response.py">BudgetResponse</a></code>
+- <code title="get /api/v1/budgets/{budget_id}">client.budgets.<a href="./src/payi/resources/budgets/budgets.py">retrieve</a>(budget_id) -> <a href="./src/payi/types/budget_response.py">BudgetResponse</a></code>
+- <code title="put /api/v1/budgets/{budget_id}">client.budgets.<a href="./src/payi/resources/budgets/budgets.py">update</a>(budget_id, \*\*<a href="src/payi/types/budget_update_params.py">params</a>) -> <a href="./src/payi/types/budget_response.py">BudgetResponse</a></code>
 - <code title="get /api/v1/budgets">client.budgets.<a href="./src/payi/resources/budgets/budgets.py">list</a>(\*\*<a href="src/payi/types/budget_list_params.py">params</a>) -> <a href="./src/payi/types/paged_budget_list.py">PagedBudgetList</a></code>
 - <code title="delete /api/v1/budgets/{budget_id}">client.budgets.<a href="./src/payi/resources/budgets/budgets.py">delete</a>(budget_id) -> <a href="./src/payi/types/default_response.py">DefaultResponse</a></code>
 - <code title="post /api/v1/budgets/{budget_id}/reset">client.budgets.<a href="./src/payi/resources/budgets/budgets.py">reset</a>(budget_id) -> <a href="./src/payi/types/budget_history.py">BudgetHistory</a></code>
