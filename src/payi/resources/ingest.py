@@ -69,12 +69,17 @@ class IngestResource(SyncAPIResource):
 
         if isinstance(budget_ids, NotGiven):
             valid_ids_str = NOT_GIVEN
+        elif not isinstance(budget_ids, list): # type: ignore
+            raise TypeError("budget_ids must be a list")
         else:
             # Proceed with the list comprehension if budget_ids is not NotGiven
             valid_ids = [id.strip() for id in budget_ids if id.strip()]
             valid_ids_str = ",".join(valid_ids) if valid_ids else NOT_GIVEN
+
         if isinstance(request_tags, NotGiven):
             valid_tags_str = NOT_GIVEN
+        elif not isinstance(request_tags, list): # type: ignore
+            raise TypeError("budget_ids must be a list")
         else:
             # Proceed with the list comprehension if budget_ids is not NotGiven
             valid_tags = [tag.strip() for tag in request_tags if tag.strip()]
