@@ -3,34 +3,23 @@
 from typing import Dict, List, Optional
 
 from .._models import BaseModel
+from .cost_details import CostDetails
 
-__all__ = ["ProxyResult", "Budgets", "Cost", "CostInput", "CostOutput", "CostTotal"]
+__all__ = ["ProxyResult", "Budgets", "Cost"]
 
 
 class Budgets(BaseModel):
     state: Optional[str] = None
 
 
-class CostInput(BaseModel):
-    base: Optional[float] = None
-
-
-class CostOutput(BaseModel):
-    base: Optional[float] = None
-
-
-class CostTotal(BaseModel):
-    base: Optional[float] = None
-
-
 class Cost(BaseModel):
     currency: Optional[str] = None
 
-    input: Optional[CostInput] = None
+    input: Optional[CostDetails] = None
 
-    output: Optional[CostOutput] = None
+    output: Optional[CostDetails] = None
 
-    total: Optional[CostTotal] = None
+    total: Optional[CostDetails] = None
 
 
 class ProxyResult(BaseModel):
