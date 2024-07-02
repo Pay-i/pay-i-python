@@ -56,13 +56,16 @@ class IngestResource(SyncAPIResource):
         Ingest a request
 
         Args:
-          extra_headers: Send extra headers
-
-          extra_query: Add additional query parameters to the request
-
-          extra_body: Add additional JSON properties to the request
-
-          timeout: Override the client-level default timeout for this request, in seconds
+          category (str): The name of the category
+          resource (str): The name of the resource.
+          input (int): The number of input units
+          output (int): The number of output units
+          budget_ids (list[str], optional): The budget IDs to associate with the request. Defaults to None.
+          request_tags (list[str], optional): The request tags to associate with the request. Defaults to None.
+          extra_headers (Dict[str, str], optional): Additional headers for the request. Defaults to None.
+          extra_query (Dict[str, str], optional): Additional query parameters. Defaults to None.
+          extra_body (Dict[str, Any], optional): Additional body parameters. Defaults to None.
+          timeout (Union[float, None], optional): The timeout for the request in seconds. Defaults to None.
         """
         valid_ids_str: str | NotGiven = NOT_GIVEN
         valid_tags_str: str | NotGiven = NOT_GIVEN
