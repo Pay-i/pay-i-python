@@ -7,63 +7,16 @@ from typing_extensions import Literal
 from pydantic import Field as FieldInfo
 
 from .._models import BaseModel
+from .cost_data import CostData
+from .requests_data import RequestsData
 
-__all__ = [
-    "PagedBudgetList",
-    "Item",
-    "ItemTotals",
-    "ItemTotalsCost",
-    "ItemTotalsCostInputCost",
-    "ItemTotalsCostOutputCost",
-    "ItemTotalsCostTotalCost",
-    "ItemTotalsRequests",
-]
-
-
-class ItemTotalsCostInputCost(BaseModel):
-    base: Optional[float] = None
-
-    overrun_base: Optional[float] = None
-
-
-class ItemTotalsCostOutputCost(BaseModel):
-    base: Optional[float] = None
-
-    overrun_base: Optional[float] = None
-
-
-class ItemTotalsCostTotalCost(BaseModel):
-    base: Optional[float] = None
-
-    overrun_base: Optional[float] = None
-
-
-class ItemTotalsCost(BaseModel):
-    input_cost: Optional[ItemTotalsCostInputCost] = FieldInfo(alias="inputCost", default=None)
-
-    output_cost: Optional[ItemTotalsCostOutputCost] = FieldInfo(alias="outputCost", default=None)
-
-    total_cost: Optional[ItemTotalsCostTotalCost] = FieldInfo(alias="totalCost", default=None)
-
-
-class ItemTotalsRequests(BaseModel):
-    blocked: Optional[int] = None
-
-    error: Optional[int] = None
-
-    exceeded: Optional[int] = None
-
-    failed: Optional[int] = None
-
-    successful: Optional[int] = None
-
-    total: Optional[int] = None
+__all__ = ["PagedBudgetList", "Item", "ItemTotals"]
 
 
 class ItemTotals(BaseModel):
-    cost: Optional[ItemTotalsCost] = None
+    cost: Optional[CostData] = None
 
-    requests: Optional[ItemTotalsRequests] = None
+    requests: Optional[RequestsData] = None
 
 
 class Item(BaseModel):
