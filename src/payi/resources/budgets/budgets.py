@@ -58,10 +58,10 @@ class BudgetsResource(SyncAPIResource):
         *,
         budget_name: str,
         max: float,
-        base_cost_estimate: Literal["Max"] | NotGiven = NOT_GIVEN,
-        budget_response_type: Literal["Block", "Allow"] | NotGiven = NOT_GIVEN,
+        base_cost_estimate: Literal["max"] | NotGiven = NOT_GIVEN,
+        budget_response_type: Literal["block", "allow"] | NotGiven = NOT_GIVEN,
         budget_tags: Optional[List[str]] | NotGiven = NOT_GIVEN,
-        budget_type: Literal["Conservative", "Liberal"] | NotGiven = NOT_GIVEN,
+        budget_type: Literal["conservative", "liberal"] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -304,10 +304,10 @@ class AsyncBudgetsResource(AsyncAPIResource):
         *,
         budget_name: str,
         max: float,
-        base_cost_estimate: Literal["Max"] | NotGiven = NOT_GIVEN,
-        budget_response_type: Literal["Block", "Allow"] | NotGiven = NOT_GIVEN,
+        base_cost_estimate: Literal["max"] | NotGiven = NOT_GIVEN,
+        budget_response_type: Literal["block", "allow"] | NotGiven = NOT_GIVEN,
         budget_tags: Optional[List[str]] | NotGiven = NOT_GIVEN,
-        budget_type: Literal["Conservative", "Liberal"] | NotGiven = NOT_GIVEN,
+        budget_type: Literal["conservative", "liberal"] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
