@@ -13,10 +13,10 @@ class BudgetCreateParams(TypedDict, total=False):
 
     max: Required[float]
 
-    base_cost_estimate: Literal["Max"]
+    base_cost_estimate: Literal["max"]
 
-    budget_response_type: Literal["Block", "Allow"]
+    budget_response_type: Literal["block", "allow"]
 
     budget_tags: Optional[List[str]]
 
-    budget_type: Literal["Conservative", "Liberal"]
+    budget_type: Literal["conservative", "liberal"]
