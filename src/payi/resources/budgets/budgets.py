@@ -32,10 +32,10 @@ from ..._response import (
 from ..._base_client import (
     make_request_options,
 )
-from ...types.budget_history import BudgetHistory
 from ...types.budget_response import BudgetResponse
 from ...types.default_response import DefaultResponse
 from ...types.paged_budget_list import PagedBudgetList
+from ...types.budget_history_response import BudgetHistoryResponse
 
 __all__ = ["BudgetsResource", "AsyncBudgetsResource"]
 
@@ -268,7 +268,7 @@ class BudgetsResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> BudgetHistory:
+    ) -> BudgetHistoryResponse:
         """
         Reset the Budget
 
@@ -288,7 +288,7 @@ class BudgetsResource(SyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=BudgetHistory,
+            cast_to=BudgetHistoryResponse,
         )
 
 
@@ -520,7 +520,7 @@ class AsyncBudgetsResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> BudgetHistory:
+    ) -> BudgetHistoryResponse:
         """
         Reset the Budget
 
@@ -540,7 +540,7 @@ class AsyncBudgetsResource(AsyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=BudgetHistory,
+            cast_to=BudgetHistoryResponse,
         )
 
 

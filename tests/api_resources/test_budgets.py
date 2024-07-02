@@ -9,10 +9,10 @@ import pytest
 
 from payi import Payi, AsyncPayi
 from payi.types import (
-    BudgetHistory,
     BudgetResponse,
     DefaultResponse,
     PagedBudgetList,
+    BudgetHistoryResponse,
 )
 from tests.utils import assert_matches_type
 
@@ -237,7 +237,7 @@ class TestBudgets:
         budget = client.budgets.reset(
             "string",
         )
-        assert_matches_type(BudgetHistory, budget, path=["response"])
+        assert_matches_type(BudgetHistoryResponse, budget, path=["response"])
 
     @parametrize
     def test_raw_response_reset(self, client: Payi) -> None:
@@ -248,7 +248,7 @@ class TestBudgets:
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
         budget = response.parse()
-        assert_matches_type(BudgetHistory, budget, path=["response"])
+        assert_matches_type(BudgetHistoryResponse, budget, path=["response"])
 
     @parametrize
     def test_streaming_response_reset(self, client: Payi) -> None:
@@ -259,7 +259,7 @@ class TestBudgets:
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
             budget = response.parse()
-            assert_matches_type(BudgetHistory, budget, path=["response"])
+            assert_matches_type(BudgetHistoryResponse, budget, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
@@ -489,7 +489,7 @@ class TestAsyncBudgets:
         budget = await async_client.budgets.reset(
             "string",
         )
-        assert_matches_type(BudgetHistory, budget, path=["response"])
+        assert_matches_type(BudgetHistoryResponse, budget, path=["response"])
 
     @parametrize
     async def test_raw_response_reset(self, async_client: AsyncPayi) -> None:
@@ -500,7 +500,7 @@ class TestAsyncBudgets:
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
         budget = await response.parse()
-        assert_matches_type(BudgetHistory, budget, path=["response"])
+        assert_matches_type(BudgetHistoryResponse, budget, path=["response"])
 
     @parametrize
     async def test_streaming_response_reset(self, async_client: AsyncPayi) -> None:
@@ -511,7 +511,7 @@ class TestAsyncBudgets:
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
             budget = await response.parse()
-            assert_matches_type(BudgetHistory, budget, path=["response"])
+            assert_matches_type(BudgetHistoryResponse, budget, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
