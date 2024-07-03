@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-alpha.11 (2024-07-03)
+
+Full Changelog: [v0.1.0-alpha.10...v0.1.0-alpha.11](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.10...v0.1.0-alpha.11)
+
+### Features
+
+* **api:** update via SDK Studio ([#39](https://github.com/Pay-i/pay-i-python/issues/39)) ([924942e](https://github.com/Pay-i/pay-i-python/commit/924942ed83577f9d6d6bc9709d22e5423a2c50b4))
+* **api:** update via SDK Studio ([#41](https://github.com/Pay-i/pay-i-python/issues/41)) ([5fb515c](https://github.com/Pay-i/pay-i-python/commit/5fb515c9399354230bda965857e2dfa090db83b7))
+
 ## 0.1.0-alpha.10 (2024-07-02)
 
 Full Changelog: [v0.1.0-alpha.9...v0.1.0-alpha.10](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.9...v0.1.0-alpha.10)
