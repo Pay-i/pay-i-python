@@ -39,6 +39,7 @@ class TestBudgets:
             budget_response_type="block",
             budget_tags=["tag1", "tag2"],
             budget_type="conservative",
+            currency="usd",
         )
         assert_matches_type(BudgetResponse, budget, path=["response"])
 
@@ -291,6 +292,7 @@ class TestAsyncBudgets:
             budget_response_type="block",
             budget_tags=["tag1", "tag2"],
             budget_type="conservative",
+            currency="usd",
         )
         assert_matches_type(BudgetResponse, budget, path=["response"])
 
