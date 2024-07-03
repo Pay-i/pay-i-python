@@ -62,6 +62,7 @@ class BudgetsResource(SyncAPIResource):
         budget_response_type: Literal["block", "allow"] | NotGiven = NOT_GIVEN,
         budget_tags: Optional[List[str]] | NotGiven = NOT_GIVEN,
         budget_type: Literal["conservative", "liberal"] | NotGiven = NOT_GIVEN,
+        currency: Literal["usd"] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -91,6 +92,7 @@ class BudgetsResource(SyncAPIResource):
                     "budget_response_type": budget_response_type,
                     "budget_tags": budget_tags,
                     "budget_type": budget_type,
+                    "currency": currency,
                 },
                 budget_create_params.BudgetCreateParams,
             ),
@@ -314,6 +316,7 @@ class AsyncBudgetsResource(AsyncAPIResource):
         budget_response_type: Literal["block", "allow"] | NotGiven = NOT_GIVEN,
         budget_tags: Optional[List[str]] | NotGiven = NOT_GIVEN,
         budget_type: Literal["conservative", "liberal"] | NotGiven = NOT_GIVEN,
+        currency: Literal["usd"] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -343,6 +346,7 @@ class AsyncBudgetsResource(AsyncAPIResource):
                     "budget_response_type": budget_response_type,
                     "budget_tags": budget_tags,
                     "budget_type": budget_type,
+                    "currency": currency,
                 },
                 budget_create_params.BudgetCreateParams,
             ),
