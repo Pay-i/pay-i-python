@@ -1,6 +1,7 @@
 # File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
 from typing import Dict, List, Optional
+from typing_extensions import Literal
 
 from .._models import BaseModel
 from .cost_details import CostDetails
@@ -13,7 +14,7 @@ class Budgets(BaseModel):
 
 
 class Cost(BaseModel):
-    currency: Optional[str] = None
+    currency: Optional[Literal["usd"]] = None
 
     input: Optional[CostDetails] = None
 
