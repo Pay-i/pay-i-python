@@ -10,7 +10,7 @@ __all__ = ["ProxyResult", "Budgets", "Cost"]
 
 
 class Budgets(BaseModel):
-    state: Optional[str] = None
+    state: Optional[Literal["ok", "blocked", "blocked_external", "exceeded", "failed"]] = None
 
 
 class Cost(BaseModel):
