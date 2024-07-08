@@ -34,7 +34,7 @@ class Item(BaseModel):
 
     budget_update_timestamp: datetime
 
-    currency: str
+    currency: Literal["usd"]
 
     max: float
 
