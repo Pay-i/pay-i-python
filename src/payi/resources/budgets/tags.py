@@ -19,9 +19,7 @@ from ..._response import (
     async_to_raw_response_wrapper,
     async_to_streamed_response_wrapper,
 )
-from ..._base_client import (
-    make_request_options,
-)
+from ..._base_client import make_request_options
 from ...types.budgets import tag_create_params, tag_remove_params, tag_update_params
 from ...types.budgets.tag_list_response import TagListResponse
 from ...types.budgets.tag_create_response import TagCreateResponse

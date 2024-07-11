@@ -8,13 +8,29 @@ from .._models import BaseModel
 from .cost_data import CostData
 from .requests_data import RequestsData
 
-__all__ = ["BudgetResponse", "Budget", "BudgetTotals"]
+__all__ = ["BudgetResponse", "Budget", "BudgetTotals", "BudgetTotalsBudgetTransactions"]
+
+
+class BudgetTotalsBudgetTransactions(BaseModel):
+    blocked: int
+
+    blocked_external: int
+
+    exceeded: int
+
+    successful: int
+
+    error: Optional[int] = None
+
+    total: Optional[int] = None
 
 
 class BudgetTotals(BaseModel):
-    cost: Optional[CostData] = None
+    budget_transactions: BudgetTotalsBudgetTransactions
 
-    requests: Optional[RequestsData] = None
+    cost: CostData
+
+    requests: RequestsData
 
 
 class Budget(BaseModel):

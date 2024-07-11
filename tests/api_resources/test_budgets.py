@@ -72,14 +72,14 @@ class TestBudgets:
     @parametrize
     def test_method_retrieve(self, client: Payi) -> None:
         budget = client.budgets.retrieve(
-            "string",
+            "budget_id",
         )
         assert_matches_type(BudgetResponse, budget, path=["response"])
 
     @parametrize
     def test_raw_response_retrieve(self, client: Payi) -> None:
         response = client.budgets.with_raw_response.retrieve(
-            "string",
+            "budget_id",
         )
 
         assert response.is_closed is True
@@ -90,7 +90,7 @@ class TestBudgets:
     @parametrize
     def test_streaming_response_retrieve(self, client: Payi) -> None:
         with client.budgets.with_streaming_response.retrieve(
-            "string",
+            "budget_id",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -110,7 +110,7 @@ class TestBudgets:
     @parametrize
     def test_method_update(self, client: Payi) -> None:
         budget = client.budgets.update(
-            "string",
+            budget_id="budget_id",
             budget_name="x",
         )
         assert_matches_type(BudgetResponse, budget, path=["response"])
@@ -118,7 +118,7 @@ class TestBudgets:
     @parametrize
     def test_method_update_with_all_params(self, client: Payi) -> None:
         budget = client.budgets.update(
-            "string",
+            budget_id="budget_id",
             budget_name="x",
             max=1,
         )
@@ -127,7 +127,7 @@ class TestBudgets:
     @parametrize
     def test_raw_response_update(self, client: Payi) -> None:
         response = client.budgets.with_raw_response.update(
-            "string",
+            budget_id="budget_id",
             budget_name="x",
         )
 
@@ -139,7 +139,7 @@ class TestBudgets:
     @parametrize
     def test_streaming_response_update(self, client: Payi) -> None:
         with client.budgets.with_streaming_response.update(
-            "string",
+            budget_id="budget_id",
             budget_name="x",
         ) as response:
             assert not response.is_closed
@@ -154,7 +154,7 @@ class TestBudgets:
     def test_path_params_update(self, client: Payi) -> None:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `budget_id` but received ''"):
             client.budgets.with_raw_response.update(
-                "",
+                budget_id="",
                 budget_name="x",
             )
 
@@ -166,12 +166,12 @@ class TestBudgets:
     @parametrize
     def test_method_list_with_all_params(self, client: Payi) -> None:
         budget = client.budgets.list(
-            budget_name="string",
+            budget_name="BudgetName",
             page_number=0,
             page_size=0,
             sort_ascending=True,
-            sort_by="string",
-            tags="string",
+            sort_by="SortBy",
+            tags="Tags",
         )
         assert_matches_type(PagedBudgetList, budget, path=["response"])
 
@@ -198,14 +198,14 @@ class TestBudgets:
     @parametrize
     def test_method_delete(self, client: Payi) -> None:
         budget = client.budgets.delete(
-            "string",
+            "budget_id",
         )
         assert_matches_type(DefaultResponse, budget, path=["response"])
 
     @parametrize
     def test_raw_response_delete(self, client: Payi) -> None:
         response = client.budgets.with_raw_response.delete(
-            "string",
+            "budget_id",
         )
 
         assert response.is_closed is True
@@ -216,7 +216,7 @@ class TestBudgets:
     @parametrize
     def test_streaming_response_delete(self, client: Payi) -> None:
         with client.budgets.with_streaming_response.delete(
-            "string",
+            "budget_id",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -236,14 +236,14 @@ class TestBudgets:
     @parametrize
     def test_method_reset(self, client: Payi) -> None:
         budget = client.budgets.reset(
-            "string",
+            "budget_id",
         )
         assert_matches_type(BudgetHistoryResponse, budget, path=["response"])
 
     @parametrize
     def test_raw_response_reset(self, client: Payi) -> None:
         response = client.budgets.with_raw_response.reset(
-            "string",
+            "budget_id",
         )
 
         assert response.is_closed is True
@@ -254,7 +254,7 @@ class TestBudgets:
     @parametrize
     def test_streaming_response_reset(self, client: Payi) -> None:
         with client.budgets.with_streaming_response.reset(
-            "string",
+            "budget_id",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -325,14 +325,14 @@ class TestAsyncBudgets:
     @parametrize
     async def test_method_retrieve(self, async_client: AsyncPayi) -> None:
         budget = await async_client.budgets.retrieve(
-            "string",
+            "budget_id",
         )
         assert_matches_type(BudgetResponse, budget, path=["response"])
 
     @parametrize
     async def test_raw_response_retrieve(self, async_client: AsyncPayi) -> None:
         response = await async_client.budgets.with_raw_response.retrieve(
-            "string",
+            "budget_id",
         )
 
         assert response.is_closed is True
@@ -343,7 +343,7 @@ class TestAsyncBudgets:
     @parametrize
     async def test_streaming_response_retrieve(self, async_client: AsyncPayi) -> None:
         async with async_client.budgets.with_streaming_response.retrieve(
-            "string",
+            "budget_id",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -363,7 +363,7 @@ class TestAsyncBudgets:
     @parametrize
     async def test_method_update(self, async_client: AsyncPayi) -> None:
         budget = await async_client.budgets.update(
-            "string",
+            budget_id="budget_id",
             budget_name="x",
         )
         assert_matches_type(BudgetResponse, budget, path=["response"])
@@ -371,7 +371,7 @@ class TestAsyncBudgets:
     @parametrize
     async def test_method_update_with_all_params(self, async_client: AsyncPayi) -> None:
         budget = await async_client.budgets.update(
-            "string",
+            budget_id="budget_id",
             budget_name="x",
             max=1,
         )
@@ -380,7 +380,7 @@ class TestAsyncBudgets:
     @parametrize
     async def test_raw_response_update(self, async_client: AsyncPayi) -> None:
         response = await async_client.budgets.with_raw_response.update(
-            "string",
+            budget_id="budget_id",
             budget_name="x",
         )
 
@@ -392,7 +392,7 @@ class TestAsyncBudgets:
     @parametrize
     async def test_streaming_response_update(self, async_client: AsyncPayi) -> None:
         async with async_client.budgets.with_streaming_response.update(
-            "string",
+            budget_id="budget_id",
             budget_name="x",
         ) as response:
             assert not response.is_closed
@@ -407,7 +407,7 @@ class TestAsyncBudgets:
     async def test_path_params_update(self, async_client: AsyncPayi) -> None:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `budget_id` but received ''"):
             await async_client.budgets.with_raw_response.update(
-                "",
+                budget_id="",
                 budget_name="x",
             )
 
@@ -419,12 +419,12 @@ class TestAsyncBudgets:
     @parametrize
     async def test_method_list_with_all_params(self, async_client: AsyncPayi) -> None:
         budget = await async_client.budgets.list(
-            budget_name="string",
+            budget_name="BudgetName",
             page_number=0,
             page_size=0,
             sort_ascending=True,
-            sort_by="string",
-            tags="string",
+            sort_by="SortBy",
+            tags="Tags",
         )
         assert_matches_type(PagedBudgetList, budget, path=["response"])
 
@@ -451,14 +451,14 @@ class TestAsyncBudgets:
     @parametrize
     async def test_method_delete(self, async_client: AsyncPayi) -> None:
         budget = await async_client.budgets.delete(
-            "string",
+            "budget_id",
         )
         assert_matches_type(DefaultResponse, budget, path=["response"])
 
     @parametrize
     async def test_raw_response_delete(self, async_client: AsyncPayi) -> None:
         response = await async_client.budgets.with_raw_response.delete(
-            "string",
+            "budget_id",
         )
 
         assert response.is_closed is True
@@ -469,7 +469,7 @@ class TestAsyncBudgets:
     @parametrize
     async def test_streaming_response_delete(self, async_client: AsyncPayi) -> None:
         async with async_client.budgets.with_streaming_response.delete(
-            "string",
+            "budget_id",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -489,14 +489,14 @@ class TestAsyncBudgets:
     @parametrize
     async def test_method_reset(self, async_client: AsyncPayi) -> None:
         budget = await async_client.budgets.reset(
-            "string",
+            "budget_id",
         )
         assert_matches_type(BudgetHistoryResponse, budget, path=["response"])
 
     @parametrize
     async def test_raw_response_reset(self, async_client: AsyncPayi) -> None:
         response = await async_client.budgets.with_raw_response.reset(
-            "string",
+            "budget_id",
         )
 
         assert response.is_closed is True
@@ -507,7 +507,7 @@ class TestAsyncBudgets:
     @parametrize
     async def test_streaming_response_reset(self, async_client: AsyncPayi) -> None:
         async with async_client.budgets.with_streaming_response.reset(
-            "string",
+            "budget_id",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
