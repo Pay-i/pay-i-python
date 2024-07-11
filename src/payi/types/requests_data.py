@@ -8,14 +8,10 @@ __all__ = ["RequestsData"]
 
 
 class RequestsData(BaseModel):
-    blocked: Optional[int] = None
+    blocked: int
 
-    error: Optional[int] = None
+    error: int
 
-    exceeded: Optional[int] = None
-
-    failed: Optional[int] = None
-
-    successful: Optional[int] = None
+    successful: int
 
     total: Optional[int] = None

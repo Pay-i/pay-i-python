@@ -26,7 +26,7 @@ class TestTags:
     @parametrize
     def test_method_create(self, client: Payi) -> None:
         tag = client.budgets.tags.create(
-            "string",
+            budget_id="budget_id",
             budget_tags=["tag1", "tag2"],
         )
         assert_matches_type(TagCreateResponse, tag, path=["response"])
@@ -34,7 +34,7 @@ class TestTags:
     @parametrize
     def test_raw_response_create(self, client: Payi) -> None:
         response = client.budgets.tags.with_raw_response.create(
-            "string",
+            budget_id="budget_id",
             budget_tags=["tag1", "tag2"],
         )
 
@@ -46,7 +46,7 @@ class TestTags:
     @parametrize
     def test_streaming_response_create(self, client: Payi) -> None:
         with client.budgets.tags.with_streaming_response.create(
-            "string",
+            budget_id="budget_id",
             budget_tags=["tag1", "tag2"],
         ) as response:
             assert not response.is_closed
@@ -61,14 +61,14 @@ class TestTags:
     def test_path_params_create(self, client: Payi) -> None:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `budget_id` but received ''"):
             client.budgets.tags.with_raw_response.create(
-                "",
+                budget_id="",
                 budget_tags=["tag1", "tag2"],
             )
 
     @parametrize
     def test_method_update(self, client: Payi) -> None:
         tag = client.budgets.tags.update(
-            "string",
+            budget_id="budget_id",
             budget_tags=["tag1", "tag2"],
         )
         assert_matches_type(TagUpdateResponse, tag, path=["response"])
@@ -76,7 +76,7 @@ class TestTags:
     @parametrize
     def test_raw_response_update(self, client: Payi) -> None:
         response = client.budgets.tags.with_raw_response.update(
-            "string",
+            budget_id="budget_id",
             budget_tags=["tag1", "tag2"],
         )
 
@@ -88,7 +88,7 @@ class TestTags:
     @parametrize
     def test_streaming_response_update(self, client: Payi) -> None:
         with client.budgets.tags.with_streaming_response.update(
-            "string",
+            budget_id="budget_id",
             budget_tags=["tag1", "tag2"],
         ) as response:
             assert not response.is_closed
@@ -103,21 +103,21 @@ class TestTags:
     def test_path_params_update(self, client: Payi) -> None:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `budget_id` but received ''"):
             client.budgets.tags.with_raw_response.update(
-                "",
+                budget_id="",
                 budget_tags=["tag1", "tag2"],
             )
 
     @parametrize
     def test_method_list(self, client: Payi) -> None:
         tag = client.budgets.tags.list(
-            "string",
+            "budget_id",
         )
         assert_matches_type(TagListResponse, tag, path=["response"])
 
     @parametrize
     def test_raw_response_list(self, client: Payi) -> None:
         response = client.budgets.tags.with_raw_response.list(
-            "string",
+            "budget_id",
         )
 
         assert response.is_closed is True
@@ -128,7 +128,7 @@ class TestTags:
     @parametrize
     def test_streaming_response_list(self, client: Payi) -> None:
         with client.budgets.tags.with_streaming_response.list(
-            "string",
+            "budget_id",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -148,14 +148,14 @@ class TestTags:
     @parametrize
     def test_method_delete(self, client: Payi) -> None:
         tag = client.budgets.tags.delete(
-            "string",
+            "budget_id",
         )
         assert_matches_type(TagDeleteResponse, tag, path=["response"])
 
     @parametrize
     def test_raw_response_delete(self, client: Payi) -> None:
         response = client.budgets.tags.with_raw_response.delete(
-            "string",
+            "budget_id",
         )
 
         assert response.is_closed is True
@@ -166,7 +166,7 @@ class TestTags:
     @parametrize
     def test_streaming_response_delete(self, client: Payi) -> None:
         with client.budgets.tags.with_streaming_response.delete(
-            "string",
+            "budget_id",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -186,7 +186,7 @@ class TestTags:
     @parametrize
     def test_method_remove(self, client: Payi) -> None:
         tag = client.budgets.tags.remove(
-            "string",
+            budget_id="budget_id",
             budget_tags=["tag1", "tag2"],
         )
         assert_matches_type(TagRemoveResponse, tag, path=["response"])
@@ -194,7 +194,7 @@ class TestTags:
     @parametrize
     def test_raw_response_remove(self, client: Payi) -> None:
         response = client.budgets.tags.with_raw_response.remove(
-            "string",
+            budget_id="budget_id",
             budget_tags=["tag1", "tag2"],
         )
 
@@ -206,7 +206,7 @@ class TestTags:
     @parametrize
     def test_streaming_response_remove(self, client: Payi) -> None:
         with client.budgets.tags.with_streaming_response.remove(
-            "string",
+            budget_id="budget_id",
             budget_tags=["tag1", "tag2"],
         ) as response:
             assert not response.is_closed
@@ -221,7 +221,7 @@ class TestTags:
     def test_path_params_remove(self, client: Payi) -> None:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `budget_id` but received ''"):
             client.budgets.tags.with_raw_response.remove(
-                "",
+                budget_id="",
                 budget_tags=["tag1", "tag2"],
             )
 
@@ -232,7 +232,7 @@ class TestAsyncTags:
     @parametrize
     async def test_method_create(self, async_client: AsyncPayi) -> None:
         tag = await async_client.budgets.tags.create(
-            "string",
+            budget_id="budget_id",
             budget_tags=["tag1", "tag2"],
         )
         assert_matches_type(TagCreateResponse, tag, path=["response"])
@@ -240,7 +240,7 @@ class TestAsyncTags:
     @parametrize
     async def test_raw_response_create(self, async_client: AsyncPayi) -> None:
         response = await async_client.budgets.tags.with_raw_response.create(
-            "string",
+            budget_id="budget_id",
             budget_tags=["tag1", "tag2"],
         )
 
@@ -252,7 +252,7 @@ class TestAsyncTags:
     @parametrize
     async def test_streaming_response_create(self, async_client: AsyncPayi) -> None:
         async with async_client.budgets.tags.with_streaming_response.create(
-            "string",
+            budget_id="budget_id",
             budget_tags=["tag1", "tag2"],
         ) as response:
             assert not response.is_closed
@@ -267,14 +267,14 @@ class TestAsyncTags:
     async def test_path_params_create(self, async_client: AsyncPayi) -> None:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `budget_id` but received ''"):
             await async_client.budgets.tags.with_raw_response.create(
-                "",
+                budget_id="",
                 budget_tags=["tag1", "tag2"],
             )
 
     @parametrize
     async def test_method_update(self, async_client: AsyncPayi) -> None:
         tag = await async_client.budgets.tags.update(
-            "string",
+            budget_id="budget_id",
             budget_tags=["tag1", "tag2"],
         )
         assert_matches_type(TagUpdateResponse, tag, path=["response"])
@@ -282,7 +282,7 @@ class TestAsyncTags:
     @parametrize
     async def test_raw_response_update(self, async_client: AsyncPayi) -> None:
         response = await async_client.budgets.tags.with_raw_response.update(
-            "string",
+            budget_id="budget_id",
             budget_tags=["tag1", "tag2"],
         )
 
@@ -294,7 +294,7 @@ class TestAsyncTags:
     @parametrize
     async def test_streaming_response_update(self, async_client: AsyncPayi) -> None:
         async with async_client.budgets.tags.with_streaming_response.update(
-            "string",
+            budget_id="budget_id",
             budget_tags=["tag1", "tag2"],
         ) as response:
             assert not response.is_closed
@@ -309,21 +309,21 @@ class TestAsyncTags:
     async def test_path_params_update(self, async_client: AsyncPayi) -> None:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `budget_id` but received ''"):
             await async_client.budgets.tags.with_raw_response.update(
-                "",
+                budget_id="",
                 budget_tags=["tag1", "tag2"],
             )
 
     @parametrize
     async def test_method_list(self, async_client: AsyncPayi) -> None:
         tag = await async_client.budgets.tags.list(
-            "string",
+            "budget_id",
         )
         assert_matches_type(TagListResponse, tag, path=["response"])
 
     @parametrize
     async def test_raw_response_list(self, async_client: AsyncPayi) -> None:
         response = await async_client.budgets.tags.with_raw_response.list(
-            "string",
+            "budget_id",
         )
 
         assert response.is_closed is True
@@ -334,7 +334,7 @@ class TestAsyncTags:
     @parametrize
     async def test_streaming_response_list(self, async_client: AsyncPayi) -> None:
         async with async_client.budgets.tags.with_streaming_response.list(
-            "string",
+            "budget_id",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -354,14 +354,14 @@ class TestAsyncTags:
     @parametrize
     async def test_method_delete(self, async_client: AsyncPayi) -> None:
         tag = await async_client.budgets.tags.delete(
-            "string",
+            "budget_id",
         )
         assert_matches_type(TagDeleteResponse, tag, path=["response"])
 
     @parametrize
     async def test_raw_response_delete(self, async_client: AsyncPayi) -> None:
         response = await async_client.budgets.tags.with_raw_response.delete(
-            "string",
+            "budget_id",
         )
 
         assert response.is_closed is True
@@ -372,7 +372,7 @@ class TestAsyncTags:
     @parametrize
     async def test_streaming_response_delete(self, async_client: AsyncPayi) -> None:
         async with async_client.budgets.tags.with_streaming_response.delete(
-            "string",
+            "budget_id",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -392,7 +392,7 @@ class TestAsyncTags:
     @parametrize
     async def test_method_remove(self, async_client: AsyncPayi) -> None:
         tag = await async_client.budgets.tags.remove(
-            "string",
+            budget_id="budget_id",
             budget_tags=["tag1", "tag2"],
         )
         assert_matches_type(TagRemoveResponse, tag, path=["response"])
@@ -400,7 +400,7 @@ class TestAsyncTags:
     @parametrize
     async def test_raw_response_remove(self, async_client: AsyncPayi) -> None:
         response = await async_client.budgets.tags.with_raw_response.remove(
-            "string",
+            budget_id="budget_id",
             budget_tags=["tag1", "tag2"],
         )
 
@@ -412,7 +412,7 @@ class TestAsyncTags:
     @parametrize
     async def test_streaming_response_remove(self, async_client: AsyncPayi) -> None:
         async with async_client.budgets.tags.with_streaming_response.remove(
-            "string",
+            budget_id="budget_id",
             budget_tags=["tag1", "tag2"],
         ) as response:
             assert not response.is_closed
@@ -427,6 +427,6 @@ class TestAsyncTags:
     async def test_path_params_remove(self, async_client: AsyncPayi) -> None:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `budget_id` but received ''"):
             await async_client.budgets.tags.with_raw_response.remove(
-                "",
+                budget_id="",
                 budget_tags=["tag1", "tag2"],
             )
