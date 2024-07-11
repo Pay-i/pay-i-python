@@ -10,13 +10,29 @@ from .._models import BaseModel
 from .cost_data import CostData
 from .requests_data import RequestsData
 
-__all__ = ["PagedBudgetList", "Item", "ItemTotals"]
+__all__ = ["PagedBudgetList", "Item", "ItemTotals", "ItemTotalsBudgetTransactions"]
+
+
+class ItemTotalsBudgetTransactions(BaseModel):
+    blocked: int
+
+    blocked_external: int
+
+    exceeded: int
+
+    successful: int
+
+    error: Optional[int] = None
+
+    total: Optional[int] = None
 
 
 class ItemTotals(BaseModel):
-    cost: Optional[CostData] = None
+    budget_transactions: ItemTotalsBudgetTransactions
 
-    requests: Optional[RequestsData] = None
+    cost: CostData
+
+    requests: RequestsData
 
 
 class Item(BaseModel):

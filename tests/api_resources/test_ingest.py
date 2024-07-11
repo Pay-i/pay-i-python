@@ -21,8 +21,8 @@ class TestIngest:
     def test_method_units(self, client: Payi) -> None:
         ingest = client.ingest.units(
             category="x",
-            input=1,
-            output=1,
+            input=0,
+            output=0,
             resource="x",
         )
         assert_matches_type(ProxyResult, ingest, path=["response"])
@@ -31,8 +31,8 @@ class TestIngest:
     def test_method_units_with_all_params(self, client: Payi) -> None:
         ingest = client.ingest.units(
             category="x",
-            input=1,
-            output=1,
+            input=0,
+            output=0,
             resource="x",
             budget_ids=["budgetId1", "budgetId_2"],
             request_tags=["requestTag1", "request_tag_2"],
@@ -43,8 +43,8 @@ class TestIngest:
     def test_raw_response_units(self, client: Payi) -> None:
         response = client.ingest.with_raw_response.units(
             category="x",
-            input=1,
-            output=1,
+            input=0,
+            output=0,
             resource="x",
         )
 
@@ -57,8 +57,8 @@ class TestIngest:
     def test_streaming_response_units(self, client: Payi) -> None:
         with client.ingest.with_streaming_response.units(
             category="x",
-            input=1,
-            output=1,
+            input=0,
+            output=0,
             resource="x",
         ) as response:
             assert not response.is_closed
@@ -77,8 +77,8 @@ class TestAsyncIngest:
     async def test_method_units(self, async_client: AsyncPayi) -> None:
         ingest = await async_client.ingest.units(
             category="x",
-            input=1,
-            output=1,
+            input=0,
+            output=0,
             resource="x",
         )
         assert_matches_type(ProxyResult, ingest, path=["response"])
@@ -87,8 +87,8 @@ class TestAsyncIngest:
     async def test_method_units_with_all_params(self, async_client: AsyncPayi) -> None:
         ingest = await async_client.ingest.units(
             category="x",
-            input=1,
-            output=1,
+            input=0,
+            output=0,
             resource="x",
             budget_ids=["budgetId1", "budgetId_2"],
             request_tags=["requestTag1", "request_tag_2"],
@@ -99,8 +99,8 @@ class TestAsyncIngest:
     async def test_raw_response_units(self, async_client: AsyncPayi) -> None:
         response = await async_client.ingest.with_raw_response.units(
             category="x",
-            input=1,
-            output=1,
+            input=0,
+            output=0,
             resource="x",
         )
 
@@ -113,8 +113,8 @@ class TestAsyncIngest:
     async def test_streaming_response_units(self, async_client: AsyncPayi) -> None:
         async with async_client.ingest.with_streaming_response.units(
             category="x",
-            input=1,
-            output=1,
+            input=0,
+            output=0,
             resource="x",
         ) as response:
             assert not response.is_closed
