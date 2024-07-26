@@ -9,6 +9,7 @@ import pytest
 
 from payi import Payi, AsyncPayi
 from payi.types import ProxyResult
+from payi._utils import parse_datetime
 from tests.utils import assert_matches_type
 
 base_url = os.environ.get("TEST_API_BASE_URL", "http://127.0.0.1:4010")
@@ -34,6 +35,7 @@ class TestIngest:
             input=0,
             output=0,
             resource="x",
+            event_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
             x_proxy_budget_ids="budgetId1, budgetId_2",
             x_proxy_request_tags="requestTag1, request_tag_2",
         )
@@ -90,6 +92,7 @@ class TestAsyncIngest:
             input=0,
             output=0,
             resource="x",
+            event_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
             x_proxy_budget_ids="budgetId1, budgetId_2",
             x_proxy_request_tags="requestTag1, request_tag_2",
         )

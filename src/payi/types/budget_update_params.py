@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from typing_extensions import Required, TypedDict
+from typing import Optional
+from typing_extensions import TypedDict
 
 __all__ = ["BudgetUpdateParams"]
 
 
 class BudgetUpdateParams(TypedDict, total=False):
-    budget_name: Required[str]
+    budget_name: Optional[str]
 
-    max: float
+    max: Optional[float]
