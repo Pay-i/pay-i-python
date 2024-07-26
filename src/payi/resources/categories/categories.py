@@ -14,20 +14,20 @@ from .resources import (
     ResourcesResourceWithStreamingResponse,
     AsyncResourcesResourceWithStreamingResponse,
 )
+from .resource_1 import (
+    Resource1Resource,
+    AsyncResource1Resource,
+    Resource1ResourceWithRawResponse,
+    AsyncResource1ResourceWithRawResponse,
+    Resource1ResourceWithStreamingResponse,
+    AsyncResource1ResourceWithStreamingResponse,
+)
 from ..._resource import SyncAPIResource, AsyncAPIResource
 from ..._response import (
     to_raw_response_wrapper,
     to_streamed_response_wrapper,
     async_to_raw_response_wrapper,
     async_to_streamed_response_wrapper,
-)
-from .resources_all import (
-    ResourcesAllResource,
-    AsyncResourcesAllResource,
-    ResourcesAllResourceWithRawResponse,
-    AsyncResourcesAllResourceWithRawResponse,
-    ResourcesAllResourceWithStreamingResponse,
-    AsyncResourcesAllResourceWithStreamingResponse,
 )
 from ..._base_client import make_request_options
 from ...types.category_list_response import CategoryListResponse
@@ -41,8 +41,8 @@ class CategoriesResource(SyncAPIResource):
         return ResourcesResource(self._client)
 
     @cached_property
-    def resources_all(self) -> ResourcesAllResource:
-        return ResourcesAllResource(self._client)
+    def resource_1(self) -> Resource1Resource:
+        return Resource1Resource(self._client)
 
     @cached_property
     def with_raw_response(self) -> CategoriesResourceWithRawResponse:
@@ -77,8 +77,8 @@ class AsyncCategoriesResource(AsyncAPIResource):
         return AsyncResourcesResource(self._client)
 
     @cached_property
-    def resources_all(self) -> AsyncResourcesAllResource:
-        return AsyncResourcesAllResource(self._client)
+    def resource_1(self) -> AsyncResource1Resource:
+        return AsyncResource1Resource(self._client)
 
     @cached_property
     def with_raw_response(self) -> AsyncCategoriesResourceWithRawResponse:
@@ -120,8 +120,8 @@ class CategoriesResourceWithRawResponse:
         return ResourcesResourceWithRawResponse(self._categories.resources)
 
     @cached_property
-    def resources_all(self) -> ResourcesAllResourceWithRawResponse:
-        return ResourcesAllResourceWithRawResponse(self._categories.resources_all)
+    def resource_1(self) -> Resource1ResourceWithRawResponse:
+        return Resource1ResourceWithRawResponse(self._categories.resource_1)
 
 
 class AsyncCategoriesResourceWithRawResponse:
@@ -137,8 +137,8 @@ class AsyncCategoriesResourceWithRawResponse:
         return AsyncResourcesResourceWithRawResponse(self._categories.resources)
 
     @cached_property
-    def resources_all(self) -> AsyncResourcesAllResourceWithRawResponse:
-        return AsyncResourcesAllResourceWithRawResponse(self._categories.resources_all)
+    def resource_1(self) -> AsyncResource1ResourceWithRawResponse:
+        return AsyncResource1ResourceWithRawResponse(self._categories.resource_1)
 
 
 class CategoriesResourceWithStreamingResponse:
@@ -154,8 +154,8 @@ class CategoriesResourceWithStreamingResponse:
         return ResourcesResourceWithStreamingResponse(self._categories.resources)
 
     @cached_property
-    def resources_all(self) -> ResourcesAllResourceWithStreamingResponse:
-        return ResourcesAllResourceWithStreamingResponse(self._categories.resources_all)
+    def resource_1(self) -> Resource1ResourceWithStreamingResponse:
+        return Resource1ResourceWithStreamingResponse(self._categories.resource_1)
 
 
 class AsyncCategoriesResourceWithStreamingResponse:
@@ -171,5 +171,5 @@ class AsyncCategoriesResourceWithStreamingResponse:
         return AsyncResourcesResourceWithStreamingResponse(self._categories.resources)
 
     @cached_property
-    def resources_all(self) -> AsyncResourcesAllResourceWithStreamingResponse:
-        return AsyncResourcesAllResourceWithStreamingResponse(self._categories.resources_all)
+    def resource_1(self) -> AsyncResource1ResourceWithStreamingResponse:
+        return AsyncResource1ResourceWithStreamingResponse(self._categories.resource_1)

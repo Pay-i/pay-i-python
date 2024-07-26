@@ -21,21 +21,21 @@ from ..._response import (
     async_to_streamed_response_wrapper,
 )
 from ..._base_client import make_request_options
-from ...types.categories import resources_all_create_params
+from ...types.categories import resource_1_create_params
 from ...types.category_resource_response import CategoryResourceResponse
-from ...types.categories.resources_all_delete_response import ResourcesAllDeleteResponse
+from ...types.categories.resource_1_delete_response import Resource1DeleteResponse
 
-__all__ = ["ResourcesAllResource", "AsyncResourcesAllResource"]
+__all__ = ["Resource1Resource", "AsyncResource1Resource"]
 
 
-class ResourcesAllResource(SyncAPIResource):
+class Resource1Resource(SyncAPIResource):
     @cached_property
-    def with_raw_response(self) -> ResourcesAllResourceWithRawResponse:
-        return ResourcesAllResourceWithRawResponse(self)
+    def with_raw_response(self) -> Resource1ResourceWithRawResponse:
+        return Resource1ResourceWithRawResponse(self)
 
     @cached_property
-    def with_streaming_response(self) -> ResourcesAllResourceWithStreamingResponse:
-        return ResourcesAllResourceWithStreamingResponse(self)
+    def with_streaming_response(self) -> Resource1ResourceWithStreamingResponse:
+        return Resource1ResourceWithStreamingResponse(self)
 
     def create(
         self,
@@ -78,7 +78,7 @@ class ResourcesAllResource(SyncAPIResource):
                     "max_output_units": max_output_units,
                     "output_price": output_price,
                 },
-                resources_all_create_params.ResourcesAllCreateParams,
+                resource_1_create_params.Resource1CreateParams,
             ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
@@ -134,7 +134,7 @@ class ResourcesAllResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> ResourcesAllDeleteResponse:
+    ) -> Resource1DeleteResponse:
         """
         Args:
           extra_headers: Send extra headers
@@ -154,18 +154,18 @@ class ResourcesAllResource(SyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=ResourcesAllDeleteResponse,
+            cast_to=Resource1DeleteResponse,
         )
 
 
-class AsyncResourcesAllResource(AsyncAPIResource):
+class AsyncResource1Resource(AsyncAPIResource):
     @cached_property
-    def with_raw_response(self) -> AsyncResourcesAllResourceWithRawResponse:
-        return AsyncResourcesAllResourceWithRawResponse(self)
+    def with_raw_response(self) -> AsyncResource1ResourceWithRawResponse:
+        return AsyncResource1ResourceWithRawResponse(self)
 
     @cached_property
-    def with_streaming_response(self) -> AsyncResourcesAllResourceWithStreamingResponse:
-        return AsyncResourcesAllResourceWithStreamingResponse(self)
+    def with_streaming_response(self) -> AsyncResource1ResourceWithStreamingResponse:
+        return AsyncResource1ResourceWithStreamingResponse(self)
 
     async def create(
         self,
@@ -208,7 +208,7 @@ class AsyncResourcesAllResource(AsyncAPIResource):
                     "max_output_units": max_output_units,
                     "output_price": output_price,
                 },
-                resources_all_create_params.ResourcesAllCreateParams,
+                resource_1_create_params.Resource1CreateParams,
             ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
@@ -264,7 +264,7 @@ class AsyncResourcesAllResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> ResourcesAllDeleteResponse:
+    ) -> Resource1DeleteResponse:
         """
         Args:
           extra_headers: Send extra headers
@@ -284,65 +284,65 @@ class AsyncResourcesAllResource(AsyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=ResourcesAllDeleteResponse,
+            cast_to=Resource1DeleteResponse,
         )
 
 
-class ResourcesAllResourceWithRawResponse:
-    def __init__(self, resources_all: ResourcesAllResource) -> None:
-        self._resources_all = resources_all
+class Resource1ResourceWithRawResponse:
+    def __init__(self, resource_1: Resource1Resource) -> None:
+        self._resource_1 = resource_1
 
         self.create = to_raw_response_wrapper(
-            resources_all.create,
+            resource_1.create,
         )
         self.retrieve = to_raw_response_wrapper(
-            resources_all.retrieve,
+            resource_1.retrieve,
         )
         self.delete = to_raw_response_wrapper(
-            resources_all.delete,
+            resource_1.delete,
         )
 
 
-class AsyncResourcesAllResourceWithRawResponse:
-    def __init__(self, resources_all: AsyncResourcesAllResource) -> None:
-        self._resources_all = resources_all
+class AsyncResource1ResourceWithRawResponse:
+    def __init__(self, resource_1: AsyncResource1Resource) -> None:
+        self._resource_1 = resource_1
 
         self.create = async_to_raw_response_wrapper(
-            resources_all.create,
+            resource_1.create,
         )
         self.retrieve = async_to_raw_response_wrapper(
-            resources_all.retrieve,
+            resource_1.retrieve,
         )
         self.delete = async_to_raw_response_wrapper(
-            resources_all.delete,
+            resource_1.delete,
         )
 
 
-class ResourcesAllResourceWithStreamingResponse:
-    def __init__(self, resources_all: ResourcesAllResource) -> None:
-        self._resources_all = resources_all
+class Resource1ResourceWithStreamingResponse:
+    def __init__(self, resource_1: Resource1Resource) -> None:
+        self._resource_1 = resource_1
 
         self.create = to_streamed_response_wrapper(
-            resources_all.create,
+            resource_1.create,
         )
         self.retrieve = to_streamed_response_wrapper(
-            resources_all.retrieve,
+            resource_1.retrieve,
         )
         self.delete = to_streamed_response_wrapper(
-            resources_all.delete,
+            resource_1.delete,
         )
 
 
-class AsyncResourcesAllResourceWithStreamingResponse:
-    def __init__(self, resources_all: AsyncResourcesAllResource) -> None:
-        self._resources_all = resources_all
+class AsyncResource1ResourceWithStreamingResponse:
+    def __init__(self, resource_1: AsyncResource1Resource) -> None:
+        self._resource_1 = resource_1
 
         self.create = async_to_streamed_response_wrapper(
-            resources_all.create,
+            resource_1.create,
         )
         self.retrieve = async_to_streamed_response_wrapper(
-            resources_all.retrieve,
+            resource_1.retrieve,
         )
         self.delete = async_to_streamed_response_wrapper(
-            resources_all.delete,
+            resource_1.delete,
         )

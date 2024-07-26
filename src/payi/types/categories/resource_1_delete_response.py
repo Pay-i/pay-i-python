@@ -4,6 +4,6 @@ from typing import List
 
 from ..category_resource_response import CategoryResourceResponse
 
-__all__ = ["ResourcesAllDeleteResponse"]
+__all__ = ["Resource1DeleteResponse"]
 
-ResourcesAllDeleteResponse = List[CategoryResourceResponse]
+Resource1DeleteResponse = List[CategoryResourceResponse]

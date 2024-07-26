@@ -16,13 +16,13 @@ from .categories import (
     CategoriesResourceWithStreamingResponse,
     AsyncCategoriesResourceWithStreamingResponse,
 )
-from .resources_all import (
-    ResourcesAllResource,
-    AsyncResourcesAllResource,
-    ResourcesAllResourceWithRawResponse,
-    AsyncResourcesAllResourceWithRawResponse,
-    ResourcesAllResourceWithStreamingResponse,
-    AsyncResourcesAllResourceWithStreamingResponse,
+from .resource_1 import (
+    Resource1Resource,
+    AsyncResource1Resource,
+    Resource1ResourceWithRawResponse,
+    AsyncResource1ResourceWithRawResponse,
+    Resource1ResourceWithStreamingResponse,
+    AsyncResource1ResourceWithStreamingResponse,
 )
 
 __all__ = [
@@ -32,12 +32,12 @@ __all__ = [
     "AsyncResourcesResourceWithRawResponse",
     "ResourcesResourceWithStreamingResponse",
     "AsyncResourcesResourceWithStreamingResponse",
-    "ResourcesAllResource",
-    "AsyncResourcesAllResource",
-    "ResourcesAllResourceWithRawResponse",
-    "AsyncResourcesAllResourceWithRawResponse",
-    "ResourcesAllResourceWithStreamingResponse",
-    "AsyncResourcesAllResourceWithStreamingResponse",
+    "Resource1Resource",
+    "AsyncResource1Resource",
+    "Resource1ResourceWithRawResponse",
+    "AsyncResource1ResourceWithRawResponse",
+    "Resource1ResourceWithStreamingResponse",
+    "AsyncResource1ResourceWithStreamingResponse",
     "CategoriesResource",
     "AsyncCategoriesResource",
     "CategoriesResourceWithRawResponse",
