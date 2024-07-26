@@ -11,7 +11,7 @@ from payi import Payi, AsyncPayi
 from payi.types import CategoryResourceResponse
 from payi._utils import parse_datetime
 from tests.utils import assert_matches_type
-from payi.types.categories import ResourceListResponse
+from payi.types.categories import ResourceListResponse, ResourceRetrieveResponse
 
 base_url = os.environ.get("TEST_API_BASE_URL", "http://127.0.0.1:4010")
 
@@ -20,102 +20,33 @@ class TestResources:
     parametrize = pytest.mark.parametrize("client", [False, True], indirect=True, ids=["loose", "strict"])
 
     @parametrize
-    def test_method_create(self, client: Payi) -> None:
-        resource = client.categories.resources.create(
-            resource="resource",
-            category="category",
-            start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
-        )
-        assert_matches_type(CategoryResourceResponse, resource, path=["response"])
-
-    @parametrize
-    def test_method_create_with_all_params(self, client: Payi) -> None:
-        resource = client.categories.resources.create(
-            resource="resource",
-            category="category",
-            start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
-            input_price=0,
-            max_input_units=0,
-            max_output_units=0,
-            output_price=0,
-        )
-        assert_matches_type(CategoryResourceResponse, resource, path=["response"])
-
-    @parametrize
-    def test_raw_response_create(self, client: Payi) -> None:
-        response = client.categories.resources.with_raw_response.create(
-            resource="resource",
-            category="category",
-            start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
-        )
-
-        assert response.is_closed is True
-        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-        resource = response.parse()
-        assert_matches_type(CategoryResourceResponse, resource, path=["response"])
-
-    @parametrize
-    def test_streaming_response_create(self, client: Payi) -> None:
-        with client.categories.resources.with_streaming_response.create(
-            resource="resource",
-            category="category",
-            start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
-        ) as response:
-            assert not response.is_closed
-            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-
-            resource = response.parse()
-            assert_matches_type(CategoryResourceResponse, resource, path=["response"])
-
-        assert cast(Any, response.is_closed) is True
-
-    @parametrize
-    def test_path_params_create(self, client: Payi) -> None:
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `category` but received ''"):
-            client.categories.resources.with_raw_response.create(
-                resource="resource",
-                category="",
-                start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
-            )
-
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `resource` but received ''"):
-            client.categories.resources.with_raw_response.create(
-                resource="",
-                category="category",
-                start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
-            )
-
-    @parametrize
     def test_method_retrieve(self, client: Payi) -> None:
         resource = client.categories.resources.retrieve(
-            resource="resource",
-            category="category",
+            "category",
         )
-        assert_matches_type(CategoryResourceResponse, resource, path=["response"])
+        assert_matches_type(ResourceRetrieveResponse, resource, path=["response"])
 
     @parametrize
     def test_raw_response_retrieve(self, client: Payi) -> None:
         response = client.categories.resources.with_raw_response.retrieve(
-            resource="resource",
-            category="category",
+            "category",
         )
 
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
         resource = response.parse()
-        assert_matches_type(CategoryResourceResponse, resource, path=["response"])
+        assert_matches_type(ResourceRetrieveResponse, resource, path=["response"])
 
     @parametrize
     def test_streaming_response_retrieve(self, client: Payi) -> None:
         with client.categories.resources.with_streaming_response.retrieve(
-            resource="resource",
-            category="category",
+            "category",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
             resource = response.parse()
-            assert_matches_type(CategoryResourceResponse, resource, path=["response"])
+            assert_matches_type(ResourceRetrieveResponse, resource, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
@@ -123,24 +54,21 @@ class TestResources:
     def test_path_params_retrieve(self, client: Payi) -> None:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `category` but received ''"):
             client.categories.resources.with_raw_response.retrieve(
-                resource="resource",
-                category="",
-            )
-
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `resource` but received ''"):
-            client.categories.resources.with_raw_response.retrieve(
-                resource="",
-                category="category",
+                "",
             )
 
     @parametrize
     def test_method_list(self, client: Payi) -> None:
-        resource = client.categories.resources.list()
+        resource = client.categories.resources.list(
+            "category",
+        )
         assert_matches_type(ResourceListResponse, resource, path=["response"])
 
     @parametrize
     def test_raw_response_list(self, client: Payi) -> None:
-        response = client.categories.resources.with_raw_response.list()
+        response = client.categories.resources.with_raw_response.list(
+            "category",
+        )
 
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -149,7 +77,9 @@ class TestResources:
 
     @parametrize
     def test_streaming_response_list(self, client: Payi) -> None:
-        with client.categories.resources.with_streaming_response.list() as response:
+        with client.categories.resources.with_streaming_response.list(
+            "category",
+        ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
@@ -157,6 +87,13 @@ class TestResources:
             assert_matches_type(ResourceListResponse, resource, path=["response"])
 
         assert cast(Any, response.is_closed) is True
+
+    @parametrize
+    def test_path_params_list(self, client: Payi) -> None:
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `category` but received ''"):
+            client.categories.resources.with_raw_response.list(
+                "",
+            )
 
     @parametrize
     def test_method_delete(self, client: Payi) -> None:
@@ -223,102 +160,33 @@ class TestAsyncResources:
     parametrize = pytest.mark.parametrize("async_client", [False, True], indirect=True, ids=["loose", "strict"])
 
     @parametrize
-    async def test_method_create(self, async_client: AsyncPayi) -> None:
-        resource = await async_client.categories.resources.create(
-            resource="resource",
-            category="category",
-            start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
-        )
-        assert_matches_type(CategoryResourceResponse, resource, path=["response"])
-
-    @parametrize
-    async def test_method_create_with_all_params(self, async_client: AsyncPayi) -> None:
-        resource = await async_client.categories.resources.create(
-            resource="resource",
-            category="category",
-            start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
-            input_price=0,
-            max_input_units=0,
-            max_output_units=0,
-            output_price=0,
-        )
-        assert_matches_type(CategoryResourceResponse, resource, path=["response"])
-
-    @parametrize
-    async def test_raw_response_create(self, async_client: AsyncPayi) -> None:
-        response = await async_client.categories.resources.with_raw_response.create(
-            resource="resource",
-            category="category",
-            start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
-        )
-
-        assert response.is_closed is True
-        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-        resource = await response.parse()
-        assert_matches_type(CategoryResourceResponse, resource, path=["response"])
-
-    @parametrize
-    async def test_streaming_response_create(self, async_client: AsyncPayi) -> None:
-        async with async_client.categories.resources.with_streaming_response.create(
-            resource="resource",
-            category="category",
-            start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
-        ) as response:
-            assert not response.is_closed
-            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-
-            resource = await response.parse()
-            assert_matches_type(CategoryResourceResponse, resource, path=["response"])
-
-        assert cast(Any, response.is_closed) is True
-
-    @parametrize
-    async def test_path_params_create(self, async_client: AsyncPayi) -> None:
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `category` but received ''"):
-            await async_client.categories.resources.with_raw_response.create(
-                resource="resource",
-                category="",
-                start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
-            )
-
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `resource` but received ''"):
-            await async_client.categories.resources.with_raw_response.create(
-                resource="",
-                category="category",
-                start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
-            )
-
-    @parametrize
     async def test_method_retrieve(self, async_client: AsyncPayi) -> None:
         resource = await async_client.categories.resources.retrieve(
-            resource="resource",
-            category="category",
+            "category",
         )
-        assert_matches_type(CategoryResourceResponse, resource, path=["response"])
+        assert_matches_type(ResourceRetrieveResponse, resource, path=["response"])
 
     @parametrize
     async def test_raw_response_retrieve(self, async_client: AsyncPayi) -> None:
         response = await async_client.categories.resources.with_raw_response.retrieve(
-            resource="resource",
-            category="category",
+            "category",
         )
 
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
         resource = await response.parse()
-        assert_matches_type(CategoryResourceResponse, resource, path=["response"])
+        assert_matches_type(ResourceRetrieveResponse, resource, path=["response"])
 
     @parametrize
     async def test_streaming_response_retrieve(self, async_client: AsyncPayi) -> None:
         async with async_client.categories.resources.with_streaming_response.retrieve(
-            resource="resource",
-            category="category",
+            "category",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
             resource = await response.parse()
-            assert_matches_type(CategoryResourceResponse, resource, path=["response"])
+            assert_matches_type(ResourceRetrieveResponse, resource, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
@@ -326,24 +194,21 @@ class TestAsyncResources:
     async def test_path_params_retrieve(self, async_client: AsyncPayi) -> None:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `category` but received ''"):
             await async_client.categories.resources.with_raw_response.retrieve(
-                resource="resource",
-                category="",
-            )
-
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `resource` but received ''"):
-            await async_client.categories.resources.with_raw_response.retrieve(
-                resource="",
-                category="category",
+                "",
             )
 
     @parametrize
     async def test_method_list(self, async_client: AsyncPayi) -> None:
-        resource = await async_client.categories.resources.list()
+        resource = await async_client.categories.resources.list(
+            "category",
+        )
         assert_matches_type(ResourceListResponse, resource, path=["response"])
 
     @parametrize
     async def test_raw_response_list(self, async_client: AsyncPayi) -> None:
-        response = await async_client.categories.resources.with_raw_response.list()
+        response = await async_client.categories.resources.with_raw_response.list(
+            "category",
+        )
 
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -352,7 +217,9 @@ class TestAsyncResources:
 
     @parametrize
     async def test_streaming_response_list(self, async_client: AsyncPayi) -> None:
-        async with async_client.categories.resources.with_streaming_response.list() as response:
+        async with async_client.categories.resources.with_streaming_response.list(
+            "category",
+        ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
@@ -360,6 +227,13 @@ class TestAsyncResources:
             assert_matches_type(ResourceListResponse, resource, path=["response"])
 
         assert cast(Any, response.is_closed) is True
+
+    @parametrize
+    async def test_path_params_list(self, async_client: AsyncPayi) -> None:
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `category` but received ''"):
+            await async_client.categories.resources.with_raw_response.list(
+                "",
+            )
 
     @parametrize
     async def test_method_delete(self, async_client: AsyncPayi) -> None:
