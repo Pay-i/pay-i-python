@@ -75,14 +75,13 @@ Methods:
 Types:
 
 ```python
-from payi.types.categories import ResourceListResponse
+from payi.types.categories import CategoryResource, ResourceRetrieveResponse, ResourceListResponse
 ```
 
 Methods:
 
-- <code title="post /api/v1/categories/{category}/resource/{resource}">client.categories.resources.<a href="./src/payi/resources/categories/resources.py">create</a>(resource, \*, category, \*\*<a href="src/payi/types/categories/resource_create_params.py">params</a>) -> <a href="./src/payi/types/category_resource_response.py">CategoryResourceResponse</a></code>
-- <code title="get /api/v1/categories/{category}/resource/{resource}">client.categories.resources.<a href="./src/payi/resources/categories/resources.py">retrieve</a>(resource, \*, category) -> <a href="./src/payi/types/category_resource_response.py">CategoryResourceResponse</a></code>
-- <code title="get /api/v1/categories/resources">client.categories.resources.<a href="./src/payi/resources/categories/resources.py">list</a>() -> <a href="./src/payi/types/categories/resource_list_response.py">ResourceListResponse</a></code>
+- <code title="get /api/v1/categories/{category}/resource">client.categories.resources.<a href="./src/payi/resources/categories/resources.py">retrieve</a>(category) -> <a href="./src/payi/types/categories/resource_retrieve_response.py">ResourceRetrieveResponse</a></code>
+- <code title="get /api/v1/categories/{category}/resource">client.categories.resources.<a href="./src/payi/resources/categories/resources.py">list</a>(category) -> <a href="./src/payi/types/categories/resource_list_response.py">ResourceListResponse</a></code>
 - <code title="delete /api/v1/categories/{category}/resource/{resource}/{start_timestamp}">client.categories.resources.<a href="./src/payi/resources/categories/resources.py">delete</a>(start_timestamp, \*, category, resource) -> <a href="./src/payi/types/category_resource_response.py">CategoryResourceResponse</a></code>
 
 ## ResourcesAll
@@ -95,4 +94,6 @@ from payi.types.categories import ResourcesAllDeleteResponse
 
 Methods:
 
+- <code title="post /api/v1/categories/{category}/resource/{resource}">client.categories.resources_all.<a href="./src/payi/resources/categories/resources_all.py">create</a>(resource, \*, category, \*\*<a href="src/payi/types/categories/resources_all_create_params.py">params</a>) -> <a href="./src/payi/types/category_resource_response.py">CategoryResourceResponse</a></code>
+- <code title="get /api/v1/categories/{category}/resource/{resource}/{start_timestamp}">client.categories.resources_all.<a href="./src/payi/resources/categories/resources_all.py">retrieve</a>(start_timestamp, \*, category, resource) -> <a href="./src/payi/types/category_resource_response.py">CategoryResourceResponse</a></code>
 - <code title="delete /api/v1/categories/{category}/resource/{resource}">client.categories.resources_all.<a href="./src/payi/resources/categories/resources_all.py">delete</a>(resource, \*, category) -> <a href="./src/payi/types/categories/resources_all_delete_response.py">ResourcesAllDeleteResponse</a></code>

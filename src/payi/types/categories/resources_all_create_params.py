@@ -8,10 +8,10 @@ from typing_extensions import Required, Annotated, TypedDict
 
 from ..._utils import PropertyInfo
 
-__all__ = ["ResourceCreateParams"]
+__all__ = ["ResourcesAllCreateParams"]
 
 
-class ResourceCreateParams(TypedDict, total=False):
+class ResourcesAllCreateParams(TypedDict, total=False):
     category: Required[str]
 
     start_timestamp: Required[Annotated[Union[str, datetime], PropertyInfo(format="iso8601")]]
