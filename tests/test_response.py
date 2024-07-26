@@ -6,7 +6,7 @@ import httpx
 import pytest
 import pydantic
 
-from payi import BaseModel, Payi, AsyncPayi
+from payi import Payi, AsyncPayi, BaseModel
 from payi._response import (
     APIResponse,
     BaseAPIResponse,

@@ -16,6 +16,14 @@ from .budgets import (
     BudgetsResourceWithStreamingResponse,
     AsyncBudgetsResourceWithStreamingResponse,
 )
+from .categories import (
+    CategoriesResource,
+    AsyncCategoriesResource,
+    CategoriesResourceWithRawResponse,
+    AsyncCategoriesResourceWithRawResponse,
+    CategoriesResourceWithStreamingResponse,
+    AsyncCategoriesResourceWithStreamingResponse,
+)
 
 __all__ = [
     "BudgetsResource",
@@ -30,4 +38,10 @@ __all__ = [
     "AsyncIngestResourceWithRawResponse",
     "IngestResourceWithStreamingResponse",
     "AsyncIngestResourceWithStreamingResponse",
+    "CategoriesResource",
+    "AsyncCategoriesResource",
+    "CategoriesResourceWithRawResponse",
+    "AsyncCategoriesResourceWithRawResponse",
+    "CategoriesResourceWithStreamingResponse",
+    "AsyncCategoriesResourceWithStreamingResponse",
 ]

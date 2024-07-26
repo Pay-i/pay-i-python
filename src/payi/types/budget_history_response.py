@@ -4,82 +4,33 @@ from typing import List, Optional
 from datetime import datetime
 from typing_extensions import Literal
 
-from pydantic import Field as FieldInfo
-
 from .._models import BaseModel
+from .cost_data import CostData
+from .requests_data import RequestsData
 
-__all__ = [
-    "BudgetHistoryResponse",
-    "BudgetHistory",
-    "BudgetHistoryTotals",
-    "BudgetHistoryTotalsCost",
-    "BudgetHistoryTotalsCostInput",
-    "BudgetHistoryTotalsCostOutput",
-    "BudgetHistoryTotalsCostTotal",
-    "BudgetHistoryTotalsRequests",
-]
+__all__ = ["BudgetHistoryResponse", "BudgetHistory", "BudgetHistoryTotals", "BudgetHistoryTotalsBudgetTransactions"]
 
 
-class BudgetHistoryTotalsCostInput(BaseModel):
-    base: Optional[float] = None
+class BudgetHistoryTotalsBudgetTransactions(BaseModel):
+    blocked: int
 
-    billed: Optional[float] = None
+    blocked_external: int
 
-    overrun_base: Optional[float] = FieldInfo(alias="overrunBase", default=None)
+    exceeded: int
 
-    overrun_billed: Optional[float] = FieldInfo(alias="overrunBilled", default=None)
+    successful: int
 
-    revenue: Optional[float] = None
-
-
-class BudgetHistoryTotalsCostOutput(BaseModel):
-    base: Optional[float] = None
-
-    billed: Optional[float] = None
-
-    overrun_base: Optional[float] = FieldInfo(alias="overrunBase", default=None)
-
-    overrun_billed: Optional[float] = FieldInfo(alias="overrunBilled", default=None)
-
-    revenue: Optional[float] = None
-
-
-class BudgetHistoryTotalsCostTotal(BaseModel):
-    base: Optional[float] = None
-
-    billed: Optional[float] = None
-
-    overrun_base: Optional[float] = FieldInfo(alias="overrunBase", default=None)
-
-    overrun_billed: Optional[float] = FieldInfo(alias="overrunBilled", default=None)
-
-    revenue: Optional[float] = None
-
-
-class BudgetHistoryTotalsCost(BaseModel):
-    input: BudgetHistoryTotalsCostInput
-
-    output: BudgetHistoryTotalsCostOutput
-
-    total: BudgetHistoryTotalsCostTotal
-
-
-class BudgetHistoryTotalsRequests(BaseModel):
-    blocked: Optional[int] = None
-
-    exceeded: Optional[int] = None
-
-    failed: Optional[int] = None
-
-    successful: Optional[int] = None
+    error: Optional[int] = None
 
     total: Optional[int] = None
 
 
 class BudgetHistoryTotals(BaseModel):
-    cost: BudgetHistoryTotalsCost
+    cost: CostData
 
-    requests: BudgetHistoryTotalsRequests
+    requests: RequestsData
+
+    budget_transactions: Optional[BudgetHistoryTotalsBudgetTransactions] = None
 
 
 class BudgetHistory(BaseModel):

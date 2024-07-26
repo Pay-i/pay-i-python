@@ -26,11 +26,11 @@ class BudgetTotalsBudgetTransactions(BaseModel):
 
 
 class BudgetTotals(BaseModel):
-    budget_transactions: BudgetTotalsBudgetTransactions
-
     cost: CostData
 
     requests: RequestsData
+
+    budget_transactions: Optional[BudgetTotalsBudgetTransactions] = None
 
 
 class Budget(BaseModel):

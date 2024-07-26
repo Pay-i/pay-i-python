@@ -57,9 +57,11 @@ class BudgetsResource(SyncAPIResource):
         budget_name: str,
         max: float,
         base_cost_estimate: Literal["max"] | NotGiven = NOT_GIVEN,
+        billing_model_id: Optional[int] | NotGiven = NOT_GIVEN,
         budget_response_type: Literal["block", "allow"] | NotGiven = NOT_GIVEN,
         budget_tags: Optional[List[str]] | NotGiven = NOT_GIVEN,
         budget_type: Literal["conservative", "liberal"] | NotGiven = NOT_GIVEN,
+        cost_basis: Literal["base", "billed"] | NotGiven = NOT_GIVEN,
         currency: Literal["usd"] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -87,9 +89,11 @@ class BudgetsResource(SyncAPIResource):
                     "budget_name": budget_name,
                     "max": max,
                     "base_cost_estimate": base_cost_estimate,
+                    "billing_model_id": billing_model_id,
                     "budget_response_type": budget_response_type,
                     "budget_tags": budget_tags,
                     "budget_type": budget_type,
+                    "cost_basis": cost_basis,
                     "currency": currency,
                 },
                 budget_create_params.BudgetCreateParams,
@@ -137,8 +141,8 @@ class BudgetsResource(SyncAPIResource):
         self,
         budget_id: str,
         *,
-        budget_name: str,
-        max: float | NotGiven = NOT_GIVEN,
+        budget_name: Optional[str] | NotGiven = NOT_GIVEN,
+        max: Optional[float] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -311,9 +315,11 @@ class AsyncBudgetsResource(AsyncAPIResource):
         budget_name: str,
         max: float,
         base_cost_estimate: Literal["max"] | NotGiven = NOT_GIVEN,
+        billing_model_id: Optional[int] | NotGiven = NOT_GIVEN,
         budget_response_type: Literal["block", "allow"] | NotGiven = NOT_GIVEN,
         budget_tags: Optional[List[str]] | NotGiven = NOT_GIVEN,
         budget_type: Literal["conservative", "liberal"] | NotGiven = NOT_GIVEN,
+        cost_basis: Literal["base", "billed"] | NotGiven = NOT_GIVEN,
         currency: Literal["usd"] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -341,9 +347,11 @@ class AsyncBudgetsResource(AsyncAPIResource):
                     "budget_name": budget_name,
                     "max": max,
                     "base_cost_estimate": base_cost_estimate,
+                    "billing_model_id": billing_model_id,
                     "budget_response_type": budget_response_type,
                     "budget_tags": budget_tags,
                     "budget_type": budget_type,
+                    "cost_basis": cost_basis,
                     "currency": currency,
                 },
                 budget_create_params.BudgetCreateParams,
@@ -391,8 +399,8 @@ class AsyncBudgetsResource(AsyncAPIResource):
         self,
         budget_id: str,
         *,
-        budget_name: str,
-        max: float | NotGiven = NOT_GIVEN,
+        budget_name: Optional[str] | NotGiven = NOT_GIVEN,
+        max: Optional[float] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,

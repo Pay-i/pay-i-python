@@ -28,11 +28,11 @@ class ItemTotalsBudgetTransactions(BaseModel):
 
 
 class ItemTotals(BaseModel):
-    budget_transactions: ItemTotalsBudgetTransactions
-
     cost: CostData
 
     requests: RequestsData
+
+    budget_transactions: Optional[ItemTotalsBudgetTransactions] = None
 
 
 class Item(BaseModel):
