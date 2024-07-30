@@ -16,4 +16,7 @@ from .budget_create_params import BudgetCreateParams as BudgetCreateParams
 from .budget_update_params import BudgetUpdateParams as BudgetUpdateParams
 from .category_list_response import CategoryListResponse as CategoryListResponse
 from .budget_history_response import BudgetHistoryResponse as BudgetHistoryResponse
+from .category_delete_response import CategoryDeleteResponse as CategoryDeleteResponse
 from .category_resource_response import CategoryResourceResponse as CategoryResourceResponse
+from .category_list_resources_response import CategoryListResourcesResponse as CategoryListResourcesResponse
+from .category_delete_resource_response import CategoryDeleteResourceResponse as CategoryDeleteResourceResponse
