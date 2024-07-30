@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.1.0-alpha.14 (2024-07-30)
+
+Full Changelog: [v0.1.0-alpha.13...v0.1.0-alpha.14](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.13...v0.1.0-alpha.14)
+
+### Features
+
+* **api:** update via SDK Studio ([#48](https://github.com/Pay-i/pay-i-python/issues/48)) ([5b67542](https://github.com/Pay-i/pay-i-python/commit/5b6754279d6b6dcb3b65bda1bf59b0d0092b4bec))
+* **api:** update via SDK Studio ([#50](https://github.com/Pay-i/pay-i-python/issues/50)) ([91c7d2c](https://github.com/Pay-i/pay-i-python/commit/91c7d2c29430835dfee501520d8b247755e1679d))
+* **api:** update via SDK Studio ([#57](https://github.com/Pay-i/pay-i-python/issues/57)) ([8d6ce22](https://github.com/Pay-i/pay-i-python/commit/8d6ce2229764aeaac2b0229cb70266545759cc7d))
+* **api:** update via SDK Studio ([#58](https://github.com/Pay-i/pay-i-python/issues/58)) ([013389a](https://github.com/Pay-i/pay-i-python/commit/013389a52fc87312e7173c34c3f27256e52b7ed5))
+* **api:** update via SDK Studio ([#59](https://github.com/Pay-i/pay-i-python/issues/59)) ([9f895e6](https://github.com/Pay-i/pay-i-python/commit/9f895e649a06a9000b1da8ab4a0b2fb779b09db9))
+
+
+### Chores
+
+* **ci:** limit release doctor target branches ([#54](https://github.com/Pay-i/pay-i-python/issues/54)) ([926140e](https://github.com/Pay-i/pay-i-python/commit/926140e37dacca0b1e4ae481ed6fb839a154ad88))
+* **docs:** document how to do per-request http client customization ([#53](https://github.com/Pay-i/pay-i-python/issues/53)) ([ea27182](https://github.com/Pay-i/pay-i-python/commit/ea271822df7ba59dc1cafc88e610b800a162c991))
+* **internal:** add type construction helper ([#60](https://github.com/Pay-i/pay-i-python/issues/60)) ([65303cf](https://github.com/Pay-i/pay-i-python/commit/65303cf704602ece488a31e8a608be100279a1bc))
+* **internal:** codegen related update ([#52](https://github.com/Pay-i/pay-i-python/issues/52)) ([4a469a0](https://github.com/Pay-i/pay-i-python/commit/4a469a0691431fe21ca111803ca6e256978cd21b))
+* **internal:** refactor release doctor script ([#55](https://github.com/Pay-i/pay-i-python/issues/55)) ([b0a2707](https://github.com/Pay-i/pay-i-python/commit/b0a2707b711baa23ee4af9152b7a3f8558ac8d09))
+* **tests:** update prism version ([#56](https://github.com/Pay-i/pay-i-python/issues/56)) ([df7370f](https://github.com/Pay-i/pay-i-python/commit/df7370f0aa1c8aa77e3091cb0b7c60238fb35ba0))
+
 ## 0.1.0-alpha.13 (2024-07-11)
 
 Full Changelog: [v0.1.0-alpha.12...v0.1.0-alpha.13](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.12...v0.1.0-alpha.13)
