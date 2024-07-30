@@ -15,10 +15,14 @@ class BudgetCreateParams(TypedDict, total=False):
 
     base_cost_estimate: Literal["max"]
 
+    billing_model_id: Optional[int]
+
     budget_response_type: Literal["block", "allow"]
 
     budget_tags: Optional[List[str]]
 
     budget_type: Literal["conservative", "liberal"]
+
+    cost_basis: Literal["base", "billed"]
 
     currency: Literal["usd"]

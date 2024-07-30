@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from typing import Union
+from datetime import datetime
+
 import httpx
 
 from ..types import ingest_units_params
@@ -41,6 +44,7 @@ class IngestResource(SyncAPIResource):
         input: int,
         output: int,
         resource: str,
+        event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
         budget_ids: list[str] | NotGiven = NOT_GIVEN,
         request_tags: list[str] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
@@ -103,6 +107,7 @@ class IngestResource(SyncAPIResource):
                     "input": input,
                     "output": output,
                     "resource": resource,
+                    "event_timestamp": event_timestamp,
                 },
                 ingest_units_params.IngestUnitsParams,
             ),
@@ -129,6 +134,7 @@ class AsyncIngestResource(AsyncAPIResource):
         input: int,
         output: int,
         resource: str,
+        event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
         budget_ids: list[str] | NotGiven = NOT_GIVEN,
         request_tags: list[str] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
@@ -183,6 +189,7 @@ class AsyncIngestResource(AsyncAPIResource):
                     "input": input,
                     "output": output,
                     "resource": resource,
+                    "event_timestamp": event_timestamp,
                 },
                 ingest_units_params.IngestUnitsParams,
             ),

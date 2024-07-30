@@ -36,9 +36,11 @@ class TestBudgets:
             budget_name="x",
             max=1,
             base_cost_estimate="max",
+            billing_model_id=0,
             budget_response_type="block",
             budget_tags=["tag1", "tag2"],
             budget_type="conservative",
+            cost_basis="base",
             currency="usd",
         )
         assert_matches_type(BudgetResponse, budget, path=["response"])
@@ -111,7 +113,6 @@ class TestBudgets:
     def test_method_update(self, client: Payi) -> None:
         budget = client.budgets.update(
             budget_id="budget_id",
-            budget_name="x",
         )
         assert_matches_type(BudgetResponse, budget, path=["response"])
 
@@ -119,7 +120,7 @@ class TestBudgets:
     def test_method_update_with_all_params(self, client: Payi) -> None:
         budget = client.budgets.update(
             budget_id="budget_id",
-            budget_name="x",
+            budget_name="budget_name",
             max=1,
         )
         assert_matches_type(BudgetResponse, budget, path=["response"])
@@ -128,7 +129,6 @@ class TestBudgets:
     def test_raw_response_update(self, client: Payi) -> None:
         response = client.budgets.with_raw_response.update(
             budget_id="budget_id",
-            budget_name="x",
         )
 
         assert response.is_closed is True
@@ -140,7 +140,6 @@ class TestBudgets:
     def test_streaming_response_update(self, client: Payi) -> None:
         with client.budgets.with_streaming_response.update(
             budget_id="budget_id",
-            budget_name="x",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -155,7 +154,6 @@ class TestBudgets:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `budget_id` but received ''"):
             client.budgets.with_raw_response.update(
                 budget_id="",
-                budget_name="x",
             )
 
     @parametrize
@@ -289,9 +287,11 @@ class TestAsyncBudgets:
             budget_name="x",
             max=1,
             base_cost_estimate="max",
+            billing_model_id=0,
             budget_response_type="block",
             budget_tags=["tag1", "tag2"],
             budget_type="conservative",
+            cost_basis="base",
             currency="usd",
         )
         assert_matches_type(BudgetResponse, budget, path=["response"])
@@ -364,7 +364,6 @@ class TestAsyncBudgets:
     async def test_method_update(self, async_client: AsyncPayi) -> None:
         budget = await async_client.budgets.update(
             budget_id="budget_id",
-            budget_name="x",
         )
         assert_matches_type(BudgetResponse, budget, path=["response"])
 
@@ -372,7 +371,7 @@ class TestAsyncBudgets:
     async def test_method_update_with_all_params(self, async_client: AsyncPayi) -> None:
         budget = await async_client.budgets.update(
             budget_id="budget_id",
-            budget_name="x",
+            budget_name="budget_name",
             max=1,
         )
         assert_matches_type(BudgetResponse, budget, path=["response"])
@@ -381,7 +380,6 @@ class TestAsyncBudgets:
     async def test_raw_response_update(self, async_client: AsyncPayi) -> None:
         response = await async_client.budgets.with_raw_response.update(
             budget_id="budget_id",
-            budget_name="x",
         )
 
         assert response.is_closed is True
@@ -393,7 +391,6 @@ class TestAsyncBudgets:
     async def test_streaming_response_update(self, async_client: AsyncPayi) -> None:
         async with async_client.budgets.with_streaming_response.update(
             budget_id="budget_id",
-            budget_name="x",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -408,7 +405,6 @@ class TestAsyncBudgets:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `budget_id` but received ''"):
             await async_client.budgets.with_raw_response.update(
                 budget_id="",
-                budget_name="x",
             )
 
     @parametrize

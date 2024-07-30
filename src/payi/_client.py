@@ -48,6 +48,7 @@ __all__ = [
 class Payi(SyncAPIClient):
     budgets: resources.BudgetsResource
     ingest: resources.IngestResource
+    categories: resources.CategoriesResource
     with_raw_response: PayiWithRawResponse
     with_streaming_response: PayiWithStreamedResponse
 
@@ -107,6 +108,7 @@ class Payi(SyncAPIClient):
 
         self.budgets = resources.BudgetsResource(self)
         self.ingest = resources.IngestResource(self)
+        self.categories = resources.CategoriesResource(self)
         self.with_raw_response = PayiWithRawResponse(self)
         self.with_streaming_response = PayiWithStreamedResponse(self)
 
@@ -218,6 +220,7 @@ class Payi(SyncAPIClient):
 class AsyncPayi(AsyncAPIClient):
     budgets: resources.AsyncBudgetsResource
     ingest: resources.AsyncIngestResource
+    categories: resources.AsyncCategoriesResource
     with_raw_response: AsyncPayiWithRawResponse
     with_streaming_response: AsyncPayiWithStreamedResponse
 
@@ -277,6 +280,7 @@ class AsyncPayi(AsyncAPIClient):
 
         self.budgets = resources.AsyncBudgetsResource(self)
         self.ingest = resources.AsyncIngestResource(self)
+        self.categories = resources.AsyncCategoriesResource(self)
         self.with_raw_response = AsyncPayiWithRawResponse(self)
         self.with_streaming_response = AsyncPayiWithStreamedResponse(self)
 
@@ -389,24 +393,28 @@ class PayiWithRawResponse:
     def __init__(self, client: Payi) -> None:
         self.budgets = resources.BudgetsResourceWithRawResponse(client.budgets)
         self.ingest = resources.IngestResourceWithRawResponse(client.ingest)
+        self.categories = resources.CategoriesResourceWithRawResponse(client.categories)
 
 
 class AsyncPayiWithRawResponse:
     def __init__(self, client: AsyncPayi) -> None:
         self.budgets = resources.AsyncBudgetsResourceWithRawResponse(client.budgets)
         self.ingest = resources.AsyncIngestResourceWithRawResponse(client.ingest)
+        self.categories = resources.AsyncCategoriesResourceWithRawResponse(client.categories)
 
 
 class PayiWithStreamedResponse:
     def __init__(self, client: Payi) -> None:
         self.budgets = resources.BudgetsResourceWithStreamingResponse(client.budgets)
         self.ingest = resources.IngestResourceWithStreamingResponse(client.ingest)
+        self.categories = resources.CategoriesResourceWithStreamingResponse(client.categories)
 
 
 class AsyncPayiWithStreamedResponse:
     def __init__(self, client: AsyncPayi) -> None:
         self.budgets = resources.AsyncBudgetsResourceWithStreamingResponse(client.budgets)
         self.ingest = resources.AsyncIngestResourceWithStreamingResponse(client.ingest)
+        self.categories = resources.AsyncCategoriesResourceWithStreamingResponse(client.categories)
 
 
 Client = Payi
