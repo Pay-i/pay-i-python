@@ -42,11 +42,11 @@ class ResourcesResource(SyncAPIResource):
         resource: str,
         *,
         category: str,
-        start_timestamp: Union[str, datetime],
         input_price: float | NotGiven = NOT_GIVEN,
         max_input_units: int | NotGiven = NOT_GIVEN,
         max_output_units: int | NotGiven = NOT_GIVEN,
         output_price: float | NotGiven = NOT_GIVEN,
+        start_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -74,11 +74,11 @@ class ResourcesResource(SyncAPIResource):
             f"/api/v1/categories/{category}/resources/{resource}",
             body=maybe_transform(
                 {
-                    "start_timestamp": start_timestamp,
                     "input_price": input_price,
                     "max_input_units": max_input_units,
                     "max_output_units": max_output_units,
                     "output_price": output_price,
+                    "start_timestamp": start_timestamp,
                 },
                 resource_create_params.ResourceCreateParams,
             ),
@@ -217,11 +217,11 @@ class AsyncResourcesResource(AsyncAPIResource):
         resource: str,
         *,
         category: str,
-        start_timestamp: Union[str, datetime],
         input_price: float | NotGiven = NOT_GIVEN,
         max_input_units: int | NotGiven = NOT_GIVEN,
         max_output_units: int | NotGiven = NOT_GIVEN,
         output_price: float | NotGiven = NOT_GIVEN,
+        start_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -249,11 +249,11 @@ class AsyncResourcesResource(AsyncAPIResource):
             f"/api/v1/categories/{category}/resources/{resource}",
             body=await async_maybe_transform(
                 {
-                    "start_timestamp": start_timestamp,
                     "input_price": input_price,
                     "max_input_units": max_input_units,
                     "max_output_units": max_output_units,
                     "output_price": output_price,
+                    "start_timestamp": start_timestamp,
                 },
                 resource_create_params.ResourceCreateParams,
             ),
