@@ -70,8 +70,8 @@ class TestIngest:
                     "event_timestamp": parse_datetime("2019-12-27T18:11:19.117Z"),
                 },
             ],
-            x_proxy_budget_ids="budgetId1, budgetId_2",
-            x_proxy_request_tags="requestTag1, request_tag_2",
+            budget_ids=["budgetId1, budgetId_2"],
+            request_tags=["requestTag1, request_tag_2"],
         )
         assert_matches_type(BulkIngestResponse, ingest, path=["response"])
 
@@ -246,8 +246,8 @@ class TestAsyncIngest:
                     "event_timestamp": parse_datetime("2019-12-27T18:11:19.117Z"),
                 },
             ],
-            x_proxy_budget_ids="budgetId1, budgetId_2",
-            x_proxy_request_tags="requestTag1, request_tag_2",
+            budget_ids=["budgetId1, budgetId_2"],
+            request_tags=["requestTag1, request_tag_2"],
         )
         assert_matches_type(BulkIngestResponse, ingest, path=["response"])
 
