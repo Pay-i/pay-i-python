@@ -5,32 +5,9 @@ from datetime import datetime
 from typing_extensions import Literal
 
 from .._models import BaseModel
-from .cost_data import CostData
-from .requests_data import RequestsData
+from .total_cost_data import TotalCostData
 
-__all__ = ["BudgetResponse", "Budget", "BudgetTotals", "BudgetTotalsBudgetTransactions"]
-
-
-class BudgetTotalsBudgetTransactions(BaseModel):
-    blocked: int
-
-    blocked_external: int
-
-    exceeded: int
-
-    successful: int
-
-    error: Optional[int] = None
-
-    total: Optional[int] = None
-
-
-class BudgetTotals(BaseModel):
-    cost: CostData
-
-    requests: RequestsData
-
-    budget_transactions: Optional[BudgetTotalsBudgetTransactions] = None
+__all__ = ["BudgetResponse", "Budget"]
 
 
 class Budget(BaseModel):
@@ -52,7 +29,7 @@ class Budget(BaseModel):
 
     max: float
 
-    totals: BudgetTotals
+    totals: TotalCostData
 
     budget_tags: Optional[List[str]] = None
 

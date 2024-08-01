@@ -8,7 +8,7 @@ from typing import Any, cast
 import pytest
 
 from payi import Payi, AsyncPayi
-from payi.types import ProxyResult
+from payi.types import IngestResponse, BulkIngestResponse
 from payi._utils import parse_datetime
 from tests.utils import assert_matches_type
 
@@ -19,6 +19,125 @@ class TestIngest:
     parametrize = pytest.mark.parametrize("client", [False, True], indirect=True, ids=["loose", "strict"])
 
     @parametrize
+    def test_method_bulk(self, client: Payi) -> None:
+        ingest = client.ingest.bulk(
+            items=[
+                {
+                    "category": "x",
+                    "resource": "x",
+                    "input": 0,
+                    "output": 0,
+                },
+                {
+                    "category": "x",
+                    "resource": "x",
+                    "input": 0,
+                    "output": 0,
+                },
+                {
+                    "category": "x",
+                    "resource": "x",
+                    "input": 0,
+                    "output": 0,
+                },
+            ],
+        )
+        assert_matches_type(BulkIngestResponse, ingest, path=["response"])
+
+    @parametrize
+    def test_method_bulk_with_all_params(self, client: Payi) -> None:
+        ingest = client.ingest.bulk(
+            items=[
+                {
+                    "category": "x",
+                    "resource": "x",
+                    "input": 0,
+                    "output": 0,
+                    "event_timestamp": parse_datetime("2019-12-27T18:11:19.117Z"),
+                },
+                {
+                    "category": "x",
+                    "resource": "x",
+                    "input": 0,
+                    "output": 0,
+                    "event_timestamp": parse_datetime("2019-12-27T18:11:19.117Z"),
+                },
+                {
+                    "category": "x",
+                    "resource": "x",
+                    "input": 0,
+                    "output": 0,
+                    "event_timestamp": parse_datetime("2019-12-27T18:11:19.117Z"),
+                },
+            ],
+            x_proxy_budget_ids="budgetId1, budgetId_2",
+            x_proxy_request_tags="requestTag1, request_tag_2",
+        )
+        assert_matches_type(BulkIngestResponse, ingest, path=["response"])
+
+    @parametrize
+    def test_raw_response_bulk(self, client: Payi) -> None:
+        response = client.ingest.with_raw_response.bulk(
+            items=[
+                {
+                    "category": "x",
+                    "resource": "x",
+                    "input": 0,
+                    "output": 0,
+                },
+                {
+                    "category": "x",
+                    "resource": "x",
+                    "input": 0,
+                    "output": 0,
+                },
+                {
+                    "category": "x",
+                    "resource": "x",
+                    "input": 0,
+                    "output": 0,
+                },
+            ],
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        ingest = response.parse()
+        assert_matches_type(BulkIngestResponse, ingest, path=["response"])
+
+    @parametrize
+    def test_streaming_response_bulk(self, client: Payi) -> None:
+        with client.ingest.with_streaming_response.bulk(
+            items=[
+                {
+                    "category": "x",
+                    "resource": "x",
+                    "input": 0,
+                    "output": 0,
+                },
+                {
+                    "category": "x",
+                    "resource": "x",
+                    "input": 0,
+                    "output": 0,
+                },
+                {
+                    "category": "x",
+                    "resource": "x",
+                    "input": 0,
+                    "output": 0,
+                },
+            ],
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            ingest = response.parse()
+            assert_matches_type(BulkIngestResponse, ingest, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @parametrize
     def test_method_units(self, client: Payi) -> None:
         ingest = client.ingest.units(
             category="x",
@@ -26,7 +145,7 @@ class TestIngest:
             output=0,
             resource="x",
         )
-        assert_matches_type(ProxyResult, ingest, path=["response"])
+        assert_matches_type(IngestResponse, ingest, path=["response"])
 
     @parametrize
     def test_method_units_with_all_params(self, client: Payi) -> None:
@@ -39,7 +158,7 @@ class TestIngest:
             budget_ids=["budgetId1", "budgetId_2"],
             request_tags=["requestTag1", "request_tag_2"],
         )
-        assert_matches_type(ProxyResult, ingest, path=["response"])
+        assert_matches_type(IngestResponse, ingest, path=["response"])
 
     @parametrize
     def test_raw_response_units(self, client: Payi) -> None:
@@ -53,7 +172,7 @@ class TestIngest:
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
         ingest = response.parse()
-        assert_matches_type(ProxyResult, ingest, path=["response"])
+        assert_matches_type(IngestResponse, ingest, path=["response"])
 
     @parametrize
     def test_streaming_response_units(self, client: Payi) -> None:
@@ -67,13 +186,132 @@ class TestIngest:
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
             ingest = response.parse()
-            assert_matches_type(ProxyResult, ingest, path=["response"])
+            assert_matches_type(IngestResponse, ingest, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
 
 class TestAsyncIngest:
     parametrize = pytest.mark.parametrize("async_client", [False, True], indirect=True, ids=["loose", "strict"])
+
+    @parametrize
+    async def test_method_bulk(self, async_client: AsyncPayi) -> None:
+        ingest = await async_client.ingest.bulk(
+            items=[
+                {
+                    "category": "x",
+                    "resource": "x",
+                    "input": 0,
+                    "output": 0,
+                },
+                {
+                    "category": "x",
+                    "resource": "x",
+                    "input": 0,
+                    "output": 0,
+                },
+                {
+                    "category": "x",
+                    "resource": "x",
+                    "input": 0,
+                    "output": 0,
+                },
+            ],
+        )
+        assert_matches_type(BulkIngestResponse, ingest, path=["response"])
+
+    @parametrize
+    async def test_method_bulk_with_all_params(self, async_client: AsyncPayi) -> None:
+        ingest = await async_client.ingest.bulk(
+            items=[
+                {
+                    "category": "x",
+                    "resource": "x",
+                    "input": 0,
+                    "output": 0,
+                    "event_timestamp": parse_datetime("2019-12-27T18:11:19.117Z"),
+                },
+                {
+                    "category": "x",
+                    "resource": "x",
+                    "input": 0,
+                    "output": 0,
+                    "event_timestamp": parse_datetime("2019-12-27T18:11:19.117Z"),
+                },
+                {
+                    "category": "x",
+                    "resource": "x",
+                    "input": 0,
+                    "output": 0,
+                    "event_timestamp": parse_datetime("2019-12-27T18:11:19.117Z"),
+                },
+            ],
+            x_proxy_budget_ids="budgetId1, budgetId_2",
+            x_proxy_request_tags="requestTag1, request_tag_2",
+        )
+        assert_matches_type(BulkIngestResponse, ingest, path=["response"])
+
+    @parametrize
+    async def test_raw_response_bulk(self, async_client: AsyncPayi) -> None:
+        response = await async_client.ingest.with_raw_response.bulk(
+            items=[
+                {
+                    "category": "x",
+                    "resource": "x",
+                    "input": 0,
+                    "output": 0,
+                },
+                {
+                    "category": "x",
+                    "resource": "x",
+                    "input": 0,
+                    "output": 0,
+                },
+                {
+                    "category": "x",
+                    "resource": "x",
+                    "input": 0,
+                    "output": 0,
+                },
+            ],
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        ingest = await response.parse()
+        assert_matches_type(BulkIngestResponse, ingest, path=["response"])
+
+    @parametrize
+    async def test_streaming_response_bulk(self, async_client: AsyncPayi) -> None:
+        async with async_client.ingest.with_streaming_response.bulk(
+            items=[
+                {
+                    "category": "x",
+                    "resource": "x",
+                    "input": 0,
+                    "output": 0,
+                },
+                {
+                    "category": "x",
+                    "resource": "x",
+                    "input": 0,
+                    "output": 0,
+                },
+                {
+                    "category": "x",
+                    "resource": "x",
+                    "input": 0,
+                    "output": 0,
+                },
+            ],
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            ingest = await response.parse()
+            assert_matches_type(BulkIngestResponse, ingest, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
 
     @parametrize
     async def test_method_units(self, async_client: AsyncPayi) -> None:
@@ -83,7 +321,7 @@ class TestAsyncIngest:
             output=0,
             resource="x",
         )
-        assert_matches_type(ProxyResult, ingest, path=["response"])
+        assert_matches_type(IngestResponse, ingest, path=["response"])
 
     @parametrize
     async def test_method_units_with_all_params(self, async_client: AsyncPayi) -> None:
@@ -96,7 +334,7 @@ class TestAsyncIngest:
             budget_ids=["budgetId1", "budgetId_2"],
             request_tags=["requestTag1", "request_tag_2"],
         )
-        assert_matches_type(ProxyResult, ingest, path=["response"])
+        assert_matches_type(IngestResponse, ingest, path=["response"])
 
     @parametrize
     async def test_raw_response_units(self, async_client: AsyncPayi) -> None:
@@ -110,7 +348,7 @@ class TestAsyncIngest:
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
         ingest = await response.parse()
-        assert_matches_type(ProxyResult, ingest, path=["response"])
+        assert_matches_type(IngestResponse, ingest, path=["response"])
 
     @parametrize
     async def test_streaming_response_units(self, async_client: AsyncPayi) -> None:
@@ -124,6 +362,6 @@ class TestAsyncIngest:
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
             ingest = await response.parse()
-            assert_matches_type(ProxyResult, ingest, path=["response"])
+            assert_matches_type(IngestResponse, ingest, path=["response"])
 
         assert cast(Any, response.is_closed) is True

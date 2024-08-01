@@ -7,32 +7,9 @@ from typing_extensions import Literal
 from pydantic import Field as FieldInfo
 
 from .._models import BaseModel
-from .cost_data import CostData
-from .requests_data import RequestsData
+from .total_cost_data import TotalCostData
 
-__all__ = ["PagedBudgetList", "Item", "ItemTotals", "ItemTotalsBudgetTransactions"]
-
-
-class ItemTotalsBudgetTransactions(BaseModel):
-    blocked: int
-
-    blocked_external: int
-
-    exceeded: int
-
-    successful: int
-
-    error: Optional[int] = None
-
-    total: Optional[int] = None
-
-
-class ItemTotals(BaseModel):
-    cost: CostData
-
-    requests: RequestsData
-
-    budget_transactions: Optional[ItemTotalsBudgetTransactions] = None
+__all__ = ["PagedBudgetList", "Item"]
 
 
 class Item(BaseModel):
@@ -54,7 +31,7 @@ class Item(BaseModel):
 
     max: float
 
-    totals: ItemTotals
+    totals: TotalCostData
 
     budget_tags: Optional[List[str]] = None
 
