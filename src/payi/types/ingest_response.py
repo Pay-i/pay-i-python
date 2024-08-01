@@ -1,19 +1,20 @@
 # File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
 from typing import Dict, List, Optional
+from datetime import datetime
 from typing_extensions import Literal
 
 from .._models import BaseModel
 from .cost_details import CostDetails
 
-__all__ = ["ProxyResult", "Budgets", "Cost"]
+__all__ = ["IngestResponse", "XproxyResult", "XproxyResultBudgets", "XproxyResultCost"]
 
 
-class Budgets(BaseModel):
+class XproxyResultBudgets(BaseModel):
     state: Optional[Literal["ok", "blocked", "blocked_external", "exceeded", "failed"]] = None
 
 
-class Cost(BaseModel):
+class XproxyResultCost(BaseModel):
     currency: Optional[Literal["usd"]] = None
 
     input: Optional[CostDetails] = None
@@ -23,11 +24,19 @@ class Cost(BaseModel):
     total: Optional[CostDetails] = None
 
 
-class ProxyResult(BaseModel):
-    budgets: Optional[Dict[str, Budgets]] = None
+class XproxyResult(BaseModel):
+    budgets: Optional[Dict[str, XproxyResultBudgets]] = None
 
-    cost: Optional[Cost] = None
+    cost: Optional[XproxyResultCost] = None
 
     request_id: Optional[str] = None
 
     request_tags: Optional[List[str]] = None
+
+
+class IngestResponse(BaseModel):
+    ingest_timestamp: datetime
+
+    request_id: str
+
+    xproxy_result: XproxyResult

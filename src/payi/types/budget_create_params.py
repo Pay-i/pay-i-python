@@ -15,7 +15,7 @@ class BudgetCreateParams(TypedDict, total=False):
 
     base_cost_estimate: Literal["max"]
 
-    billing_model_id: Optional[int]
+    billing_model_id: Optional[str]
 
     budget_response_type: Literal["block", "allow"]
 
