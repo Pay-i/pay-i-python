@@ -208,8 +208,12 @@ class AsyncIngestResource(AsyncAPIResource):
         return await self._post(
             "/api/v1/ingest/bulk",
             body= cast(Dict[str, object],
-                await async_maybe_transform(items, ingest_bulk_params.IngestBulkParams)
-                )["items"],
+                await async_maybe_transform( 
+            { 
+                "items": items, 
+            }, 
+            ingest_bulk_params.IngestBulkParams)
+            )["items"],
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
