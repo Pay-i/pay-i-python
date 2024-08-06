@@ -7,7 +7,7 @@ from datetime import datetime
 
 import httpx
 
-from ..types import ingest_bulk_params,  ingest_units_params
+from ..types import ingest_bulk_params, ingest_units_params
 from .._types import NOT_GIVEN, Body, Query, Headers, NotGiven
 from .._utils import (
     maybe_transform,
