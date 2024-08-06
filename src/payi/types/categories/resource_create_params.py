@@ -14,8 +14,6 @@ __all__ = ["ResourceCreateParams"]
 class ResourceCreateParams(TypedDict, total=False):
     category: Required[str]
 
-    start_timestamp: Required[Annotated[Union[str, datetime], PropertyInfo(format="iso8601")]]
-
     input_price: float
 
     max_input_units: int
@@ -23,3 +21,5 @@ class ResourceCreateParams(TypedDict, total=False):
     max_output_units: int
 
     output_price: float
+
+    start_timestamp: Annotated[Union[str, datetime, None], PropertyInfo(format="iso8601")]

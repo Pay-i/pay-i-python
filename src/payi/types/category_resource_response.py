@@ -13,8 +13,6 @@ class CategoryResourceResponse(BaseModel):
 
     resource: str
 
-    start_timestamp: datetime
-
     input_price: Optional[float] = None
 
     max_input_units: Optional[int] = None
@@ -22,3 +20,5 @@ class CategoryResourceResponse(BaseModel):
     max_output_units: Optional[int] = None
 
     output_price: Optional[float] = None
+
+    start_timestamp: Optional[datetime] = None
