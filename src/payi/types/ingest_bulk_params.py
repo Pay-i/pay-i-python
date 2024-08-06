@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Iterable, Union
-from typing_extensions import Required, Annotated, TypedDict
+from typing import Iterable
+from typing_extensions import Required, TypedDict
 
-from .._utils import PropertyInfo
 from .ingest_units_param import IngestUnitsParam
 
 __all__ = ["IngestBulkParams"]
@@ -13,7 +12,3 @@ __all__ = ["IngestBulkParams"]
 
 class IngestBulkParams(TypedDict, total=False):
     items: Required[Iterable[IngestUnitsParam]]
-
-    budget_ids: Annotated[Union[list[str], None], PropertyInfo(alias="xProxy-Budget-IDs")]
-
-    request_tags: Annotated[Union[list[str], None], PropertyInfo(alias="xProxy-Request-Tags")]
