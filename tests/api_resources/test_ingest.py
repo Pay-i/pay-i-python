@@ -21,7 +21,7 @@ class TestIngest:
     @parametrize
     def test_method_bulk(self, client: Payi) -> None:
         ingest = client.ingest.bulk(
-            items=[
+            events=[
                 {
                     "category": "x",
                     "resource": "x",
@@ -45,38 +45,9 @@ class TestIngest:
         assert_matches_type(BulkIngestResponse, ingest, path=["response"])
 
     @parametrize
-    def test_method_bulk_with_all_params(self, client: Payi) -> None:
-        ingest = client.ingest.bulk(
-            items=[
-                {
-                    "category": "x",
-                    "resource": "x",
-                    "input": 0,
-                    "output": 0,
-                    "event_timestamp": parse_datetime("2019-12-27T18:11:19.117Z"),
-                },
-                {
-                    "category": "x",
-                    "resource": "x",
-                    "input": 0,
-                    "output": 0,
-                    "event_timestamp": parse_datetime("2019-12-27T18:11:19.117Z"),
-                },
-                {
-                    "category": "x",
-                    "resource": "x",
-                    "input": 0,
-                    "output": 0,
-                    "event_timestamp": parse_datetime("2019-12-27T18:11:19.117Z"),
-                },
-            ]
-        )
-        assert_matches_type(BulkIngestResponse, ingest, path=["response"])
-
-    @parametrize
     def test_raw_response_bulk(self, client: Payi) -> None:
         response = client.ingest.with_raw_response.bulk(
-            items=[
+            events=[
                 {
                     "category": "x",
                     "resource": "x",
@@ -106,7 +77,7 @@ class TestIngest:
     @parametrize
     def test_streaming_response_bulk(self, client: Payi) -> None:
         with client.ingest.with_streaming_response.bulk(
-            items=[
+            events=[
                 {
                     "category": "x",
                     "resource": "x",
@@ -195,7 +166,7 @@ class TestAsyncIngest:
     @parametrize
     async def test_method_bulk(self, async_client: AsyncPayi) -> None:
         ingest = await async_client.ingest.bulk(
-            items=[
+            events=[
                 {
                     "category": "x",
                     "resource": "x",
@@ -219,38 +190,9 @@ class TestAsyncIngest:
         assert_matches_type(BulkIngestResponse, ingest, path=["response"])
 
     @parametrize
-    async def test_method_bulk_with_all_params(self, async_client: AsyncPayi) -> None:
-        ingest = await async_client.ingest.bulk(
-            items=[
-                {
-                    "category": "x",
-                    "resource": "x",
-                    "input": 0,
-                    "output": 0,
-                    "event_timestamp": parse_datetime("2019-12-27T18:11:19.117Z"),
-                },
-                {
-                    "category": "x",
-                    "resource": "x",
-                    "input": 0,
-                    "output": 0,
-                    "event_timestamp": parse_datetime("2019-12-27T18:11:19.117Z"),
-                },
-                {
-                    "category": "x",
-                    "resource": "x",
-                    "input": 0,
-                    "output": 0,
-                    "event_timestamp": parse_datetime("2019-12-27T18:11:19.117Z"),
-                },
-            ]
-        )
-        assert_matches_type(BulkIngestResponse, ingest, path=["response"])
-
-    @parametrize
     async def test_raw_response_bulk(self, async_client: AsyncPayi) -> None:
         response = await async_client.ingest.with_raw_response.bulk(
-            items=[
+            events=[
                 {
                     "category": "x",
                     "resource": "x",
@@ -280,7 +222,7 @@ class TestAsyncIngest:
     @parametrize
     async def test_streaming_response_bulk(self, async_client: AsyncPayi) -> None:
         async with async_client.ingest.with_streaming_response.bulk(
-            items=[
+            events=[
                 {
                     "category": "x",
                     "resource": "x",
