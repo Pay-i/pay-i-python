@@ -17,6 +17,7 @@ from respx import MockRouter
 from pydantic import ValidationError
 
 from payi import Payi, AsyncPayi, APIResponseValidationError
+from payi._types import Omit
 from payi._models import BaseModel, FinalRequestOptions
 from payi._constants import RAW_RESPONSE_HEADER
 from payi._exceptions import PayiError, APIStatusError, APITimeoutError, APIResponseValidationError
@@ -335,7 +336,8 @@ class TestPayi:
         assert request.headers.get("Authorization") == payi_api_key
 
         with pytest.raises(PayiError):
-            client2 = Payi(base_url=base_url, payi_api_key=None, _strict_response_validation=True)
+            with update_env(**{"PAYI_API_KEY": Omit()}):
+                client2 = Payi(base_url=base_url, payi_api_key=None, _strict_response_validation=True)
             _ = client2
 
     def test_default_query_option(self) -> None:
@@ -1067,7 +1069,8 @@ class TestAsyncPayi:
         assert request.headers.get("Authorization") == payi_api_key
 
         with pytest.raises(PayiError):
-            client2 = AsyncPayi(base_url=base_url, payi_api_key=None, _strict_response_validation=True)
+            with update_env(**{"PAYI_API_KEY": Omit()}):
+                client2 = AsyncPayi(base_url=base_url, payi_api_key=None, _strict_response_validation=True)
             _ = client2
 
     def test_default_query_option(self) -> None:
