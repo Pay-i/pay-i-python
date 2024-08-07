@@ -83,6 +83,8 @@ class IngestResource(SyncAPIResource):
         event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
         budget_ids: Union[list[str], None] | NotGiven = NOT_GIVEN,
         request_tags: Union[list[str], None] | NotGiven = NOT_GIVEN,
+        experience_instance_id: Union[str, None] | NotGiven = NOT_GIVEN,
+        user_id: Union[str, None] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -107,6 +109,10 @@ class IngestResource(SyncAPIResource):
           budget_ids (list[str], optional): The budget IDs to associate with the request. Defaults to None.
           
           request_tags (list[str], optional): The request tags to associate with the request. Defaults to None.
+
+          experience_instance_id (str, optional): The experience instance id
+          
+          user_id (str, optional): The user id
           
           extra_headers (Dict[str, str], optional): Additional headers for the request. Defaults to None.
           
@@ -142,6 +148,8 @@ class IngestResource(SyncAPIResource):
                 {
                     "xProxy-Budget-IDs": valid_ids_str,
                     "xProxy-Request-Tags": valid_tags_str,
+                    "xProxy-Experience-InstanceId": experience_instance_id,
+                    "xProxy-User-ID": user_id,
                 }
             ),
             **(extra_headers or {}),
@@ -218,6 +226,8 @@ class AsyncIngestResource(AsyncAPIResource):
         event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
         budget_ids: Union[list[str], None] | NotGiven = NOT_GIVEN,
         request_tags: Union[list[str], None] | NotGiven = NOT_GIVEN,
+        experience_instance_id: Union[str, None] | NotGiven = NOT_GIVEN,
+        user_id: Union[str, None] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -242,6 +252,10 @@ class AsyncIngestResource(AsyncAPIResource):
           budget_ids (list[str], optional): The budget IDs to associate with the request. Defaults to None.
           
           request_tags (list[str], optional): The request tags to associate with the request. Defaults to None.
+          
+          experience_instance_id (str, optional): The experience instance id
+          
+          user_id (str, optional): The user id
           
           extra_headers (Dict[str, str], optional): Additional headers for the request. Defaults to None.
           
@@ -277,6 +291,8 @@ class AsyncIngestResource(AsyncAPIResource):
                 {
                     "xProxy-Budget-IDs": valid_ids_str,
                     "xProxy-Request-Tags": valid_tags_str,
+                    "xProxy-Experience-InstanceId": experience_instance_id,
+                    "xProxy-User-ID": user_id,
                 }
             ),
             **(extra_headers or {}),

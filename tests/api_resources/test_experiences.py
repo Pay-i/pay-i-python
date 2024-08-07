@@ -20,14 +20,14 @@ class TestExperiences:
     @parametrize
     def test_method_create(self, client: Payi) -> None:
         experience = client.experiences.create(
-            0,
+            "experience_type_id",
         )
         assert_matches_type(ExperienceInstance, experience, path=["response"])
 
     @parametrize
     def test_raw_response_create(self, client: Payi) -> None:
         response = client.experiences.with_raw_response.create(
-            0,
+            "experience_type_id",
         )
 
         assert response.is_closed is True
@@ -38,7 +38,7 @@ class TestExperiences:
     @parametrize
     def test_streaming_response_create(self, client: Payi) -> None:
         with client.experiences.with_streaming_response.create(
-            0,
+            "experience_type_id",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -49,16 +49,23 @@ class TestExperiences:
         assert cast(Any, response.is_closed) is True
 
     @parametrize
+    def test_path_params_create(self, client: Payi) -> None:
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `experience_type_id` but received ''"):
+            client.experiences.with_raw_response.create(
+                "",
+            )
+
+    @parametrize
     def test_method_retrieve(self, client: Payi) -> None:
         experience = client.experiences.retrieve(
-            0,
+            "experience_instance_id",
         )
         assert_matches_type(ExperienceInstance, experience, path=["response"])
 
     @parametrize
     def test_raw_response_retrieve(self, client: Payi) -> None:
         response = client.experiences.with_raw_response.retrieve(
-            0,
+            "experience_instance_id",
         )
 
         assert response.is_closed is True
@@ -69,7 +76,7 @@ class TestExperiences:
     @parametrize
     def test_streaming_response_retrieve(self, client: Payi) -> None:
         with client.experiences.with_streaming_response.retrieve(
-            0,
+            "experience_instance_id",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -80,16 +87,25 @@ class TestExperiences:
         assert cast(Any, response.is_closed) is True
 
     @parametrize
+    def test_path_params_retrieve(self, client: Payi) -> None:
+        with pytest.raises(
+            ValueError, match=r"Expected a non-empty value for `experience_instance_id` but received ''"
+        ):
+            client.experiences.with_raw_response.retrieve(
+                "",
+            )
+
+    @parametrize
     def test_method_delete(self, client: Payi) -> None:
         experience = client.experiences.delete(
-            0,
+            "experience_instance_id",
         )
         assert_matches_type(ExperienceInstance, experience, path=["response"])
 
     @parametrize
     def test_raw_response_delete(self, client: Payi) -> None:
         response = client.experiences.with_raw_response.delete(
-            0,
+            "experience_instance_id",
         )
 
         assert response.is_closed is True
@@ -100,7 +116,7 @@ class TestExperiences:
     @parametrize
     def test_streaming_response_delete(self, client: Payi) -> None:
         with client.experiences.with_streaming_response.delete(
-            0,
+            "experience_instance_id",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -110,6 +126,15 @@ class TestExperiences:
 
         assert cast(Any, response.is_closed) is True
 
+    @parametrize
+    def test_path_params_delete(self, client: Payi) -> None:
+        with pytest.raises(
+            ValueError, match=r"Expected a non-empty value for `experience_instance_id` but received ''"
+        ):
+            client.experiences.with_raw_response.delete(
+                "",
+            )
+
 
 class TestAsyncExperiences:
     parametrize = pytest.mark.parametrize("async_client", [False, True], indirect=True, ids=["loose", "strict"])
@@ -117,14 +142,14 @@ class TestAsyncExperiences:
     @parametrize
     async def test_method_create(self, async_client: AsyncPayi) -> None:
         experience = await async_client.experiences.create(
-            0,
+            "experience_type_id",
         )
         assert_matches_type(ExperienceInstance, experience, path=["response"])
 
     @parametrize
     async def test_raw_response_create(self, async_client: AsyncPayi) -> None:
         response = await async_client.experiences.with_raw_response.create(
-            0,
+            "experience_type_id",
         )
 
         assert response.is_closed is True
@@ -135,7 +160,7 @@ class TestAsyncExperiences:
     @parametrize
     async def test_streaming_response_create(self, async_client: AsyncPayi) -> None:
         async with async_client.experiences.with_streaming_response.create(
-            0,
+            "experience_type_id",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -146,16 +171,23 @@ class TestAsyncExperiences:
         assert cast(Any, response.is_closed) is True
 
     @parametrize
+    async def test_path_params_create(self, async_client: AsyncPayi) -> None:
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `experience_type_id` but received ''"):
+            await async_client.experiences.with_raw_response.create(
+                "",
+            )
+
+    @parametrize
     async def test_method_retrieve(self, async_client: AsyncPayi) -> None:
         experience = await async_client.experiences.retrieve(
-            0,
+            "experience_instance_id",
         )
         assert_matches_type(ExperienceInstance, experience, path=["response"])
 
     @parametrize
     async def test_raw_response_retrieve(self, async_client: AsyncPayi) -> None:
         response = await async_client.experiences.with_raw_response.retrieve(
-            0,
+            "experience_instance_id",
         )
 
         assert response.is_closed is True
@@ -166,7 +198,7 @@ class TestAsyncExperiences:
     @parametrize
     async def test_streaming_response_retrieve(self, async_client: AsyncPayi) -> None:
         async with async_client.experiences.with_streaming_response.retrieve(
-            0,
+            "experience_instance_id",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -177,16 +209,25 @@ class TestAsyncExperiences:
         assert cast(Any, response.is_closed) is True
 
     @parametrize
+    async def test_path_params_retrieve(self, async_client: AsyncPayi) -> None:
+        with pytest.raises(
+            ValueError, match=r"Expected a non-empty value for `experience_instance_id` but received ''"
+        ):
+            await async_client.experiences.with_raw_response.retrieve(
+                "",
+            )
+
+    @parametrize
     async def test_method_delete(self, async_client: AsyncPayi) -> None:
         experience = await async_client.experiences.delete(
-            0,
+            "experience_instance_id",
         )
         assert_matches_type(ExperienceInstance, experience, path=["response"])
 
     @parametrize
     async def test_raw_response_delete(self, async_client: AsyncPayi) -> None:
         response = await async_client.experiences.with_raw_response.delete(
-            0,
+            "experience_instance_id",
         )
 
         assert response.is_closed is True
@@ -197,7 +238,7 @@ class TestAsyncExperiences:
     @parametrize
     async def test_streaming_response_delete(self, async_client: AsyncPayi) -> None:
         async with async_client.experiences.with_streaming_response.delete(
-            0,
+            "experience_instance_id",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -206,3 +247,12 @@ class TestAsyncExperiences:
             assert_matches_type(ExperienceInstance, experience, path=["response"])
 
         assert cast(Any, response.is_closed) is True
+
+    @parametrize
+    async def test_path_params_delete(self, async_client: AsyncPayi) -> None:
+        with pytest.raises(
+            ValueError, match=r"Expected a non-empty value for `experience_instance_id` but received ''"
+        ):
+            await async_client.experiences.with_raw_response.delete(
+                "",
+            )
