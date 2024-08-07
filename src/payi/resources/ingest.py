@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Union, Iterable, cast
+from typing import Union, Iterable
 from datetime import datetime
 
 import httpx
