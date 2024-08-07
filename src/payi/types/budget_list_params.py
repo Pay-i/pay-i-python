@@ -2,22 +2,20 @@
 
 from __future__ import annotations
 
-from typing_extensions import Annotated, TypedDict
-
-from .._utils import PropertyInfo
+from typing_extensions import TypedDict
 
 __all__ = ["BudgetListParams"]
 
 
 class BudgetListParams(TypedDict, total=False):
-    budget_name: Annotated[str, PropertyInfo(alias="BudgetName")]
+    budget_name: str
 
-    page_number: Annotated[int, PropertyInfo(alias="PageNumber")]
+    page_number: int
 
-    page_size: Annotated[int, PropertyInfo(alias="PageSize")]
+    page_size: int
 
-    sort_ascending: Annotated[bool, PropertyInfo(alias="SortAscending")]
+    sort_ascending: bool
 
-    sort_by: Annotated[str, PropertyInfo(alias="SortBy")]
+    sort_by: str
 
-    tags: Annotated[str, PropertyInfo(alias="Tags")]
+    tags: str

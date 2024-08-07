@@ -164,12 +164,12 @@ class TestBudgets:
     @parametrize
     def test_method_list_with_all_params(self, client: Payi) -> None:
         budget = client.budgets.list(
-            budget_name="BudgetName",
+            budget_name="budget_name",
             page_number=0,
             page_size=0,
             sort_ascending=True,
-            sort_by="SortBy",
-            tags="Tags",
+            sort_by="sort_by",
+            tags="tags",
         )
         assert_matches_type(PagedBudgetList, budget, path=["response"])
 
@@ -415,12 +415,12 @@ class TestAsyncBudgets:
     @parametrize
     async def test_method_list_with_all_params(self, async_client: AsyncPayi) -> None:
         budget = await async_client.budgets.list(
-            budget_name="BudgetName",
+            budget_name="budget_name",
             page_number=0,
             page_size=0,
             sort_ascending=True,
-            sort_by="SortBy",
-            tags="Tags",
+            sort_by="sort_by",
+            tags="tags",
         )
         assert_matches_type(PagedBudgetList, budget, path=["response"])
 
