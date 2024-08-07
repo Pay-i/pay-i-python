@@ -22,6 +22,6 @@ class IngestUnitsParams(TypedDict, total=False):
 
     event_timestamp: Annotated[Union[str, datetime, None], PropertyInfo(format="iso8601")]
 
-    x_proxy_budget_ids: Annotated[str, PropertyInfo(alias="xProxy-Budget-IDs")]
+    budget_ids: Annotated[Union[list[str], None], PropertyInfo(alias="xProxy-Budget-IDs")]
 
-    x_proxy_request_tags: Annotated[str, PropertyInfo(alias="xProxy-Request-Tags")]
+    request_tags: Annotated[Union[list[str], None], PropertyInfo(alias="xProxy-Request-Tags")]
