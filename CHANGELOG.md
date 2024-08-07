@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.1.0-alpha.16 (2024-08-07)
+
+Full Changelog: [v0.1.0-alpha.15...v0.1.0-alpha.16](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.15...v0.1.0-alpha.16)
+
+### Features
+
+* **api:** update via SDK Studio ([#67](https://github.com/Pay-i/pay-i-python/issues/67)) ([b720656](https://github.com/Pay-i/pay-i-python/commit/b72065621d50902959a484a5fe4c05051a5e2caa))
+* **client:** add `retry_count` to raw response class ([#71](https://github.com/Pay-i/pay-i-python/issues/71)) ([88fdd1d](https://github.com/Pay-i/pay-i-python/commit/88fdd1df022c74e173db8697659dfba937f73be7))
+
+
+### Chores
+
+* **internal:** bump pyright ([#70](https://github.com/Pay-i/pay-i-python/issues/70)) ([28a35f0](https://github.com/Pay-i/pay-i-python/commit/28a35f0d6412c3fd2d0b0f696b5b723069ce7b98))
+* **internal:** bump ruff version ([#73](https://github.com/Pay-i/pay-i-python/issues/73)) ([f487b64](https://github.com/Pay-i/pay-i-python/commit/f487b6409b3d6ac4eb3378e0eace4f68fbd3342f))
+* **internal:** test updates ([#72](https://github.com/Pay-i/pay-i-python/issues/72)) ([1ded1fe](https://github.com/Pay-i/pay-i-python/commit/1ded1feade7fb2ad98e2e9eb3d2a4c957146cfb8))
+* **internal:** update pydantic compat helper function ([#74](https://github.com/Pay-i/pay-i-python/issues/74)) ([16f34b3](https://github.com/Pay-i/pay-i-python/commit/16f34b307bd097cbd0ed81328972727c3ccec581))
+* **internal:** use `TypeAlias` marker for type assignments ([#69](https://github.com/Pay-i/pay-i-python/issues/69)) ([eebb6e9](https://github.com/Pay-i/pay-i-python/commit/eebb6e95c4e8ad497dc178099923e036644bfd4a))
+
 ## 0.1.0-alpha.15 (2024-08-06)
 
 Full Changelog: [v0.1.0-alpha.14...v0.1.0-alpha.15](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.14...v0.1.0-alpha.15)
