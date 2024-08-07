@@ -39,8 +39,8 @@ class TypesResource(SyncAPIResource):
     def create(
         self,
         *,
-        description: Optional[str] | NotGiven = NOT_GIVEN,
-        name: Optional[str] | NotGiven = NOT_GIVEN,
+        description: str,
+        name: str,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -79,7 +79,7 @@ class TypesResource(SyncAPIResource):
 
     def retrieve(
         self,
-        experience_type_id: int,
+        experience_type_id: str,
         *,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -100,6 +100,8 @@ class TypesResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
+        if not experience_type_id:
+            raise ValueError(f"Expected a non-empty value for `experience_type_id` but received {experience_type_id!r}")
         return self._get(
             f"/api/v1/experiences/types/{experience_type_id}",
             options=make_request_options(
@@ -110,7 +112,7 @@ class TypesResource(SyncAPIResource):
 
     def update(
         self,
-        experience_type_id: int,
+        experience_type_id: str,
         *,
         description: Optional[str] | NotGiven = NOT_GIVEN,
         name: Optional[str] | NotGiven = NOT_GIVEN,
@@ -133,6 +135,8 @@ class TypesResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
+        if not experience_type_id:
+            raise ValueError(f"Expected a non-empty value for `experience_type_id` but received {experience_type_id!r}")
         return self._patch(
             f"/api/v1/experiences/types/{experience_type_id}",
             body=maybe_transform(
@@ -169,7 +173,7 @@ class TypesResource(SyncAPIResource):
 
     def delete(
         self,
-        experience_type_id: int,
+        experience_type_id: str,
         *,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -192,6 +196,8 @@ class TypesResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
+        if not experience_type_id:
+            raise ValueError(f"Expected a non-empty value for `experience_type_id` but received {experience_type_id!r}")
         return self._delete(
             f"/api/v1/experiences/types/{experience_type_id}",
             options=make_request_options(
@@ -213,8 +219,8 @@ class AsyncTypesResource(AsyncAPIResource):
     async def create(
         self,
         *,
-        description: Optional[str] | NotGiven = NOT_GIVEN,
-        name: Optional[str] | NotGiven = NOT_GIVEN,
+        description: str,
+        name: str,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -253,7 +259,7 @@ class AsyncTypesResource(AsyncAPIResource):
 
     async def retrieve(
         self,
-        experience_type_id: int,
+        experience_type_id: str,
         *,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -274,6 +280,8 @@ class AsyncTypesResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
+        if not experience_type_id:
+            raise ValueError(f"Expected a non-empty value for `experience_type_id` but received {experience_type_id!r}")
         return await self._get(
             f"/api/v1/experiences/types/{experience_type_id}",
             options=make_request_options(
@@ -284,7 +292,7 @@ class AsyncTypesResource(AsyncAPIResource):
 
     async def update(
         self,
-        experience_type_id: int,
+        experience_type_id: str,
         *,
         description: Optional[str] | NotGiven = NOT_GIVEN,
         name: Optional[str] | NotGiven = NOT_GIVEN,
@@ -307,6 +315,8 @@ class AsyncTypesResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
+        if not experience_type_id:
+            raise ValueError(f"Expected a non-empty value for `experience_type_id` but received {experience_type_id!r}")
         return await self._patch(
             f"/api/v1/experiences/types/{experience_type_id}",
             body=await async_maybe_transform(
@@ -343,7 +353,7 @@ class AsyncTypesResource(AsyncAPIResource):
 
     async def delete(
         self,
-        experience_type_id: int,
+        experience_type_id: str,
         *,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -366,6 +376,8 @@ class AsyncTypesResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
+        if not experience_type_id:
+            raise ValueError(f"Expected a non-empty value for `experience_type_id` but received {experience_type_id!r}")
         return await self._delete(
             f"/api/v1/experiences/types/{experience_type_id}",
             options=make_request_options(

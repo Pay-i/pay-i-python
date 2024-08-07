@@ -25,3 +25,7 @@ class IngestUnitsParams(TypedDict, total=False):
     budget_ids: Annotated[Union[list[str], None], PropertyInfo(alias="xProxy-Budget-IDs")]
 
     request_tags: Annotated[Union[list[str], None], PropertyInfo(alias="xProxy-Request-Tags")]
+
+    experience_instance_id: Annotated[Union[str, None], PropertyInfo(alias="xProxy-Experience-InstanceId")]
+
+    user_id: Annotated[Union[str, None], PropertyInfo(alias="xProxy-User-ID")]

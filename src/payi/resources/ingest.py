@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Union, Iterable, cast
+from typing import Union, Iterable
 from datetime import datetime
 
 import httpx
@@ -66,12 +66,7 @@ class IngestResource(SyncAPIResource):
         """
         return self._post(
             "/api/v1/ingest/bulk",
-            body=cast(Dict[str, object], maybe_transform(
-            { 
-                "events": events, 
-            }, 
-            ingest_bulk_params.IngestBulkParams)
-            )["events"],
+            body=maybe_transform(events, Iterable[ingest_bulk_params.Event]),
             options=make_request_options(
                     extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -88,6 +83,8 @@ class IngestResource(SyncAPIResource):
         event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
         budget_ids: Union[list[str], None] | NotGiven = NOT_GIVEN,
         request_tags: Union[list[str], None] | NotGiven = NOT_GIVEN,
+        experience_instance_id: Union[str, None] | NotGiven = NOT_GIVEN,
+        user_id: Union[str, None] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -112,6 +109,10 @@ class IngestResource(SyncAPIResource):
           budget_ids (list[str], optional): The budget IDs to associate with the request. Defaults to None.
           
           request_tags (list[str], optional): The request tags to associate with the request. Defaults to None.
+
+          experience_instance_id (str, optional): The experience instance id
+          
+          user_id (str, optional): The user id
           
           extra_headers (Dict[str, str], optional): Additional headers for the request. Defaults to None.
           
@@ -142,11 +143,19 @@ class IngestResource(SyncAPIResource):
             valid_tags = [tag.strip() for tag in request_tags if tag.strip()]
             valid_tags_str = ",".join(valid_tags) if valid_tags else NOT_GIVEN
 
+        if experience_instance_id is None or isinstance(experience_instance_id, NotGiven):
+            experience_instance_id = NOT_GIVEN
+        
+        if user_id is None or isinstance(user_id, NotGiven):
+            user_id = NOT_GIVEN
+
         extra_headers = {
             **strip_not_given(
                 {
                     "xProxy-Budget-IDs": valid_ids_str,
                     "xProxy-Request-Tags": valid_tags_str,
+                    "xProxy-Experience-InstanceId": experience_instance_id,
+                    "xProxy-User-ID": user_id,
                 }
             ),
             **(extra_headers or {}),
@@ -206,13 +215,7 @@ class AsyncIngestResource(AsyncAPIResource):
         """
         return await self._post(
             "/api/v1/ingest/bulk",
-            body= cast(Dict[str, object],
-                await async_maybe_transform( 
-            { 
-                "events": events, 
-            }, 
-            ingest_bulk_params.IngestBulkParams)
-            )["events"],
+            body=await async_maybe_transform(events, Iterable[ingest_bulk_params.Event]),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -229,6 +232,8 @@ class AsyncIngestResource(AsyncAPIResource):
         event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
         budget_ids: Union[list[str], None] | NotGiven = NOT_GIVEN,
         request_tags: Union[list[str], None] | NotGiven = NOT_GIVEN,
+        experience_instance_id: Union[str, None] | NotGiven = NOT_GIVEN,
+        user_id: Union[str, None] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -253,6 +258,10 @@ class AsyncIngestResource(AsyncAPIResource):
           budget_ids (list[str], optional): The budget IDs to associate with the request. Defaults to None.
           
           request_tags (list[str], optional): The request tags to associate with the request. Defaults to None.
+          
+          experience_instance_id (str, optional): The experience instance id
+          
+          user_id (str, optional): The user id
           
           extra_headers (Dict[str, str], optional): Additional headers for the request. Defaults to None.
           
@@ -283,11 +292,19 @@ class AsyncIngestResource(AsyncAPIResource):
             valid_tags = [tag.strip() for tag in request_tags if tag.strip()]
             valid_tags_str = ",".join(valid_tags) if valid_tags else NOT_GIVEN
 
+        if experience_instance_id is None or isinstance(experience_instance_id, NotGiven):
+            experience_instance_id = NOT_GIVEN
+        
+        if user_id is None or isinstance(user_id, NotGiven):
+            user_id = NOT_GIVEN
+
         extra_headers = {
             **strip_not_given(
                 {
                     "xProxy-Budget-IDs": valid_ids_str,
                     "xProxy-Request-Tags": valid_tags_str,
+                    "xProxy-Experience-InstanceId": experience_instance_id,
+                    "xProxy-User-ID": user_id,
                 }
             ),
             **(extra_headers or {}),
