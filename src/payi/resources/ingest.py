@@ -63,7 +63,7 @@ class IngestResource(SyncAPIResource):
         """
         return self._post(
             "/api/v1/ingest/bulk",
-            body=maybe_transform(events, ingest_bulk_params.IngestBulkParams),
+            body=maybe_transform(events, Iterable[ingest_bulk_params.Event]),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -161,7 +161,7 @@ class AsyncIngestResource(AsyncAPIResource):
         """
         return await self._post(
             "/api/v1/ingest/bulk",
-            body=await async_maybe_transform(events, ingest_bulk_params.IngestBulkParams),
+            body=await async_maybe_transform(events, Iterable[ingest_bulk_params.Event]),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
