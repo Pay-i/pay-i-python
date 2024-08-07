@@ -24,4 +24,8 @@ class IngestUnitsParams(TypedDict, total=False):
 
     x_proxy_budget_ids: Annotated[str, PropertyInfo(alias="xProxy-Budget-IDs")]
 
+    x_proxy_experience_instance_id: Annotated[str, PropertyInfo(alias="xProxy-Experience-InstanceId")]
+
     x_proxy_request_tags: Annotated[str, PropertyInfo(alias="xProxy-Request-Tags")]
+
+    x_proxy_user_id: Annotated[str, PropertyInfo(alias="xProxy-User-ID")]
