@@ -24,7 +24,6 @@ from .._response import (
 )
 from .._base_client import make_request_options
 from ..types.ingest_response import IngestResponse
-from ..types.ingest_units_param import IngestUnitsParam
 from ..types.bulk_ingest_response import BulkIngestResponse
 
 __all__ = ["IngestResource", "AsyncIngestResource"]
@@ -42,9 +41,7 @@ class IngestResource(SyncAPIResource):
     def bulk(
         self,
         *,
-        items: Iterable[IngestUnitsParam],
-        x_proxy_budget_ids: str | NotGiven = NOT_GIVEN,
-        x_proxy_request_tags: str | NotGiven = NOT_GIVEN,
+        events: Iterable[ingest_bulk_params.Event],
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -64,18 +61,9 @@ class IngestResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        extra_headers = {
-            **strip_not_given(
-                {
-                    "xProxy-Budget-IDs": x_proxy_budget_ids,
-                    "xProxy-Request-Tags": x_proxy_request_tags,
-                }
-            ),
-            **(extra_headers or {}),
-        }
         return self._post(
             "/api/v1/ingest/bulk",
-            body=maybe_transform(items, ingest_bulk_params.IngestBulkParams),
+            body=maybe_transform(events, ingest_bulk_params.IngestBulkParams),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -151,9 +139,7 @@ class AsyncIngestResource(AsyncAPIResource):
     async def bulk(
         self,
         *,
-        items: Iterable[IngestUnitsParam],
-        x_proxy_budget_ids: str | NotGiven = NOT_GIVEN,
-        x_proxy_request_tags: str | NotGiven = NOT_GIVEN,
+        events: Iterable[ingest_bulk_params.Event],
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -173,18 +159,9 @@ class AsyncIngestResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        extra_headers = {
-            **strip_not_given(
-                {
-                    "xProxy-Budget-IDs": x_proxy_budget_ids,
-                    "xProxy-Request-Tags": x_proxy_request_tags,
-                }
-            ),
-            **(extra_headers or {}),
-        }
         return await self._post(
             "/api/v1/ingest/bulk",
-            body=await async_maybe_transform(items, ingest_bulk_params.IngestBulkParams),
+            body=await async_maybe_transform(events, ingest_bulk_params.IngestBulkParams),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),

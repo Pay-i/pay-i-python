@@ -49,6 +49,7 @@ class Payi(SyncAPIClient):
     budgets: resources.BudgetsResource
     ingest: resources.IngestResource
     categories: resources.CategoriesResource
+    experiences: resources.ExperiencesResource
     with_raw_response: PayiWithRawResponse
     with_streaming_response: PayiWithStreamedResponse
 
@@ -109,6 +110,7 @@ class Payi(SyncAPIClient):
         self.budgets = resources.BudgetsResource(self)
         self.ingest = resources.IngestResource(self)
         self.categories = resources.CategoriesResource(self)
+        self.experiences = resources.ExperiencesResource(self)
         self.with_raw_response = PayiWithRawResponse(self)
         self.with_streaming_response = PayiWithStreamedResponse(self)
 
@@ -221,6 +223,7 @@ class AsyncPayi(AsyncAPIClient):
     budgets: resources.AsyncBudgetsResource
     ingest: resources.AsyncIngestResource
     categories: resources.AsyncCategoriesResource
+    experiences: resources.AsyncExperiencesResource
     with_raw_response: AsyncPayiWithRawResponse
     with_streaming_response: AsyncPayiWithStreamedResponse
 
@@ -281,6 +284,7 @@ class AsyncPayi(AsyncAPIClient):
         self.budgets = resources.AsyncBudgetsResource(self)
         self.ingest = resources.AsyncIngestResource(self)
         self.categories = resources.AsyncCategoriesResource(self)
+        self.experiences = resources.AsyncExperiencesResource(self)
         self.with_raw_response = AsyncPayiWithRawResponse(self)
         self.with_streaming_response = AsyncPayiWithStreamedResponse(self)
 
@@ -394,6 +398,7 @@ class PayiWithRawResponse:
         self.budgets = resources.BudgetsResourceWithRawResponse(client.budgets)
         self.ingest = resources.IngestResourceWithRawResponse(client.ingest)
         self.categories = resources.CategoriesResourceWithRawResponse(client.categories)
+        self.experiences = resources.ExperiencesResourceWithRawResponse(client.experiences)
 
 
 class AsyncPayiWithRawResponse:
@@ -401,6 +406,7 @@ class AsyncPayiWithRawResponse:
         self.budgets = resources.AsyncBudgetsResourceWithRawResponse(client.budgets)
         self.ingest = resources.AsyncIngestResourceWithRawResponse(client.ingest)
         self.categories = resources.AsyncCategoriesResourceWithRawResponse(client.categories)
+        self.experiences = resources.AsyncExperiencesResourceWithRawResponse(client.experiences)
 
 
 class PayiWithStreamedResponse:
@@ -408,6 +414,7 @@ class PayiWithStreamedResponse:
         self.budgets = resources.BudgetsResourceWithStreamingResponse(client.budgets)
         self.ingest = resources.IngestResourceWithStreamingResponse(client.ingest)
         self.categories = resources.CategoriesResourceWithStreamingResponse(client.categories)
+        self.experiences = resources.ExperiencesResourceWithStreamingResponse(client.experiences)
 
 
 class AsyncPayiWithStreamedResponse:
@@ -415,6 +422,7 @@ class AsyncPayiWithStreamedResponse:
         self.budgets = resources.AsyncBudgetsResourceWithStreamingResponse(client.budgets)
         self.ingest = resources.AsyncIngestResourceWithStreamingResponse(client.ingest)
         self.categories = resources.AsyncCategoriesResourceWithStreamingResponse(client.categories)
+        self.experiences = resources.AsyncExperiencesResourceWithStreamingResponse(client.experiences)
 
 
 Client = Payi
