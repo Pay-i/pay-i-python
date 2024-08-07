@@ -143,6 +143,12 @@ class IngestResource(SyncAPIResource):
             valid_tags = [tag.strip() for tag in request_tags if tag.strip()]
             valid_tags_str = ",".join(valid_tags) if valid_tags else NOT_GIVEN
 
+        if experience_instance_id is None or isinstance(experience_instance_id, NotGiven):
+            experience_instance_id = NOT_GIVEN
+        
+        if user_id is None or isinstance(user_id, NotGiven):
+            user_id = NOT_GIVEN
+
         extra_headers = {
             **strip_not_given(
                 {
@@ -285,6 +291,12 @@ class AsyncIngestResource(AsyncAPIResource):
             # Proceed with the list comprehension if budget_ids is not NotGiven
             valid_tags = [tag.strip() for tag in request_tags if tag.strip()]
             valid_tags_str = ",".join(valid_tags) if valid_tags else NOT_GIVEN
+
+        if experience_instance_id is None or isinstance(experience_instance_id, NotGiven):
+            experience_instance_id = NOT_GIVEN
+        
+        if user_id is None or isinstance(user_id, NotGiven):
+            user_id = NOT_GIVEN
 
         extra_headers = {
             **strip_not_given(
