@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.17 (2024-08-07)
+
+Full Changelog: [v0.1.0-alpha.16...v0.1.0-alpha.17](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.16...v0.1.0-alpha.17)
+
+### Features
+
+* **api:** update via SDK Studio ([#79](https://github.com/Pay-i/pay-i-python/issues/79)) ([b7a562e](https://github.com/Pay-i/pay-i-python/commit/b7a562ed5f6051fd797ac76087ef095e8c73a8bc))
+
+
+### Bug Fixes
+
+* **client:** correctly serialise array body params ([#77](https://github.com/Pay-i/pay-i-python/issues/77)) ([e3770e4](https://github.com/Pay-i/pay-i-python/commit/e3770e474a9279eb4f13cbd7d87480d4d6a5bc76))
+
 ## 0.1.0-alpha.16 (2024-08-07)
 
 Full Changelog: [v0.1.0-alpha.15...v0.1.0-alpha.16](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.15...v0.1.0-alpha.16)
