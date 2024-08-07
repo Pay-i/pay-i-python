@@ -24,7 +24,6 @@ from .._response import (
 )
 from .._base_client import make_request_options
 from ..types.ingest_response import IngestResponse
-from ..types.ingest_units_param import IngestUnitsParam
 from ..types.bulk_ingest_response import BulkIngestResponse
 
 __all__ = ["IngestResource", "AsyncIngestResource"]
@@ -42,7 +41,7 @@ class IngestResource(SyncAPIResource):
     def bulk(
         self,
         *,
-        items: Iterable[IngestUnitsParam],
+        events: Iterable[ingest_bulk_params.Event],
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -69,10 +68,10 @@ class IngestResource(SyncAPIResource):
             "/api/v1/ingest/bulk",
             body=cast(Dict[str, object], maybe_transform(
             { 
-                "items": items, 
+                "events": events, 
             }, 
             ingest_bulk_params.IngestBulkParams)
-            )["items"],
+            )["events"],
             options=make_request_options(
                     extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -183,7 +182,7 @@ class AsyncIngestResource(AsyncAPIResource):
     async def bulk(
         self,
         *,
-        items: Iterable[IngestUnitsParam],
+        events: Iterable[ingest_bulk_params.Event],
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -210,10 +209,10 @@ class AsyncIngestResource(AsyncAPIResource):
             body= cast(Dict[str, object],
                 await async_maybe_transform( 
             { 
-                "items": items, 
+                "events": events, 
             }, 
             ingest_bulk_params.IngestBulkParams)
-            )["items"],
+            )["events"],
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),

@@ -35,6 +35,8 @@ class XproxyResult(BaseModel):
 
 
 class IngestResponse(BaseModel):
+    event_timestamp: datetime
+
     ingest_timestamp: datetime
 
     request_id: str

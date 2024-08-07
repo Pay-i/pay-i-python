@@ -3,8 +3,8 @@
 from typing import List
 from typing_extensions import TypeAlias
 
-from .budget_tags import BudgetTags
+from .experience_type import ExperienceType
 
-__all__ = ["TagRemoveResponse"]
+__all__ = ["TypeListResponse"]
 
-TagRemoveResponse: TypeAlias = List[BudgetTags]
+TypeListResponse: TypeAlias = List[ExperienceType]
