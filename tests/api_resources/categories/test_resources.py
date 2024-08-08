@@ -83,7 +83,7 @@ class TestResources:
     @parametrize
     def test_method_retrieve(self, client: Payi) -> None:
         resource = client.categories.resources.retrieve(
-            start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
+            resource_id="resource_id",
             category="category",
             resource="resource",
         )
@@ -92,7 +92,7 @@ class TestResources:
     @parametrize
     def test_raw_response_retrieve(self, client: Payi) -> None:
         response = client.categories.resources.with_raw_response.retrieve(
-            start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
+            resource_id="resource_id",
             category="category",
             resource="resource",
         )
@@ -105,7 +105,7 @@ class TestResources:
     @parametrize
     def test_streaming_response_retrieve(self, client: Payi) -> None:
         with client.categories.resources.with_streaming_response.retrieve(
-            start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
+            resource_id="resource_id",
             category="category",
             resource="resource",
         ) as response:
@@ -121,21 +121,21 @@ class TestResources:
     def test_path_params_retrieve(self, client: Payi) -> None:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `category` but received ''"):
             client.categories.resources.with_raw_response.retrieve(
-                start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
+                resource_id="resource_id",
                 category="",
                 resource="resource",
             )
 
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `resource` but received ''"):
             client.categories.resources.with_raw_response.retrieve(
-                start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
+                resource_id="resource_id",
                 category="category",
                 resource="",
             )
 
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `start_timestamp` but received ''"):
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `resource_id` but received ''"):
             client.categories.resources.with_raw_response.retrieve(
-                start_timestamp="",
+                resource_id="",
                 category="category",
                 resource="resource",
             )
@@ -191,7 +191,7 @@ class TestResources:
     @parametrize
     def test_method_delete(self, client: Payi) -> None:
         resource = client.categories.resources.delete(
-            start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
+            resource_id="resource_id",
             category="category",
             resource="resource",
         )
@@ -200,7 +200,7 @@ class TestResources:
     @parametrize
     def test_raw_response_delete(self, client: Payi) -> None:
         response = client.categories.resources.with_raw_response.delete(
-            start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
+            resource_id="resource_id",
             category="category",
             resource="resource",
         )
@@ -213,7 +213,7 @@ class TestResources:
     @parametrize
     def test_streaming_response_delete(self, client: Payi) -> None:
         with client.categories.resources.with_streaming_response.delete(
-            start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
+            resource_id="resource_id",
             category="category",
             resource="resource",
         ) as response:
@@ -229,21 +229,21 @@ class TestResources:
     def test_path_params_delete(self, client: Payi) -> None:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `category` but received ''"):
             client.categories.resources.with_raw_response.delete(
-                start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
+                resource_id="resource_id",
                 category="",
                 resource="resource",
             )
 
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `resource` but received ''"):
             client.categories.resources.with_raw_response.delete(
-                start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
+                resource_id="resource_id",
                 category="category",
                 resource="",
             )
 
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `start_timestamp` but received ''"):
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `resource_id` but received ''"):
             client.categories.resources.with_raw_response.delete(
-                start_timestamp="",
+                resource_id="",
                 category="category",
                 resource="resource",
             )
@@ -316,7 +316,7 @@ class TestAsyncResources:
     @parametrize
     async def test_method_retrieve(self, async_client: AsyncPayi) -> None:
         resource = await async_client.categories.resources.retrieve(
-            start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
+            resource_id="resource_id",
             category="category",
             resource="resource",
         )
@@ -325,7 +325,7 @@ class TestAsyncResources:
     @parametrize
     async def test_raw_response_retrieve(self, async_client: AsyncPayi) -> None:
         response = await async_client.categories.resources.with_raw_response.retrieve(
-            start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
+            resource_id="resource_id",
             category="category",
             resource="resource",
         )
@@ -338,7 +338,7 @@ class TestAsyncResources:
     @parametrize
     async def test_streaming_response_retrieve(self, async_client: AsyncPayi) -> None:
         async with async_client.categories.resources.with_streaming_response.retrieve(
-            start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
+            resource_id="resource_id",
             category="category",
             resource="resource",
         ) as response:
@@ -354,21 +354,21 @@ class TestAsyncResources:
     async def test_path_params_retrieve(self, async_client: AsyncPayi) -> None:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `category` but received ''"):
             await async_client.categories.resources.with_raw_response.retrieve(
-                start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
+                resource_id="resource_id",
                 category="",
                 resource="resource",
             )
 
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `resource` but received ''"):
             await async_client.categories.resources.with_raw_response.retrieve(
-                start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
+                resource_id="resource_id",
                 category="category",
                 resource="",
             )
 
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `start_timestamp` but received ''"):
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `resource_id` but received ''"):
             await async_client.categories.resources.with_raw_response.retrieve(
-                start_timestamp="",
+                resource_id="",
                 category="category",
                 resource="resource",
             )
@@ -424,7 +424,7 @@ class TestAsyncResources:
     @parametrize
     async def test_method_delete(self, async_client: AsyncPayi) -> None:
         resource = await async_client.categories.resources.delete(
-            start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
+            resource_id="resource_id",
             category="category",
             resource="resource",
         )
@@ -433,7 +433,7 @@ class TestAsyncResources:
     @parametrize
     async def test_raw_response_delete(self, async_client: AsyncPayi) -> None:
         response = await async_client.categories.resources.with_raw_response.delete(
-            start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
+            resource_id="resource_id",
             category="category",
             resource="resource",
         )
@@ -446,7 +446,7 @@ class TestAsyncResources:
     @parametrize
     async def test_streaming_response_delete(self, async_client: AsyncPayi) -> None:
         async with async_client.categories.resources.with_streaming_response.delete(
-            start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
+            resource_id="resource_id",
             category="category",
             resource="resource",
         ) as response:
@@ -462,21 +462,21 @@ class TestAsyncResources:
     async def test_path_params_delete(self, async_client: AsyncPayi) -> None:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `category` but received ''"):
             await async_client.categories.resources.with_raw_response.delete(
-                start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
+                resource_id="resource_id",
                 category="",
                 resource="resource",
             )
 
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `resource` but received ''"):
             await async_client.categories.resources.with_raw_response.delete(
-                start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
+                resource_id="resource_id",
                 category="category",
                 resource="",
             )
 
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `start_timestamp` but received ''"):
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `resource_id` but received ''"):
             await async_client.categories.resources.with_raw_response.delete(
-                start_timestamp="",
+                resource_id="",
                 category="category",
                 resource="resource",
             )

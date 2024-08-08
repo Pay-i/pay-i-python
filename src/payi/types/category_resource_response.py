@@ -13,6 +13,8 @@ class CategoryResourceResponse(BaseModel):
 
     resource: str
 
+    resource_id: str
+
     start_timestamp: datetime
 
     input_price: Optional[float] = None

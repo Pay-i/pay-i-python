@@ -90,7 +90,7 @@ class ResourcesResource(SyncAPIResource):
 
     def retrieve(
         self,
-        start_timestamp: Union[str, datetime],
+        resource_id: str,
         *,
         category: str,
         resource: str,
@@ -117,10 +117,10 @@ class ResourcesResource(SyncAPIResource):
             raise ValueError(f"Expected a non-empty value for `category` but received {category!r}")
         if not resource:
             raise ValueError(f"Expected a non-empty value for `resource` but received {resource!r}")
-        if not start_timestamp:
-            raise ValueError(f"Expected a non-empty value for `start_timestamp` but received {start_timestamp!r}")
+        if not resource_id:
+            raise ValueError(f"Expected a non-empty value for `resource_id` but received {resource_id!r}")
         return self._get(
-            f"/api/v1/categories/{category}/resources/{resource}/{start_timestamp}",
+            f"/api/v1/categories/{category}/resources/{resource}/{resource_id}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -165,7 +165,7 @@ class ResourcesResource(SyncAPIResource):
 
     def delete(
         self,
-        start_timestamp: Union[str, datetime],
+        resource_id: str,
         *,
         category: str,
         resource: str,
@@ -192,10 +192,10 @@ class ResourcesResource(SyncAPIResource):
             raise ValueError(f"Expected a non-empty value for `category` but received {category!r}")
         if not resource:
             raise ValueError(f"Expected a non-empty value for `resource` but received {resource!r}")
-        if not start_timestamp:
-            raise ValueError(f"Expected a non-empty value for `start_timestamp` but received {start_timestamp!r}")
+        if not resource_id:
+            raise ValueError(f"Expected a non-empty value for `resource_id` but received {resource_id!r}")
         return self._delete(
-            f"/api/v1/categories/{category}/resources/{resource}/{start_timestamp}",
+            f"/api/v1/categories/{category}/resources/{resource}/{resource_id}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -265,7 +265,7 @@ class AsyncResourcesResource(AsyncAPIResource):
 
     async def retrieve(
         self,
-        start_timestamp: Union[str, datetime],
+        resource_id: str,
         *,
         category: str,
         resource: str,
@@ -292,10 +292,10 @@ class AsyncResourcesResource(AsyncAPIResource):
             raise ValueError(f"Expected a non-empty value for `category` but received {category!r}")
         if not resource:
             raise ValueError(f"Expected a non-empty value for `resource` but received {resource!r}")
-        if not start_timestamp:
-            raise ValueError(f"Expected a non-empty value for `start_timestamp` but received {start_timestamp!r}")
+        if not resource_id:
+            raise ValueError(f"Expected a non-empty value for `resource_id` but received {resource_id!r}")
         return await self._get(
-            f"/api/v1/categories/{category}/resources/{resource}/{start_timestamp}",
+            f"/api/v1/categories/{category}/resources/{resource}/{resource_id}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -340,7 +340,7 @@ class AsyncResourcesResource(AsyncAPIResource):
 
     async def delete(
         self,
-        start_timestamp: Union[str, datetime],
+        resource_id: str,
         *,
         category: str,
         resource: str,
@@ -367,10 +367,10 @@ class AsyncResourcesResource(AsyncAPIResource):
             raise ValueError(f"Expected a non-empty value for `category` but received {category!r}")
         if not resource:
             raise ValueError(f"Expected a non-empty value for `resource` but received {resource!r}")
-        if not start_timestamp:
-            raise ValueError(f"Expected a non-empty value for `start_timestamp` but received {start_timestamp!r}")
+        if not resource_id:
+            raise ValueError(f"Expected a non-empty value for `resource_id` but received {resource_id!r}")
         return await self._delete(
-            f"/api/v1/categories/{category}/resources/{resource}/{start_timestamp}",
+            f"/api/v1/categories/{category}/resources/{resource}/{resource_id}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),

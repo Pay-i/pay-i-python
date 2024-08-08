@@ -52,7 +52,7 @@ Methods:
 Types:
 
 ```python
-from payi.types import BulkIngestResponse, IngestEvent, IngestResponse
+from payi.types import BulkIngestResponse, IngestEvent, IngestResponse, IngestUnits
 ```
 
 Methods:
@@ -93,9 +93,9 @@ from payi.types.categories import ResourceListResponse
 Methods:
 
 - <code title="post /api/v1/categories/{category}/resources/{resource}">client.categories.resources.<a href="./src/payi/resources/categories/resources.py">create</a>(resource, \*, category, \*\*<a href="src/payi/types/categories/resource_create_params.py">params</a>) -> <a href="./src/payi/types/category_resource_response.py">CategoryResourceResponse</a></code>
-- <code title="get /api/v1/categories/{category}/resources/{resource}/{start_timestamp}">client.categories.resources.<a href="./src/payi/resources/categories/resources.py">retrieve</a>(start_timestamp, \*, category, resource) -> <a href="./src/payi/types/category_resource_response.py">CategoryResourceResponse</a></code>
+- <code title="get /api/v1/categories/{category}/resources/{resource}/{resource_id}">client.categories.resources.<a href="./src/payi/resources/categories/resources.py">retrieve</a>(resource_id, \*, category, resource) -> <a href="./src/payi/types/category_resource_response.py">CategoryResourceResponse</a></code>
 - <code title="get /api/v1/categories/{category}/resources/{resource}">client.categories.resources.<a href="./src/payi/resources/categories/resources.py">list</a>(resource, \*, category) -> <a href="./src/payi/types/categories/resource_list_response.py">ResourceListResponse</a></code>
-- <code title="delete /api/v1/categories/{category}/resources/{resource}/{start_timestamp}">client.categories.resources.<a href="./src/payi/resources/categories/resources.py">delete</a>(start_timestamp, \*, category, resource) -> <a href="./src/payi/types/category_resource_response.py">CategoryResourceResponse</a></code>
+- <code title="delete /api/v1/categories/{category}/resources/{resource}/{resource_id}">client.categories.resources.<a href="./src/payi/resources/categories/resources.py">delete</a>(resource_id, \*, category, resource) -> <a href="./src/payi/types/category_resource_response.py">CategoryResourceResponse</a></code>
 
 # Experiences
 
