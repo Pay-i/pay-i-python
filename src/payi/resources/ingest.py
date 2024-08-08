@@ -7,7 +7,7 @@ from datetime import datetime
 
 import httpx
 
-from ..types import ingest_bulk_params, ingest_units_params
+from ..types import ingest_units_params
 from .._types import NOT_GIVEN, Body, Query, Headers, NotGiven
 from .._utils import (
     maybe_transform,
@@ -24,6 +24,7 @@ from .._response import (
 )
 from .._base_client import make_request_options
 from ..types.ingest_response import IngestResponse
+from ..types.ingest_event_param import IngestEventParam
 from ..types.bulk_ingest_response import BulkIngestResponse
 
 __all__ = ["IngestResource", "AsyncIngestResource"]
@@ -41,7 +42,7 @@ class IngestResource(SyncAPIResource):
     def bulk(
         self,
         *,
-        events: Iterable[ingest_bulk_params.Event],
+        events: Iterable[IngestEventParam],
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -63,7 +64,7 @@ class IngestResource(SyncAPIResource):
         """
         return self._post(
             "/api/v1/ingest/bulk",
-            body=maybe_transform(events, Iterable[ingest_bulk_params.Event]),
+            body=maybe_transform(events, Iterable[IngestEventParam]),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -143,7 +144,7 @@ class AsyncIngestResource(AsyncAPIResource):
     async def bulk(
         self,
         *,
-        events: Iterable[ingest_bulk_params.Event],
+        events: Iterable[IngestEventParam],
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -165,7 +166,7 @@ class AsyncIngestResource(AsyncAPIResource):
         """
         return await self._post(
             "/api/v1/ingest/bulk",
-            body=await async_maybe_transform(events, Iterable[ingest_bulk_params.Event]),
+            body=await async_maybe_transform(events, Iterable[IngestEventParam]),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
