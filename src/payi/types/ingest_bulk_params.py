@@ -14,7 +14,6 @@ __all__ = ["IngestBulkParams", "Event"]
 class IngestBulkParams(TypedDict, total=False):
     events: Required[Iterable[Event]]
 
-
 class Event(TypedDict, total=False):
     category: Required[str]
 
