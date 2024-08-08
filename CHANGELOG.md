@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.0-alpha.18 (2024-08-08)
+
+Full Changelog: [v0.1.0-alpha.17...v0.1.0-alpha.18](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.17...v0.1.0-alpha.18)
+
+### Features
+
+* **api:** update via SDK Studio ([#83](https://github.com/Pay-i/pay-i-python/issues/83)) ([c78b273](https://github.com/Pay-i/pay-i-python/commit/c78b273d807606abe94212e0092eff80895da96d))
+* **api:** update via SDK Studio ([#86](https://github.com/Pay-i/pay-i-python/issues/86)) ([ea1bc86](https://github.com/Pay-i/pay-i-python/commit/ea1bc86c6a3671b49ba7394841b5534d7e8c0263))
+
+
+### Chores
+
+* **internal:** remove deprecated ruff config ([#85](https://github.com/Pay-i/pay-i-python/issues/85)) ([744ae88](https://github.com/Pay-i/pay-i-python/commit/744ae888b57aa5a424e4a4729d7c0e85776b6d08))
+
 ## 0.1.0-alpha.17 (2024-08-07)
 
 Full Changelog: [v0.1.0-alpha.16...v0.1.0-alpha.17](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.16...v0.1.0-alpha.17)
