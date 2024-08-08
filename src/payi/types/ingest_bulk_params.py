@@ -2,34 +2,13 @@
 
 from __future__ import annotations
 
-from typing import List, Union, Iterable, Optional
-from datetime import datetime
-from typing_extensions import Required, Annotated, TypedDict
+from typing import Iterable
+from typing_extensions import Required, TypedDict
 
-from .._utils import PropertyInfo
+from .ingest_event_param import IngestEventParam
 
-__all__ = ["IngestBulkParams", "Event"]
+__all__ = ["IngestBulkParams"]
 
 
 class IngestBulkParams(TypedDict, total=False):
-    events: Required[Iterable[Event]]
-
-
-class Event(TypedDict, total=False):
-    category: Required[str]
-
-    input: Required[int]
-
-    output: Required[int]
-
-    resource: Required[str]
-
-    budget_ids: Optional[List[str]]
-
-    event_timestamp: Annotated[Union[str, datetime, None], PropertyInfo(format="iso8601")]
-
-    experience_instance_id: Optional[str]
-
-    request_tags: Optional[List[str]]
-
-    user_id: Optional[str]
+    events: Required[Iterable[IngestEventParam]]
