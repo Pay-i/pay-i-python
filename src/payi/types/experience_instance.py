@@ -8,6 +8,6 @@ __all__ = ["ExperienceInstance"]
 
 
 class ExperienceInstance(BaseModel):
-    experience_instance_id: str
+    experience_id: str
 
     request_id: str

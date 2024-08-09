@@ -77,7 +77,7 @@ class ExperiencesResource(SyncAPIResource):
 
     def retrieve(
         self,
-        experience_instance_id: str,
+        experience_id: str,
         *,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -98,12 +98,10 @@ class ExperiencesResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not experience_instance_id:
-            raise ValueError(
-                f"Expected a non-empty value for `experience_instance_id` but received {experience_instance_id!r}"
-            )
+        if not experience_id:
+            raise ValueError(f"Expected a non-empty value for `experience_id` but received {experience_id!r}")
         return self._get(
-            f"/api/v1/experiences/instances/{experience_instance_id}",
+            f"/api/v1/experiences/instances/{experience_id}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -112,7 +110,7 @@ class ExperiencesResource(SyncAPIResource):
 
     def delete(
         self,
-        experience_instance_id: str,
+        experience_id: str,
         *,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -135,12 +133,10 @@ class ExperiencesResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not experience_instance_id:
-            raise ValueError(
-                f"Expected a non-empty value for `experience_instance_id` but received {experience_instance_id!r}"
-            )
+        if not experience_id:
+            raise ValueError(f"Expected a non-empty value for `experience_id` but received {experience_id!r}")
         return self._delete(
-            f"/api/v1/experiences/instances/{experience_instance_id}",
+            f"/api/v1/experiences/instances/{experience_id}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -198,7 +194,7 @@ class AsyncExperiencesResource(AsyncAPIResource):
 
     async def retrieve(
         self,
-        experience_instance_id: str,
+        experience_id: str,
         *,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -219,12 +215,10 @@ class AsyncExperiencesResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not experience_instance_id:
-            raise ValueError(
-                f"Expected a non-empty value for `experience_instance_id` but received {experience_instance_id!r}"
-            )
+        if not experience_id:
+            raise ValueError(f"Expected a non-empty value for `experience_id` but received {experience_id!r}")
         return await self._get(
-            f"/api/v1/experiences/instances/{experience_instance_id}",
+            f"/api/v1/experiences/instances/{experience_id}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -233,7 +227,7 @@ class AsyncExperiencesResource(AsyncAPIResource):
 
     async def delete(
         self,
-        experience_instance_id: str,
+        experience_id: str,
         *,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -256,12 +250,10 @@ class AsyncExperiencesResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not experience_instance_id:
-            raise ValueError(
-                f"Expected a non-empty value for `experience_instance_id` but received {experience_instance_id!r}"
-            )
+        if not experience_id:
+            raise ValueError(f"Expected a non-empty value for `experience_id` but received {experience_id!r}")
         return await self._delete(
-            f"/api/v1/experiences/instances/{experience_instance_id}",
+            f"/api/v1/experiences/instances/{experience_id}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),

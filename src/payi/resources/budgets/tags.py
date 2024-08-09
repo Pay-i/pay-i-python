@@ -52,7 +52,7 @@ class TagsResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> TagCreateResponse:
         """
-        Add Tags to a Budget
+        Add Budget Tags
 
         Args:
           extra_headers: Send extra headers
@@ -87,7 +87,7 @@ class TagsResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> TagUpdateResponse:
         """
-        Update the Budget's Tags
+        Update the Budget Tags
 
         Args:
           extra_headers: Send extra headers
@@ -121,7 +121,7 @@ class TagsResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> TagListResponse:
         """
-        Get a Budget's Tags
+        Get Budget Tags
 
         Args:
           extra_headers: Send extra headers
@@ -154,7 +154,7 @@ class TagsResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> TagDeleteResponse:
         """
-        Delete the Budget's Tags
+        Delete all Tags from Budget
 
         Args:
           extra_headers: Send extra headers
@@ -188,7 +188,7 @@ class TagsResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> TagRemoveResponse:
         """
-        Remove Tags from the Budget
+        Remove Tags from Budget
 
         Args:
           extra_headers: Send extra headers
@@ -233,7 +233,7 @@ class AsyncTagsResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> TagCreateResponse:
         """
-        Add Tags to a Budget
+        Add Budget Tags
 
         Args:
           extra_headers: Send extra headers
@@ -268,7 +268,7 @@ class AsyncTagsResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> TagUpdateResponse:
         """
-        Update the Budget's Tags
+        Update the Budget Tags
 
         Args:
           extra_headers: Send extra headers
@@ -302,7 +302,7 @@ class AsyncTagsResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> TagListResponse:
         """
-        Get a Budget's Tags
+        Get Budget Tags
 
         Args:
           extra_headers: Send extra headers
@@ -335,7 +335,7 @@ class AsyncTagsResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> TagDeleteResponse:
         """
-        Delete the Budget's Tags
+        Delete all Tags from Budget
 
         Args:
           extra_headers: Send extra headers
@@ -369,7 +369,7 @@ class AsyncTagsResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> TagRemoveResponse:
         """
-        Remove Tags from the Budget
+        Remove Tags from Budget
 
         Args:
           extra_headers: Send extra headers

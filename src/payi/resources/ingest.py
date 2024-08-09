@@ -91,7 +91,7 @@ class IngestResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> IngestResponse:
         """
-        Ingest a request
+        Ingest an Event
 
         Args:
           extra_headers: Send extra headers
@@ -193,7 +193,7 @@ class AsyncIngestResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> IngestResponse:
         """
-        Ingest a request
+        Ingest an Event
 
         Args:
           extra_headers: Send extra headers
