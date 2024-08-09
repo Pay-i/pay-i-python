@@ -108,8 +108,8 @@ from payi.types import ExperienceInstance
 Methods:
 
 - <code title="post /api/v1/experiences/instances/{experience_type_id}">client.experiences.<a href="./src/payi/resources/experiences/experiences.py">create</a>(experience_type_id) -> <a href="./src/payi/types/experience_instance.py">ExperienceInstance</a></code>
-- <code title="get /api/v1/experiences/instances/{experience_instance_id}">client.experiences.<a href="./src/payi/resources/experiences/experiences.py">retrieve</a>(experience_instance_id) -> <a href="./src/payi/types/experience_instance.py">ExperienceInstance</a></code>
-- <code title="delete /api/v1/experiences/instances/{experience_instance_id}">client.experiences.<a href="./src/payi/resources/experiences/experiences.py">delete</a>(experience_instance_id) -> <a href="./src/payi/types/experience_instance.py">ExperienceInstance</a></code>
+- <code title="get /api/v1/experiences/instances/{experience_id}">client.experiences.<a href="./src/payi/resources/experiences/experiences.py">retrieve</a>(experience_id) -> <a href="./src/payi/types/experience_instance.py">ExperienceInstance</a></code>
+- <code title="delete /api/v1/experiences/instances/{experience_id}">client.experiences.<a href="./src/payi/resources/experiences/experiences.py">delete</a>(experience_id) -> <a href="./src/payi/types/experience_instance.py">ExperienceInstance</a></code>
 
 ## Types
 
