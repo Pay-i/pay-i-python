@@ -29,7 +29,7 @@ from payi import Payi
 
 client = Payi(
     # This is the default and can be omitted
-    payi_api_key=os.environ.get("PAYI_API_KEY"),
+    api_key=os.environ.get("PAYI_API_KEY"),
 )
 
 budget_response = client.budgets.create(
@@ -39,10 +39,10 @@ budget_response = client.budgets.create(
 print(budget_response.request_id)
 ```
 
-While you can provide a `payi_api_key` keyword argument,
+While you can provide an `api_key` keyword argument,
 we recommend using [python-dotenv](https://pypi.org/project/python-dotenv/)
-to add `PAYI_API_KEY="My Payi API Key"` to your `.env` file
-so that your Payi API Key is not stored in source control.
+to add `PAYI_API_KEY="My API Key"` to your `.env` file
+so that your API Key is not stored in source control.
 
 ## Async usage
 
@@ -55,7 +55,7 @@ from payi import AsyncPayi
 
 client = AsyncPayi(
     # This is the default and can be omitted
-    payi_api_key=os.environ.get("PAYI_API_KEY"),
+    api_key=os.environ.get("PAYI_API_KEY"),
 )
 
 

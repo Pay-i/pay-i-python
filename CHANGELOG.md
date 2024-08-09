@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.0-alpha.19 (2024-08-09)
+
+Full Changelog: [v0.1.0-alpha.18...v0.1.0-alpha.19](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.18...v0.1.0-alpha.19)
+
+### Features
+
+* **api:** update via SDK Studio ([#89](https://github.com/Pay-i/pay-i-python/issues/89)) ([b031428](https://github.com/Pay-i/pay-i-python/commit/b03142879e9d1798d08288578d078eab98e86353))
+
+
+### Chores
+
+* **ci:** bump prism mock server version ([#91](https://github.com/Pay-i/pay-i-python/issues/91)) ([6cd2937](https://github.com/Pay-i/pay-i-python/commit/6cd29379f24f7a7d261ed6beea8e4833e01eacfd))
+* **internal:** ensure package is importable in lint cmd ([#92](https://github.com/Pay-i/pay-i-python/issues/92)) ([5af85e5](https://github.com/Pay-i/pay-i-python/commit/5af85e57dac94be4da96b45b406e683701150365))
+
 ## 0.1.0-alpha.18 (2024-08-08)
 
 Full Changelog: [v0.1.0-alpha.17...v0.1.0-alpha.18](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.17...v0.1.0-alpha.18)
