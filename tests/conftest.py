@@ -26,7 +26,7 @@ def event_loop() -> Iterator[asyncio.AbstractEventLoop]:
 
 base_url = os.environ.get("TEST_API_BASE_URL", "http://127.0.0.1:4010")
 
-payi_api_key = "My Payi API Key"
+api_key = "My API Key"
 
 
 @pytest.fixture(scope="session")
@@ -35,7 +35,7 @@ def client(request: FixtureRequest) -> Iterator[Payi]:
     if not isinstance(strict, bool):
         raise TypeError(f"Unexpected fixture parameter type {type(strict)}, expected {bool}")
 
-    with Payi(base_url=base_url, payi_api_key=payi_api_key, _strict_response_validation=strict) as client:
+    with Payi(base_url=base_url, api_key=api_key, _strict_response_validation=strict) as client:
         yield client
 
 
@@ -45,5 +45,5 @@ async def async_client(request: FixtureRequest) -> AsyncIterator[AsyncPayi]:
     if not isinstance(strict, bool):
         raise TypeError(f"Unexpected fixture parameter type {type(strict)}, expected {bool}")
 
-    async with AsyncPayi(base_url=base_url, payi_api_key=payi_api_key, _strict_response_validation=strict) as client:
+    async with AsyncPayi(base_url=base_url, api_key=api_key, _strict_response_validation=strict) as client:
         yield client
