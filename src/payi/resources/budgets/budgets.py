@@ -119,7 +119,7 @@ class BudgetsResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> BudgetResponse:
         """
-        Get a Budget's details
+        Get Budget details
 
         Args:
           budget_id (str): The ID of the budget.
@@ -368,7 +368,7 @@ class AsyncBudgetsResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> BudgetResponse:
         """
-        Get a Budget's details
+        Get Budget details
 
         Args:
           extra_headers: Send extra headers

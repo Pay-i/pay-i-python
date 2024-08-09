@@ -126,7 +126,7 @@ class TestIngest:
             event_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
             budget_ids=["budgetId1", "budgetId_2"],
             request_tags=["requestTag1", "request_tag_2"],
-            experience_instance_id="experience_instance_id",
+            experience_id="experience_id",
             user_id="UserName123",
         )
         assert_matches_type(IngestResponse, ingest, path=["response"])
@@ -273,7 +273,7 @@ class TestAsyncIngest:
             event_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
             budget_ids=["budgetId1", "budgetId_2"],
             request_tags=["requestTag1", "request_tag_2"],
-            experience_instance_id="experience_instance_id",
+            experience_id="experience_id",
             user_id="UserName123",
         )
         assert_matches_type(IngestResponse, ingest, path=["response"])

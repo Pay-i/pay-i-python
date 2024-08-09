@@ -94,7 +94,7 @@ class IngestResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> IngestResponse:
         """
-        Ingest a request
+        Ingest an Event
 
         Args:
           category (str): The name of the category
@@ -243,7 +243,7 @@ class AsyncIngestResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> IngestResponse:
         """
-        Ingest a request
+        Ingest an Event
 
         Args:
           category (str): The name of the category
