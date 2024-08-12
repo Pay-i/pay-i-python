@@ -20,7 +20,9 @@ def create_request_header_from_tags(request_tags: List[str]) -> Dict[str, str]:
 
 def create_headers(
     budget_ids: Union[List[str], None] = None, 
-    request_tags: Union[List[str], None] = None 
+    request_tags: Union[List[str], None] = None,
+    user_id: Union[str, None] = None,
+    experience_id: Union[str, None] = None, 
     ) -> Dict[str, str]:
     headers: Dict[str, str] = {}
 
@@ -28,5 +30,9 @@ def create_headers(
         headers.update(create_budget_header_from_ids(budget_ids))
     if request_tags:
         headers.update(create_request_header_from_tags(request_tags))
+    if user_id:
+        headers.update({"xProxy-User-ID": user_id})
+    if experience_id:
+        headers.update({"xProxy-Experience-Id": experience_id})
 
     return headers
