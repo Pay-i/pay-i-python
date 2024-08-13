@@ -51,10 +51,8 @@ class ExperiencesResource(SyncAPIResource):
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> ExperienceInstance:
-        """Creates a new experience instance.
-
-        This ID can then be passed into router calls
-        for a specific user experience.
+        """
+        Create an Experience
 
         Args:
           extra_headers: Send extra headers
@@ -87,7 +85,7 @@ class ExperiencesResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> ExperienceInstance:
         """
-        Get details for an experience instance.
+        Get Experience details
 
         Args:
           extra_headers: Send extra headers
@@ -119,10 +117,8 @@ class ExperiencesResource(SyncAPIResource):
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> ExperienceInstance:
-        """Deletes an experience instance.
-
-        This will remove all costs associated with this
-        experience instance.
+        """
+        Delete an Experience
 
         Args:
           extra_headers: Send extra headers
@@ -168,10 +164,8 @@ class AsyncExperiencesResource(AsyncAPIResource):
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> ExperienceInstance:
-        """Creates a new experience instance.
-
-        This ID can then be passed into router calls
-        for a specific user experience.
+        """
+        Create an Experience
 
         Args:
           extra_headers: Send extra headers
@@ -204,7 +198,7 @@ class AsyncExperiencesResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> ExperienceInstance:
         """
-        Get details for an experience instance.
+        Get Experience details
 
         Args:
           extra_headers: Send extra headers
@@ -236,10 +230,8 @@ class AsyncExperiencesResource(AsyncAPIResource):
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> ExperienceInstance:
-        """Deletes an experience instance.
-
-        This will remove all costs associated with this
-        experience instance.
+        """
+        Delete an Experience
 
         Args:
           extra_headers: Send extra headers

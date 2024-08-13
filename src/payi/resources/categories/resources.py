@@ -102,7 +102,7 @@ class ResourcesResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> CategoryResourceResponse:
         """
-        Get a Resource's version details
+        Get a Resource version details
 
         Args:
           extra_headers: Send extra headers
@@ -277,7 +277,7 @@ class AsyncResourcesResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> CategoryResourceResponse:
         """
-        Get a Resource's version details
+        Get a Resource version details
 
         Args:
           extra_headers: Send extra headers
