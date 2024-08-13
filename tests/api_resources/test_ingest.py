@@ -24,21 +24,21 @@ class TestIngest:
             events=[
                 {
                     "category": "x",
-                    "resource": "x",
                     "input": 0,
                     "output": 0,
+                    "resource": "x",
                 },
                 {
                     "category": "x",
-                    "resource": "x",
                     "input": 0,
                     "output": 0,
+                    "resource": "x",
                 },
                 {
                     "category": "x",
-                    "resource": "x",
                     "input": 0,
                     "output": 0,
+                    "resource": "x",
                 },
             ],
         )
@@ -50,21 +50,21 @@ class TestIngest:
             events=[
                 {
                     "category": "x",
-                    "resource": "x",
                     "input": 0,
                     "output": 0,
+                    "resource": "x",
                 },
                 {
                     "category": "x",
-                    "resource": "x",
                     "input": 0,
                     "output": 0,
+                    "resource": "x",
                 },
                 {
                     "category": "x",
-                    "resource": "x",
                     "input": 0,
                     "output": 0,
+                    "resource": "x",
                 },
             ],
         )
@@ -80,21 +80,21 @@ class TestIngest:
             events=[
                 {
                     "category": "x",
-                    "resource": "x",
                     "input": 0,
                     "output": 0,
+                    "resource": "x",
                 },
                 {
                     "category": "x",
-                    "resource": "x",
                     "input": 0,
                     "output": 0,
+                    "resource": "x",
                 },
                 {
                     "category": "x",
-                    "resource": "x",
                     "input": 0,
                     "output": 0,
+                    "resource": "x",
                 },
             ],
         ) as response:
@@ -171,21 +171,21 @@ class TestAsyncIngest:
             events=[
                 {
                     "category": "x",
-                    "resource": "x",
                     "input": 0,
                     "output": 0,
+                    "resource": "x",
                 },
                 {
                     "category": "x",
-                    "resource": "x",
                     "input": 0,
                     "output": 0,
+                    "resource": "x",
                 },
                 {
                     "category": "x",
-                    "resource": "x",
                     "input": 0,
                     "output": 0,
+                    "resource": "x",
                 },
             ],
         )
@@ -197,21 +197,21 @@ class TestAsyncIngest:
             events=[
                 {
                     "category": "x",
-                    "resource": "x",
                     "input": 0,
                     "output": 0,
+                    "resource": "x",
                 },
                 {
                     "category": "x",
-                    "resource": "x",
                     "input": 0,
                     "output": 0,
+                    "resource": "x",
                 },
                 {
                     "category": "x",
-                    "resource": "x",
                     "input": 0,
                     "output": 0,
+                    "resource": "x",
                 },
             ],
         )
@@ -227,21 +227,21 @@ class TestAsyncIngest:
             events=[
                 {
                     "category": "x",
-                    "resource": "x",
                     "input": 0,
                     "output": 0,
+                    "resource": "x",
                 },
                 {
                     "category": "x",
-                    "resource": "x",
                     "input": 0,
                     "output": 0,
+                    "resource": "x",
                 },
                 {
                     "category": "x",
-                    "resource": "x",
                     "input": 0,
                     "output": 0,
+                    "resource": "x",
                 },
             ],
         ) as response:
