@@ -24,7 +24,7 @@ class IngestEventParam(TypedDict, total=False):
 
     event_timestamp: Annotated[Union[str, datetime, None], PropertyInfo(format="iso8601")]
 
-    experience_instance_id: Optional[str]
+    experience_id: Optional[str]
 
     request_tags: Optional[List[str]]
 

@@ -84,7 +84,7 @@ class IngestResource(SyncAPIResource):
         event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
         budget_ids: Union[list[str], None] | NotGiven = NOT_GIVEN,
         request_tags: Union[list[str], None] | NotGiven = NOT_GIVEN,
-        experience_instance_id: Union[str, None] | NotGiven = NOT_GIVEN,
+        experience_id: Union[str, None] | NotGiven = NOT_GIVEN,
         user_id: Union[str, None] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -94,7 +94,7 @@ class IngestResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> IngestResponse:
         """
-        Ingest a request
+        Ingest an Event
 
         Args:
           category (str): The name of the category
@@ -111,7 +111,7 @@ class IngestResource(SyncAPIResource):
           
           request_tags (list[str], optional): The request tags to associate with the request. Defaults to None.
 
-          experience_instance_id (str, optional): The experience instance id
+          experience_id (str, optional): The experience instance id
           
           user_id (str, optional): The user id
           
@@ -144,8 +144,8 @@ class IngestResource(SyncAPIResource):
             valid_tags = [tag.strip() for tag in request_tags if tag.strip()]
             valid_tags_str = ",".join(valid_tags) if valid_tags else NOT_GIVEN
 
-        if experience_instance_id is None or isinstance(experience_instance_id, NotGiven):
-            experience_instance_id = NOT_GIVEN
+        if experience_id is None or isinstance(experience_id, NotGiven):
+            experience_id = NOT_GIVEN
         
         if user_id is None or isinstance(user_id, NotGiven):
             user_id = NOT_GIVEN
@@ -155,7 +155,7 @@ class IngestResource(SyncAPIResource):
                 {
                     "xProxy-Budget-IDs": valid_ids_str,
                     "xProxy-Request-Tags": valid_tags_str,
-                    "xProxy-Experience-InstanceId": experience_instance_id,
+                    "xProxy-Experience-Id": experience_id,
                     "xProxy-User-ID": user_id,
                 }
             ),
@@ -233,7 +233,7 @@ class AsyncIngestResource(AsyncAPIResource):
         event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
         budget_ids: Union[list[str], None] | NotGiven = NOT_GIVEN,
         request_tags: Union[list[str], None] | NotGiven = NOT_GIVEN,
-        experience_instance_id: Union[str, None] | NotGiven = NOT_GIVEN,
+        experience_id: Union[str, None] | NotGiven = NOT_GIVEN,
         user_id: Union[str, None] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -243,7 +243,7 @@ class AsyncIngestResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> IngestResponse:
         """
-        Ingest a request
+        Ingest an Event
 
         Args:
           category (str): The name of the category
@@ -260,7 +260,7 @@ class AsyncIngestResource(AsyncAPIResource):
           
           request_tags (list[str], optional): The request tags to associate with the request. Defaults to None.
           
-          experience_instance_id (str, optional): The experience instance id
+          experience_id (str, optional): The experience instance id
           
           user_id (str, optional): The user id
           
@@ -293,8 +293,8 @@ class AsyncIngestResource(AsyncAPIResource):
             valid_tags = [tag.strip() for tag in request_tags if tag.strip()]
             valid_tags_str = ",".join(valid_tags) if valid_tags else NOT_GIVEN
 
-        if experience_instance_id is None or isinstance(experience_instance_id, NotGiven):
-            experience_instance_id = NOT_GIVEN
+        if experience_id is None or isinstance(experience_id, NotGiven):
+            experience_id = NOT_GIVEN
         
         if user_id is None or isinstance(user_id, NotGiven):
             user_id = NOT_GIVEN
@@ -304,7 +304,7 @@ class AsyncIngestResource(AsyncAPIResource):
                 {
                     "xProxy-Budget-IDs": valid_ids_str,
                     "xProxy-Request-Tags": valid_tags_str,
-                    "xProxy-Experience-InstanceId": experience_instance_id,
+                    "xProxy-Experience-Id": experience_id,
                     "xProxy-User-ID": user_id,
                 }
             ),
