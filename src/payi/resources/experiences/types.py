@@ -48,10 +48,8 @@ class TypesResource(SyncAPIResource):
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> ExperienceType:
-        """Adds a new experience type.
-
-        Instances of this type can be created via
-        /experiences/instance.
+        """
+        Create an Experience Type
 
         Args:
           extra_headers: Send extra headers
@@ -89,7 +87,7 @@ class TypesResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> ExperienceType:
         """
-        Get details for a specific Experience Type
+        Get Experience Type details
 
         Args:
           extra_headers: Send extra headers
@@ -124,7 +122,7 @@ class TypesResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> ExperienceType:
         """
-        Updates an existing experience type.
+        Update an Experience Type
 
         Args:
           extra_headers: Send extra headers
@@ -182,10 +180,8 @@ class TypesResource(SyncAPIResource):
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> ExperienceType:
-        """Deletes an experience type.
-
-        This will remove visiblity of this type from all
-        dashboard stats.
+        """
+        Delete an Experience Type
 
         Args:
           extra_headers: Send extra headers
@@ -228,10 +224,8 @@ class AsyncTypesResource(AsyncAPIResource):
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> ExperienceType:
-        """Adds a new experience type.
-
-        Instances of this type can be created via
-        /experiences/instance.
+        """
+        Create an Experience Type
 
         Args:
           extra_headers: Send extra headers
@@ -269,7 +263,7 @@ class AsyncTypesResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> ExperienceType:
         """
-        Get details for a specific Experience Type
+        Get Experience Type details
 
         Args:
           extra_headers: Send extra headers
@@ -304,7 +298,7 @@ class AsyncTypesResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> ExperienceType:
         """
-        Updates an existing experience type.
+        Update an Experience Type
 
         Args:
           extra_headers: Send extra headers
@@ -362,10 +356,8 @@ class AsyncTypesResource(AsyncAPIResource):
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> ExperienceType:
-        """Deletes an experience type.
-
-        This will remove visiblity of this type from all
-        dashboard stats.
+        """
+        Delete an Experience Type
 
         Args:
           extra_headers: Send extra headers
