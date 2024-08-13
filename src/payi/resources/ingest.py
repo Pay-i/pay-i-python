@@ -80,7 +80,7 @@ class IngestResource(SyncAPIResource):
         resource: str,
         event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
         x_proxy_budget_ids: str | NotGiven = NOT_GIVEN,
-        x_proxy_experience_instance_id: str | NotGiven = NOT_GIVEN,
+        x_proxy_experience_id: str | NotGiven = NOT_GIVEN,
         x_proxy_request_tags: str | NotGiven = NOT_GIVEN,
         x_proxy_user_id: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
@@ -106,7 +106,7 @@ class IngestResource(SyncAPIResource):
             **strip_not_given(
                 {
                     "xProxy-Budget-IDs": x_proxy_budget_ids,
-                    "xProxy-Experience-InstanceId": x_proxy_experience_instance_id,
+                    "xProxy-Experience-Id": x_proxy_experience_id,
                     "xProxy-Request-Tags": x_proxy_request_tags,
                     "xProxy-User-ID": x_proxy_user_id,
                 }
@@ -182,7 +182,7 @@ class AsyncIngestResource(AsyncAPIResource):
         resource: str,
         event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
         x_proxy_budget_ids: str | NotGiven = NOT_GIVEN,
-        x_proxy_experience_instance_id: str | NotGiven = NOT_GIVEN,
+        x_proxy_experience_id: str | NotGiven = NOT_GIVEN,
         x_proxy_request_tags: str | NotGiven = NOT_GIVEN,
         x_proxy_user_id: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
@@ -208,7 +208,7 @@ class AsyncIngestResource(AsyncAPIResource):
             **strip_not_given(
                 {
                     "xProxy-Budget-IDs": x_proxy_budget_ids,
-                    "xProxy-Experience-InstanceId": x_proxy_experience_instance_id,
+                    "xProxy-Experience-Id": x_proxy_experience_id,
                     "xProxy-Request-Tags": x_proxy_request_tags,
                     "xProxy-User-ID": x_proxy_user_id,
                 }
