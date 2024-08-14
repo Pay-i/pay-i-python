@@ -94,7 +94,7 @@ class Payi(SyncAPIClient):
         if base_url is None:
             base_url = os.environ.get("PAYI_BASE_URL")
         if base_url is None:
-            base_url = f"https://apim-payi-prod-eastus.azure-api.net"
+            base_url = f"https://api.pay-i.com"
 
         super().__init__(
             version=__version__,
@@ -268,7 +268,7 @@ class AsyncPayi(AsyncAPIClient):
         if base_url is None:
             base_url = os.environ.get("PAYI_BASE_URL")
         if base_url is None:
-            base_url = f"https://apim-payi-prod-eastus.azure-api.net"
+            base_url = f"https://api.pay-i.com"
 
         super().__init__(
             version=__version__,
