@@ -42,7 +42,7 @@ class ExperiencesResource(SyncAPIResource):
 
     def create(
         self,
-        experience_type_id: str,
+        experience_name: str,
         *,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -63,10 +63,10 @@ class ExperiencesResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not experience_type_id:
-            raise ValueError(f"Expected a non-empty value for `experience_type_id` but received {experience_type_id!r}")
+        if not experience_name:
+            raise ValueError(f"Expected a non-empty value for `experience_name` but received {experience_name!r}")
         return self._post(
-            f"/api/v1/experiences/instances/{experience_type_id}",
+            f"/api/v1/experiences/instances/{experience_name}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -85,7 +85,7 @@ class ExperiencesResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> ExperienceInstance:
         """
-        Get Experience details
+        Get an Experience details
 
         Args:
           extra_headers: Send extra headers
@@ -155,7 +155,7 @@ class AsyncExperiencesResource(AsyncAPIResource):
 
     async def create(
         self,
-        experience_type_id: str,
+        experience_name: str,
         *,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -176,10 +176,10 @@ class AsyncExperiencesResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not experience_type_id:
-            raise ValueError(f"Expected a non-empty value for `experience_type_id` but received {experience_type_id!r}")
+        if not experience_name:
+            raise ValueError(f"Expected a non-empty value for `experience_name` but received {experience_name!r}")
         return await self._post(
-            f"/api/v1/experiences/instances/{experience_type_id}",
+            f"/api/v1/experiences/instances/{experience_name}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -198,7 +198,7 @@ class AsyncExperiencesResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> ExperienceInstance:
         """
-        Get Experience details
+        Get an Experience details
 
         Args:
           extra_headers: Send extra headers

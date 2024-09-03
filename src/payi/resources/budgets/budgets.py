@@ -270,7 +270,7 @@ class BudgetsResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> BudgetHistoryResponse:
         """
-        Reset the Budget
+        Reset a Budget
 
         Args:
           budget_id (str): The ID of the budget.
@@ -526,7 +526,7 @@ class AsyncBudgetsResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> BudgetHistoryResponse:
         """
-        Reset the Budget
+        Reset a Budget
 
         Args:
           extra_headers: Send extra headers
