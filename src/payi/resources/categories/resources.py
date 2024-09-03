@@ -7,7 +7,7 @@ from datetime import datetime
 
 import httpx
 
-from ..._types import NOT_GIVEN, Body, Query, Headers, NoneType, NotGiven
+from ..._types import NOT_GIVEN, Body, Query, Headers, NotGiven
 from ..._utils import (
     maybe_transform,
     async_maybe_transform,
@@ -175,7 +175,7 @@ class ResourcesResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> None:
+    ) -> CategoryResourceResponse:
         """
         Delete a version of the Resource
 
@@ -194,13 +194,12 @@ class ResourcesResource(SyncAPIResource):
             raise ValueError(f"Expected a non-empty value for `resource` but received {resource!r}")
         if not resource_id:
             raise ValueError(f"Expected a non-empty value for `resource_id` but received {resource_id!r}")
-        extra_headers = {"Accept": "*/*", **(extra_headers or {})}
         return self._delete(
             f"/api/v1/categories/{category}/resources/{resource}/{resource_id}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=NoneType,
+            cast_to=CategoryResourceResponse,
         )
 
 
@@ -351,7 +350,7 @@ class AsyncResourcesResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> None:
+    ) -> CategoryResourceResponse:
         """
         Delete a version of the Resource
 
@@ -370,13 +369,12 @@ class AsyncResourcesResource(AsyncAPIResource):
             raise ValueError(f"Expected a non-empty value for `resource` but received {resource!r}")
         if not resource_id:
             raise ValueError(f"Expected a non-empty value for `resource_id` but received {resource_id!r}")
-        extra_headers = {"Accept": "*/*", **(extra_headers or {})}
         return await self._delete(
             f"/api/v1/categories/{category}/resources/{resource}/{resource_id}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=NoneType,
+            cast_to=CategoryResourceResponse,
         )
 
 

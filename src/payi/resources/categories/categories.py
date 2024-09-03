@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import httpx
 
-from ..._types import NOT_GIVEN, Body, Query, Headers, NoneType, NotGiven
+from ..._types import NOT_GIVEN, Body, Query, Headers, NotGiven
 from ..._compat import cached_property
 from .resources import (
     ResourcesResource,
@@ -25,6 +25,7 @@ from ..._base_client import make_request_options
 from ...types.category_list_response import CategoryListResponse
 from ...types.category_delete_response import CategoryDeleteResponse
 from ...types.category_list_resources_response import CategoryListResourcesResponse
+from ...types.category_delete_resource_response import CategoryDeleteResourceResponse
 
 __all__ = ["CategoriesResource", "AsyncCategoriesResource"]
 
@@ -105,7 +106,7 @@ class CategoriesResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> None:
+    ) -> CategoryDeleteResourceResponse:
         """
         Delete all versions of Resource from a Category
 
@@ -122,13 +123,12 @@ class CategoriesResource(SyncAPIResource):
             raise ValueError(f"Expected a non-empty value for `category` but received {category!r}")
         if not resource:
             raise ValueError(f"Expected a non-empty value for `resource` but received {resource!r}")
-        extra_headers = {"Accept": "*/*", **(extra_headers or {})}
         return self._delete(
             f"/api/v1/categories/{category}/resources/{resource}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=NoneType,
+            cast_to=CategoryDeleteResourceResponse,
         )
 
     def list_resources(
@@ -241,7 +241,7 @@ class AsyncCategoriesResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> None:
+    ) -> CategoryDeleteResourceResponse:
         """
         Delete all versions of Resource from a Category
 
@@ -258,13 +258,12 @@ class AsyncCategoriesResource(AsyncAPIResource):
             raise ValueError(f"Expected a non-empty value for `category` but received {category!r}")
         if not resource:
             raise ValueError(f"Expected a non-empty value for `resource` but received {resource!r}")
-        extra_headers = {"Accept": "*/*", **(extra_headers or {})}
         return await self._delete(
             f"/api/v1/categories/{category}/resources/{resource}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=NoneType,
+            cast_to=CategoryDeleteResourceResponse,
         )
 
     async def list_resources(
