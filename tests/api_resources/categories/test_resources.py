@@ -195,7 +195,7 @@ class TestResources:
             category="category",
             resource="resource",
         )
-        assert resource is None
+        assert_matches_type(CategoryResourceResponse, resource, path=["response"])
 
     @parametrize
     def test_raw_response_delete(self, client: Payi) -> None:
@@ -208,7 +208,7 @@ class TestResources:
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
         resource = response.parse()
-        assert resource is None
+        assert_matches_type(CategoryResourceResponse, resource, path=["response"])
 
     @parametrize
     def test_streaming_response_delete(self, client: Payi) -> None:
@@ -221,7 +221,7 @@ class TestResources:
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
             resource = response.parse()
-            assert resource is None
+            assert_matches_type(CategoryResourceResponse, resource, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
@@ -428,7 +428,7 @@ class TestAsyncResources:
             category="category",
             resource="resource",
         )
-        assert resource is None
+        assert_matches_type(CategoryResourceResponse, resource, path=["response"])
 
     @parametrize
     async def test_raw_response_delete(self, async_client: AsyncPayi) -> None:
@@ -441,7 +441,7 @@ class TestAsyncResources:
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
         resource = await response.parse()
-        assert resource is None
+        assert_matches_type(CategoryResourceResponse, resource, path=["response"])
 
     @parametrize
     async def test_streaming_response_delete(self, async_client: AsyncPayi) -> None:
@@ -454,7 +454,7 @@ class TestAsyncResources:
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
             resource = await response.parse()
-            assert resource is None
+            assert_matches_type(CategoryResourceResponse, resource, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
