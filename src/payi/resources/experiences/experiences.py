@@ -40,6 +40,39 @@ class ExperiencesResource(SyncAPIResource):
     def with_streaming_response(self) -> ExperiencesResourceWithStreamingResponse:
         return ExperiencesResourceWithStreamingResponse(self)
 
+    def create(
+        self,
+        experience_name: str,
+        *,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+    ) -> ExperienceInstance:
+        """
+        Create an Experience
+
+        Args:
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        if not experience_name:
+            raise ValueError(f"Expected a non-empty value for `experience_name` but received {experience_name!r}")
+        return self._post(
+            f"/api/v1/experiences/instances/{experience_name}",
+            options=make_request_options(
+                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+            ),
+            cast_to=ExperienceInstance,
+        )
+
     def retrieve(
         self,
         experience_id: str,
@@ -120,6 +153,39 @@ class AsyncExperiencesResource(AsyncAPIResource):
     def with_streaming_response(self) -> AsyncExperiencesResourceWithStreamingResponse:
         return AsyncExperiencesResourceWithStreamingResponse(self)
 
+    async def create(
+        self,
+        experience_name: str,
+        *,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+    ) -> ExperienceInstance:
+        """
+        Create an Experience
+
+        Args:
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        if not experience_name:
+            raise ValueError(f"Expected a non-empty value for `experience_name` but received {experience_name!r}")
+        return await self._post(
+            f"/api/v1/experiences/instances/{experience_name}",
+            options=make_request_options(
+                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+            ),
+            cast_to=ExperienceInstance,
+        )
+
     async def retrieve(
         self,
         experience_id: str,
@@ -191,6 +257,9 @@ class ExperiencesResourceWithRawResponse:
     def __init__(self, experiences: ExperiencesResource) -> None:
         self._experiences = experiences
 
+        self.create = to_raw_response_wrapper(
+            experiences.create,
+        )
         self.retrieve = to_raw_response_wrapper(
             experiences.retrieve,
         )
@@ -207,6 +276,9 @@ class AsyncExperiencesResourceWithRawResponse:
     def __init__(self, experiences: AsyncExperiencesResource) -> None:
         self._experiences = experiences
 
+        self.create = async_to_raw_response_wrapper(
+            experiences.create,
+        )
         self.retrieve = async_to_raw_response_wrapper(
             experiences.retrieve,
         )
@@ -223,6 +295,9 @@ class ExperiencesResourceWithStreamingResponse:
     def __init__(self, experiences: ExperiencesResource) -> None:
         self._experiences = experiences
 
+        self.create = to_streamed_response_wrapper(
+            experiences.create,
+        )
         self.retrieve = to_streamed_response_wrapper(
             experiences.retrieve,
         )
@@ -239,6 +314,9 @@ class AsyncExperiencesResourceWithStreamingResponse:
     def __init__(self, experiences: AsyncExperiencesResource) -> None:
         self._experiences = experiences
 
+        self.create = async_to_streamed_response_wrapper(
+            experiences.create,
+        )
         self.retrieve = async_to_streamed_response_wrapper(
             experiences.retrieve,
         )
