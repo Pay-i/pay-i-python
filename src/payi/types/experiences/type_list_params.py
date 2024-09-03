@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Optional
 from typing_extensions import TypedDict
 
-__all__ = ["TypeUpdateParams"]
+__all__ = ["TypeListParams"]
 
 
-class TypeUpdateParams(TypedDict, total=False):
-    description: Optional[str]
-
-    name: Optional[str]
+class TypeListParams(TypedDict, total=False):
+    name: str
+    """Experience Type Name"""
