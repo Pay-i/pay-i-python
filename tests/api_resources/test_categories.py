@@ -8,12 +8,7 @@ from typing import Any, cast
 import pytest
 
 from payi import Payi, AsyncPayi
-from payi.types import (
-    CategoryListResponse,
-    CategoryDeleteResponse,
-    CategoryListResourcesResponse,
-    CategoryDeleteResourceResponse,
-)
+from payi.types import CategoryListResponse, CategoryDeleteResponse, CategoryListResourcesResponse
 from tests.utils import assert_matches_type
 
 base_url = os.environ.get("TEST_API_BASE_URL", "http://127.0.0.1:4010")
@@ -91,7 +86,7 @@ class TestCategories:
             resource="resource",
             category="category",
         )
-        assert_matches_type(CategoryDeleteResourceResponse, category, path=["response"])
+        assert category is None
 
     @parametrize
     def test_raw_response_delete_resource(self, client: Payi) -> None:
@@ -103,7 +98,7 @@ class TestCategories:
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
         category = response.parse()
-        assert_matches_type(CategoryDeleteResourceResponse, category, path=["response"])
+        assert category is None
 
     @parametrize
     def test_streaming_response_delete_resource(self, client: Payi) -> None:
@@ -115,7 +110,7 @@ class TestCategories:
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
             category = response.parse()
-            assert_matches_type(CategoryDeleteResourceResponse, category, path=["response"])
+            assert category is None
 
         assert cast(Any, response.is_closed) is True
 
@@ -244,7 +239,7 @@ class TestAsyncCategories:
             resource="resource",
             category="category",
         )
-        assert_matches_type(CategoryDeleteResourceResponse, category, path=["response"])
+        assert category is None
 
     @parametrize
     async def test_raw_response_delete_resource(self, async_client: AsyncPayi) -> None:
@@ -256,7 +251,7 @@ class TestAsyncCategories:
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
         category = await response.parse()
-        assert_matches_type(CategoryDeleteResourceResponse, category, path=["response"])
+        assert category is None
 
     @parametrize
     async def test_streaming_response_delete_resource(self, async_client: AsyncPayi) -> None:
@@ -268,7 +263,7 @@ class TestAsyncCategories:
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
             category = await response.parse()
-            assert_matches_type(CategoryDeleteResourceResponse, category, path=["response"])
+            assert category is None
 
         assert cast(Any, response.is_closed) is True
 
