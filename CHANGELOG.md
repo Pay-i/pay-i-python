@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.0-alpha.25 (2024-09-25)
+
+Full Changelog: [v0.1.0-alpha.24...v0.1.0-alpha.25](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.24...v0.1.0-alpha.25)
+
+### Features
+
+* **api:** add Evaluations ([#114](https://github.com/Pay-i/pay-i-python/issues/114)) ([6352b8d](https://github.com/Pay-i/pay-i-python/commit/6352b8d8d69a8e2d636e7fd43745dae02b8c7fc9))
+
+
+### Chores
+
+* **internal:** codegen related update ([#115](https://github.com/Pay-i/pay-i-python/issues/115)) ([17c1b4d](https://github.com/Pay-i/pay-i-python/commit/17c1b4d89f6b54d87bc9e8dbceea2d6f4bd4f30a))
+* **internal:** update pydantic v1 compat helpers ([#117](https://github.com/Pay-i/pay-i-python/issues/117)) ([e4a11c5](https://github.com/Pay-i/pay-i-python/commit/e4a11c5d2ad7baf3920d5608d07a31d9649ff570))
+
 ## 0.1.0-alpha.24 (2024-09-03)
 
 Full Changelog: [v0.1.0-alpha.23...v0.1.0-alpha.24](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.23...v0.1.0-alpha.24)

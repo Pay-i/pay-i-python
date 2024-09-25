@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .shared import EvaluationResponse as EvaluationResponse
 from .cost_data import CostData as CostData
 from .cost_details import CostDetails as CostDetails
 from .requests_data import RequestsData as RequestsData
