@@ -4,12 +4,8 @@
 
 from ..._models import BaseModel
 
-__all__ = ["ExperienceType"]
+__all__ = ["EvaluationResponse"]
 
 
-class ExperienceType(BaseModel):
-    description: str
-
-    name: str
-
+class EvaluationResponse(BaseModel):
     request_id: str
