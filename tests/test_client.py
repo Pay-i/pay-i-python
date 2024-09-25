@@ -740,6 +740,7 @@ class TestPayi:
         response = client.budgets.with_raw_response.create(budget_name="x", max=0)
 
         assert response.retries_taken == failures_before_success
+        assert int(response.http_request.headers.get("x-stainless-retry-count")) == failures_before_success
 
 
 class TestAsyncPayi:
@@ -1452,3 +1453,4 @@ class TestAsyncPayi:
         response = await client.budgets.with_raw_response.create(budget_name="x", max=0)
 
         assert response.retries_taken == failures_before_success
+        assert int(response.http_request.headers.get("x-stainless-retry-count")) == failures_before_success

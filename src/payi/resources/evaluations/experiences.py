@@ -29,10 +29,21 @@ __all__ = ["ExperiencesResource", "AsyncExperiencesResource"]
 class ExperiencesResource(SyncAPIResource):
     @cached_property
     def with_raw_response(self) -> ExperiencesResourceWithRawResponse:
+        """
+        This property can be used as a prefix for any HTTP method call to return the
+        the raw response object instead of the parsed content.
+
+        For more information, see https://www.github.com/Pay-i/pay-i-python#accessing-raw-response-data-eg-headers
+        """
         return ExperiencesResourceWithRawResponse(self)
 
     @cached_property
     def with_streaming_response(self) -> ExperiencesResourceWithStreamingResponse:
+        """
+        An alternative to `.with_raw_response` that doesn't eagerly read the response body.
+
+        For more information, see https://www.github.com/Pay-i/pay-i-python#with_streaming_response
+        """
         return ExperiencesResourceWithStreamingResponse(self)
 
     def create(
@@ -81,10 +92,21 @@ class ExperiencesResource(SyncAPIResource):
 class AsyncExperiencesResource(AsyncAPIResource):
     @cached_property
     def with_raw_response(self) -> AsyncExperiencesResourceWithRawResponse:
+        """
+        This property can be used as a prefix for any HTTP method call to return the
+        the raw response object instead of the parsed content.
+
+        For more information, see https://www.github.com/Pay-i/pay-i-python#accessing-raw-response-data-eg-headers
+        """
         return AsyncExperiencesResourceWithRawResponse(self)
 
     @cached_property
     def with_streaming_response(self) -> AsyncExperiencesResourceWithStreamingResponse:
+        """
+        An alternative to `.with_raw_response` that doesn't eagerly read the response body.
+
+        For more information, see https://www.github.com/Pay-i/pay-i-python#with_streaming_response
+        """
         return AsyncExperiencesResourceWithStreamingResponse(self)
 
     async def create(
