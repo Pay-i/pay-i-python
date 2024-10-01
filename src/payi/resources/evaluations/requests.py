@@ -63,6 +63,12 @@ class RequestsResource(SyncAPIResource):
         Create an Evaluation for a Request
 
         Args:
+          evaluation: The evaluation value
+
+          request_id: The request ID being evaluated
+
+          user_id: The user ID creating the evaluation
+
           extra_headers: Send extra headers
 
           extra_query: Add additional query parameters to the request
@@ -126,6 +132,12 @@ class AsyncRequestsResource(AsyncAPIResource):
         Create an Evaluation for a Request
 
         Args:
+          evaluation: The evaluation value
+
+          request_id: The request ID being evaluated
+
+          user_id: The user ID creating the evaluation
+
           extra_headers: Send extra headers
 
           extra_query: Add additional query parameters to the request
