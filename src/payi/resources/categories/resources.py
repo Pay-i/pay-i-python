@@ -56,6 +56,7 @@ class ResourcesResource(SyncAPIResource):
         input_price: float | NotGiven = NOT_GIVEN,
         max_input_units: int | NotGiven = NOT_GIVEN,
         max_output_units: int | NotGiven = NOT_GIVEN,
+        max_total_units: int | NotGiven = NOT_GIVEN,
         output_price: float | NotGiven = NOT_GIVEN,
         start_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
@@ -88,6 +89,7 @@ class ResourcesResource(SyncAPIResource):
                     "input_price": input_price,
                     "max_input_units": max_input_units,
                     "max_output_units": max_output_units,
+                    "max_total_units": max_total_units,
                     "output_price": output_price,
                     "start_timestamp": start_timestamp,
                 },
@@ -242,6 +244,7 @@ class AsyncResourcesResource(AsyncAPIResource):
         input_price: float | NotGiven = NOT_GIVEN,
         max_input_units: int | NotGiven = NOT_GIVEN,
         max_output_units: int | NotGiven = NOT_GIVEN,
+        max_total_units: int | NotGiven = NOT_GIVEN,
         output_price: float | NotGiven = NOT_GIVEN,
         start_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
@@ -274,6 +277,7 @@ class AsyncResourcesResource(AsyncAPIResource):
                     "input_price": input_price,
                     "max_input_units": max_input_units,
                     "max_output_units": max_output_units,
+                    "max_total_units": max_total_units,
                     "output_price": output_price,
                     "start_timestamp": start_timestamp,
                 },

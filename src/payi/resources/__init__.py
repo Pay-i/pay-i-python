@@ -1,5 +1,13 @@
 # File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
+from .csat import (
+    CsatResource,
+    AsyncCsatResource,
+    CsatResourceWithRawResponse,
+    AsyncCsatResourceWithRawResponse,
+    CsatResourceWithStreamingResponse,
+    AsyncCsatResourceWithStreamingResponse,
+)
 from .ingest import (
     IngestResource,
     AsyncIngestResource,
@@ -66,10 +74,10 @@ __all__ = [
     "AsyncExperiencesResourceWithRawResponse",
     "ExperiencesResourceWithStreamingResponse",
     "AsyncExperiencesResourceWithStreamingResponse",
-    "EvaluationsResource",
-    "AsyncEvaluationsResource",
-    "EvaluationsResourceWithRawResponse",
-    "AsyncEvaluationsResourceWithRawResponse",
-    "EvaluationsResourceWithStreamingResponse",
-    "AsyncEvaluationsResourceWithStreamingResponse",
+    "CsatResource",
+    "AsyncCsatResource",
+    "CsatResourceWithRawResponse",
+    "AsyncCsatResourceWithRawResponse",
+    "CsatResourceWithStreamingResponse",
+    "AsyncCsatResourceWithStreamingResponse",
 ]
