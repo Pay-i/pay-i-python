@@ -1,9 +1,3 @@
-# Shared Types
-
-```python
-from payi.types import EvaluationResponse
-```
-
 # Budgets
 
 Types:
