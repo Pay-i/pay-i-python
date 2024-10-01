@@ -6,51 +6,51 @@ from typing import Optional
 
 import httpx
 
-from ..._types import NOT_GIVEN, Body, Query, Headers, NotGiven
-from ..._utils import (
+from ..types import csat_create_params
+from .._types import NOT_GIVEN, Body, Query, Headers, NotGiven
+from .._utils import (
     maybe_transform,
     async_maybe_transform,
 )
-from ..._compat import cached_property
-from ..._resource import SyncAPIResource, AsyncAPIResource
-from ..._response import (
+from .._compat import cached_property
+from .._resource import SyncAPIResource, AsyncAPIResource
+from .._response import (
     to_raw_response_wrapper,
     to_streamed_response_wrapper,
     async_to_raw_response_wrapper,
     async_to_streamed_response_wrapper,
 )
-from ..._base_client import make_request_options
-from ...types.evaluations import experience_create_params
-from ...types.shared.evaluation_response import EvaluationResponse
+from ..types.csat import Csat
+from .._base_client import make_request_options
 
-__all__ = ["ExperiencesResource", "AsyncExperiencesResource"]
+__all__ = ["CsatResource", "AsyncCsatResource"]
 
 
-class ExperiencesResource(SyncAPIResource):
+class CsatResource(SyncAPIResource):
     @cached_property
-    def with_raw_response(self) -> ExperiencesResourceWithRawResponse:
+    def with_raw_response(self) -> CsatResourceWithRawResponse:
         """
         This property can be used as a prefix for any HTTP method call to return the
         the raw response object instead of the parsed content.
 
         For more information, see https://www.github.com/Pay-i/pay-i-python#accessing-raw-response-data-eg-headers
         """
-        return ExperiencesResourceWithRawResponse(self)
+        return CsatResourceWithRawResponse(self)
 
     @cached_property
-    def with_streaming_response(self) -> ExperiencesResourceWithStreamingResponse:
+    def with_streaming_response(self) -> CsatResourceWithStreamingResponse:
         """
         An alternative to `.with_raw_response` that doesn't eagerly read the response body.
 
         For more information, see https://www.github.com/Pay-i/pay-i-python#with_streaming_response
         """
-        return ExperiencesResourceWithStreamingResponse(self)
+        return CsatResourceWithStreamingResponse(self)
 
     def create(
         self,
         experience_id: str,
         *,
-        evaluation: int,
+        csat_rating: int,
         user_id: Optional[str] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -58,9 +58,9 @@ class ExperiencesResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> EvaluationResponse:
+    ) -> Csat:
         """
-        Create an Evaluation for an Experience
+        Created a CSAT rating for an Experience
 
         Args:
           extra_headers: Send extra headers
@@ -74,46 +74,46 @@ class ExperiencesResource(SyncAPIResource):
         if not experience_id:
             raise ValueError(f"Expected a non-empty value for `experience_id` but received {experience_id!r}")
         return self._post(
-            f"/api/v1/evaluations/experiences/{experience_id}",
+            f"/api/v1/csat/experiences/{experience_id}",
             body=maybe_transform(
                 {
-                    "evaluation": evaluation,
+                    "csat_rating": csat_rating,
                     "user_id": user_id,
                 },
-                experience_create_params.ExperienceCreateParams,
+                csat_create_params.CsatCreateParams,
             ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=EvaluationResponse,
+            cast_to=Csat,
         )
 
 
-class AsyncExperiencesResource(AsyncAPIResource):
+class AsyncCsatResource(AsyncAPIResource):
     @cached_property
-    def with_raw_response(self) -> AsyncExperiencesResourceWithRawResponse:
+    def with_raw_response(self) -> AsyncCsatResourceWithRawResponse:
         """
         This property can be used as a prefix for any HTTP method call to return the
         the raw response object instead of the parsed content.
 
         For more information, see https://www.github.com/Pay-i/pay-i-python#accessing-raw-response-data-eg-headers
         """
-        return AsyncExperiencesResourceWithRawResponse(self)
+        return AsyncCsatResourceWithRawResponse(self)
 
     @cached_property
-    def with_streaming_response(self) -> AsyncExperiencesResourceWithStreamingResponse:
+    def with_streaming_response(self) -> AsyncCsatResourceWithStreamingResponse:
         """
         An alternative to `.with_raw_response` that doesn't eagerly read the response body.
 
         For more information, see https://www.github.com/Pay-i/pay-i-python#with_streaming_response
         """
-        return AsyncExperiencesResourceWithStreamingResponse(self)
+        return AsyncCsatResourceWithStreamingResponse(self)
 
     async def create(
         self,
         experience_id: str,
         *,
-        evaluation: int,
+        csat_rating: int,
         user_id: Optional[str] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -121,9 +121,9 @@ class AsyncExperiencesResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> EvaluationResponse:
+    ) -> Csat:
         """
-        Create an Evaluation for an Experience
+        Created a CSAT rating for an Experience
 
         Args:
           extra_headers: Send extra headers
@@ -137,52 +137,52 @@ class AsyncExperiencesResource(AsyncAPIResource):
         if not experience_id:
             raise ValueError(f"Expected a non-empty value for `experience_id` but received {experience_id!r}")
         return await self._post(
-            f"/api/v1/evaluations/experiences/{experience_id}",
+            f"/api/v1/csat/experiences/{experience_id}",
             body=await async_maybe_transform(
                 {
-                    "evaluation": evaluation,
+                    "csat_rating": csat_rating,
                     "user_id": user_id,
                 },
-                experience_create_params.ExperienceCreateParams,
+                csat_create_params.CsatCreateParams,
             ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=EvaluationResponse,
+            cast_to=Csat,
         )
 
 
-class ExperiencesResourceWithRawResponse:
-    def __init__(self, experiences: ExperiencesResource) -> None:
-        self._experiences = experiences
+class CsatResourceWithRawResponse:
+    def __init__(self, csat: CsatResource) -> None:
+        self._csat = csat
 
         self.create = to_raw_response_wrapper(
-            experiences.create,
+            csat.create,
         )
 
 
-class AsyncExperiencesResourceWithRawResponse:
-    def __init__(self, experiences: AsyncExperiencesResource) -> None:
-        self._experiences = experiences
+class AsyncCsatResourceWithRawResponse:
+    def __init__(self, csat: AsyncCsatResource) -> None:
+        self._csat = csat
 
         self.create = async_to_raw_response_wrapper(
-            experiences.create,
+            csat.create,
         )
 
 
-class ExperiencesResourceWithStreamingResponse:
-    def __init__(self, experiences: ExperiencesResource) -> None:
-        self._experiences = experiences
+class CsatResourceWithStreamingResponse:
+    def __init__(self, csat: CsatResource) -> None:
+        self._csat = csat
 
         self.create = to_streamed_response_wrapper(
-            experiences.create,
+            csat.create,
         )
 
 
-class AsyncExperiencesResourceWithStreamingResponse:
-    def __init__(self, experiences: AsyncExperiencesResource) -> None:
-        self._experiences = experiences
+class AsyncCsatResourceWithStreamingResponse:
+    def __init__(self, csat: AsyncCsatResource) -> None:
+        self._csat = csat
 
         self.create = async_to_streamed_response_wrapper(
-            experiences.create,
+            csat.create,
         )

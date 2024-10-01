@@ -35,6 +35,7 @@ class TestResources:
             input_price=0,
             max_input_units=0,
             max_output_units=0,
+            max_total_units=0,
             output_price=0,
             start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
         )
@@ -268,6 +269,7 @@ class TestAsyncResources:
             input_price=0,
             max_input_units=0,
             max_output_units=0,
+            max_total_units=0,
             output_price=0,
             start_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
         )

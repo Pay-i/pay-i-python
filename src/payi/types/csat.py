@@ -2,10 +2,10 @@
 
 
 
-from ..._models import BaseModel
+from .._models import BaseModel
 
-__all__ = ["EvaluationResponse"]
+__all__ = ["Csat"]
 
 
-class EvaluationResponse(BaseModel):
+class Csat(BaseModel):
     request_id: str

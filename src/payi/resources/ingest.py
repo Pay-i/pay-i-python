@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Union, Iterable
+from typing import Union, Iterable, Optional
 from datetime import datetime
 
 import httpx
@@ -93,6 +93,7 @@ class IngestResource(SyncAPIResource):
         output: int,
         resource: str,
         event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
+        provisioned_resource_name: Optional[str] | NotGiven = NOT_GIVEN,
         budget_ids: Union[list[str], None] | NotGiven = NOT_GIVEN,
         request_tags: Union[list[str], None] | NotGiven = NOT_GIVEN,
         experience_id: Union[str, None] | NotGiven = NOT_GIVEN,
@@ -181,6 +182,7 @@ class IngestResource(SyncAPIResource):
                     "output": output,
                     "resource": resource,
                     "event_timestamp": event_timestamp,
+                    "provisioned_resource_name": provisioned_resource_name,
                 },
                 ingest_units_params.IngestUnitsParams,
             ),
@@ -253,12 +255,12 @@ class AsyncIngestResource(AsyncAPIResource):
         output: int,
         resource: str,
         event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
+        provisioned_resource_name: Optional[str] | NotGiven = NOT_GIVEN,
         budget_ids: Union[list[str], None] | NotGiven = NOT_GIVEN,
         request_tags: Union[list[str], None] | NotGiven = NOT_GIVEN,
         experience_id: Union[str, None] | NotGiven = NOT_GIVEN,
         user_id: Union[str, None] | NotGiven = NOT_GIVEN,
 
-      # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
@@ -342,6 +344,7 @@ class AsyncIngestResource(AsyncAPIResource):
                     "output": output,
                     "resource": resource,
                     "event_timestamp": event_timestamp,
+                    "provisioned_resource_name": provisioned_resource_name,
                 },
                 ingest_units_params.IngestUnitsParams,
             ),
