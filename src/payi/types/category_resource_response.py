@@ -23,4 +23,6 @@ class CategoryResourceResponse(BaseModel):
 
     max_output_units: Optional[int] = None
 
+    max_total_units: Optional[int] = None
+
     output_price: Optional[float] = None

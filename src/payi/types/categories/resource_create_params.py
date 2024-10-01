@@ -20,6 +20,8 @@ class ResourceCreateParams(TypedDict, total=False):
 
     max_output_units: int
 
+    max_total_units: int
+
     output_price: float
 
     start_timestamp: Annotated[Union[str, datetime, None], PropertyInfo(format="iso8601")]

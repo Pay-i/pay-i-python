@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Union, Iterable
+from typing import Union, Iterable, Optional
 from datetime import datetime
 
 import httpx
@@ -90,6 +90,7 @@ class IngestResource(SyncAPIResource):
         output: int,
         resource: str,
         event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
+        provisioned_resource_name: Optional[str] | NotGiven = NOT_GIVEN,
         x_proxy_budget_ids: str | NotGiven = NOT_GIVEN,
         x_proxy_experience_id: str | NotGiven = NOT_GIVEN,
         x_proxy_request_tags: str | NotGiven = NOT_GIVEN,
@@ -133,6 +134,7 @@ class IngestResource(SyncAPIResource):
                     "output": output,
                     "resource": resource,
                     "event_timestamp": event_timestamp,
+                    "provisioned_resource_name": provisioned_resource_name,
                 },
                 ingest_units_params.IngestUnitsParams,
             ),
@@ -203,6 +205,7 @@ class AsyncIngestResource(AsyncAPIResource):
         output: int,
         resource: str,
         event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
+        provisioned_resource_name: Optional[str] | NotGiven = NOT_GIVEN,
         x_proxy_budget_ids: str | NotGiven = NOT_GIVEN,
         x_proxy_experience_id: str | NotGiven = NOT_GIVEN,
         x_proxy_request_tags: str | NotGiven = NOT_GIVEN,
@@ -246,6 +249,7 @@ class AsyncIngestResource(AsyncAPIResource):
                     "output": output,
                     "resource": resource,
                     "event_timestamp": event_timestamp,
+                    "provisioned_resource_name": provisioned_resource_name,
                 },
                 ingest_units_params.IngestUnitsParams,
             ),

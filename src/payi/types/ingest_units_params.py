@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Union
+from typing import Union, Optional
 from datetime import datetime
 from typing_extensions import Required, Annotated, TypedDict
 
@@ -21,6 +21,8 @@ class IngestUnitsParams(TypedDict, total=False):
     resource: Required[str]
 
     event_timestamp: Annotated[Union[str, datetime, None], PropertyInfo(format="iso8601")]
+
+    provisioned_resource_name: Optional[str]
 
     x_proxy_budget_ids: Annotated[str, PropertyInfo(alias="xProxy-Budget-IDs")]
 

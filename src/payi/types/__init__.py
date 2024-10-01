@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .shared import EvaluationResponse as EvaluationResponse
+from .csat import Csat as Csat
 from .cost_data import CostData as CostData
 from .cost_details import CostDetails as CostDetails
 from .requests_data import RequestsData as RequestsData
@@ -13,6 +13,7 @@ from .default_response import DefaultResponse as DefaultResponse
 from .category_response import CategoryResponse as CategoryResponse
 from .paged_budget_list import PagedBudgetList as PagedBudgetList
 from .budget_list_params import BudgetListParams as BudgetListParams
+from .csat_create_params import CsatCreateParams as CsatCreateParams
 from .ingest_bulk_params import IngestBulkParams as IngestBulkParams
 from .ingest_event_param import IngestEventParam as IngestEventParam
 from .experience_instance import ExperienceInstance as ExperienceInstance
