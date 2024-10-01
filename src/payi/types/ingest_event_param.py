@@ -26,6 +26,8 @@ class IngestEventParam(TypedDict, total=False):
 
     experience_id: Optional[str]
 
+    provisioned_resource_name: Optional[str]
+
     request_tags: Optional[List[str]]
 
     user_id: Optional[str]
