@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.26 (2024-10-01)
+
+Full Changelog: [v0.1.0-alpha.25...v0.1.0-alpha.26](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.25...v0.1.0-alpha.26)
+
+### Features
+
+* **api:** api update ([#121](https://github.com/Pay-i/pay-i-python/issues/121)) ([2705291](https://github.com/Pay-i/pay-i-python/commit/27052910f37169c45456fc2a752a8525eb858d4e))
+
+
+### Chores
+
+* **internal:** codegen related update ([#119](https://github.com/Pay-i/pay-i-python/issues/119)) ([1e7361a](https://github.com/Pay-i/pay-i-python/commit/1e7361a69e9751e834bb32a450624324aa27c646))
+
 ## 0.1.0-alpha.25 (2024-09-25)
 
 Full Changelog: [v0.1.0-alpha.24...v0.1.0-alpha.25](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.24...v0.1.0-alpha.25)
