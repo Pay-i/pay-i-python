@@ -85,13 +85,16 @@ class BudgetsResource(SyncAPIResource):
         Create a Budget
 
         Args:
-          extra_headers: Send extra headers
-
-          extra_query: Add additional query parameters to the request
-
-          extra_body: Add additional JSON properties to the request
-
-          timeout: Override the client-level default timeout for this request, in seconds
+          budget_name (str): The name of the budget.
+          max (float): The maximum budget amount.
+          base_cost_estimate (Union[float, Literal['max']], optional): The base cost estimate. Defaults to 'max'.
+          budget_response_type (Literal['block', 'allow'], optional): The budget response type. Defaults to 'block'.
+          budget_tags (Union[List[str], None], optional): List of budget tags. Defaults to None.
+          budget_type (Literal['conservative', 'liberal'], optional): The budget type. Defaults to 'conservative'.
+          extra_headers (Dict[str, str], optional): Additional headers for the request. Defaults to None.
+          extra_query (Dict[str, str], optional): Additional query parameters. Defaults to None.
+          extra_body (Dict[str, Any], optional): Additional body parameters. Defaults to None.
+          timeout (Union[float, None], optional): The timeout for the request in seconds. Defaults to None.
         """
         return self._post(
             "/api/v1/budgets",
@@ -130,13 +133,11 @@ class BudgetsResource(SyncAPIResource):
         Get Budget details
 
         Args:
-          extra_headers: Send extra headers
-
-          extra_query: Add additional query parameters to the request
-
-          extra_body: Add additional JSON properties to the request
-
-          timeout: Override the client-level default timeout for this request, in seconds
+          budget_id (str): The ID of the budget.
+          extra_headers (Dict[str, str], optional): Additional headers for the request. Defaults to None.
+          extra_query (Dict[str, str], optional): Additional query parameters. Defaults to None.
+          extra_body (Dict[str, Any], optional): Additional body parameters. Defaults to None.
+          timeout (Union[float, None], optional): The timeout for the request in seconds. Defaults to None.
         """
         if not budget_id:
             raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
@@ -165,13 +166,13 @@ class BudgetsResource(SyncAPIResource):
         Update a Budget
 
         Args:
-          extra_headers: Send extra headers
-
-          extra_query: Add additional query parameters to the request
-
-          extra_body: Add additional JSON properties to the request
-
-          timeout: Override the client-level default timeout for this request, in seconds
+          budget_id (str): The ID of the budget.
+          budget_name (Union[str, optional]): The updated name of the budget. Defaults to None.
+          max (Union[float, optional])): The maximum budget amount. Defaults to None.
+          extra_headers (Dict[str, str], optional): Additional headers for the request. Defaults to None.
+          extra_query (Dict[str, str], optional): Additional query parameters. Defaults to None.
+          extra_body (Dict[str, Any], optional): Additional body parameters. Defaults to None.
+          timeout (Union[float, None], optional): The timeout for the request in seconds. Defaults to None.
         """
         if not budget_id:
             raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
@@ -210,13 +211,10 @@ class BudgetsResource(SyncAPIResource):
         Get all Budgets
 
         Args:
-          extra_headers: Send extra headers
-
-          extra_query: Add additional query parameters to the request
-
-          extra_body: Add additional JSON properties to the request
-
-          timeout: Override the client-level default timeout for this request, in seconds
+          extra_headers (Dict[str, str], optional): Additional headers for the request. Defaults to None.
+          extra_query (Dict[str, str], optional): Additional query parameters. Defaults to None.
+          extra_body (Dict[str, Any], optional): Additional body parameters. Defaults to None.
+          timeout (Union[float, None], optional): The timeout for the request in seconds. Defaults to None.
         """
         return self._get(
             "/api/v1/budgets",
@@ -255,13 +253,11 @@ class BudgetsResource(SyncAPIResource):
         Delete a Budget
 
         Args:
-          extra_headers: Send extra headers
-
-          extra_query: Add additional query parameters to the request
-
-          extra_body: Add additional JSON properties to the request
-
-          timeout: Override the client-level default timeout for this request, in seconds
+          budget_id (str): The ID of the budget.
+          extra_headers (Dict[str, str], optional): Additional headers for the request. Defaults to None.
+          extra_query (Dict[str, str], optional): Additional query parameters. Defaults to None.
+          extra_body (Dict[str, Any], optional): Additional body parameters. Defaults to None.
+          timeout (Union[float, None], optional): The timeout for the request in seconds. Defaults to None.
         """
         if not budget_id:
             raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
@@ -288,13 +284,11 @@ class BudgetsResource(SyncAPIResource):
         Reset a Budget
 
         Args:
-          extra_headers: Send extra headers
-
-          extra_query: Add additional query parameters to the request
-
-          extra_body: Add additional JSON properties to the request
-
-          timeout: Override the client-level default timeout for this request, in seconds
+          budget_id (str): The ID of the budget.
+          extra_headers (Dict[str, str], optional): Additional headers for the request. Defaults to None.
+          extra_query (Dict[str, str], optional): Additional query parameters. Defaults to None.
+          extra_body (Dict[str, Any], optional): Additional body parameters. Defaults to None.
+          timeout (Union[float, None], optional): The timeout for the request in seconds. Defaults to None.
         """
         if not budget_id:
             raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
