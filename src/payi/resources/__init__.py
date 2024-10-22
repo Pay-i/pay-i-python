@@ -40,6 +40,22 @@ from .experiences import (
     ExperiencesResourceWithStreamingResponse,
     AsyncExperiencesResourceWithStreamingResponse,
 )
+from .billing_models import (
+    BillingModelsResource,
+    AsyncBillingModelsResource,
+    BillingModelsResourceWithRawResponse,
+    AsyncBillingModelsResourceWithRawResponse,
+    BillingModelsResourceWithStreamingResponse,
+    AsyncBillingModelsResourceWithStreamingResponse,
+)
+from .price_modifiers import (
+    PriceModifiersResource,
+    AsyncPriceModifiersResource,
+    PriceModifiersResourceWithRawResponse,
+    AsyncPriceModifiersResourceWithRawResponse,
+    PriceModifiersResourceWithStreamingResponse,
+    AsyncPriceModifiersResourceWithStreamingResponse,
+)
 
 __all__ = [
     "BudgetsResource",
@@ -72,4 +88,16 @@ __all__ = [
     "AsyncCsatResourceWithRawResponse",
     "CsatResourceWithStreamingResponse",
     "AsyncCsatResourceWithStreamingResponse",
+    "BillingModelsResource",
+    "AsyncBillingModelsResource",
+    "BillingModelsResourceWithRawResponse",
+    "AsyncBillingModelsResourceWithRawResponse",
+    "BillingModelsResourceWithStreamingResponse",
+    "AsyncBillingModelsResourceWithStreamingResponse",
+    "PriceModifiersResource",
+    "AsyncPriceModifiersResource",
+    "PriceModifiersResourceWithRawResponse",
+    "AsyncPriceModifiersResourceWithRawResponse",
+    "PriceModifiersResourceWithStreamingResponse",
+    "AsyncPriceModifiersResourceWithStreamingResponse",
 ]

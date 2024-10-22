@@ -51,6 +51,8 @@ class Payi(SyncAPIClient):
     categories: resources.CategoriesResource
     experiences: resources.ExperiencesResource
     csat: resources.CsatResource
+    billing_models: resources.BillingModelsResource
+    price_modifiers: resources.PriceModifiersResource
     with_raw_response: PayiWithRawResponse
     with_streaming_response: PayiWithStreamedResponse
 
@@ -113,6 +115,8 @@ class Payi(SyncAPIClient):
         self.categories = resources.CategoriesResource(self)
         self.experiences = resources.ExperiencesResource(self)
         self.csat = resources.CsatResource(self)
+        self.billing_models = resources.BillingModelsResource(self)
+        self.price_modifiers = resources.PriceModifiersResource(self)
         self.with_raw_response = PayiWithRawResponse(self)
         self.with_streaming_response = PayiWithStreamedResponse(self)
 
@@ -227,6 +231,8 @@ class AsyncPayi(AsyncAPIClient):
     categories: resources.AsyncCategoriesResource
     experiences: resources.AsyncExperiencesResource
     csat: resources.AsyncCsatResource
+    billing_models: resources.AsyncBillingModelsResource
+    price_modifiers: resources.AsyncPriceModifiersResource
     with_raw_response: AsyncPayiWithRawResponse
     with_streaming_response: AsyncPayiWithStreamedResponse
 
@@ -289,6 +295,8 @@ class AsyncPayi(AsyncAPIClient):
         self.categories = resources.AsyncCategoriesResource(self)
         self.experiences = resources.AsyncExperiencesResource(self)
         self.csat = resources.AsyncCsatResource(self)
+        self.billing_models = resources.AsyncBillingModelsResource(self)
+        self.price_modifiers = resources.AsyncPriceModifiersResource(self)
         self.with_raw_response = AsyncPayiWithRawResponse(self)
         self.with_streaming_response = AsyncPayiWithStreamedResponse(self)
 
@@ -404,6 +412,8 @@ class PayiWithRawResponse:
         self.categories = resources.CategoriesResourceWithRawResponse(client.categories)
         self.experiences = resources.ExperiencesResourceWithRawResponse(client.experiences)
         self.csat = resources.CsatResourceWithRawResponse(client.csat)
+        self.billing_models = resources.BillingModelsResourceWithRawResponse(client.billing_models)
+        self.price_modifiers = resources.PriceModifiersResourceWithRawResponse(client.price_modifiers)
 
 
 class AsyncPayiWithRawResponse:
@@ -413,6 +423,8 @@ class AsyncPayiWithRawResponse:
         self.categories = resources.AsyncCategoriesResourceWithRawResponse(client.categories)
         self.experiences = resources.AsyncExperiencesResourceWithRawResponse(client.experiences)
         self.csat = resources.AsyncCsatResourceWithRawResponse(client.csat)
+        self.billing_models = resources.AsyncBillingModelsResourceWithRawResponse(client.billing_models)
+        self.price_modifiers = resources.AsyncPriceModifiersResourceWithRawResponse(client.price_modifiers)
 
 
 class PayiWithStreamedResponse:
@@ -422,6 +434,8 @@ class PayiWithStreamedResponse:
         self.categories = resources.CategoriesResourceWithStreamingResponse(client.categories)
         self.experiences = resources.ExperiencesResourceWithStreamingResponse(client.experiences)
         self.csat = resources.CsatResourceWithStreamingResponse(client.csat)
+        self.billing_models = resources.BillingModelsResourceWithStreamingResponse(client.billing_models)
+        self.price_modifiers = resources.PriceModifiersResourceWithStreamingResponse(client.price_modifiers)
 
 
 class AsyncPayiWithStreamedResponse:
@@ -431,6 +445,8 @@ class AsyncPayiWithStreamedResponse:
         self.categories = resources.AsyncCategoriesResourceWithStreamingResponse(client.categories)
         self.experiences = resources.AsyncExperiencesResourceWithStreamingResponse(client.experiences)
         self.csat = resources.AsyncCsatResourceWithStreamingResponse(client.csat)
+        self.billing_models = resources.AsyncBillingModelsResourceWithStreamingResponse(client.billing_models)
+        self.price_modifiers = resources.AsyncPriceModifiersResourceWithStreamingResponse(client.price_modifiers)
 
 
 Client = Payi
