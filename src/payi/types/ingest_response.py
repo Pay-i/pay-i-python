@@ -11,7 +11,7 @@ __all__ = ["IngestResponse", "XproxyResult", "XproxyResultBudgets", "XproxyResul
 
 
 class XproxyResultBudgets(BaseModel):
-    state: Optional[Literal["ok", "blocked", "blocked_external", "exceeded", "failed"]] = None
+    state: Optional[Literal["ok", "blocked", "blocked_external", "exceeded", "overrun", "failed"]] = None
 
 
 class XproxyResultCost(BaseModel):
@@ -29,9 +29,15 @@ class XproxyResult(BaseModel):
 
     cost: Optional[XproxyResultCost] = None
 
+    experience_id: Optional[str] = None
+
     request_id: Optional[str] = None
 
     request_tags: Optional[List[str]] = None
+
+    resource_id: Optional[str] = None
+
+    user_id: Optional[str] = None
 
 
 class IngestResponse(BaseModel):

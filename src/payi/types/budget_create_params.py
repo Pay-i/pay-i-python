@@ -21,8 +21,8 @@ class BudgetCreateParams(TypedDict, total=False):
 
     budget_tags: Optional[List[str]]
 
-    budget_type: Literal["conservative", "liberal"]
-
     cost_basis: Literal["base", "billed"]
 
     currency: Literal["usd"]
+
+    threshold: Optional[float]

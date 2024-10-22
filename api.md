@@ -1,9 +1,3 @@
-# Shared Types
-
-```python
-from payi.types import EvaluationResponse
-```
-
 # Budgets
 
 Types:
@@ -144,3 +138,33 @@ from payi.types import Csat
 Methods:
 
 - <code title="post /api/v1/csat/experiences/{experience_id}">client.csat.<a href="./src/payi/resources/csat.py">create</a>(experience_id, \*\*<a href="src/payi/types/csat_create_params.py">params</a>) -> <a href="./src/payi/types/csat.py">Csat</a></code>
+
+# BillingModels
+
+Types:
+
+```python
+from payi.types import BillingModel, BillingModelListResponse
+```
+
+Methods:
+
+- <code title="post /api/v1/billing-model">client.billing_models.<a href="./src/payi/resources/billing_models.py">create</a>(\*\*<a href="src/payi/types/billing_model_create_params.py">params</a>) -> <a href="./src/payi/types/billing_model.py">BillingModel</a></code>
+- <code title="get /api/v1/billing-model/{billing_model_id}">client.billing_models.<a href="./src/payi/resources/billing_models.py">retrieve</a>(billing_model_id) -> <a href="./src/payi/types/billing_model.py">BillingModel</a></code>
+- <code title="put /api/v1/billing-model/{billing_model_id}">client.billing_models.<a href="./src/payi/resources/billing_models.py">update</a>(billing_model_id, \*\*<a href="src/payi/types/billing_model_update_params.py">params</a>) -> <a href="./src/payi/types/billing_model.py">BillingModel</a></code>
+- <code title="get /api/v1/billing-model">client.billing_models.<a href="./src/payi/resources/billing_models.py">list</a>() -> <a href="./src/payi/types/billing_model_list_response.py">BillingModelListResponse</a></code>
+- <code title="put /api/v1/billing-model/{billing_model_id}/default">client.billing_models.<a href="./src/payi/resources/billing_models.py">set_default</a>(billing_model_id) -> <a href="./src/payi/types/billing_model.py">BillingModel</a></code>
+
+# PriceModifiers
+
+Types:
+
+```python
+from payi.types import PriceModifier, PriceModifierRetrieveResponse
+```
+
+Methods:
+
+- <code title="post /api/v1/price-modifier">client.price_modifiers.<a href="./src/payi/resources/price_modifiers.py">create</a>(\*\*<a href="src/payi/types/price_modifier_create_params.py">params</a>) -> <a href="./src/payi/types/price_modifier.py">PriceModifier</a></code>
+- <code title="get /api/v1/price-modifier/{billing_model_id}">client.price_modifiers.<a href="./src/payi/resources/price_modifiers.py">retrieve</a>(billing_model_id) -> <a href="./src/payi/types/price_modifier_retrieve_response.py">PriceModifierRetrieveResponse</a></code>
+- <code title="put /api/v1/price-modifier">client.price_modifiers.<a href="./src/payi/resources/price_modifiers.py">update</a>(\*\*<a href="src/payi/types/price_modifier_update_params.py">params</a>) -> <a href="./src/payi/types/price_modifier.py">PriceModifier</a></code>
