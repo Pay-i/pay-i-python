@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Union, Iterable, Optional
+from typing import Dict, Union, Iterable, Optional
 from datetime import datetime
 
 import httpx
@@ -86,13 +86,13 @@ class IngestResource(SyncAPIResource):
         self,
         *,
         category: str,
-        input: int,
-        output: int,
         resource: str,
+        units: Dict[str, ingest_units_params.Units],
         event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
         provisioned_resource_name: Optional[str] | NotGiven = NOT_GIVEN,
         x_proxy_budget_ids: str | NotGiven = NOT_GIVEN,
         x_proxy_experience_id: str | NotGiven = NOT_GIVEN,
+        x_proxy_experience_name: str | NotGiven = NOT_GIVEN,
         x_proxy_request_tags: str | NotGiven = NOT_GIVEN,
         x_proxy_user_id: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
@@ -119,6 +119,7 @@ class IngestResource(SyncAPIResource):
                 {
                     "xProxy-Budget-IDs": x_proxy_budget_ids,
                     "xProxy-Experience-Id": x_proxy_experience_id,
+                    "xProxy-Experience-Name": x_proxy_experience_name,
                     "xProxy-Request-Tags": x_proxy_request_tags,
                     "xProxy-User-ID": x_proxy_user_id,
                 }
@@ -130,9 +131,8 @@ class IngestResource(SyncAPIResource):
             body=maybe_transform(
                 {
                     "category": category,
-                    "input": input,
-                    "output": output,
                     "resource": resource,
+                    "units": units,
                     "event_timestamp": event_timestamp,
                     "provisioned_resource_name": provisioned_resource_name,
                 },
@@ -201,13 +201,13 @@ class AsyncIngestResource(AsyncAPIResource):
         self,
         *,
         category: str,
-        input: int,
-        output: int,
         resource: str,
+        units: Dict[str, ingest_units_params.Units],
         event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
         provisioned_resource_name: Optional[str] | NotGiven = NOT_GIVEN,
         x_proxy_budget_ids: str | NotGiven = NOT_GIVEN,
         x_proxy_experience_id: str | NotGiven = NOT_GIVEN,
+        x_proxy_experience_name: str | NotGiven = NOT_GIVEN,
         x_proxy_request_tags: str | NotGiven = NOT_GIVEN,
         x_proxy_user_id: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
@@ -234,6 +234,7 @@ class AsyncIngestResource(AsyncAPIResource):
                 {
                     "xProxy-Budget-IDs": x_proxy_budget_ids,
                     "xProxy-Experience-Id": x_proxy_experience_id,
+                    "xProxy-Experience-Name": x_proxy_experience_name,
                     "xProxy-Request-Tags": x_proxy_request_tags,
                     "xProxy-User-ID": x_proxy_user_id,
                 }
@@ -245,9 +246,8 @@ class AsyncIngestResource(AsyncAPIResource):
             body=await async_maybe_transform(
                 {
                     "category": category,
-                    "input": input,
-                    "output": output,
                     "resource": resource,
+                    "units": units,
                     "event_timestamp": event_timestamp,
                     "provisioned_resource_name": provisioned_resource_name,
                 },

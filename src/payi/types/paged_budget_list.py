@@ -23,8 +23,6 @@ class Item(BaseModel):
 
     budget_response_type: Literal["block", "allow"]
 
-    budget_type: Literal["conservative", "liberal"]
-
     budget_update_timestamp: datetime
 
     currency: Literal["usd"]
@@ -34,6 +32,8 @@ class Item(BaseModel):
     totals: TotalCostData
 
     budget_tags: Optional[List[str]] = None
+
+    threshold: Optional[float] = None
 
 
 class PagedBudgetList(BaseModel):

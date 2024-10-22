@@ -24,21 +24,18 @@ class TestIngest:
             events=[
                 {
                     "category": "x",
-                    "input": 0,
-                    "output": 0,
                     "resource": "x",
+                    "units": {"foo": {}},
                 },
                 {
                     "category": "x",
-                    "input": 0,
-                    "output": 0,
                     "resource": "x",
+                    "units": {"foo": {}},
                 },
                 {
                     "category": "x",
-                    "input": 0,
-                    "output": 0,
                     "resource": "x",
+                    "units": {"foo": {}},
                 },
             ],
         )
@@ -50,21 +47,18 @@ class TestIngest:
             events=[
                 {
                     "category": "x",
-                    "input": 0,
-                    "output": 0,
                     "resource": "x",
+                    "units": {"foo": {}},
                 },
                 {
                     "category": "x",
-                    "input": 0,
-                    "output": 0,
                     "resource": "x",
+                    "units": {"foo": {}},
                 },
                 {
                     "category": "x",
-                    "input": 0,
-                    "output": 0,
                     "resource": "x",
+                    "units": {"foo": {}},
                 },
             ],
         )
@@ -80,21 +74,18 @@ class TestIngest:
             events=[
                 {
                     "category": "x",
-                    "input": 0,
-                    "output": 0,
                     "resource": "x",
+                    "units": {"foo": {}},
                 },
                 {
                     "category": "x",
-                    "input": 0,
-                    "output": 0,
                     "resource": "x",
+                    "units": {"foo": {}},
                 },
                 {
                     "category": "x",
-                    "input": 0,
-                    "output": 0,
                     "resource": "x",
+                    "units": {"foo": {}},
                 },
             ],
         ) as response:
@@ -110,9 +101,8 @@ class TestIngest:
     def test_method_units(self, client: Payi) -> None:
         ingest = client.ingest.units(
             category="x",
-            input=0,
-            output=0,
             resource="x",
+            units={"foo": {}},
         )
         assert_matches_type(IngestResponse, ingest, path=["response"])
 
@@ -120,13 +110,18 @@ class TestIngest:
     def test_method_units_with_all_params(self, client: Payi) -> None:
         ingest = client.ingest.units(
             category="x",
-            input=0,
-            output=0,
             resource="x",
+            units={
+                "foo": {
+                    "input": 0,
+                    "output": 0,
+                }
+            },
             event_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
             provisioned_resource_name="provisioned_resource_name",
             x_proxy_budget_ids="budgetId1, budgetId_2",
             x_proxy_experience_id="experience_id",
+            x_proxy_experience_name="experience_name",
             x_proxy_request_tags="requestTag1, request_tag_2",
             x_proxy_user_id="UserName123",
         )
@@ -136,9 +131,8 @@ class TestIngest:
     def test_raw_response_units(self, client: Payi) -> None:
         response = client.ingest.with_raw_response.units(
             category="x",
-            input=0,
-            output=0,
             resource="x",
+            units={"foo": {}},
         )
 
         assert response.is_closed is True
@@ -150,9 +144,8 @@ class TestIngest:
     def test_streaming_response_units(self, client: Payi) -> None:
         with client.ingest.with_streaming_response.units(
             category="x",
-            input=0,
-            output=0,
             resource="x",
+            units={"foo": {}},
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -172,21 +165,18 @@ class TestAsyncIngest:
             events=[
                 {
                     "category": "x",
-                    "input": 0,
-                    "output": 0,
                     "resource": "x",
+                    "units": {"foo": {}},
                 },
                 {
                     "category": "x",
-                    "input": 0,
-                    "output": 0,
                     "resource": "x",
+                    "units": {"foo": {}},
                 },
                 {
                     "category": "x",
-                    "input": 0,
-                    "output": 0,
                     "resource": "x",
+                    "units": {"foo": {}},
                 },
             ],
         )
@@ -198,21 +188,18 @@ class TestAsyncIngest:
             events=[
                 {
                     "category": "x",
-                    "input": 0,
-                    "output": 0,
                     "resource": "x",
+                    "units": {"foo": {}},
                 },
                 {
                     "category": "x",
-                    "input": 0,
-                    "output": 0,
                     "resource": "x",
+                    "units": {"foo": {}},
                 },
                 {
                     "category": "x",
-                    "input": 0,
-                    "output": 0,
                     "resource": "x",
+                    "units": {"foo": {}},
                 },
             ],
         )
@@ -228,21 +215,18 @@ class TestAsyncIngest:
             events=[
                 {
                     "category": "x",
-                    "input": 0,
-                    "output": 0,
                     "resource": "x",
+                    "units": {"foo": {}},
                 },
                 {
                     "category": "x",
-                    "input": 0,
-                    "output": 0,
                     "resource": "x",
+                    "units": {"foo": {}},
                 },
                 {
                     "category": "x",
-                    "input": 0,
-                    "output": 0,
                     "resource": "x",
+                    "units": {"foo": {}},
                 },
             ],
         ) as response:
@@ -258,9 +242,8 @@ class TestAsyncIngest:
     async def test_method_units(self, async_client: AsyncPayi) -> None:
         ingest = await async_client.ingest.units(
             category="x",
-            input=0,
-            output=0,
             resource="x",
+            units={"foo": {}},
         )
         assert_matches_type(IngestResponse, ingest, path=["response"])
 
@@ -268,13 +251,18 @@ class TestAsyncIngest:
     async def test_method_units_with_all_params(self, async_client: AsyncPayi) -> None:
         ingest = await async_client.ingest.units(
             category="x",
-            input=0,
-            output=0,
             resource="x",
+            units={
+                "foo": {
+                    "input": 0,
+                    "output": 0,
+                }
+            },
             event_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
             provisioned_resource_name="provisioned_resource_name",
             x_proxy_budget_ids="budgetId1, budgetId_2",
             x_proxy_experience_id="experience_id",
+            x_proxy_experience_name="experience_name",
             x_proxy_request_tags="requestTag1, request_tag_2",
             x_proxy_user_id="UserName123",
         )
@@ -284,9 +272,8 @@ class TestAsyncIngest:
     async def test_raw_response_units(self, async_client: AsyncPayi) -> None:
         response = await async_client.ingest.with_raw_response.units(
             category="x",
-            input=0,
-            output=0,
             resource="x",
+            units={"foo": {}},
         )
 
         assert response.is_closed is True
@@ -298,9 +285,8 @@ class TestAsyncIngest:
     async def test_streaming_response_units(self, async_client: AsyncPayi) -> None:
         async with async_client.ingest.with_streaming_response.units(
             category="x",
-            input=0,
-            output=0,
             resource="x",
+            units={"foo": {}},
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
