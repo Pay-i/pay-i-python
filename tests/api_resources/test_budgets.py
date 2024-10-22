@@ -39,9 +39,9 @@ class TestBudgets:
             billing_model_id="billing_model_id",
             budget_response_type="block",
             budget_tags=["tag1", "tag2"],
-            budget_type="conservative",
             cost_basis="base",
             currency="usd",
+            threshold=0,
         )
         assert_matches_type(BudgetResponse, budget, path=["response"])
 
@@ -290,9 +290,9 @@ class TestAsyncBudgets:
             billing_model_id="billing_model_id",
             budget_response_type="block",
             budget_tags=["tag1", "tag2"],
-            budget_type="conservative",
             cost_basis="base",
             currency="usd",
+            threshold=0,
         )
         assert_matches_type(BudgetResponse, budget, path=["response"])
 

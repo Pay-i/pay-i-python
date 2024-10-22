@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Union, Iterable, Optional
+from typing import Dict, Union, Iterable, Optional
 from datetime import datetime
 
 import httpx
@@ -89,14 +89,14 @@ class IngestResource(SyncAPIResource):
         self,
         *,
         category: str,
-        input: int,
-        output: int,
         resource: str,
+        units: Dict[str, ingest_units_params.Units],
         event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
         provisioned_resource_name: Optional[str] | NotGiven = NOT_GIVEN,
         budget_ids: Union[list[str], None] | NotGiven = NOT_GIVEN,
         request_tags: Union[list[str], None] | NotGiven = NOT_GIVEN,
         experience_id: Union[str, None] | NotGiven = NOT_GIVEN,
+        experience_name: Union[str, None] | NotGiven = NOT_GIVEN,
         user_id: Union[str, None] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -123,6 +123,8 @@ class IngestResource(SyncAPIResource):
           
           request_tags (list[str], optional): The request tags to associate with the request. Defaults to None.
 
+          experience_name (str, optional): The experience name
+          
           experience_id (str, optional): The experience instance id
           
           user_id (str, optional): The user id
@@ -156,6 +158,9 @@ class IngestResource(SyncAPIResource):
             valid_tags = [tag.strip() for tag in request_tags if tag.strip()]
             valid_tags_str = ",".join(valid_tags) if valid_tags else NOT_GIVEN
 
+        if experience_name is None or isinstance(experience_name, NotGiven):
+            experience_name = NOT_GIVEN
+
         if experience_id is None or isinstance(experience_id, NotGiven):
             experience_id = NOT_GIVEN
         
@@ -168,6 +173,7 @@ class IngestResource(SyncAPIResource):
                     "xProxy-Budget-IDs": valid_ids_str,
                     "xProxy-Request-Tags": valid_tags_str,
                     "xProxy-Experience-Id": experience_id,
+                    "xProxy-Experience-Name": experience_name,
                     "xProxy-User-ID": user_id,
                 }
             ),
@@ -178,9 +184,8 @@ class IngestResource(SyncAPIResource):
             body=maybe_transform(
                 {
                     "category": category,
-                    "input": input,
-                    "output": output,
                     "resource": resource,
+                    "units": units,
                     "event_timestamp": event_timestamp,
                     "provisioned_resource_name": provisioned_resource_name,
                 },
@@ -251,16 +256,15 @@ class AsyncIngestResource(AsyncAPIResource):
         self,
         *,
         category: str,
-        input: int,
-        output: int,
         resource: str,
+        units: Dict[str, ingest_units_params.Units],
         event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
         provisioned_resource_name: Optional[str] | NotGiven = NOT_GIVEN,
         budget_ids: Union[list[str], None] | NotGiven = NOT_GIVEN,
         request_tags: Union[list[str], None] | NotGiven = NOT_GIVEN,
+        experience_name: Union[str, None] | NotGiven = NOT_GIVEN,
         experience_id: Union[str, None] | NotGiven = NOT_GIVEN,
         user_id: Union[str, None] | NotGiven = NOT_GIVEN,
-
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
@@ -284,6 +288,8 @@ class AsyncIngestResource(AsyncAPIResource):
           budget_ids (list[str], optional): The budget IDs to associate with the request. Defaults to None.
           
           request_tags (list[str], optional): The request tags to associate with the request. Defaults to None.
+          
+          experience_name (str, optional): The experience name
           
           experience_id (str, optional): The experience instance id
           
@@ -318,6 +324,9 @@ class AsyncIngestResource(AsyncAPIResource):
             valid_tags = [tag.strip() for tag in request_tags if tag.strip()]
             valid_tags_str = ",".join(valid_tags) if valid_tags else NOT_GIVEN
 
+        if experience_name is None or isinstance(experience_name, NotGiven):
+            experience_name = NOT_GIVEN
+
         if experience_id is None or isinstance(experience_id, NotGiven):
             experience_id = NOT_GIVEN
         
@@ -329,6 +338,7 @@ class AsyncIngestResource(AsyncAPIResource):
                 {
                     "xProxy-Budget-IDs": valid_ids_str,
                     "xProxy-Request-Tags": valid_tags_str,
+                    "xProxy-Experience-Name": experience_name,
                     "xProxy-Experience-Id": experience_id,
                     "xProxy-User-ID": user_id,
                 }
@@ -340,9 +350,8 @@ class AsyncIngestResource(AsyncAPIResource):
             body=await async_maybe_transform(
                 {
                     "category": category,
-                    "input": input,
-                    "output": output,
                     "resource": resource,
+                    "units": units,
                     "event_timestamp": event_timestamp,
                     "provisioned_resource_name": provisioned_resource_name,
                 },
