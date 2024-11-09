@@ -22,16 +22,15 @@ class IngestUnitsParams(TypedDict, total=False):
 
     provisioned_resource_name: Optional[str]
 
-    x_proxy_budget_ids: Annotated[str, PropertyInfo(alias="xProxy-Budget-IDs")]
+    budget_ids: Annotated[Union[list[str], None], PropertyInfo(alias="xProxy-Budget-IDs")]
 
-    x_proxy_experience_id: Annotated[str, PropertyInfo(alias="xProxy-Experience-Id")]
+    request_tags: Annotated[Union[list[str], None], PropertyInfo(alias="xProxy-Request-Tags")]
 
-    x_proxy_experience_name: Annotated[str, PropertyInfo(alias="xProxy-Experience-Name")]
+    experience_name: Annotated[Union[str, None], PropertyInfo(alias="xProxy-Experience-Name")]
 
-    x_proxy_request_tags: Annotated[str, PropertyInfo(alias="xProxy-Request-Tags")]
+    experience_id: Annotated[Union[str, None], PropertyInfo(alias="xProxy-Experience-Id")]
 
-    x_proxy_user_id: Annotated[str, PropertyInfo(alias="xProxy-User-ID")]
-
+    user_id: Annotated[Union[str, None], PropertyInfo(alias="xProxy-User-ID")]
 
 class Units(TypedDict, total=False):
     input: int
