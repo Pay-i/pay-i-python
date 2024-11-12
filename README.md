@@ -28,8 +28,7 @@ import os
 from payi import Payi
 
 client = Payi(
-    # This is the default and can be omitted
-    api_key=os.environ.get("PAYI_API_KEY"),
+    api_key=os.environ.get("PAYI_API_KEY"),  # This is the default and can be omitted
 )
 
 budget_response = client.budgets.create(
@@ -54,8 +53,7 @@ import asyncio
 from payi import AsyncPayi
 
 client = AsyncPayi(
-    # This is the default and can be omitted
-    api_key=os.environ.get("PAYI_API_KEY"),
+    api_key=os.environ.get("PAYI_API_KEY"),  # This is the default and can be omitted
 )
 
 
