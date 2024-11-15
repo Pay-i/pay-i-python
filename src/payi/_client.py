@@ -129,7 +129,7 @@ class Payi(SyncAPIClient):
     @override
     def auth_headers(self) -> dict[str, str]:
         api_key = self.api_key
-        return {"Authorization": api_key}
+        return {"xProxy-api-key": api_key}
 
     @property
     @override
@@ -309,7 +309,7 @@ class AsyncPayi(AsyncAPIClient):
     @override
     def auth_headers(self) -> dict[str, str]:
         api_key = self.api_key
-        return {"Authorization": api_key}
+        return {"xProxy-api-key": api_key}
 
     @property
     @override

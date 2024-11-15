@@ -30,6 +30,7 @@ class TestBillingModels:
         billing_model = client.billing_models.create(
             name="x",
             type="costplus",
+            default_price_modifier=0,
             prepaid_amount=0,
             prepaid_max=0,
             threshold=0,
@@ -113,6 +114,7 @@ class TestBillingModels:
         billing_model = client.billing_models.update(
             billing_model_id="billing_model_id",
             type="costplus",
+            default_price_modifier=0,
             name="name",
             prepaid_amount=0,
             prepaid_max=0,
@@ -234,6 +236,7 @@ class TestAsyncBillingModels:
         billing_model = await async_client.billing_models.create(
             name="x",
             type="costplus",
+            default_price_modifier=0,
             prepaid_amount=0,
             prepaid_max=0,
             threshold=0,
@@ -317,6 +320,7 @@ class TestAsyncBillingModels:
         billing_model = await async_client.billing_models.update(
             billing_model_id="billing_model_id",
             type="costplus",
+            default_price_modifier=0,
             name="name",
             prepaid_amount=0,
             prepaid_max=0,

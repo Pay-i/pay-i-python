@@ -53,6 +53,7 @@ class BillingModelsResource(SyncAPIResource):
         *,
         name: str,
         type: Literal["costplus"],
+        default_price_modifier: Optional[float] | NotGiven = NOT_GIVEN,
         prepaid_amount: Optional[float] | NotGiven = NOT_GIVEN,
         prepaid_max: Optional[float] | NotGiven = NOT_GIVEN,
         threshold: Optional[float] | NotGiven = NOT_GIVEN,
@@ -79,6 +80,7 @@ class BillingModelsResource(SyncAPIResource):
                 {
                     "name": name,
                     "type": type,
+                    "default_price_modifier": default_price_modifier,
                     "prepaid_amount": prepaid_amount,
                     "prepaid_max": prepaid_max,
                     "threshold": threshold,
@@ -127,6 +129,7 @@ class BillingModelsResource(SyncAPIResource):
         billing_model_id: str,
         *,
         type: Literal["costplus"],
+        default_price_modifier: Optional[float] | NotGiven = NOT_GIVEN,
         name: Optional[str] | NotGiven = NOT_GIVEN,
         prepaid_amount: Optional[float] | NotGiven = NOT_GIVEN,
         prepaid_max: Optional[float] | NotGiven = NOT_GIVEN,
@@ -155,6 +158,7 @@ class BillingModelsResource(SyncAPIResource):
             body=maybe_transform(
                 {
                     "type": type,
+                    "default_price_modifier": default_price_modifier,
                     "name": name,
                     "prepaid_amount": prepaid_amount,
                     "prepaid_max": prepaid_max,
@@ -243,6 +247,7 @@ class AsyncBillingModelsResource(AsyncAPIResource):
         *,
         name: str,
         type: Literal["costplus"],
+        default_price_modifier: Optional[float] | NotGiven = NOT_GIVEN,
         prepaid_amount: Optional[float] | NotGiven = NOT_GIVEN,
         prepaid_max: Optional[float] | NotGiven = NOT_GIVEN,
         threshold: Optional[float] | NotGiven = NOT_GIVEN,
@@ -269,6 +274,7 @@ class AsyncBillingModelsResource(AsyncAPIResource):
                 {
                     "name": name,
                     "type": type,
+                    "default_price_modifier": default_price_modifier,
                     "prepaid_amount": prepaid_amount,
                     "prepaid_max": prepaid_max,
                     "threshold": threshold,
@@ -317,6 +323,7 @@ class AsyncBillingModelsResource(AsyncAPIResource):
         billing_model_id: str,
         *,
         type: Literal["costplus"],
+        default_price_modifier: Optional[float] | NotGiven = NOT_GIVEN,
         name: Optional[str] | NotGiven = NOT_GIVEN,
         prepaid_amount: Optional[float] | NotGiven = NOT_GIVEN,
         prepaid_max: Optional[float] | NotGiven = NOT_GIVEN,
@@ -345,6 +352,7 @@ class AsyncBillingModelsResource(AsyncAPIResource):
             body=await async_maybe_transform(
                 {
                     "type": type,
+                    "default_price_modifier": default_price_modifier,
                     "name": name,
                     "prepaid_amount": prepaid_amount,
                     "prepaid_max": prepaid_max,

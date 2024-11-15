@@ -320,7 +320,7 @@ class TestPayi:
     def test_validate_headers(self) -> None:
         client = Payi(base_url=base_url, api_key=api_key, _strict_response_validation=True)
         request = client._build_request(FinalRequestOptions(method="get", url="/foo"))
-        assert request.headers.get("Authorization") == api_key
+        assert request.headers.get("xProxy-api-key") == api_key
 
         with pytest.raises(PayiError):
             with update_env(**{"PAYI_API_KEY": Omit()}):
@@ -1084,7 +1084,7 @@ class TestAsyncPayi:
     def test_validate_headers(self) -> None:
         client = AsyncPayi(base_url=base_url, api_key=api_key, _strict_response_validation=True)
         request = client._build_request(FinalRequestOptions(method="get", url="/foo"))
-        assert request.headers.get("Authorization") == api_key
+        assert request.headers.get("xProxy-api-key") == api_key
 
         with pytest.raises(PayiError):
             with update_env(**{"PAYI_API_KEY": Omit()}):
