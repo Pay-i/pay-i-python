@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from typing import Optional
 from typing_extensions import Required, TypedDict
 
 __all__ = ["TypeUpdateParams"]
 
 
 class TypeUpdateParams(TypedDict, total=False):
-    description: Required[str]
+    description: Required[Optional[str]]
+
+    logging_enabled: Optional[bool]
