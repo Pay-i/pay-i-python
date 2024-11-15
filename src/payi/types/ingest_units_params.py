@@ -18,9 +18,15 @@ class IngestUnitsParams(TypedDict, total=False):
 
     units: Required[Dict[str, Units]]
 
+    end_to_end_latency_ms: Optional[int]
+
     event_timestamp: Annotated[Union[str, datetime, None], PropertyInfo(format="iso8601")]
 
+    http_status_code: Optional[int]
+
     provisioned_resource_name: Optional[str]
+
+    time_to_first_token_ms: Optional[int]
 
     x_proxy_budget_ids: Annotated[str, PropertyInfo(alias="xProxy-Budget-IDs")]
 

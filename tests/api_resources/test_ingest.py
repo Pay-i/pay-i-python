@@ -117,8 +117,11 @@ class TestIngest:
                     "output": 0,
                 }
             },
+            end_to_end_latency_ms=0,
             event_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
+            http_status_code=0,
             provisioned_resource_name="provisioned_resource_name",
+            time_to_first_token_ms=0,
             x_proxy_budget_ids="budgetId1, budgetId_2",
             x_proxy_experience_id="experience_id",
             x_proxy_experience_name="experience_name",
@@ -258,8 +261,11 @@ class TestAsyncIngest:
                     "output": 0,
                 }
             },
+            end_to_end_latency_ms=0,
             event_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
+            http_status_code=0,
             provisioned_resource_name="provisioned_resource_name",
+            time_to_first_token_ms=0,
             x_proxy_budget_ids="budgetId1, budgetId_2",
             x_proxy_experience_id="experience_id",
             x_proxy_experience_name="experience_name",
