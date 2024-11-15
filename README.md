@@ -2,7 +2,7 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/payi.svg)](https://pypi.org/project/payi/)
 
-The Payi Python library provides convenient access to the Payi REST API from any Python 3.7+
+The Payi Python library provides convenient access to the Payi REST API from any Python 3.8+
 application. The library includes type definitions for all request params and response fields,
 and offers both synchronous and asynchronous clients powered by [httpx](https://github.com/encode/httpx).
 
@@ -28,8 +28,7 @@ import os
 from payi import Payi
 
 client = Payi(
-    # This is the default and can be omitted
-    api_key=os.environ.get("PAYI_API_KEY"),
+    api_key=os.environ.get("PAYI_API_KEY"),  # This is the default and can be omitted
 )
 
 budget_response = client.budgets.create(
@@ -54,8 +53,7 @@ import asyncio
 from payi import AsyncPayi
 
 client = AsyncPayi(
-    # This is the default and can be omitted
-    api_key=os.environ.get("PAYI_API_KEY"),
+    api_key=os.environ.get("PAYI_API_KEY"),  # This is the default and can be omitted
 )
 
 
@@ -335,7 +333,7 @@ print(payi.__version__)
 
 ## Requirements
 
-Python 3.7 or higher.
+Python 3.8 or higher.
 
 ## Contributing
 

@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.0-alpha.28 (2024-11-15)
+
+Full Changelog: [v0.1.0-alpha.27...v0.1.0-alpha.28](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.27...v0.1.0-alpha.28)
+
+### Features
+
+* **api:** api update ([#127](https://github.com/Pay-i/pay-i-python/issues/127)) ([f9f8665](https://github.com/Pay-i/pay-i-python/commit/f9f8665278eec1f3b4d081076047460004230a97))
+
+
+### Chores
+
+* rebuild project due to codegen change ([#128](https://github.com/Pay-i/pay-i-python/issues/128)) ([31ab0f5](https://github.com/Pay-i/pay-i-python/commit/31ab0f57ca4d1c073c7d1996af9df94db792cf9f))
+* rebuild project due to codegen change ([#130](https://github.com/Pay-i/pay-i-python/issues/130)) ([e98d9ce](https://github.com/Pay-i/pay-i-python/commit/e98d9cead371ef5e3e9f3b68116dc81975fbd471))
+* rebuild project due to codegen change ([#131](https://github.com/Pay-i/pay-i-python/issues/131)) ([e197c4b](https://github.com/Pay-i/pay-i-python/commit/e197c4b0199f417b550ee4c852ffcaef4888c82c))
+
 ## 0.1.0-alpha.27 (2024-10-22)
 
 Full Changelog: [v0.1.0-alpha.26...v0.1.0-alpha.27](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.26...v0.1.0-alpha.27)
