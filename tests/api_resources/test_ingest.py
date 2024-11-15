@@ -122,11 +122,11 @@ class TestIngest:
             http_status_code=0,
             provisioned_resource_name="provisioned_resource_name",
             time_to_first_token_ms=0,
-            x_proxy_budget_ids="budgetId1, budgetId_2",
-            x_proxy_experience_id="experience_id",
-            x_proxy_experience_name="experience_name",
-            x_proxy_request_tags="requestTag1, request_tag_2",
-            x_proxy_user_id="UserName123",
+            budget_ids=["budgetId1", "budgetId_2"],
+            request_tags=["requestTag1", "request_tag_2"],
+            experience_name="experience_name",
+            experience_id="experience_id",
+            user_id="UserName123",
         )
         assert_matches_type(IngestResponse, ingest, path=["response"])
 
@@ -266,11 +266,11 @@ class TestAsyncIngest:
             http_status_code=0,
             provisioned_resource_name="provisioned_resource_name",
             time_to_first_token_ms=0,
-            x_proxy_budget_ids="budgetId1, budgetId_2",
-            x_proxy_experience_id="experience_id",
-            x_proxy_experience_name="experience_name",
-            x_proxy_request_tags="requestTag1, request_tag_2",
-            x_proxy_user_id="UserName123",
+            budget_ids=["budgetId1", "budgetId_2"],
+            request_tags=["requestTag1", "request_tag_2"],
+            experience_name="experience_name",
+            experience_id="experience_id",
+            user_id="UserName123",
         )
         assert_matches_type(IngestResponse, ingest, path=["response"])
 
