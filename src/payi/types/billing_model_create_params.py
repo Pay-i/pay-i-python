@@ -13,6 +13,8 @@ class BillingModelCreateParams(TypedDict, total=False):
 
     type: Required[Literal["costplus"]]
 
+    default_price_modifier: Optional[float]
+
     prepaid_amount: Optional[float]
 
     prepaid_max: Optional[float]

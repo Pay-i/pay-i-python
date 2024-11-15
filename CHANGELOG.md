@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.29 (2024-11-15)
+
+Full Changelog: [v0.1.0-alpha.28...v0.1.0-alpha.29](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.28...v0.1.0-alpha.29)
+
+### Features
+
+* **api:** update apikey header ([#132](https://github.com/Pay-i/pay-i-python/issues/132)) ([4e42d00](https://github.com/Pay-i/pay-i-python/commit/4e42d005530be2e002f536c2008c75a2afc1dea2))
+
 ## 0.1.0-alpha.28 (2024-11-15)
 
 Full Changelog: [v0.1.0-alpha.27...v0.1.0-alpha.28](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.27...v0.1.0-alpha.28)

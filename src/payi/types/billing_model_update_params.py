@@ -11,6 +11,8 @@ __all__ = ["BillingModelUpdateParams"]
 class BillingModelUpdateParams(TypedDict, total=False):
     type: Required[Literal["costplus"]]
 
+    default_price_modifier: Optional[float]
+
     name: Optional[str]
 
     prepaid_amount: Optional[float]

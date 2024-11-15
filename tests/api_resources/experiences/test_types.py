@@ -29,6 +29,15 @@ class TestTypes:
         assert_matches_type(ExperienceType, type, path=["response"])
 
     @parametrize
+    def test_method_create_with_all_params(self, client: Payi) -> None:
+        type = client.experiences.types.create(
+            description="x",
+            name="x",
+            logging_enabled=True,
+        )
+        assert_matches_type(ExperienceType, type, path=["response"])
+
+    @parametrize
     def test_raw_response_create(self, client: Payi) -> None:
         response = client.experiences.types.with_raw_response.create(
             description="x",
@@ -96,7 +105,16 @@ class TestTypes:
     def test_method_update(self, client: Payi) -> None:
         type = client.experiences.types.update(
             experience_name="experience_name",
-            description="x",
+            description="description",
+        )
+        assert_matches_type(ExperienceType, type, path=["response"])
+
+    @parametrize
+    def test_method_update_with_all_params(self, client: Payi) -> None:
+        type = client.experiences.types.update(
+            experience_name="experience_name",
+            description="description",
+            logging_enabled=True,
         )
         assert_matches_type(ExperienceType, type, path=["response"])
 
@@ -104,7 +122,7 @@ class TestTypes:
     def test_raw_response_update(self, client: Payi) -> None:
         response = client.experiences.types.with_raw_response.update(
             experience_name="experience_name",
-            description="x",
+            description="description",
         )
 
         assert response.is_closed is True
@@ -116,7 +134,7 @@ class TestTypes:
     def test_streaming_response_update(self, client: Payi) -> None:
         with client.experiences.types.with_streaming_response.update(
             experience_name="experience_name",
-            description="x",
+            description="description",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -131,7 +149,7 @@ class TestTypes:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `experience_name` but received ''"):
             client.experiences.types.with_raw_response.update(
                 experience_name="",
-                description="x",
+                description="description",
             )
 
     @parametrize
@@ -217,6 +235,15 @@ class TestAsyncTypes:
         assert_matches_type(ExperienceType, type, path=["response"])
 
     @parametrize
+    async def test_method_create_with_all_params(self, async_client: AsyncPayi) -> None:
+        type = await async_client.experiences.types.create(
+            description="x",
+            name="x",
+            logging_enabled=True,
+        )
+        assert_matches_type(ExperienceType, type, path=["response"])
+
+    @parametrize
     async def test_raw_response_create(self, async_client: AsyncPayi) -> None:
         response = await async_client.experiences.types.with_raw_response.create(
             description="x",
@@ -284,7 +311,16 @@ class TestAsyncTypes:
     async def test_method_update(self, async_client: AsyncPayi) -> None:
         type = await async_client.experiences.types.update(
             experience_name="experience_name",
-            description="x",
+            description="description",
+        )
+        assert_matches_type(ExperienceType, type, path=["response"])
+
+    @parametrize
+    async def test_method_update_with_all_params(self, async_client: AsyncPayi) -> None:
+        type = await async_client.experiences.types.update(
+            experience_name="experience_name",
+            description="description",
+            logging_enabled=True,
         )
         assert_matches_type(ExperienceType, type, path=["response"])
 
@@ -292,7 +328,7 @@ class TestAsyncTypes:
     async def test_raw_response_update(self, async_client: AsyncPayi) -> None:
         response = await async_client.experiences.types.with_raw_response.update(
             experience_name="experience_name",
-            description="x",
+            description="description",
         )
 
         assert response.is_closed is True
@@ -304,7 +340,7 @@ class TestAsyncTypes:
     async def test_streaming_response_update(self, async_client: AsyncPayi) -> None:
         async with async_client.experiences.types.with_streaming_response.update(
             experience_name="experience_name",
-            description="x",
+            description="description",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -319,7 +355,7 @@ class TestAsyncTypes:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `experience_name` but received ''"):
             await async_client.experiences.types.with_raw_response.update(
                 experience_name="",
-                description="x",
+                description="description",
             )
 
     @parametrize

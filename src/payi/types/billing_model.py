@@ -22,6 +22,8 @@ class BillingModel(BaseModel):
 
     updated_on: datetime
 
+    default_price_modifier: Optional[float] = None
+
     prepaid_amount: Optional[float] = None
 
     prepaid_max: Optional[float] = None

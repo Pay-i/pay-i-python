@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Optional
+
 import httpx
 
 from ..._types import NOT_GIVEN, Body, Query, Headers, NotGiven
@@ -50,6 +52,7 @@ class TypesResource(SyncAPIResource):
         *,
         description: str,
         name: str,
+        logging_enabled: Optional[bool] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -75,6 +78,7 @@ class TypesResource(SyncAPIResource):
                 {
                     "description": description,
                     "name": name,
+                    "logging_enabled": logging_enabled,
                 },
                 type_create_params.TypeCreateParams,
             ),
@@ -121,7 +125,8 @@ class TypesResource(SyncAPIResource):
         self,
         experience_name: str,
         *,
-        description: str,
+        description: Optional[str],
+        logging_enabled: Optional[bool] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -145,7 +150,13 @@ class TypesResource(SyncAPIResource):
             raise ValueError(f"Expected a non-empty value for `experience_name` but received {experience_name!r}")
         return self._patch(
             f"/api/v1/experiences/types/{experience_name}",
-            body=maybe_transform({"description": description}, type_update_params.TypeUpdateParams),
+            body=maybe_transform(
+                {
+                    "description": description,
+                    "logging_enabled": logging_enabled,
+                },
+                type_update_params.TypeUpdateParams,
+            ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -248,6 +259,7 @@ class AsyncTypesResource(AsyncAPIResource):
         *,
         description: str,
         name: str,
+        logging_enabled: Optional[bool] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -273,6 +285,7 @@ class AsyncTypesResource(AsyncAPIResource):
                 {
                     "description": description,
                     "name": name,
+                    "logging_enabled": logging_enabled,
                 },
                 type_create_params.TypeCreateParams,
             ),
@@ -319,7 +332,8 @@ class AsyncTypesResource(AsyncAPIResource):
         self,
         experience_name: str,
         *,
-        description: str,
+        description: Optional[str],
+        logging_enabled: Optional[bool] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -343,7 +357,13 @@ class AsyncTypesResource(AsyncAPIResource):
             raise ValueError(f"Expected a non-empty value for `experience_name` but received {experience_name!r}")
         return await self._patch(
             f"/api/v1/experiences/types/{experience_name}",
-            body=await async_maybe_transform({"description": description}, type_update_params.TypeUpdateParams),
+            body=await async_maybe_transform(
+                {
+                    "description": description,
+                    "logging_enabled": logging_enabled,
+                },
+                type_update_params.TypeUpdateParams,
+            ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
