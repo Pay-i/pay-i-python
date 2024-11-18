@@ -26,17 +26,7 @@ class TestIngest:
                     "category": "x",
                     "resource": "x",
                     "units": {"foo": {}},
-                },
-                {
-                    "category": "x",
-                    "resource": "x",
-                    "units": {"foo": {}},
-                },
-                {
-                    "category": "x",
-                    "resource": "x",
-                    "units": {"foo": {}},
-                },
+                }
             ],
         )
         assert_matches_type(BulkIngestResponse, ingest, path=["response"])
@@ -49,17 +39,7 @@ class TestIngest:
                     "category": "x",
                     "resource": "x",
                     "units": {"foo": {}},
-                },
-                {
-                    "category": "x",
-                    "resource": "x",
-                    "units": {"foo": {}},
-                },
-                {
-                    "category": "x",
-                    "resource": "x",
-                    "units": {"foo": {}},
-                },
+                }
             ],
         )
 
@@ -76,17 +56,7 @@ class TestIngest:
                     "category": "x",
                     "resource": "x",
                     "units": {"foo": {}},
-                },
-                {
-                    "category": "x",
-                    "resource": "x",
-                    "units": {"foo": {}},
-                },
-                {
-                    "category": "x",
-                    "resource": "x",
-                    "units": {"foo": {}},
-                },
+                }
             ],
         ) as response:
             assert not response.is_closed
@@ -170,17 +140,7 @@ class TestAsyncIngest:
                     "category": "x",
                     "resource": "x",
                     "units": {"foo": {}},
-                },
-                {
-                    "category": "x",
-                    "resource": "x",
-                    "units": {"foo": {}},
-                },
-                {
-                    "category": "x",
-                    "resource": "x",
-                    "units": {"foo": {}},
-                },
+                }
             ],
         )
         assert_matches_type(BulkIngestResponse, ingest, path=["response"])
@@ -193,17 +153,7 @@ class TestAsyncIngest:
                     "category": "x",
                     "resource": "x",
                     "units": {"foo": {}},
-                },
-                {
-                    "category": "x",
-                    "resource": "x",
-                    "units": {"foo": {}},
-                },
-                {
-                    "category": "x",
-                    "resource": "x",
-                    "units": {"foo": {}},
-                },
+                }
             ],
         )
 
@@ -220,17 +170,7 @@ class TestAsyncIngest:
                     "category": "x",
                     "resource": "x",
                     "units": {"foo": {}},
-                },
-                {
-                    "category": "x",
-                    "resource": "x",
-                    "units": {"foo": {}},
-                },
-                {
-                    "category": "x",
-                    "resource": "x",
-                    "units": {"foo": {}},
-                },
+                }
             ],
         ) as response:
             assert not response.is_closed
