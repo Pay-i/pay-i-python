@@ -6,22 +6,22 @@ from typing import Optional
 
 import httpx
 
-from ..types import csat_create_params
-from .._types import NOT_GIVEN, Body, Query, Headers, NotGiven
-from .._utils import (
+from ..._types import NOT_GIVEN, Body, Query, Headers, NotGiven
+from ..._utils import (
     maybe_transform,
     async_maybe_transform,
 )
-from .._compat import cached_property
-from .._resource import SyncAPIResource, AsyncAPIResource
-from .._response import (
+from ..._compat import cached_property
+from ..._resource import SyncAPIResource, AsyncAPIResource
+from ..._response import (
     to_raw_response_wrapper,
     to_streamed_response_wrapper,
     async_to_raw_response_wrapper,
     async_to_streamed_response_wrapper,
 )
-from ..types.csat import Csat
-from .._base_client import make_request_options
+from ..._base_client import make_request_options
+from ...types.experiences import csat_create_params
+from ...types.experiences.csat_response import CsatResponse
 
 __all__ = ["CsatResource", "AsyncCsatResource"]
 
@@ -58,9 +58,9 @@ class CsatResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> Csat:
+    ) -> CsatResponse:
         """
-        Created a CSAT rating for an Experience
+        Update an Experience properties
 
         Args:
           extra_headers: Send extra headers
@@ -74,7 +74,7 @@ class CsatResource(SyncAPIResource):
         if not experience_id:
             raise ValueError(f"Expected a non-empty value for `experience_id` but received {experience_id!r}")
         return self._post(
-            f"/api/v1/csat/experiences/{experience_id}",
+            f"/api/v1/experiences/instances/{experience_id}/csat",
             body=maybe_transform(
                 {
                     "csat_rating": csat_rating,
@@ -85,7 +85,7 @@ class CsatResource(SyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=Csat,
+            cast_to=CsatResponse,
         )
 
 
@@ -121,9 +121,9 @@ class AsyncCsatResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> Csat:
+    ) -> CsatResponse:
         """
-        Created a CSAT rating for an Experience
+        Update an Experience properties
 
         Args:
           extra_headers: Send extra headers
@@ -137,7 +137,7 @@ class AsyncCsatResource(AsyncAPIResource):
         if not experience_id:
             raise ValueError(f"Expected a non-empty value for `experience_id` but received {experience_id!r}")
         return await self._post(
-            f"/api/v1/csat/experiences/{experience_id}",
+            f"/api/v1/experiences/instances/{experience_id}/csat",
             body=await async_maybe_transform(
                 {
                     "csat_rating": csat_rating,
@@ -148,7 +148,7 @@ class AsyncCsatResource(AsyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=Csat,
+            cast_to=CsatResponse,
         )
 
 

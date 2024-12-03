@@ -50,9 +50,9 @@ class Payi(SyncAPIClient):
     ingest: resources.IngestResource
     categories: resources.CategoriesResource
     experiences: resources.ExperiencesResource
-    csat: resources.CsatResource
     billing_models: resources.BillingModelsResource
     price_modifiers: resources.PriceModifiersResource
+    requests: resources.RequestsResource
     with_raw_response: PayiWithRawResponse
     with_streaming_response: PayiWithStreamedResponse
 
@@ -114,9 +114,9 @@ class Payi(SyncAPIClient):
         self.ingest = resources.IngestResource(self)
         self.categories = resources.CategoriesResource(self)
         self.experiences = resources.ExperiencesResource(self)
-        self.csat = resources.CsatResource(self)
         self.billing_models = resources.BillingModelsResource(self)
         self.price_modifiers = resources.PriceModifiersResource(self)
+        self.requests = resources.RequestsResource(self)
         self.with_raw_response = PayiWithRawResponse(self)
         self.with_streaming_response = PayiWithStreamedResponse(self)
 
@@ -230,9 +230,9 @@ class AsyncPayi(AsyncAPIClient):
     ingest: resources.AsyncIngestResource
     categories: resources.AsyncCategoriesResource
     experiences: resources.AsyncExperiencesResource
-    csat: resources.AsyncCsatResource
     billing_models: resources.AsyncBillingModelsResource
     price_modifiers: resources.AsyncPriceModifiersResource
+    requests: resources.AsyncRequestsResource
     with_raw_response: AsyncPayiWithRawResponse
     with_streaming_response: AsyncPayiWithStreamedResponse
 
@@ -294,9 +294,9 @@ class AsyncPayi(AsyncAPIClient):
         self.ingest = resources.AsyncIngestResource(self)
         self.categories = resources.AsyncCategoriesResource(self)
         self.experiences = resources.AsyncExperiencesResource(self)
-        self.csat = resources.AsyncCsatResource(self)
         self.billing_models = resources.AsyncBillingModelsResource(self)
         self.price_modifiers = resources.AsyncPriceModifiersResource(self)
+        self.requests = resources.AsyncRequestsResource(self)
         self.with_raw_response = AsyncPayiWithRawResponse(self)
         self.with_streaming_response = AsyncPayiWithStreamedResponse(self)
 
@@ -411,9 +411,9 @@ class PayiWithRawResponse:
         self.ingest = resources.IngestResourceWithRawResponse(client.ingest)
         self.categories = resources.CategoriesResourceWithRawResponse(client.categories)
         self.experiences = resources.ExperiencesResourceWithRawResponse(client.experiences)
-        self.csat = resources.CsatResourceWithRawResponse(client.csat)
         self.billing_models = resources.BillingModelsResourceWithRawResponse(client.billing_models)
         self.price_modifiers = resources.PriceModifiersResourceWithRawResponse(client.price_modifiers)
+        self.requests = resources.RequestsResourceWithRawResponse(client.requests)
 
 
 class AsyncPayiWithRawResponse:
@@ -422,9 +422,9 @@ class AsyncPayiWithRawResponse:
         self.ingest = resources.AsyncIngestResourceWithRawResponse(client.ingest)
         self.categories = resources.AsyncCategoriesResourceWithRawResponse(client.categories)
         self.experiences = resources.AsyncExperiencesResourceWithRawResponse(client.experiences)
-        self.csat = resources.AsyncCsatResourceWithRawResponse(client.csat)
         self.billing_models = resources.AsyncBillingModelsResourceWithRawResponse(client.billing_models)
         self.price_modifiers = resources.AsyncPriceModifiersResourceWithRawResponse(client.price_modifiers)
+        self.requests = resources.AsyncRequestsResourceWithRawResponse(client.requests)
 
 
 class PayiWithStreamedResponse:
@@ -433,9 +433,9 @@ class PayiWithStreamedResponse:
         self.ingest = resources.IngestResourceWithStreamingResponse(client.ingest)
         self.categories = resources.CategoriesResourceWithStreamingResponse(client.categories)
         self.experiences = resources.ExperiencesResourceWithStreamingResponse(client.experiences)
-        self.csat = resources.CsatResourceWithStreamingResponse(client.csat)
         self.billing_models = resources.BillingModelsResourceWithStreamingResponse(client.billing_models)
         self.price_modifiers = resources.PriceModifiersResourceWithStreamingResponse(client.price_modifiers)
+        self.requests = resources.RequestsResourceWithStreamingResponse(client.requests)
 
 
 class AsyncPayiWithStreamedResponse:
@@ -444,9 +444,9 @@ class AsyncPayiWithStreamedResponse:
         self.ingest = resources.AsyncIngestResourceWithStreamingResponse(client.ingest)
         self.categories = resources.AsyncCategoriesResourceWithStreamingResponse(client.categories)
         self.experiences = resources.AsyncExperiencesResourceWithStreamingResponse(client.experiences)
-        self.csat = resources.AsyncCsatResourceWithStreamingResponse(client.csat)
         self.billing_models = resources.AsyncBillingModelsResourceWithStreamingResponse(client.billing_models)
         self.price_modifiers = resources.AsyncPriceModifiersResourceWithStreamingResponse(client.price_modifiers)
+        self.requests = resources.AsyncRequestsResourceWithStreamingResponse(client.requests)
 
 
 Client = Payi
