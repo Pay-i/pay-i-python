@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.1.0-alpha.30 (2024-12-03)
+
+Full Changelog: [v0.1.0-alpha.29...v0.1.0-alpha.30](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.29...v0.1.0-alpha.30)
+
+### Bug Fixes
+
+* **asyncify:** avoid hanging process under certain conditions ([#141](https://github.com/Pay-i/pay-i-python/issues/141)) ([58b8775](https://github.com/Pay-i/pay-i-python/commit/58b8775427865cb3aa4c05748511c7f2d5ab8c22))
+* **client:** compat with new httpx 0.28.0 release ([#146](https://github.com/Pay-i/pay-i-python/issues/146)) ([4ae1a72](https://github.com/Pay-i/pay-i-python/commit/4ae1a72109d0633aaa08d9ff9d6d3aef7e1a9e0d))
+
+
+### Chores
+
+* **internal:** bump pyright ([#147](https://github.com/Pay-i/pay-i-python/issues/147)) ([f169e37](https://github.com/Pay-i/pay-i-python/commit/f169e3780bb33eefaf18ae61f4765a21be418f1e))
+* **internal:** codegen related update ([#144](https://github.com/Pay-i/pay-i-python/issues/144)) ([792376c](https://github.com/Pay-i/pay-i-python/commit/792376c30d33a9a2aa0bacf53c38e481ded7be4c))
+* **internal:** exclude mypy from running on tests ([#145](https://github.com/Pay-i/pay-i-python/issues/145)) ([3856fd1](https://github.com/Pay-i/pay-i-python/commit/3856fd19391aa68befe8776406e340efdff49984))
+* **internal:** fix compat model_dump method when warnings are passed ([#142](https://github.com/Pay-i/pay-i-python/issues/142)) ([58b3ef8](https://github.com/Pay-i/pay-i-python/commit/58b3ef8b4d1dc9c7df2858c6914e587e08f43857))
+* rebuild project due to codegen change ([#139](https://github.com/Pay-i/pay-i-python/issues/139)) ([9ed4a24](https://github.com/Pay-i/pay-i-python/commit/9ed4a2439973965d745cbfd2dfc68003958d51c5))
+
+
+### Documentation
+
+* add info log level to readme ([#143](https://github.com/Pay-i/pay-i-python/issues/143)) ([cec3a51](https://github.com/Pay-i/pay-i-python/commit/cec3a51a51ca9ab67c37dd2692a5222ede4c72cf))
+
 ## 0.1.0-alpha.29 (2024-11-15)
 
 Full Changelog: [v0.1.0-alpha.28...v0.1.0-alpha.29](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.28...v0.1.0-alpha.29)
