@@ -1,12 +1,15 @@
 # File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
+from typing import Dict
 
 from .._models import BaseModel
 
-__all__ = ["ExperienceInstance"]
+__all__ = ["ExperienceInstanceResponse"]
 
 
-class ExperienceInstance(BaseModel):
+class ExperienceInstanceResponse(BaseModel):
     experience_id: str
+
+    properties: Dict[str, str]
 
     request_id: str
