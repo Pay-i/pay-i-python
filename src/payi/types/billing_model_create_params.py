@@ -11,7 +11,7 @@ __all__ = ["BillingModelCreateParams"]
 class BillingModelCreateParams(TypedDict, total=False):
     name: Required[str]
 
-    type: Required[Literal["costplus"]]
+    type: Required[Literal["invalid", "costplus", "subscription", "hybrid"]]
 
     default_price_modifier: Optional[float]
 

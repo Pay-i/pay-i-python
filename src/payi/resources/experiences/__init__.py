@@ -1,5 +1,13 @@
 # File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
+from .csat import (
+    CsatResource,
+    AsyncCsatResource,
+    CsatResourceWithRawResponse,
+    AsyncCsatResourceWithRawResponse,
+    CsatResourceWithStreamingResponse,
+    AsyncCsatResourceWithStreamingResponse,
+)
 from .types import (
     TypesResource,
     AsyncTypesResource,
@@ -7,6 +15,14 @@ from .types import (
     AsyncTypesResourceWithRawResponse,
     TypesResourceWithStreamingResponse,
     AsyncTypesResourceWithStreamingResponse,
+)
+from .properties import (
+    PropertiesResource,
+    AsyncPropertiesResource,
+    PropertiesResourceWithRawResponse,
+    AsyncPropertiesResourceWithRawResponse,
+    PropertiesResourceWithStreamingResponse,
+    AsyncPropertiesResourceWithStreamingResponse,
 )
 from .experiences import (
     ExperiencesResource,
@@ -24,6 +40,18 @@ __all__ = [
     "AsyncTypesResourceWithRawResponse",
     "TypesResourceWithStreamingResponse",
     "AsyncTypesResourceWithStreamingResponse",
+    "CsatResource",
+    "AsyncCsatResource",
+    "CsatResourceWithRawResponse",
+    "AsyncCsatResourceWithRawResponse",
+    "CsatResourceWithStreamingResponse",
+    "AsyncCsatResourceWithStreamingResponse",
+    "PropertiesResource",
+    "AsyncPropertiesResource",
+    "PropertiesResourceWithRawResponse",
+    "AsyncPropertiesResourceWithRawResponse",
+    "PropertiesResourceWithStreamingResponse",
+    "AsyncPropertiesResourceWithStreamingResponse",
     "ExperiencesResource",
     "AsyncExperiencesResource",
     "ExperiencesResourceWithRawResponse",
