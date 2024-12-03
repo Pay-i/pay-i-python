@@ -102,14 +102,14 @@ Methods:
 Types:
 
 ```python
-from payi.types import ExperienceInstance
+from payi.types import ExperienceInstanceResponse
 ```
 
 Methods:
 
-- <code title="post /api/v1/experiences/instances/{experience_name}">client.experiences.<a href="./src/payi/resources/experiences/experiences.py">create</a>(experience_name) -> <a href="./src/payi/types/experience_instance.py">ExperienceInstance</a></code>
-- <code title="get /api/v1/experiences/instances/{experience_id}">client.experiences.<a href="./src/payi/resources/experiences/experiences.py">retrieve</a>(experience_id) -> <a href="./src/payi/types/experience_instance.py">ExperienceInstance</a></code>
-- <code title="delete /api/v1/experiences/instances/{experience_id}">client.experiences.<a href="./src/payi/resources/experiences/experiences.py">delete</a>(experience_id) -> <a href="./src/payi/types/experience_instance.py">ExperienceInstance</a></code>
+- <code title="post /api/v1/experiences/instances/{experience_name}">client.experiences.<a href="./src/payi/resources/experiences/experiences.py">create</a>(experience_name) -> <a href="./src/payi/types/experience_instance_response.py">ExperienceInstanceResponse</a></code>
+- <code title="get /api/v1/experiences/instances/{experience_id}">client.experiences.<a href="./src/payi/resources/experiences/experiences.py">retrieve</a>(experience_id) -> <a href="./src/payi/types/experience_instance_response.py">ExperienceInstanceResponse</a></code>
+- <code title="delete /api/v1/experiences/instances/{experience_id}">client.experiences.<a href="./src/payi/resources/experiences/experiences.py">delete</a>(experience_id) -> <a href="./src/payi/types/experience_instance_response.py">ExperienceInstanceResponse</a></code>
 
 ## Types
 
@@ -127,17 +127,29 @@ Methods:
 - <code title="get /api/v1/experiences/types">client.experiences.types.<a href="./src/payi/resources/experiences/types.py">list</a>(\*\*<a href="src/payi/types/experiences/type_list_params.py">params</a>) -> <a href="./src/payi/types/experiences/type_list_response.py">TypeListResponse</a></code>
 - <code title="delete /api/v1/experiences/types/{experience_name}">client.experiences.types.<a href="./src/payi/resources/experiences/types.py">delete</a>(experience_name) -> <a href="./src/payi/types/experiences/experience_type.py">ExperienceType</a></code>
 
-# Csat
+## Csat
 
 Types:
 
 ```python
-from payi.types import Csat
+from payi.types.experiences import CsatResponse
 ```
 
 Methods:
 
-- <code title="post /api/v1/csat/experiences/{experience_id}">client.csat.<a href="./src/payi/resources/csat.py">create</a>(experience_id, \*\*<a href="src/payi/types/csat_create_params.py">params</a>) -> <a href="./src/payi/types/csat.py">Csat</a></code>
+- <code title="post /api/v1/experiences/instances/{experience_id}/csat">client.experiences.csat.<a href="./src/payi/resources/experiences/csat.py">create</a>(experience_id, \*\*<a href="src/payi/types/experiences/csat_create_params.py">params</a>) -> <a href="./src/payi/types/experiences/csat_response.py">CsatResponse</a></code>
+
+## Properties
+
+Types:
+
+```python
+from payi.types.experiences import PropertiesResponse
+```
+
+Methods:
+
+- <code title="post /api/v1/experiences/instances/{experience_id}/properties">client.experiences.properties.<a href="./src/payi/resources/experiences/properties.py">create</a>(experience_id, \*\*<a href="src/payi/types/experiences/property_create_params.py">params</a>) -> <a href="./src/payi/types/experience_instance_response.py">ExperienceInstanceResponse</a></code>
 
 # BillingModels
 
@@ -168,3 +180,11 @@ Methods:
 - <code title="post /api/v1/price-modifier">client.price_modifiers.<a href="./src/payi/resources/price_modifiers.py">create</a>(\*\*<a href="src/payi/types/price_modifier_create_params.py">params</a>) -> <a href="./src/payi/types/price_modifier.py">PriceModifier</a></code>
 - <code title="get /api/v1/price-modifier/{billing_model_id}">client.price_modifiers.<a href="./src/payi/resources/price_modifiers.py">retrieve</a>(billing_model_id) -> <a href="./src/payi/types/price_modifier_retrieve_response.py">PriceModifierRetrieveResponse</a></code>
 - <code title="put /api/v1/price-modifier">client.price_modifiers.<a href="./src/payi/resources/price_modifiers.py">update</a>(\*\*<a href="src/payi/types/price_modifier_update_params.py">params</a>) -> <a href="./src/payi/types/price_modifier.py">PriceModifier</a></code>
+
+# Requests
+
+## Properties
+
+Methods:
+
+- <code title="post /api/v1/requests/{request_id}/properties">client.requests.properties.<a href="./src/payi/resources/requests/properties.py">create</a>(request_id, \*\*<a href="src/payi/types/requests/property_create_params.py">params</a>) -> <a href="./src/payi/types/experiences/properties_response.py">PropertiesResponse</a></code>

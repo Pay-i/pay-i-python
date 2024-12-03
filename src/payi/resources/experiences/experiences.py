@@ -4,6 +4,14 @@ from __future__ import annotations
 
 import httpx
 
+from .csat import (
+    CsatResource,
+    AsyncCsatResource,
+    CsatResourceWithRawResponse,
+    AsyncCsatResourceWithRawResponse,
+    CsatResourceWithStreamingResponse,
+    AsyncCsatResourceWithStreamingResponse,
+)
 from .types import (
     TypesResource,
     AsyncTypesResource,
@@ -14,6 +22,14 @@ from .types import (
 )
 from ..._types import NOT_GIVEN, Body, Query, Headers, NotGiven
 from ..._compat import cached_property
+from .properties import (
+    PropertiesResource,
+    AsyncPropertiesResource,
+    PropertiesResourceWithRawResponse,
+    AsyncPropertiesResourceWithRawResponse,
+    PropertiesResourceWithStreamingResponse,
+    AsyncPropertiesResourceWithStreamingResponse,
+)
 from ..._resource import SyncAPIResource, AsyncAPIResource
 from ..._response import (
     to_raw_response_wrapper,
@@ -22,7 +38,7 @@ from ..._response import (
     async_to_streamed_response_wrapper,
 )
 from ..._base_client import make_request_options
-from ...types.experience_instance import ExperienceInstance
+from ...types.experience_instance_response import ExperienceInstanceResponse
 
 __all__ = ["ExperiencesResource", "AsyncExperiencesResource"]
 
@@ -31,6 +47,14 @@ class ExperiencesResource(SyncAPIResource):
     @cached_property
     def types(self) -> TypesResource:
         return TypesResource(self._client)
+
+    @cached_property
+    def csat(self) -> CsatResource:
+        return CsatResource(self._client)
+
+    @cached_property
+    def properties(self) -> PropertiesResource:
+        return PropertiesResource(self._client)
 
     @cached_property
     def with_raw_response(self) -> ExperiencesResourceWithRawResponse:
@@ -61,7 +85,7 @@ class ExperiencesResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> ExperienceInstance:
+    ) -> ExperienceInstanceResponse:
         """
         Create an Experience
 
@@ -81,7 +105,7 @@ class ExperiencesResource(SyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=ExperienceInstance,
+            cast_to=ExperienceInstanceResponse,
         )
 
     def retrieve(
@@ -94,7 +118,7 @@ class ExperiencesResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> ExperienceInstance:
+    ) -> ExperienceInstanceResponse:
         """
         Get an Experience details
 
@@ -114,7 +138,7 @@ class ExperiencesResource(SyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=ExperienceInstance,
+            cast_to=ExperienceInstanceResponse,
         )
 
     def delete(
@@ -127,7 +151,7 @@ class ExperiencesResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> ExperienceInstance:
+    ) -> ExperienceInstanceResponse:
         """
         Delete an Experience
 
@@ -147,7 +171,7 @@ class ExperiencesResource(SyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=ExperienceInstance,
+            cast_to=ExperienceInstanceResponse,
         )
 
 
@@ -155,6 +179,14 @@ class AsyncExperiencesResource(AsyncAPIResource):
     @cached_property
     def types(self) -> AsyncTypesResource:
         return AsyncTypesResource(self._client)
+
+    @cached_property
+    def csat(self) -> AsyncCsatResource:
+        return AsyncCsatResource(self._client)
+
+    @cached_property
+    def properties(self) -> AsyncPropertiesResource:
+        return AsyncPropertiesResource(self._client)
 
     @cached_property
     def with_raw_response(self) -> AsyncExperiencesResourceWithRawResponse:
@@ -185,7 +217,7 @@ class AsyncExperiencesResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> ExperienceInstance:
+    ) -> ExperienceInstanceResponse:
         """
         Create an Experience
 
@@ -205,7 +237,7 @@ class AsyncExperiencesResource(AsyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=ExperienceInstance,
+            cast_to=ExperienceInstanceResponse,
         )
 
     async def retrieve(
@@ -218,7 +250,7 @@ class AsyncExperiencesResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> ExperienceInstance:
+    ) -> ExperienceInstanceResponse:
         """
         Get an Experience details
 
@@ -238,7 +270,7 @@ class AsyncExperiencesResource(AsyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=ExperienceInstance,
+            cast_to=ExperienceInstanceResponse,
         )
 
     async def delete(
@@ -251,7 +283,7 @@ class AsyncExperiencesResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> ExperienceInstance:
+    ) -> ExperienceInstanceResponse:
         """
         Delete an Experience
 
@@ -271,7 +303,7 @@ class AsyncExperiencesResource(AsyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=ExperienceInstance,
+            cast_to=ExperienceInstanceResponse,
         )
 
 
@@ -293,6 +325,14 @@ class ExperiencesResourceWithRawResponse:
     def types(self) -> TypesResourceWithRawResponse:
         return TypesResourceWithRawResponse(self._experiences.types)
 
+    @cached_property
+    def csat(self) -> CsatResourceWithRawResponse:
+        return CsatResourceWithRawResponse(self._experiences.csat)
+
+    @cached_property
+    def properties(self) -> PropertiesResourceWithRawResponse:
+        return PropertiesResourceWithRawResponse(self._experiences.properties)
+
 
 class AsyncExperiencesResourceWithRawResponse:
     def __init__(self, experiences: AsyncExperiencesResource) -> None:
@@ -311,6 +351,14 @@ class AsyncExperiencesResourceWithRawResponse:
     @cached_property
     def types(self) -> AsyncTypesResourceWithRawResponse:
         return AsyncTypesResourceWithRawResponse(self._experiences.types)
+
+    @cached_property
+    def csat(self) -> AsyncCsatResourceWithRawResponse:
+        return AsyncCsatResourceWithRawResponse(self._experiences.csat)
+
+    @cached_property
+    def properties(self) -> AsyncPropertiesResourceWithRawResponse:
+        return AsyncPropertiesResourceWithRawResponse(self._experiences.properties)
 
 
 class ExperiencesResourceWithStreamingResponse:
@@ -331,6 +379,14 @@ class ExperiencesResourceWithStreamingResponse:
     def types(self) -> TypesResourceWithStreamingResponse:
         return TypesResourceWithStreamingResponse(self._experiences.types)
 
+    @cached_property
+    def csat(self) -> CsatResourceWithStreamingResponse:
+        return CsatResourceWithStreamingResponse(self._experiences.csat)
+
+    @cached_property
+    def properties(self) -> PropertiesResourceWithStreamingResponse:
+        return PropertiesResourceWithStreamingResponse(self._experiences.properties)
+
 
 class AsyncExperiencesResourceWithStreamingResponse:
     def __init__(self, experiences: AsyncExperiencesResource) -> None:
@@ -349,3 +405,11 @@ class AsyncExperiencesResourceWithStreamingResponse:
     @cached_property
     def types(self) -> AsyncTypesResourceWithStreamingResponse:
         return AsyncTypesResourceWithStreamingResponse(self._experiences.types)
+
+    @cached_property
+    def csat(self) -> AsyncCsatResourceWithStreamingResponse:
+        return AsyncCsatResourceWithStreamingResponse(self._experiences.csat)
+
+    @cached_property
+    def properties(self) -> AsyncPropertiesResourceWithStreamingResponse:
+        return AsyncPropertiesResourceWithStreamingResponse(self._experiences.properties)
