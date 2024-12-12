@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.0-alpha.32 (2024-12-10)
+
+Full Changelog: [v0.1.0-alpha.31...v0.1.0-alpha.32](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.31...v0.1.0-alpha.32)
+
+### Chores
+
+* **internal:** bump pydantic dependency ([#154](https://github.com/Pay-i/pay-i-python/issues/154)) ([c2187c5](https://github.com/Pay-i/pay-i-python/commit/c2187c501a445cf1fbeff1d3ca97508c30232236))
+* make the `Omit` type public ([#152](https://github.com/Pay-i/pay-i-python/issues/152)) ([def0371](https://github.com/Pay-i/pay-i-python/commit/def0371c51b545d0109ca8473aa4242a35094e3c))
+
+
+### Documentation
+
+* **readme:** fix http client proxies example ([#155](https://github.com/Pay-i/pay-i-python/issues/155)) ([7eb2bf7](https://github.com/Pay-i/pay-i-python/commit/7eb2bf7e1147968cf5ed67c28a1c155694b69e28))
+
 ## 0.1.0-alpha.31 (2024-12-03)
 
 Full Changelog: [v0.1.0-alpha.30...v0.1.0-alpha.31](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.30...v0.1.0-alpha.31)
