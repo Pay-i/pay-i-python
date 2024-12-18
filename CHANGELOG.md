@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.1.0-alpha.33 (2024-12-18)
+
+Full Changelog: [v0.1.0-alpha.32...v0.1.0-alpha.33](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.32...v0.1.0-alpha.33)
+
+### Chores
+
+* **internal:** add support for TypeAliasType ([#159](https://github.com/Pay-i/pay-i-python/issues/159)) ([8ea8180](https://github.com/Pay-i/pay-i-python/commit/8ea81803464331a9d431871b3965716e7dd751cc))
+* **internal:** bump pyright ([#157](https://github.com/Pay-i/pay-i-python/issues/157)) ([9e0676b](https://github.com/Pay-i/pay-i-python/commit/9e0676bcdb4f9c8518632a480650667b9aba27f7))
+* **internal:** codegen related update ([#160](https://github.com/Pay-i/pay-i-python/issues/160)) ([5141606](https://github.com/Pay-i/pay-i-python/commit/5141606ed39b82cff8e7c70416a01adab04c0944))
+* **internal:** fix some typos ([#162](https://github.com/Pay-i/pay-i-python/issues/162)) ([5ef33a3](https://github.com/Pay-i/pay-i-python/commit/5ef33a34129c147183ddc746373dd99721741b4c))
+
+
+### Documentation
+
+* **readme:** example snippet for client context manager ([#161](https://github.com/Pay-i/pay-i-python/issues/161)) ([bcbbfa5](https://github.com/Pay-i/pay-i-python/commit/bcbbfa5ce1d75ab4d8cc9a7b2b2d85ae69a13277))
+
 ## 0.1.0-alpha.32 (2024-12-10)
 
 Full Changelog: [v0.1.0-alpha.31...v0.1.0-alpha.32](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.31...v0.1.0-alpha.32)
