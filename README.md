@@ -31,11 +31,11 @@ client = Payi(
     api_key=os.environ.get("PAYI_API_KEY"),  # This is the default and can be omitted
 )
 
-budget_response = client.budgets.create(
-    budget_name="x",
+limit_response = client.limits.create(
+    limit_name="x",
     max=0,
 )
-print(budget_response.request_id)
+print(limit_response.request_id)
 ```
 
 While you can provide an `api_key` keyword argument,
@@ -58,11 +58,11 @@ client = AsyncPayi(
 
 
 async def main() -> None:
-    budget_response = await client.budgets.create(
-        budget_name="x",
+    limit_response = await client.limits.create(
+        limit_name="x",
         max=0,
     )
-    print(budget_response.request_id)
+    print(limit_response.request_id)
 
 
 asyncio.run(main())
@@ -95,8 +95,8 @@ from payi import Payi
 client = Payi()
 
 try:
-    client.budgets.create(
-        budget_name="x",
+    client.limits.create(
+        limit_name="x",
         max=0,
     )
 except payi.APIConnectionError as e:
@@ -141,8 +141,8 @@ client = Payi(
 )
 
 # Or, configure per-request:
-client.with_options(max_retries=5).budgets.create(
-    budget_name="x",
+client.with_options(max_retries=5).limits.create(
+    limit_name="x",
     max=0,
 )
 ```
@@ -167,8 +167,8 @@ client = Payi(
 )
 
 # Override per-request:
-client.with_options(timeout=5.0).budgets.create(
-    budget_name="x",
+client.with_options(timeout=5.0).limits.create(
+    limit_name="x",
     max=0,
 )
 ```
@@ -211,14 +211,14 @@ The "raw" Response object can be accessed by prefixing `.with_raw_response.` to 
 from payi import Payi
 
 client = Payi()
-response = client.budgets.with_raw_response.create(
-    budget_name="x",
+response = client.limits.with_raw_response.create(
+    limit_name="x",
     max=0,
 )
 print(response.headers.get('X-My-Header'))
 
-budget = response.parse()  # get the object that `budgets.create()` would have returned
-print(budget.request_id)
+limit = response.parse()  # get the object that `limits.create()` would have returned
+print(limit.request_id)
 ```
 
 These methods return an [`APIResponse`](https://github.com/Pay-i/pay-i-python/tree/main/src/payi/_response.py) object.
@@ -232,8 +232,8 @@ The above interface eagerly reads the full response body when you make the reque
 To stream the response body, use `.with_streaming_response` instead, which requires a context manager and only reads the response body once you call `.read()`, `.text()`, `.json()`, `.iter_bytes()`, `.iter_text()`, `.iter_lines()` or `.parse()`. In the async client, these are async methods.
 
 ```python
-with client.budgets.with_streaming_response.create(
-    budget_name="x",
+with client.limits.with_streaming_response.create(
+    limit_name="x",
     max=0,
 ) as response:
     print(response.headers.get("X-My-Header"))

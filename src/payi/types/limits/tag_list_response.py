@@ -3,8 +3,8 @@
 from typing import List
 from typing_extensions import TypeAlias
 
-from .budget_tags import BudgetTags
+from .limit_tags import LimitTags
 
-__all__ = ["TagCreateResponse"]
+__all__ = ["TagListResponse"]
 
-TagCreateResponse: TypeAlias = List[BudgetTags]
+TagListResponse: TypeAlias = List[LimitTags]

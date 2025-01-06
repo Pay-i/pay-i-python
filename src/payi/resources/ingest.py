@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Union, Iterable, Optional
+from typing import Dict, List, Union, Iterable, Optional
 from datetime import datetime
 
 import httpx
@@ -93,10 +93,17 @@ class IngestResource(SyncAPIResource):
         units: Dict[str, ingest_units_params.Units],
         end_to_end_latency_ms: Optional[int] | NotGiven = NOT_GIVEN,
         event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
+        experience_properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
         http_status_code: Optional[int] | NotGiven = NOT_GIVEN,
+        properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
+        provider_prompt: Optional[str] | NotGiven = NOT_GIVEN,
+        provider_request_headers: Optional[Dict[str, List[str]]] | NotGiven = NOT_GIVEN,
+        provider_response: Optional[List[str]] | NotGiven = NOT_GIVEN,
+        provider_response_headers: Optional[Dict[str, List[str]]] | NotGiven = NOT_GIVEN,
+        provider_uri: Optional[str] | NotGiven = NOT_GIVEN,
         provisioned_resource_name: Optional[str] | NotGiven = NOT_GIVEN,
         time_to_first_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
-        budget_ids: Union[list[str], None] | NotGiven = NOT_GIVEN,
+        limit_ids: Union[list[str], None] | NotGiven = NOT_GIVEN,
         request_tags: Union[list[str], None] | NotGiven = NOT_GIVEN,
         experience_id: Union[str, None] | NotGiven = NOT_GIVEN,
         experience_name: Union[str, None] | NotGiven = NOT_GIVEN,
@@ -143,13 +150,13 @@ class IngestResource(SyncAPIResource):
         valid_ids_str: str | NotGiven = NOT_GIVEN
         valid_tags_str: str | NotGiven = NOT_GIVEN
 
-        if budget_ids is None or isinstance(budget_ids, NotGiven):
+        if limit_ids is None or isinstance(limit_ids, NotGiven):
             valid_ids_str = NOT_GIVEN
         elif not isinstance(budget_ids, list): # type: ignore
             raise TypeError("budget_ids must be a list")
         else:
             # Proceed with the list comprehension if budget_ids is not NotGiven
-            valid_ids = [id.strip() for id in budget_ids if id.strip()]
+            valid_ids = [id.strip() for id in limit_ids if id.strip()]
             valid_ids_str = ",".join(valid_ids) if valid_ids else NOT_GIVEN
 
         if request_tags is None or isinstance(request_tags, NotGiven):
@@ -173,7 +180,7 @@ class IngestResource(SyncAPIResource):
         extra_headers = {
             **strip_not_given(
                 {
-                    "xProxy-Budget-IDs": valid_ids_str,
+                    "xProxy-Limit-IDs": valid_ids_str,
                     "xProxy-Request-Tags": valid_tags_str,
                     "xProxy-Experience-Id": experience_id,
                     "xProxy-Experience-Name": experience_name,
@@ -191,7 +198,14 @@ class IngestResource(SyncAPIResource):
                     "units": units,
                     "end_to_end_latency_ms": end_to_end_latency_ms,
                     "event_timestamp": event_timestamp,
+                    "experience_properties": experience_properties,
                     "http_status_code": http_status_code,
+                    "properties": properties,
+                    "provider_prompt": provider_prompt,
+                    "provider_request_headers": provider_request_headers,
+                    "provider_response": provider_response,
+                    "provider_response_headers": provider_response_headers,
+                    "provider_uri": provider_uri,
                     "provisioned_resource_name": provisioned_resource_name,
                     "time_to_first_token_ms": time_to_first_token_ms,
                 },
@@ -266,10 +280,17 @@ class AsyncIngestResource(AsyncAPIResource):
         units: Dict[str, ingest_units_params.Units],
         end_to_end_latency_ms: Optional[int] | NotGiven = NOT_GIVEN,
         event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
+        experience_properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
         http_status_code: Optional[int] | NotGiven = NOT_GIVEN,
+        properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
+        provider_prompt: Optional[str] | NotGiven = NOT_GIVEN,
+        provider_request_headers: Optional[Dict[str, List[str]]] | NotGiven = NOT_GIVEN,
+        provider_response: Optional[List[str]] | NotGiven = NOT_GIVEN,
+        provider_response_headers: Optional[Dict[str, List[str]]] | NotGiven = NOT_GIVEN,
+        provider_uri: Optional[str] | NotGiven = NOT_GIVEN,
         provisioned_resource_name: Optional[str] | NotGiven = NOT_GIVEN,
         time_to_first_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
-        budget_ids: Union[list[str], None] | NotGiven = NOT_GIVEN,
+        limit_ids: Union[list[str], None] | NotGiven = NOT_GIVEN,
         request_tags: Union[list[str], None] | NotGiven = NOT_GIVEN,
         experience_name: Union[str, None] | NotGiven = NOT_GIVEN,
         experience_id: Union[str, None] | NotGiven = NOT_GIVEN,
@@ -315,13 +336,13 @@ class AsyncIngestResource(AsyncAPIResource):
         valid_ids_str: str | NotGiven = NOT_GIVEN
         valid_tags_str: str | NotGiven = NOT_GIVEN
 
-        if budget_ids is None or isinstance(budget_ids, NotGiven):
+        if limit_ids is None or isinstance(limit_ids, NotGiven):
             valid_ids_str = NOT_GIVEN
         elif not isinstance(budget_ids, list): # type: ignore
             raise TypeError("budget_ids must be a list")
         else:
             # Proceed with the list comprehension if budget_ids is not NotGiven
-            valid_ids = [id.strip() for id in budget_ids if id.strip()]
+            valid_ids = [id.strip() for id in limit_ids if id.strip()]
             valid_ids_str = ",".join(valid_ids) if valid_ids else NOT_GIVEN
 
         if request_tags is None or isinstance(request_tags, NotGiven):
@@ -345,7 +366,7 @@ class AsyncIngestResource(AsyncAPIResource):
         extra_headers = {
             **strip_not_given(
                 {
-                    "xProxy-Budget-IDs": valid_ids_str,
+                    "xProxy-Limit-IDs": valid_ids_str,
                     "xProxy-Request-Tags": valid_tags_str,
                     "xProxy-Experience-Name": experience_name,
                     "xProxy-Experience-Id": experience_id,
@@ -363,7 +384,14 @@ class AsyncIngestResource(AsyncAPIResource):
                     "units": units,
                     "end_to_end_latency_ms": end_to_end_latency_ms,
                     "event_timestamp": event_timestamp,
+                    "experience_properties": experience_properties,
                     "http_status_code": http_status_code,
+                    "properties": properties,
+                    "provider_prompt": provider_prompt,
+                    "provider_request_headers": provider_request_headers,
+                    "provider_response": provider_response,
+                    "provider_response_headers": provider_response_headers,
+                    "provider_uri": provider_uri,
                     "provisioned_resource_name": provisioned_resource_name,
                     "time_to_first_token_ms": time_to_first_token_ms,
                 },
