@@ -9,34 +9,32 @@ from pydantic import Field as FieldInfo
 from .._models import BaseModel
 from .total_cost_data import TotalCostData
 
-__all__ = ["PagedBudgetList", "Item"]
+__all__ = ["PagedLimitList", "Item"]
 
 
 class Item(BaseModel):
-    base_cost_estimate: Literal["max"]
-
-    budget_creation_timestamp: datetime
-
-    budget_id: str
-
-    budget_name: str
-
-    budget_response_type: Literal["block", "allow"]
-
-    budget_update_timestamp: datetime
-
     currency: Literal["usd"]
+
+    limit_creation_timestamp: datetime
+
+    limit_id: str
+
+    limit_name: str
+
+    limit_type: Literal["block", "allow"]
+
+    limit_update_timestamp: datetime
 
     max: float
 
     totals: TotalCostData
 
-    budget_tags: Optional[List[str]] = None
+    limit_tags: Optional[List[str]] = None
 
     threshold: Optional[float] = None
 
 
-class PagedBudgetList(BaseModel):
+class PagedLimitList(BaseModel):
     current_page: Optional[int] = FieldInfo(alias="currentPage", default=None)
 
     has_next_page: Optional[bool] = FieldInfo(alias="hasNextPage", default=None)

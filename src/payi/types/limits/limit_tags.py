@@ -5,10 +5,10 @@ from datetime import datetime
 
 from ..._models import BaseModel
 
-__all__ = ["BudgetTags"]
+__all__ = ["LimitTags"]
 
 
-class BudgetTags(BaseModel):
+class LimitTags(BaseModel):
     created_on: Optional[datetime] = None
 
     tag_id: Optional[int] = None

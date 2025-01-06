@@ -1,15 +1,15 @@
-# Budgets
+# Limits
 
 Types:
 
 ```python
 from payi.types import (
-    BudgetHistoryResponse,
-    BudgetResponse,
     CostData,
     CostDetails,
     DefaultResponse,
-    PagedBudgetList,
+    LimitHistoryResponse,
+    LimitResponse,
+    PagedLimitList,
     RequestsData,
     TotalCostData,
 )
@@ -17,20 +17,20 @@ from payi.types import (
 
 Methods:
 
-- <code title="post /api/v1/budgets">client.budgets.<a href="./src/payi/resources/budgets/budgets.py">create</a>(\*\*<a href="src/payi/types/budget_create_params.py">params</a>) -> <a href="./src/payi/types/budget_response.py">BudgetResponse</a></code>
-- <code title="get /api/v1/budgets/{budget_id}">client.budgets.<a href="./src/payi/resources/budgets/budgets.py">retrieve</a>(budget_id) -> <a href="./src/payi/types/budget_response.py">BudgetResponse</a></code>
-- <code title="put /api/v1/budgets/{budget_id}">client.budgets.<a href="./src/payi/resources/budgets/budgets.py">update</a>(budget_id, \*\*<a href="src/payi/types/budget_update_params.py">params</a>) -> <a href="./src/payi/types/budget_response.py">BudgetResponse</a></code>
-- <code title="get /api/v1/budgets">client.budgets.<a href="./src/payi/resources/budgets/budgets.py">list</a>(\*\*<a href="src/payi/types/budget_list_params.py">params</a>) -> <a href="./src/payi/types/paged_budget_list.py">PagedBudgetList</a></code>
-- <code title="delete /api/v1/budgets/{budget_id}">client.budgets.<a href="./src/payi/resources/budgets/budgets.py">delete</a>(budget_id) -> <a href="./src/payi/types/default_response.py">DefaultResponse</a></code>
-- <code title="post /api/v1/budgets/{budget_id}/reset">client.budgets.<a href="./src/payi/resources/budgets/budgets.py">reset</a>(budget_id) -> <a href="./src/payi/types/budget_history_response.py">BudgetHistoryResponse</a></code>
+- <code title="post /api/v1/limits">client.limits.<a href="./src/payi/resources/limits/limits.py">create</a>(\*\*<a href="src/payi/types/limit_create_params.py">params</a>) -> <a href="./src/payi/types/limit_response.py">LimitResponse</a></code>
+- <code title="get /api/v1/limits/{limit_id}">client.limits.<a href="./src/payi/resources/limits/limits.py">retrieve</a>(limit_id) -> <a href="./src/payi/types/limit_response.py">LimitResponse</a></code>
+- <code title="put /api/v1/limits/{limit_id}">client.limits.<a href="./src/payi/resources/limits/limits.py">update</a>(limit_id, \*\*<a href="src/payi/types/limit_update_params.py">params</a>) -> <a href="./src/payi/types/limit_response.py">LimitResponse</a></code>
+- <code title="get /api/v1/limits">client.limits.<a href="./src/payi/resources/limits/limits.py">list</a>(\*\*<a href="src/payi/types/limit_list_params.py">params</a>) -> <a href="./src/payi/types/paged_limit_list.py">PagedLimitList</a></code>
+- <code title="delete /api/v1/limits/{limit_id}">client.limits.<a href="./src/payi/resources/limits/limits.py">delete</a>(limit_id) -> <a href="./src/payi/types/default_response.py">DefaultResponse</a></code>
+- <code title="post /api/v1/limits/{limit_id}/reset">client.limits.<a href="./src/payi/resources/limits/limits.py">reset</a>(limit_id, \*\*<a href="src/payi/types/limit_reset_params.py">params</a>) -> <a href="./src/payi/types/limit_history_response.py">LimitHistoryResponse</a></code>
 
 ## Tags
 
 Types:
 
 ```python
-from payi.types.budgets import (
-    BudgetTags,
+from payi.types.limits import (
+    LimitTags,
     TagCreateResponse,
     TagUpdateResponse,
     TagListResponse,
@@ -41,11 +41,11 @@ from payi.types.budgets import (
 
 Methods:
 
-- <code title="post /api/v1/budgets/{budget_id}/tags">client.budgets.tags.<a href="./src/payi/resources/budgets/tags.py">create</a>(budget_id, \*\*<a href="src/payi/types/budgets/tag_create_params.py">params</a>) -> <a href="./src/payi/types/budgets/tag_create_response.py">TagCreateResponse</a></code>
-- <code title="put /api/v1/budgets/{budget_id}/tags">client.budgets.tags.<a href="./src/payi/resources/budgets/tags.py">update</a>(budget_id, \*\*<a href="src/payi/types/budgets/tag_update_params.py">params</a>) -> <a href="./src/payi/types/budgets/tag_update_response.py">TagUpdateResponse</a></code>
-- <code title="get /api/v1/budgets/{budget_id}/tags">client.budgets.tags.<a href="./src/payi/resources/budgets/tags.py">list</a>(budget_id) -> <a href="./src/payi/types/budgets/tag_list_response.py">TagListResponse</a></code>
-- <code title="delete /api/v1/budgets/{budget_id}/tags">client.budgets.tags.<a href="./src/payi/resources/budgets/tags.py">delete</a>(budget_id) -> <a href="./src/payi/types/budgets/tag_delete_response.py">TagDeleteResponse</a></code>
-- <code title="patch /api/v1/budgets/{budget_id}/tags/remove">client.budgets.tags.<a href="./src/payi/resources/budgets/tags.py">remove</a>(budget_id, \*\*<a href="src/payi/types/budgets/tag_remove_params.py">params</a>) -> <a href="./src/payi/types/budgets/tag_remove_response.py">TagRemoveResponse</a></code>
+- <code title="post /api/v1/limits/{limit_id}/tags">client.limits.tags.<a href="./src/payi/resources/limits/tags.py">create</a>(limit_id, \*\*<a href="src/payi/types/limits/tag_create_params.py">params</a>) -> <a href="./src/payi/types/limits/tag_create_response.py">TagCreateResponse</a></code>
+- <code title="put /api/v1/limits/{limit_id}/tags">client.limits.tags.<a href="./src/payi/resources/limits/tags.py">update</a>(limit_id, \*\*<a href="src/payi/types/limits/tag_update_params.py">params</a>) -> <a href="./src/payi/types/limits/tag_update_response.py">TagUpdateResponse</a></code>
+- <code title="get /api/v1/limits/{limit_id}/tags">client.limits.tags.<a href="./src/payi/resources/limits/tags.py">list</a>(limit_id) -> <a href="./src/payi/types/limits/tag_list_response.py">TagListResponse</a></code>
+- <code title="delete /api/v1/limits/{limit_id}/tags">client.limits.tags.<a href="./src/payi/resources/limits/tags.py">delete</a>(limit_id) -> <a href="./src/payi/types/limits/tag_delete_response.py">TagDeleteResponse</a></code>
+- <code title="patch /api/v1/limits/{limit_id}/tags/remove">client.limits.tags.<a href="./src/payi/resources/limits/tags.py">remove</a>(limit_id, \*\*<a href="src/payi/types/limits/tag_remove_params.py">params</a>) -> <a href="./src/payi/types/limits/tag_remove_response.py">TagRemoveResponse</a></code>
 
 # Ingest
 
@@ -126,65 +126,3 @@ Methods:
 - <code title="patch /api/v1/experiences/types/{experience_name}">client.experiences.types.<a href="./src/payi/resources/experiences/types.py">update</a>(experience_name, \*\*<a href="src/payi/types/experiences/type_update_params.py">params</a>) -> <a href="./src/payi/types/experiences/experience_type.py">ExperienceType</a></code>
 - <code title="get /api/v1/experiences/types">client.experiences.types.<a href="./src/payi/resources/experiences/types.py">list</a>(\*\*<a href="src/payi/types/experiences/type_list_params.py">params</a>) -> <a href="./src/payi/types/experiences/type_list_response.py">TypeListResponse</a></code>
 - <code title="delete /api/v1/experiences/types/{experience_name}">client.experiences.types.<a href="./src/payi/resources/experiences/types.py">delete</a>(experience_name) -> <a href="./src/payi/types/experiences/experience_type.py">ExperienceType</a></code>
-
-## Csat
-
-Types:
-
-```python
-from payi.types.experiences import CsatResponse
-```
-
-Methods:
-
-- <code title="post /api/v1/experiences/instances/{experience_id}/csat">client.experiences.csat.<a href="./src/payi/resources/experiences/csat.py">create</a>(experience_id, \*\*<a href="src/payi/types/experiences/csat_create_params.py">params</a>) -> <a href="./src/payi/types/experiences/csat_response.py">CsatResponse</a></code>
-
-## Properties
-
-Types:
-
-```python
-from payi.types.experiences import PropertiesResponse
-```
-
-Methods:
-
-- <code title="post /api/v1/experiences/instances/{experience_id}/properties">client.experiences.properties.<a href="./src/payi/resources/experiences/properties.py">create</a>(experience_id, \*\*<a href="src/payi/types/experiences/property_create_params.py">params</a>) -> <a href="./src/payi/types/experience_instance_response.py">ExperienceInstanceResponse</a></code>
-
-# BillingModels
-
-Types:
-
-```python
-from payi.types import BillingModel, BillingModelListResponse
-```
-
-Methods:
-
-- <code title="post /api/v1/billing-model">client.billing_models.<a href="./src/payi/resources/billing_models.py">create</a>(\*\*<a href="src/payi/types/billing_model_create_params.py">params</a>) -> <a href="./src/payi/types/billing_model.py">BillingModel</a></code>
-- <code title="get /api/v1/billing-model/{billing_model_id}">client.billing_models.<a href="./src/payi/resources/billing_models.py">retrieve</a>(billing_model_id) -> <a href="./src/payi/types/billing_model.py">BillingModel</a></code>
-- <code title="put /api/v1/billing-model/{billing_model_id}">client.billing_models.<a href="./src/payi/resources/billing_models.py">update</a>(billing_model_id, \*\*<a href="src/payi/types/billing_model_update_params.py">params</a>) -> <a href="./src/payi/types/billing_model.py">BillingModel</a></code>
-- <code title="get /api/v1/billing-model">client.billing_models.<a href="./src/payi/resources/billing_models.py">list</a>() -> <a href="./src/payi/types/billing_model_list_response.py">BillingModelListResponse</a></code>
-- <code title="put /api/v1/billing-model/{billing_model_id}/default">client.billing_models.<a href="./src/payi/resources/billing_models.py">set_default</a>(billing_model_id) -> <a href="./src/payi/types/billing_model.py">BillingModel</a></code>
-
-# PriceModifiers
-
-Types:
-
-```python
-from payi.types import PriceModifier, PriceModifierRetrieveResponse
-```
-
-Methods:
-
-- <code title="post /api/v1/price-modifier">client.price_modifiers.<a href="./src/payi/resources/price_modifiers.py">create</a>(\*\*<a href="src/payi/types/price_modifier_create_params.py">params</a>) -> <a href="./src/payi/types/price_modifier.py">PriceModifier</a></code>
-- <code title="get /api/v1/price-modifier/{billing_model_id}">client.price_modifiers.<a href="./src/payi/resources/price_modifiers.py">retrieve</a>(billing_model_id) -> <a href="./src/payi/types/price_modifier_retrieve_response.py">PriceModifierRetrieveResponse</a></code>
-- <code title="put /api/v1/price-modifier">client.price_modifiers.<a href="./src/payi/resources/price_modifiers.py">update</a>(\*\*<a href="src/payi/types/price_modifier_update_params.py">params</a>) -> <a href="./src/payi/types/price_modifier.py">PriceModifier</a></code>
-
-# Requests
-
-## Properties
-
-Methods:
-
-- <code title="post /api/v1/requests/{request_id}/properties">client.requests.properties.<a href="./src/payi/resources/requests/properties.py">create</a>(request_id, \*\*<a href="src/payi/types/requests/property_create_params.py">params</a>) -> <a href="./src/payi/types/experiences/properties_response.py">PropertiesResponse</a></code>

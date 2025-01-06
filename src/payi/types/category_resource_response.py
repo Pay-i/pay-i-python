@@ -17,6 +17,8 @@ class Units(BaseModel):
 class CategoryResourceResponse(BaseModel):
     category: str
 
+    proxy_allowed: bool
+
     resource: str
 
     resource_id: str
@@ -24,6 +26,8 @@ class CategoryResourceResponse(BaseModel):
     start_timestamp: datetime
 
     units: Dict[str, Units]
+
+    deprecated_timestamp: Optional[datetime] = None
 
     max_input_units: Optional[int] = None
 

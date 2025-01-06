@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .budget_tags import BudgetTags as BudgetTags
+from .limit_tags import LimitTags as LimitTags
 from .tag_create_params import TagCreateParams as TagCreateParams
 from .tag_list_response import TagListResponse as TagListResponse
 from .tag_remove_params import TagRemoveParams as TagRemoveParams

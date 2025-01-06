@@ -5,10 +5,10 @@ from __future__ import annotations
 from typing import Optional
 from typing_extensions import TypedDict
 
-__all__ = ["BudgetUpdateParams"]
+__all__ = ["LimitUpdateParams"]
 
 
-class BudgetUpdateParams(TypedDict, total=False):
-    budget_name: Optional[str]
+class LimitUpdateParams(TypedDict, total=False):
+    limit_name: Optional[str]
 
     max: Optional[float]

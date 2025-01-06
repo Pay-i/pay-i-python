@@ -9,4 +9,4 @@ __all__ = ["TagRemoveParams"]
 
 
 class TagRemoveParams(TypedDict, total=False):
-    budget_tags: Required[List[str]]
+    limit_tags: Required[List[str]]
