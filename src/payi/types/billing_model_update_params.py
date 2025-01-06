@@ -9,7 +9,7 @@ __all__ = ["BillingModelUpdateParams"]
 
 
 class BillingModelUpdateParams(TypedDict, total=False):
-    type: Required[Literal["invalid", "costplus", "subscription", "hybrid"]]
+    type: Required[Literal["costplus", "subscription", "hybrid"]]
 
     default_price_modifier: Optional[float]
 

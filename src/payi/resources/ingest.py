@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Union, Iterable, Optional
+from typing import Dict, List, Union, Iterable, Optional
 from datetime import datetime
 
 import httpx
@@ -90,12 +90,19 @@ class IngestResource(SyncAPIResource):
         units: Dict[str, ingest_units_params.Units],
         end_to_end_latency_ms: Optional[int] | NotGiven = NOT_GIVEN,
         event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
+        experience_properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
         http_status_code: Optional[int] | NotGiven = NOT_GIVEN,
+        properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
+        provider_prompt: Optional[str] | NotGiven = NOT_GIVEN,
+        provider_request_headers: Optional[Dict[str, List[str]]] | NotGiven = NOT_GIVEN,
+        provider_response: Optional[List[str]] | NotGiven = NOT_GIVEN,
+        provider_response_headers: Optional[Dict[str, List[str]]] | NotGiven = NOT_GIVEN,
+        provider_uri: Optional[str] | NotGiven = NOT_GIVEN,
         provisioned_resource_name: Optional[str] | NotGiven = NOT_GIVEN,
         time_to_first_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
-        x_proxy_budget_ids: str | NotGiven = NOT_GIVEN,
         x_proxy_experience_id: str | NotGiven = NOT_GIVEN,
         x_proxy_experience_name: str | NotGiven = NOT_GIVEN,
+        x_proxy_limit_ids: str | NotGiven = NOT_GIVEN,
         x_proxy_request_tags: str | NotGiven = NOT_GIVEN,
         x_proxy_user_id: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
@@ -120,9 +127,9 @@ class IngestResource(SyncAPIResource):
         extra_headers = {
             **strip_not_given(
                 {
-                    "xProxy-Budget-IDs": x_proxy_budget_ids,
-                    "xProxy-Experience-Id": x_proxy_experience_id,
+                    "xProxy-Experience-ID": x_proxy_experience_id,
                     "xProxy-Experience-Name": x_proxy_experience_name,
+                    "xProxy-Limit-IDs": x_proxy_limit_ids,
                     "xProxy-Request-Tags": x_proxy_request_tags,
                     "xProxy-User-ID": x_proxy_user_id,
                 }
@@ -138,7 +145,14 @@ class IngestResource(SyncAPIResource):
                     "units": units,
                     "end_to_end_latency_ms": end_to_end_latency_ms,
                     "event_timestamp": event_timestamp,
+                    "experience_properties": experience_properties,
                     "http_status_code": http_status_code,
+                    "properties": properties,
+                    "provider_prompt": provider_prompt,
+                    "provider_request_headers": provider_request_headers,
+                    "provider_response": provider_response,
+                    "provider_response_headers": provider_response_headers,
+                    "provider_uri": provider_uri,
                     "provisioned_resource_name": provisioned_resource_name,
                     "time_to_first_token_ms": time_to_first_token_ms,
                 },
@@ -211,12 +225,19 @@ class AsyncIngestResource(AsyncAPIResource):
         units: Dict[str, ingest_units_params.Units],
         end_to_end_latency_ms: Optional[int] | NotGiven = NOT_GIVEN,
         event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
+        experience_properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
         http_status_code: Optional[int] | NotGiven = NOT_GIVEN,
+        properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
+        provider_prompt: Optional[str] | NotGiven = NOT_GIVEN,
+        provider_request_headers: Optional[Dict[str, List[str]]] | NotGiven = NOT_GIVEN,
+        provider_response: Optional[List[str]] | NotGiven = NOT_GIVEN,
+        provider_response_headers: Optional[Dict[str, List[str]]] | NotGiven = NOT_GIVEN,
+        provider_uri: Optional[str] | NotGiven = NOT_GIVEN,
         provisioned_resource_name: Optional[str] | NotGiven = NOT_GIVEN,
         time_to_first_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
-        x_proxy_budget_ids: str | NotGiven = NOT_GIVEN,
         x_proxy_experience_id: str | NotGiven = NOT_GIVEN,
         x_proxy_experience_name: str | NotGiven = NOT_GIVEN,
+        x_proxy_limit_ids: str | NotGiven = NOT_GIVEN,
         x_proxy_request_tags: str | NotGiven = NOT_GIVEN,
         x_proxy_user_id: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
@@ -241,9 +262,9 @@ class AsyncIngestResource(AsyncAPIResource):
         extra_headers = {
             **strip_not_given(
                 {
-                    "xProxy-Budget-IDs": x_proxy_budget_ids,
-                    "xProxy-Experience-Id": x_proxy_experience_id,
+                    "xProxy-Experience-ID": x_proxy_experience_id,
                     "xProxy-Experience-Name": x_proxy_experience_name,
+                    "xProxy-Limit-IDs": x_proxy_limit_ids,
                     "xProxy-Request-Tags": x_proxy_request_tags,
                     "xProxy-User-ID": x_proxy_user_id,
                 }
@@ -259,7 +280,14 @@ class AsyncIngestResource(AsyncAPIResource):
                     "units": units,
                     "end_to_end_latency_ms": end_to_end_latency_ms,
                     "event_timestamp": event_timestamp,
+                    "experience_properties": experience_properties,
                     "http_status_code": http_status_code,
+                    "properties": properties,
+                    "provider_prompt": provider_prompt,
+                    "provider_request_headers": provider_request_headers,
+                    "provider_response": provider_response,
+                    "provider_response_headers": provider_response_headers,
+                    "provider_uri": provider_uri,
                     "provisioned_resource_name": provisioned_resource_name,
                     "time_to_first_token_ms": time_to_first_token_ms,
                 },

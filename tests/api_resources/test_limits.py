@@ -9,513 +9,528 @@ import pytest
 
 from payi import Payi, AsyncPayi
 from payi.types import (
-    BudgetResponse,
+    LimitResponse,
+    PagedLimitList,
     DefaultResponse,
-    PagedBudgetList,
-    BudgetHistoryResponse,
+    LimitHistoryResponse,
 )
+from payi._utils import parse_datetime
 from tests.utils import assert_matches_type
 
 base_url = os.environ.get("TEST_API_BASE_URL", "http://127.0.0.1:4010")
 
 
-class TestBudgets:
+class TestLimits:
     parametrize = pytest.mark.parametrize("client", [False, True], indirect=True, ids=["loose", "strict"])
 
     @parametrize
     def test_method_create(self, client: Payi) -> None:
-        budget = client.budgets.create(
-            budget_name="x",
+        limit = client.limits.create(
+            limit_name="x",
             max=0,
         )
-        assert_matches_type(BudgetResponse, budget, path=["response"])
+        assert_matches_type(LimitResponse, limit, path=["response"])
 
     @parametrize
     def test_method_create_with_all_params(self, client: Payi) -> None:
-        budget = client.budgets.create(
-            budget_name="x",
+        limit = client.limits.create(
+            limit_name="x",
             max=0,
-            base_cost_estimate="max",
             billing_model_id="billing_model_id",
-            budget_response_type="block",
-            budget_tags=["tag1", "tag2"],
             cost_basis="base",
             currency="usd",
+            limit_tags=["tag1", "tag2"],
+            limit_type="block",
             threshold=0,
         )
-        assert_matches_type(BudgetResponse, budget, path=["response"])
+        assert_matches_type(LimitResponse, limit, path=["response"])
 
     @parametrize
     def test_raw_response_create(self, client: Payi) -> None:
-        response = client.budgets.with_raw_response.create(
-            budget_name="x",
+        response = client.limits.with_raw_response.create(
+            limit_name="x",
             max=0,
         )
 
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-        budget = response.parse()
-        assert_matches_type(BudgetResponse, budget, path=["response"])
+        limit = response.parse()
+        assert_matches_type(LimitResponse, limit, path=["response"])
 
     @parametrize
     def test_streaming_response_create(self, client: Payi) -> None:
-        with client.budgets.with_streaming_response.create(
-            budget_name="x",
+        with client.limits.with_streaming_response.create(
+            limit_name="x",
             max=0,
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
-            budget = response.parse()
-            assert_matches_type(BudgetResponse, budget, path=["response"])
+            limit = response.parse()
+            assert_matches_type(LimitResponse, limit, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
     @parametrize
     def test_method_retrieve(self, client: Payi) -> None:
-        budget = client.budgets.retrieve(
-            "budget_id",
+        limit = client.limits.retrieve(
+            "limit_id",
         )
-        assert_matches_type(BudgetResponse, budget, path=["response"])
+        assert_matches_type(LimitResponse, limit, path=["response"])
 
     @parametrize
     def test_raw_response_retrieve(self, client: Payi) -> None:
-        response = client.budgets.with_raw_response.retrieve(
-            "budget_id",
+        response = client.limits.with_raw_response.retrieve(
+            "limit_id",
         )
 
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-        budget = response.parse()
-        assert_matches_type(BudgetResponse, budget, path=["response"])
+        limit = response.parse()
+        assert_matches_type(LimitResponse, limit, path=["response"])
 
     @parametrize
     def test_streaming_response_retrieve(self, client: Payi) -> None:
-        with client.budgets.with_streaming_response.retrieve(
-            "budget_id",
+        with client.limits.with_streaming_response.retrieve(
+            "limit_id",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
-            budget = response.parse()
-            assert_matches_type(BudgetResponse, budget, path=["response"])
+            limit = response.parse()
+            assert_matches_type(LimitResponse, limit, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
     @parametrize
     def test_path_params_retrieve(self, client: Payi) -> None:
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `budget_id` but received ''"):
-            client.budgets.with_raw_response.retrieve(
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `limit_id` but received ''"):
+            client.limits.with_raw_response.retrieve(
                 "",
             )
 
     @parametrize
     def test_method_update(self, client: Payi) -> None:
-        budget = client.budgets.update(
-            budget_id="budget_id",
+        limit = client.limits.update(
+            limit_id="limit_id",
         )
-        assert_matches_type(BudgetResponse, budget, path=["response"])
+        assert_matches_type(LimitResponse, limit, path=["response"])
 
     @parametrize
     def test_method_update_with_all_params(self, client: Payi) -> None:
-        budget = client.budgets.update(
-            budget_id="budget_id",
-            budget_name="budget_name",
+        limit = client.limits.update(
+            limit_id="limit_id",
+            limit_name="limit_name",
             max=0,
         )
-        assert_matches_type(BudgetResponse, budget, path=["response"])
+        assert_matches_type(LimitResponse, limit, path=["response"])
 
     @parametrize
     def test_raw_response_update(self, client: Payi) -> None:
-        response = client.budgets.with_raw_response.update(
-            budget_id="budget_id",
+        response = client.limits.with_raw_response.update(
+            limit_id="limit_id",
         )
 
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-        budget = response.parse()
-        assert_matches_type(BudgetResponse, budget, path=["response"])
+        limit = response.parse()
+        assert_matches_type(LimitResponse, limit, path=["response"])
 
     @parametrize
     def test_streaming_response_update(self, client: Payi) -> None:
-        with client.budgets.with_streaming_response.update(
-            budget_id="budget_id",
+        with client.limits.with_streaming_response.update(
+            limit_id="limit_id",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
-            budget = response.parse()
-            assert_matches_type(BudgetResponse, budget, path=["response"])
+            limit = response.parse()
+            assert_matches_type(LimitResponse, limit, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
     @parametrize
     def test_path_params_update(self, client: Payi) -> None:
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `budget_id` but received ''"):
-            client.budgets.with_raw_response.update(
-                budget_id="",
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `limit_id` but received ''"):
+            client.limits.with_raw_response.update(
+                limit_id="",
             )
 
     @parametrize
     def test_method_list(self, client: Payi) -> None:
-        budget = client.budgets.list()
-        assert_matches_type(PagedBudgetList, budget, path=["response"])
+        limit = client.limits.list()
+        assert_matches_type(PagedLimitList, limit, path=["response"])
 
     @parametrize
     def test_method_list_with_all_params(self, client: Payi) -> None:
-        budget = client.budgets.list(
-            budget_name="budget_name",
+        limit = client.limits.list(
+            limit_name="limit_name",
             page_number=0,
             page_size=0,
             sort_ascending=True,
             sort_by="sort_by",
             tags="tags",
         )
-        assert_matches_type(PagedBudgetList, budget, path=["response"])
+        assert_matches_type(PagedLimitList, limit, path=["response"])
 
     @parametrize
     def test_raw_response_list(self, client: Payi) -> None:
-        response = client.budgets.with_raw_response.list()
+        response = client.limits.with_raw_response.list()
 
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-        budget = response.parse()
-        assert_matches_type(PagedBudgetList, budget, path=["response"])
+        limit = response.parse()
+        assert_matches_type(PagedLimitList, limit, path=["response"])
 
     @parametrize
     def test_streaming_response_list(self, client: Payi) -> None:
-        with client.budgets.with_streaming_response.list() as response:
+        with client.limits.with_streaming_response.list() as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
-            budget = response.parse()
-            assert_matches_type(PagedBudgetList, budget, path=["response"])
+            limit = response.parse()
+            assert_matches_type(PagedLimitList, limit, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
     @parametrize
     def test_method_delete(self, client: Payi) -> None:
-        budget = client.budgets.delete(
-            "budget_id",
+        limit = client.limits.delete(
+            "limit_id",
         )
-        assert_matches_type(DefaultResponse, budget, path=["response"])
+        assert_matches_type(DefaultResponse, limit, path=["response"])
 
     @parametrize
     def test_raw_response_delete(self, client: Payi) -> None:
-        response = client.budgets.with_raw_response.delete(
-            "budget_id",
+        response = client.limits.with_raw_response.delete(
+            "limit_id",
         )
 
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-        budget = response.parse()
-        assert_matches_type(DefaultResponse, budget, path=["response"])
+        limit = response.parse()
+        assert_matches_type(DefaultResponse, limit, path=["response"])
 
     @parametrize
     def test_streaming_response_delete(self, client: Payi) -> None:
-        with client.budgets.with_streaming_response.delete(
-            "budget_id",
+        with client.limits.with_streaming_response.delete(
+            "limit_id",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
-            budget = response.parse()
-            assert_matches_type(DefaultResponse, budget, path=["response"])
+            limit = response.parse()
+            assert_matches_type(DefaultResponse, limit, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
     @parametrize
     def test_path_params_delete(self, client: Payi) -> None:
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `budget_id` but received ''"):
-            client.budgets.with_raw_response.delete(
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `limit_id` but received ''"):
+            client.limits.with_raw_response.delete(
                 "",
             )
 
     @parametrize
     def test_method_reset(self, client: Payi) -> None:
-        budget = client.budgets.reset(
-            "budget_id",
+        limit = client.limits.reset(
+            limit_id="limit_id",
         )
-        assert_matches_type(BudgetHistoryResponse, budget, path=["response"])
+        assert_matches_type(LimitHistoryResponse, limit, path=["response"])
+
+    @parametrize
+    def test_method_reset_with_all_params(self, client: Payi) -> None:
+        limit = client.limits.reset(
+            limit_id="limit_id",
+            reset_date=parse_datetime("2019-12-27T18:11:19.117Z"),
+        )
+        assert_matches_type(LimitHistoryResponse, limit, path=["response"])
 
     @parametrize
     def test_raw_response_reset(self, client: Payi) -> None:
-        response = client.budgets.with_raw_response.reset(
-            "budget_id",
+        response = client.limits.with_raw_response.reset(
+            limit_id="limit_id",
         )
 
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-        budget = response.parse()
-        assert_matches_type(BudgetHistoryResponse, budget, path=["response"])
+        limit = response.parse()
+        assert_matches_type(LimitHistoryResponse, limit, path=["response"])
 
     @parametrize
     def test_streaming_response_reset(self, client: Payi) -> None:
-        with client.budgets.with_streaming_response.reset(
-            "budget_id",
+        with client.limits.with_streaming_response.reset(
+            limit_id="limit_id",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
-            budget = response.parse()
-            assert_matches_type(BudgetHistoryResponse, budget, path=["response"])
+            limit = response.parse()
+            assert_matches_type(LimitHistoryResponse, limit, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
     @parametrize
     def test_path_params_reset(self, client: Payi) -> None:
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `budget_id` but received ''"):
-            client.budgets.with_raw_response.reset(
-                "",
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `limit_id` but received ''"):
+            client.limits.with_raw_response.reset(
+                limit_id="",
             )
 
 
-class TestAsyncBudgets:
+class TestAsyncLimits:
     parametrize = pytest.mark.parametrize("async_client", [False, True], indirect=True, ids=["loose", "strict"])
 
     @parametrize
     async def test_method_create(self, async_client: AsyncPayi) -> None:
-        budget = await async_client.budgets.create(
-            budget_name="x",
+        limit = await async_client.limits.create(
+            limit_name="x",
             max=0,
         )
-        assert_matches_type(BudgetResponse, budget, path=["response"])
+        assert_matches_type(LimitResponse, limit, path=["response"])
 
     @parametrize
     async def test_method_create_with_all_params(self, async_client: AsyncPayi) -> None:
-        budget = await async_client.budgets.create(
-            budget_name="x",
+        limit = await async_client.limits.create(
+            limit_name="x",
             max=0,
-            base_cost_estimate="max",
             billing_model_id="billing_model_id",
-            budget_response_type="block",
-            budget_tags=["tag1", "tag2"],
             cost_basis="base",
             currency="usd",
+            limit_tags=["tag1", "tag2"],
+            limit_type="block",
             threshold=0,
         )
-        assert_matches_type(BudgetResponse, budget, path=["response"])
+        assert_matches_type(LimitResponse, limit, path=["response"])
 
     @parametrize
     async def test_raw_response_create(self, async_client: AsyncPayi) -> None:
-        response = await async_client.budgets.with_raw_response.create(
-            budget_name="x",
+        response = await async_client.limits.with_raw_response.create(
+            limit_name="x",
             max=0,
         )
 
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-        budget = await response.parse()
-        assert_matches_type(BudgetResponse, budget, path=["response"])
+        limit = await response.parse()
+        assert_matches_type(LimitResponse, limit, path=["response"])
 
     @parametrize
     async def test_streaming_response_create(self, async_client: AsyncPayi) -> None:
-        async with async_client.budgets.with_streaming_response.create(
-            budget_name="x",
+        async with async_client.limits.with_streaming_response.create(
+            limit_name="x",
             max=0,
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
-            budget = await response.parse()
-            assert_matches_type(BudgetResponse, budget, path=["response"])
+            limit = await response.parse()
+            assert_matches_type(LimitResponse, limit, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
     @parametrize
     async def test_method_retrieve(self, async_client: AsyncPayi) -> None:
-        budget = await async_client.budgets.retrieve(
-            "budget_id",
+        limit = await async_client.limits.retrieve(
+            "limit_id",
         )
-        assert_matches_type(BudgetResponse, budget, path=["response"])
+        assert_matches_type(LimitResponse, limit, path=["response"])
 
     @parametrize
     async def test_raw_response_retrieve(self, async_client: AsyncPayi) -> None:
-        response = await async_client.budgets.with_raw_response.retrieve(
-            "budget_id",
+        response = await async_client.limits.with_raw_response.retrieve(
+            "limit_id",
         )
 
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-        budget = await response.parse()
-        assert_matches_type(BudgetResponse, budget, path=["response"])
+        limit = await response.parse()
+        assert_matches_type(LimitResponse, limit, path=["response"])
 
     @parametrize
     async def test_streaming_response_retrieve(self, async_client: AsyncPayi) -> None:
-        async with async_client.budgets.with_streaming_response.retrieve(
-            "budget_id",
+        async with async_client.limits.with_streaming_response.retrieve(
+            "limit_id",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
-            budget = await response.parse()
-            assert_matches_type(BudgetResponse, budget, path=["response"])
+            limit = await response.parse()
+            assert_matches_type(LimitResponse, limit, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
     @parametrize
     async def test_path_params_retrieve(self, async_client: AsyncPayi) -> None:
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `budget_id` but received ''"):
-            await async_client.budgets.with_raw_response.retrieve(
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `limit_id` but received ''"):
+            await async_client.limits.with_raw_response.retrieve(
                 "",
             )
 
     @parametrize
     async def test_method_update(self, async_client: AsyncPayi) -> None:
-        budget = await async_client.budgets.update(
-            budget_id="budget_id",
+        limit = await async_client.limits.update(
+            limit_id="limit_id",
         )
-        assert_matches_type(BudgetResponse, budget, path=["response"])
+        assert_matches_type(LimitResponse, limit, path=["response"])
 
     @parametrize
     async def test_method_update_with_all_params(self, async_client: AsyncPayi) -> None:
-        budget = await async_client.budgets.update(
-            budget_id="budget_id",
-            budget_name="budget_name",
+        limit = await async_client.limits.update(
+            limit_id="limit_id",
+            limit_name="limit_name",
             max=0,
         )
-        assert_matches_type(BudgetResponse, budget, path=["response"])
+        assert_matches_type(LimitResponse, limit, path=["response"])
 
     @parametrize
     async def test_raw_response_update(self, async_client: AsyncPayi) -> None:
-        response = await async_client.budgets.with_raw_response.update(
-            budget_id="budget_id",
+        response = await async_client.limits.with_raw_response.update(
+            limit_id="limit_id",
         )
 
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-        budget = await response.parse()
-        assert_matches_type(BudgetResponse, budget, path=["response"])
+        limit = await response.parse()
+        assert_matches_type(LimitResponse, limit, path=["response"])
 
     @parametrize
     async def test_streaming_response_update(self, async_client: AsyncPayi) -> None:
-        async with async_client.budgets.with_streaming_response.update(
-            budget_id="budget_id",
+        async with async_client.limits.with_streaming_response.update(
+            limit_id="limit_id",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
-            budget = await response.parse()
-            assert_matches_type(BudgetResponse, budget, path=["response"])
+            limit = await response.parse()
+            assert_matches_type(LimitResponse, limit, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
     @parametrize
     async def test_path_params_update(self, async_client: AsyncPayi) -> None:
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `budget_id` but received ''"):
-            await async_client.budgets.with_raw_response.update(
-                budget_id="",
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `limit_id` but received ''"):
+            await async_client.limits.with_raw_response.update(
+                limit_id="",
             )
 
     @parametrize
     async def test_method_list(self, async_client: AsyncPayi) -> None:
-        budget = await async_client.budgets.list()
-        assert_matches_type(PagedBudgetList, budget, path=["response"])
+        limit = await async_client.limits.list()
+        assert_matches_type(PagedLimitList, limit, path=["response"])
 
     @parametrize
     async def test_method_list_with_all_params(self, async_client: AsyncPayi) -> None:
-        budget = await async_client.budgets.list(
-            budget_name="budget_name",
+        limit = await async_client.limits.list(
+            limit_name="limit_name",
             page_number=0,
             page_size=0,
             sort_ascending=True,
             sort_by="sort_by",
             tags="tags",
         )
-        assert_matches_type(PagedBudgetList, budget, path=["response"])
+        assert_matches_type(PagedLimitList, limit, path=["response"])
 
     @parametrize
     async def test_raw_response_list(self, async_client: AsyncPayi) -> None:
-        response = await async_client.budgets.with_raw_response.list()
+        response = await async_client.limits.with_raw_response.list()
 
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-        budget = await response.parse()
-        assert_matches_type(PagedBudgetList, budget, path=["response"])
+        limit = await response.parse()
+        assert_matches_type(PagedLimitList, limit, path=["response"])
 
     @parametrize
     async def test_streaming_response_list(self, async_client: AsyncPayi) -> None:
-        async with async_client.budgets.with_streaming_response.list() as response:
+        async with async_client.limits.with_streaming_response.list() as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
-            budget = await response.parse()
-            assert_matches_type(PagedBudgetList, budget, path=["response"])
+            limit = await response.parse()
+            assert_matches_type(PagedLimitList, limit, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
     @parametrize
     async def test_method_delete(self, async_client: AsyncPayi) -> None:
-        budget = await async_client.budgets.delete(
-            "budget_id",
+        limit = await async_client.limits.delete(
+            "limit_id",
         )
-        assert_matches_type(DefaultResponse, budget, path=["response"])
+        assert_matches_type(DefaultResponse, limit, path=["response"])
 
     @parametrize
     async def test_raw_response_delete(self, async_client: AsyncPayi) -> None:
-        response = await async_client.budgets.with_raw_response.delete(
-            "budget_id",
+        response = await async_client.limits.with_raw_response.delete(
+            "limit_id",
         )
 
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-        budget = await response.parse()
-        assert_matches_type(DefaultResponse, budget, path=["response"])
+        limit = await response.parse()
+        assert_matches_type(DefaultResponse, limit, path=["response"])
 
     @parametrize
     async def test_streaming_response_delete(self, async_client: AsyncPayi) -> None:
-        async with async_client.budgets.with_streaming_response.delete(
-            "budget_id",
+        async with async_client.limits.with_streaming_response.delete(
+            "limit_id",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
-            budget = await response.parse()
-            assert_matches_type(DefaultResponse, budget, path=["response"])
+            limit = await response.parse()
+            assert_matches_type(DefaultResponse, limit, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
     @parametrize
     async def test_path_params_delete(self, async_client: AsyncPayi) -> None:
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `budget_id` but received ''"):
-            await async_client.budgets.with_raw_response.delete(
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `limit_id` but received ''"):
+            await async_client.limits.with_raw_response.delete(
                 "",
             )
 
     @parametrize
     async def test_method_reset(self, async_client: AsyncPayi) -> None:
-        budget = await async_client.budgets.reset(
-            "budget_id",
+        limit = await async_client.limits.reset(
+            limit_id="limit_id",
         )
-        assert_matches_type(BudgetHistoryResponse, budget, path=["response"])
+        assert_matches_type(LimitHistoryResponse, limit, path=["response"])
+
+    @parametrize
+    async def test_method_reset_with_all_params(self, async_client: AsyncPayi) -> None:
+        limit = await async_client.limits.reset(
+            limit_id="limit_id",
+            reset_date=parse_datetime("2019-12-27T18:11:19.117Z"),
+        )
+        assert_matches_type(LimitHistoryResponse, limit, path=["response"])
 
     @parametrize
     async def test_raw_response_reset(self, async_client: AsyncPayi) -> None:
-        response = await async_client.budgets.with_raw_response.reset(
-            "budget_id",
+        response = await async_client.limits.with_raw_response.reset(
+            limit_id="limit_id",
         )
 
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-        budget = await response.parse()
-        assert_matches_type(BudgetHistoryResponse, budget, path=["response"])
+        limit = await response.parse()
+        assert_matches_type(LimitHistoryResponse, limit, path=["response"])
 
     @parametrize
     async def test_streaming_response_reset(self, async_client: AsyncPayi) -> None:
-        async with async_client.budgets.with_streaming_response.reset(
-            "budget_id",
+        async with async_client.limits.with_streaming_response.reset(
+            limit_id="limit_id",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
-            budget = await response.parse()
-            assert_matches_type(BudgetHistoryResponse, budget, path=["response"])
+            limit = await response.parse()
+            assert_matches_type(LimitHistoryResponse, limit, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
     @parametrize
     async def test_path_params_reset(self, async_client: AsyncPayi) -> None:
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `budget_id` but received ''"):
-            await async_client.budgets.with_raw_response.reset(
-                "",
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `limit_id` but received ''"):
+            await async_client.limits.with_raw_response.reset(
+                limit_id="",
             )

@@ -20,12 +20,12 @@ from ..._response import (
     async_to_streamed_response_wrapper,
 )
 from ..._base_client import make_request_options
-from ...types.budgets import tag_create_params, tag_remove_params, tag_update_params
-from ...types.budgets.tag_list_response import TagListResponse
-from ...types.budgets.tag_create_response import TagCreateResponse
-from ...types.budgets.tag_delete_response import TagDeleteResponse
-from ...types.budgets.tag_remove_response import TagRemoveResponse
-from ...types.budgets.tag_update_response import TagUpdateResponse
+from ...types.limits import tag_create_params, tag_remove_params, tag_update_params
+from ...types.limits.tag_list_response import TagListResponse
+from ...types.limits.tag_create_response import TagCreateResponse
+from ...types.limits.tag_delete_response import TagDeleteResponse
+from ...types.limits.tag_remove_response import TagRemoveResponse
+from ...types.limits.tag_update_response import TagUpdateResponse
 
 __all__ = ["TagsResource", "AsyncTagsResource"]
 
@@ -52,9 +52,9 @@ class TagsResource(SyncAPIResource):
 
     def create(
         self,
-        budget_id: str,
+        limit_id: str,
         *,
-        budget_tags: List[str],
+        limit_tags: List[str],
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -63,7 +63,7 @@ class TagsResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> TagCreateResponse:
         """
-        Add Budget Tags
+        Add Limit Tags
 
         Args:
           extra_headers: Send extra headers
@@ -74,11 +74,11 @@ class TagsResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not budget_id:
-            raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
+        if not limit_id:
+            raise ValueError(f"Expected a non-empty value for `limit_id` but received {limit_id!r}")
         return self._post(
-            f"/api/v1/budgets/{budget_id}/tags",
-            body=maybe_transform({"budget_tags": budget_tags}, tag_create_params.TagCreateParams),
+            f"/api/v1/limits/{limit_id}/tags",
+            body=maybe_transform({"limit_tags": limit_tags}, tag_create_params.TagCreateParams),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -87,9 +87,9 @@ class TagsResource(SyncAPIResource):
 
     def update(
         self,
-        budget_id: str,
+        limit_id: str,
         *,
-        budget_tags: List[str],
+        limit_tags: List[str],
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -98,7 +98,7 @@ class TagsResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> TagUpdateResponse:
         """
-        Update the Budget Tags
+        Update the Limit Tags
 
         Args:
           extra_headers: Send extra headers
@@ -109,11 +109,11 @@ class TagsResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not budget_id:
-            raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
+        if not limit_id:
+            raise ValueError(f"Expected a non-empty value for `limit_id` but received {limit_id!r}")
         return self._put(
-            f"/api/v1/budgets/{budget_id}/tags",
-            body=maybe_transform({"budget_tags": budget_tags}, tag_update_params.TagUpdateParams),
+            f"/api/v1/limits/{limit_id}/tags",
+            body=maybe_transform({"limit_tags": limit_tags}, tag_update_params.TagUpdateParams),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -122,7 +122,7 @@ class TagsResource(SyncAPIResource):
 
     def list(
         self,
-        budget_id: str,
+        limit_id: str,
         *,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -132,7 +132,7 @@ class TagsResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> TagListResponse:
         """
-        Get Budget Tags
+        Get Limit Tags
 
         Args:
           extra_headers: Send extra headers
@@ -143,10 +143,10 @@ class TagsResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not budget_id:
-            raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
+        if not limit_id:
+            raise ValueError(f"Expected a non-empty value for `limit_id` but received {limit_id!r}")
         return self._get(
-            f"/api/v1/budgets/{budget_id}/tags",
+            f"/api/v1/limits/{limit_id}/tags",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -155,7 +155,7 @@ class TagsResource(SyncAPIResource):
 
     def delete(
         self,
-        budget_id: str,
+        limit_id: str,
         *,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -165,7 +165,7 @@ class TagsResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> TagDeleteResponse:
         """
-        Delete all Tags from Budget
+        Delete all Tags from Limit
 
         Args:
           extra_headers: Send extra headers
@@ -176,10 +176,10 @@ class TagsResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not budget_id:
-            raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
+        if not limit_id:
+            raise ValueError(f"Expected a non-empty value for `limit_id` but received {limit_id!r}")
         return self._delete(
-            f"/api/v1/budgets/{budget_id}/tags",
+            f"/api/v1/limits/{limit_id}/tags",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -188,9 +188,9 @@ class TagsResource(SyncAPIResource):
 
     def remove(
         self,
-        budget_id: str,
+        limit_id: str,
         *,
-        budget_tags: List[str],
+        limit_tags: List[str],
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -199,7 +199,7 @@ class TagsResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> TagRemoveResponse:
         """
-        Remove Tags from Budget
+        Remove Tags from Limit
 
         Args:
           extra_headers: Send extra headers
@@ -210,11 +210,11 @@ class TagsResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not budget_id:
-            raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
+        if not limit_id:
+            raise ValueError(f"Expected a non-empty value for `limit_id` but received {limit_id!r}")
         return self._patch(
-            f"/api/v1/budgets/{budget_id}/tags/remove",
-            body=maybe_transform({"budget_tags": budget_tags}, tag_remove_params.TagRemoveParams),
+            f"/api/v1/limits/{limit_id}/tags/remove",
+            body=maybe_transform({"limit_tags": limit_tags}, tag_remove_params.TagRemoveParams),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -244,9 +244,9 @@ class AsyncTagsResource(AsyncAPIResource):
 
     async def create(
         self,
-        budget_id: str,
+        limit_id: str,
         *,
-        budget_tags: List[str],
+        limit_tags: List[str],
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -255,7 +255,7 @@ class AsyncTagsResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> TagCreateResponse:
         """
-        Add Budget Tags
+        Add Limit Tags
 
         Args:
           extra_headers: Send extra headers
@@ -266,11 +266,11 @@ class AsyncTagsResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not budget_id:
-            raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
+        if not limit_id:
+            raise ValueError(f"Expected a non-empty value for `limit_id` but received {limit_id!r}")
         return await self._post(
-            f"/api/v1/budgets/{budget_id}/tags",
-            body=await async_maybe_transform({"budget_tags": budget_tags}, tag_create_params.TagCreateParams),
+            f"/api/v1/limits/{limit_id}/tags",
+            body=await async_maybe_transform({"limit_tags": limit_tags}, tag_create_params.TagCreateParams),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -279,9 +279,9 @@ class AsyncTagsResource(AsyncAPIResource):
 
     async def update(
         self,
-        budget_id: str,
+        limit_id: str,
         *,
-        budget_tags: List[str],
+        limit_tags: List[str],
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -290,7 +290,7 @@ class AsyncTagsResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> TagUpdateResponse:
         """
-        Update the Budget Tags
+        Update the Limit Tags
 
         Args:
           extra_headers: Send extra headers
@@ -301,11 +301,11 @@ class AsyncTagsResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not budget_id:
-            raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
+        if not limit_id:
+            raise ValueError(f"Expected a non-empty value for `limit_id` but received {limit_id!r}")
         return await self._put(
-            f"/api/v1/budgets/{budget_id}/tags",
-            body=await async_maybe_transform({"budget_tags": budget_tags}, tag_update_params.TagUpdateParams),
+            f"/api/v1/limits/{limit_id}/tags",
+            body=await async_maybe_transform({"limit_tags": limit_tags}, tag_update_params.TagUpdateParams),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -314,7 +314,7 @@ class AsyncTagsResource(AsyncAPIResource):
 
     async def list(
         self,
-        budget_id: str,
+        limit_id: str,
         *,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -324,7 +324,7 @@ class AsyncTagsResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> TagListResponse:
         """
-        Get Budget Tags
+        Get Limit Tags
 
         Args:
           extra_headers: Send extra headers
@@ -335,10 +335,10 @@ class AsyncTagsResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not budget_id:
-            raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
+        if not limit_id:
+            raise ValueError(f"Expected a non-empty value for `limit_id` but received {limit_id!r}")
         return await self._get(
-            f"/api/v1/budgets/{budget_id}/tags",
+            f"/api/v1/limits/{limit_id}/tags",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -347,7 +347,7 @@ class AsyncTagsResource(AsyncAPIResource):
 
     async def delete(
         self,
-        budget_id: str,
+        limit_id: str,
         *,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -357,7 +357,7 @@ class AsyncTagsResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> TagDeleteResponse:
         """
-        Delete all Tags from Budget
+        Delete all Tags from Limit
 
         Args:
           extra_headers: Send extra headers
@@ -368,10 +368,10 @@ class AsyncTagsResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not budget_id:
-            raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
+        if not limit_id:
+            raise ValueError(f"Expected a non-empty value for `limit_id` but received {limit_id!r}")
         return await self._delete(
-            f"/api/v1/budgets/{budget_id}/tags",
+            f"/api/v1/limits/{limit_id}/tags",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -380,9 +380,9 @@ class AsyncTagsResource(AsyncAPIResource):
 
     async def remove(
         self,
-        budget_id: str,
+        limit_id: str,
         *,
-        budget_tags: List[str],
+        limit_tags: List[str],
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -391,7 +391,7 @@ class AsyncTagsResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> TagRemoveResponse:
         """
-        Remove Tags from Budget
+        Remove Tags from Limit
 
         Args:
           extra_headers: Send extra headers
@@ -402,11 +402,11 @@ class AsyncTagsResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not budget_id:
-            raise ValueError(f"Expected a non-empty value for `budget_id` but received {budget_id!r}")
+        if not limit_id:
+            raise ValueError(f"Expected a non-empty value for `limit_id` but received {limit_id!r}")
         return await self._patch(
-            f"/api/v1/budgets/{budget_id}/tags/remove",
-            body=await async_maybe_transform({"budget_tags": budget_tags}, tag_remove_params.TagRemoveParams),
+            f"/api/v1/limits/{limit_id}/tags/remove",
+            body=await async_maybe_transform({"limit_tags": limit_tags}, tag_remove_params.TagRemoveParams),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),

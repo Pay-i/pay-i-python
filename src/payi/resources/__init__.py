@@ -8,13 +8,13 @@ from .ingest import (
     IngestResourceWithStreamingResponse,
     AsyncIngestResourceWithStreamingResponse,
 )
-from .budgets import (
-    BudgetsResource,
-    AsyncBudgetsResource,
-    BudgetsResourceWithRawResponse,
-    AsyncBudgetsResourceWithRawResponse,
-    BudgetsResourceWithStreamingResponse,
-    AsyncBudgetsResourceWithStreamingResponse,
+from .limits import (
+    LimitsResource,
+    AsyncLimitsResource,
+    LimitsResourceWithRawResponse,
+    AsyncLimitsResourceWithRawResponse,
+    LimitsResourceWithStreamingResponse,
+    AsyncLimitsResourceWithStreamingResponse,
 )
 from .requests import (
     RequestsResource,
@@ -58,12 +58,12 @@ from .price_modifiers import (
 )
 
 __all__ = [
-    "BudgetsResource",
-    "AsyncBudgetsResource",
-    "BudgetsResourceWithRawResponse",
-    "AsyncBudgetsResourceWithRawResponse",
-    "BudgetsResourceWithStreamingResponse",
-    "AsyncBudgetsResourceWithStreamingResponse",
+    "LimitsResource",
+    "AsyncLimitsResource",
+    "LimitsResourceWithRawResponse",
+    "AsyncLimitsResourceWithRawResponse",
+    "LimitsResourceWithStreamingResponse",
+    "AsyncLimitsResourceWithStreamingResponse",
     "IngestResource",
     "AsyncIngestResource",
     "IngestResourceWithRawResponse",
