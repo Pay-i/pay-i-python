@@ -21,7 +21,6 @@ class TestExperiences:
     def test_method_create(self, client: Payi) -> None:
         experience = client.evaluations.experiences.create(
             experience_id="experience_id",
-            evaluation=0,
         )
         assert_matches_type(EvaluationResponse, experience, path=["response"])
 
@@ -38,7 +37,6 @@ class TestExperiences:
     def test_raw_response_create(self, client: Payi) -> None:
         response = client.evaluations.experiences.with_raw_response.create(
             experience_id="experience_id",
-            evaluation=0,
         )
 
         assert response.is_closed is True
@@ -50,7 +48,6 @@ class TestExperiences:
     def test_streaming_response_create(self, client: Payi) -> None:
         with client.evaluations.experiences.with_streaming_response.create(
             experience_id="experience_id",
-            evaluation=0,
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
