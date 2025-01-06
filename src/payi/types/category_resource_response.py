@@ -1,15 +1,23 @@
 # File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-from typing import Optional
+from typing import Dict, Optional
 from datetime import datetime
 
 from .._models import BaseModel
 
-__all__ = ["CategoryResourceResponse"]
+__all__ = ["CategoryResourceResponse", "Units"]
+
+
+class Units(BaseModel):
+    input_price: float
+
+    output_price: float
 
 
 class CategoryResourceResponse(BaseModel):
     category: str
+
+    proxy_allowed: bool
 
     resource: str
 
@@ -17,10 +25,12 @@ class CategoryResourceResponse(BaseModel):
 
     start_timestamp: datetime
 
-    input_price: Optional[float] = None
+    units: Dict[str, Units]
+
+    deprecated_timestamp: Optional[datetime] = None
 
     max_input_units: Optional[int] = None
 
     max_output_units: Optional[int] = None
 
-    output_price: Optional[float] = None
+    max_total_units: Optional[int] = None

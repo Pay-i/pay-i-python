@@ -1,6 +1,6 @@
 # File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-
+from typing import Optional
 
 from ..._models import BaseModel
 
@@ -13,3 +13,5 @@ class ExperienceType(BaseModel):
     name: str
 
     request_id: str
+
+    logging_enabled: Optional[bool] = None

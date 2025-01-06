@@ -1,5 +1,124 @@
 # Changelog
 
+## 0.1.0-alpha.34 (2025-01-06)
+
+Full Changelog: [v0.1.0-alpha.33...v0.1.0-alpha.34](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.33...v0.1.0-alpha.34)
+
+### Features
+
+* **api:** rename budgets to limits ([#166](https://github.com/Pay-i/pay-i-python/issues/166)) ([7b7bdf3](https://github.com/Pay-i/pay-i-python/commit/7b7bdf3e9deade234ddd46ec1ad8bb9255f4ab64))
+
+
+### Chores
+
+* **internal:** codegen related update ([#164](https://github.com/Pay-i/pay-i-python/issues/164)) ([c8be7a0](https://github.com/Pay-i/pay-i-python/commit/c8be7a00beab6874fbdae426c52b63c509eba450))
+
+## 0.1.0-alpha.33 (2024-12-18)
+
+Full Changelog: [v0.1.0-alpha.32...v0.1.0-alpha.33](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.32...v0.1.0-alpha.33)
+
+### Chores
+
+* **internal:** add support for TypeAliasType ([#159](https://github.com/Pay-i/pay-i-python/issues/159)) ([8ea8180](https://github.com/Pay-i/pay-i-python/commit/8ea81803464331a9d431871b3965716e7dd751cc))
+* **internal:** bump pyright ([#157](https://github.com/Pay-i/pay-i-python/issues/157)) ([9e0676b](https://github.com/Pay-i/pay-i-python/commit/9e0676bcdb4f9c8518632a480650667b9aba27f7))
+* **internal:** codegen related update ([#160](https://github.com/Pay-i/pay-i-python/issues/160)) ([5141606](https://github.com/Pay-i/pay-i-python/commit/5141606ed39b82cff8e7c70416a01adab04c0944))
+* **internal:** fix some typos ([#162](https://github.com/Pay-i/pay-i-python/issues/162)) ([5ef33a3](https://github.com/Pay-i/pay-i-python/commit/5ef33a34129c147183ddc746373dd99721741b4c))
+
+
+### Documentation
+
+* **readme:** example snippet for client context manager ([#161](https://github.com/Pay-i/pay-i-python/issues/161)) ([bcbbfa5](https://github.com/Pay-i/pay-i-python/commit/bcbbfa5ce1d75ab4d8cc9a7b2b2d85ae69a13277))
+
+## 0.1.0-alpha.32 (2024-12-10)
+
+Full Changelog: [v0.1.0-alpha.31...v0.1.0-alpha.32](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.31...v0.1.0-alpha.32)
+
+### Chores
+
+* **internal:** bump pydantic dependency ([#154](https://github.com/Pay-i/pay-i-python/issues/154)) ([c2187c5](https://github.com/Pay-i/pay-i-python/commit/c2187c501a445cf1fbeff1d3ca97508c30232236))
+* make the `Omit` type public ([#152](https://github.com/Pay-i/pay-i-python/issues/152)) ([def0371](https://github.com/Pay-i/pay-i-python/commit/def0371c51b545d0109ca8473aa4242a35094e3c))
+
+
+### Documentation
+
+* **readme:** fix http client proxies example ([#155](https://github.com/Pay-i/pay-i-python/issues/155)) ([7eb2bf7](https://github.com/Pay-i/pay-i-python/commit/7eb2bf7e1147968cf5ed67c28a1c155694b69e28))
+
+## 0.1.0-alpha.31 (2024-12-03)
+
+Full Changelog: [v0.1.0-alpha.30...v0.1.0-alpha.31](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.30...v0.1.0-alpha.31)
+
+### Features
+
+* **api:** manual updates ([#149](https://github.com/Pay-i/pay-i-python/issues/149)) ([5f9b61b](https://github.com/Pay-i/pay-i-python/commit/5f9b61b4d344c090dc1ce3192ba659fbd2ec895b))
+
+## 0.1.0-alpha.30 (2024-12-03)
+
+Full Changelog: [v0.1.0-alpha.29...v0.1.0-alpha.30](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.29...v0.1.0-alpha.30)
+
+### Bug Fixes
+
+* **asyncify:** avoid hanging process under certain conditions ([#141](https://github.com/Pay-i/pay-i-python/issues/141)) ([58b8775](https://github.com/Pay-i/pay-i-python/commit/58b8775427865cb3aa4c05748511c7f2d5ab8c22))
+* **client:** compat with new httpx 0.28.0 release ([#146](https://github.com/Pay-i/pay-i-python/issues/146)) ([4ae1a72](https://github.com/Pay-i/pay-i-python/commit/4ae1a72109d0633aaa08d9ff9d6d3aef7e1a9e0d))
+
+
+### Chores
+
+* **internal:** bump pyright ([#147](https://github.com/Pay-i/pay-i-python/issues/147)) ([f169e37](https://github.com/Pay-i/pay-i-python/commit/f169e3780bb33eefaf18ae61f4765a21be418f1e))
+* **internal:** codegen related update ([#144](https://github.com/Pay-i/pay-i-python/issues/144)) ([792376c](https://github.com/Pay-i/pay-i-python/commit/792376c30d33a9a2aa0bacf53c38e481ded7be4c))
+* **internal:** exclude mypy from running on tests ([#145](https://github.com/Pay-i/pay-i-python/issues/145)) ([3856fd1](https://github.com/Pay-i/pay-i-python/commit/3856fd19391aa68befe8776406e340efdff49984))
+* **internal:** fix compat model_dump method when warnings are passed ([#142](https://github.com/Pay-i/pay-i-python/issues/142)) ([58b3ef8](https://github.com/Pay-i/pay-i-python/commit/58b3ef8b4d1dc9c7df2858c6914e587e08f43857))
+* rebuild project due to codegen change ([#139](https://github.com/Pay-i/pay-i-python/issues/139)) ([9ed4a24](https://github.com/Pay-i/pay-i-python/commit/9ed4a2439973965d745cbfd2dfc68003958d51c5))
+
+
+### Documentation
+
+* add info log level to readme ([#143](https://github.com/Pay-i/pay-i-python/issues/143)) ([cec3a51](https://github.com/Pay-i/pay-i-python/commit/cec3a51a51ca9ab67c37dd2692a5222ede4c72cf))
+
+## 0.1.0-alpha.29 (2024-11-15)
+
+Full Changelog: [v0.1.0-alpha.28...v0.1.0-alpha.29](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.28...v0.1.0-alpha.29)
+
+### Features
+
+* **api:** update apikey header ([#132](https://github.com/Pay-i/pay-i-python/issues/132)) ([4e42d00](https://github.com/Pay-i/pay-i-python/commit/4e42d005530be2e002f536c2008c75a2afc1dea2))
+
+## 0.1.0-alpha.28 (2024-11-15)
+
+Full Changelog: [v0.1.0-alpha.27...v0.1.0-alpha.28](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.27...v0.1.0-alpha.28)
+
+### Features
+
+* **api:** api update ([#127](https://github.com/Pay-i/pay-i-python/issues/127)) ([f9f8665](https://github.com/Pay-i/pay-i-python/commit/f9f8665278eec1f3b4d081076047460004230a97))
+
+
+### Chores
+
+* rebuild project due to codegen change ([#128](https://github.com/Pay-i/pay-i-python/issues/128)) ([31ab0f5](https://github.com/Pay-i/pay-i-python/commit/31ab0f57ca4d1c073c7d1996af9df94db792cf9f))
+* rebuild project due to codegen change ([#130](https://github.com/Pay-i/pay-i-python/issues/130)) ([e98d9ce](https://github.com/Pay-i/pay-i-python/commit/e98d9cead371ef5e3e9f3b68116dc81975fbd471))
+* rebuild project due to codegen change ([#131](https://github.com/Pay-i/pay-i-python/issues/131)) ([e197c4b](https://github.com/Pay-i/pay-i-python/commit/e197c4b0199f417b550ee4c852ffcaef4888c82c))
+
+## 0.1.0-alpha.27 (2024-10-22)
+
+Full Changelog: [v0.1.0-alpha.26...v0.1.0-alpha.27](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.26...v0.1.0-alpha.27)
+
+### Features
+
+* **api:** api update ([#121](https://github.com/Pay-i/pay-i-python/issues/121)) ([5d4aa28](https://github.com/Pay-i/pay-i-python/commit/5d4aa28bde2fa653fb5c99081758d8c06de572ea))
+* **api:** api update ([#125](https://github.com/Pay-i/pay-i-python/issues/125)) ([64e1ac8](https://github.com/Pay-i/pay-i-python/commit/64e1ac8e641917f23998c95fc9ce717484dc826f))
+
+## 0.1.0-alpha.26 (2024-10-01)
+
+Full Changelog: [v0.1.0-alpha.25...v0.1.0-alpha.26](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.25...v0.1.0-alpha.26)
+
+### Features
+
+* **api:** api update ([#121](https://github.com/Pay-i/pay-i-python/issues/121)) ([2705291](https://github.com/Pay-i/pay-i-python/commit/27052910f37169c45456fc2a752a8525eb858d4e))
+
+
+### Chores
+
+* **internal:** codegen related update ([#119](https://github.com/Pay-i/pay-i-python/issues/119)) ([1e7361a](https://github.com/Pay-i/pay-i-python/commit/1e7361a69e9751e834bb32a450624324aa27c646))
+
 ## 0.1.0-alpha.25 (2024-09-25)
 
 Full Changelog: [v0.1.0-alpha.24...v0.1.0-alpha.25](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.24...v0.1.0-alpha.25)

@@ -28,6 +28,13 @@ class Error(BaseModel):
     item_index: Optional[int] = None
 
     xproxy_result: Optional[ErrorXproxyResult] = None
+    """
+    Represents an generic error that occurred as a result of processing a request.
+    APIM returns an (not customizable) error response body of { "statusCode",
+    "message" } and this class matches this schema. Derived classes may add
+    additional required fields if these classes are specified as produced as a
+    return type specific endpoints.
+    """
 
 
 class BulkIngestResponse(BaseModel):

@@ -2,7 +2,7 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/payi.svg)](https://pypi.org/project/payi/)
 
-The Payi Python library provides convenient access to the Payi REST API from any Python 3.7+
+The Payi Python library provides convenient access to the Payi REST API from any Python 3.8+
 application. The library includes type definitions for all request params and response fields,
 and offers both synchronous and asynchronous clients powered by [httpx](https://github.com/encode/httpx).
 
@@ -28,15 +28,14 @@ import os
 from payi import Payi
 
 client = Payi(
-    # This is the default and can be omitted
-    api_key=os.environ.get("PAYI_API_KEY"),
+    api_key=os.environ.get("PAYI_API_KEY"),  # This is the default and can be omitted
 )
 
-budget_response = client.budgets.create(
-    budget_name="x",
+limit_response = client.limits.create(
+    limit_name="x",
     max=0,
 )
-print(budget_response.request_id)
+print(limit_response.request_id)
 ```
 
 While you can provide an `api_key` keyword argument,
@@ -54,17 +53,16 @@ import asyncio
 from payi import AsyncPayi
 
 client = AsyncPayi(
-    # This is the default and can be omitted
-    api_key=os.environ.get("PAYI_API_KEY"),
+    api_key=os.environ.get("PAYI_API_KEY"),  # This is the default and can be omitted
 )
 
 
 async def main() -> None:
-    budget_response = await client.budgets.create(
-        budget_name="x",
+    limit_response = await client.limits.create(
+        limit_name="x",
         max=0,
     )
-    print(budget_response.request_id)
+    print(limit_response.request_id)
 
 
 asyncio.run(main())
@@ -97,8 +95,8 @@ from payi import Payi
 client = Payi()
 
 try:
-    client.budgets.create(
-        budget_name="x",
+    client.limits.create(
+        limit_name="x",
         max=0,
     )
 except payi.APIConnectionError as e:
@@ -143,8 +141,8 @@ client = Payi(
 )
 
 # Or, configure per-request:
-client.with_options(max_retries=5).budgets.create(
-    budget_name="x",
+client.with_options(max_retries=5).limits.create(
+    limit_name="x",
     max=0,
 )
 ```
@@ -169,8 +167,8 @@ client = Payi(
 )
 
 # Override per-request:
-client.with_options(timeout=5.0).budgets.create(
-    budget_name="x",
+client.with_options(timeout=5.0).limits.create(
+    limit_name="x",
     max=0,
 )
 ```
@@ -185,11 +183,13 @@ Note that requests that time out are [retried twice by default](#retries).
 
 We use the standard library [`logging`](https://docs.python.org/3/library/logging.html) module.
 
-You can enable logging by setting the environment variable `PAYI_LOG` to `debug`.
+You can enable logging by setting the environment variable `PAYI_LOG` to `info`.
 
 ```shell
-$ export PAYI_LOG=debug
+$ export PAYI_LOG=info
 ```
+
+Or to `debug` for more verbose logging.
 
 ### How to tell whether `None` means `null` or missing
 
@@ -211,14 +211,14 @@ The "raw" Response object can be accessed by prefixing `.with_raw_response.` to 
 from payi import Payi
 
 client = Payi()
-response = client.budgets.with_raw_response.create(
-    budget_name="x",
+response = client.limits.with_raw_response.create(
+    limit_name="x",
     max=0,
 )
 print(response.headers.get('X-My-Header'))
 
-budget = response.parse()  # get the object that `budgets.create()` would have returned
-print(budget.request_id)
+limit = response.parse()  # get the object that `limits.create()` would have returned
+print(limit.request_id)
 ```
 
 These methods return an [`APIResponse`](https://github.com/Pay-i/pay-i-python/tree/main/src/payi/_response.py) object.
@@ -232,8 +232,8 @@ The above interface eagerly reads the full response body when you make the reque
 To stream the response body, use `.with_streaming_response` instead, which requires a context manager and only reads the response body once you call `.read()`, `.text()`, `.json()`, `.iter_bytes()`, `.iter_text()`, `.iter_lines()` or `.parse()`. In the async client, these are async methods.
 
 ```python
-with client.budgets.with_streaming_response.create(
-    budget_name="x",
+with client.limits.with_streaming_response.create(
+    limit_name="x",
     max=0,
 ) as response:
     print(response.headers.get("X-My-Header"))
@@ -283,18 +283,19 @@ can also get all the extra fields on the Pydantic model as a dict with
 
 You can directly override the [httpx client](https://www.python-httpx.org/api/#client) to customize it for your use case, including:
 
-- Support for proxies
-- Custom transports
+- Support for [proxies](https://www.python-httpx.org/advanced/proxies/)
+- Custom [transports](https://www.python-httpx.org/advanced/transports/)
 - Additional [advanced](https://www.python-httpx.org/advanced/clients/) functionality
 
 ```python
+import httpx
 from payi import Payi, DefaultHttpxClient
 
 client = Payi(
     # Or use the `PAYI_BASE_URL` env var
     base_url="http://my.test.server.example.com:8083",
     http_client=DefaultHttpxClient(
-        proxies="http://my.test.proxy.example.com",
+        proxy="http://my.test.proxy.example.com",
         transport=httpx.HTTPTransport(local_address="0.0.0.0"),
     ),
 )
@@ -309,6 +310,16 @@ client.with_options(http_client=DefaultHttpxClient(...))
 ### Managing HTTP resources
 
 By default the library closes underlying HTTP connections whenever the client is [garbage collected](https://docs.python.org/3/reference/datamodel.html#object.__del__). You can manually close the client using the `.close()` method if desired, or with a context manager that closes when exiting.
+
+```py
+from payi import Payi
+
+with Payi() as client:
+  # make requests here
+  ...
+
+# HTTP client is now closed
+```
 
 ## Versioning
 
@@ -335,4 +346,8 @@ print(payi.__version__)
 
 ## Requirements
 
-Python 3.7 or higher.
+Python 3.8 or higher.
+
+## Contributing
+
+See [the contributing documentation](./CONTRIBUTING.md).

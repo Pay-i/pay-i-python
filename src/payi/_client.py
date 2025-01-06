@@ -8,7 +8,7 @@ from typing_extensions import Self, override
 
 import httpx
 
-from . import resources, _exceptions
+from . import _exceptions
 from ._qs import Querystring
 from ._types import (
     NOT_GIVEN,
@@ -24,6 +24,7 @@ from ._utils import (
     get_async_library,
 )
 from ._version import __version__
+from .resources import ingest, billing_models, price_modifiers
 from ._streaming import Stream as Stream, AsyncStream as AsyncStream
 from ._exceptions import PayiError, APIStatusError
 from ._base_client import (
@@ -31,26 +32,22 @@ from ._base_client import (
     SyncAPIClient,
     AsyncAPIClient,
 )
+from .resources.limits import limits
+from .resources.requests import requests
+from .resources.categories import categories
+from .resources.experiences import experiences
 
-__all__ = [
-    "Timeout",
-    "Transport",
-    "ProxiesTypes",
-    "RequestOptions",
-    "resources",
-    "Payi",
-    "AsyncPayi",
-    "Client",
-    "AsyncClient",
-]
+__all__ = ["Timeout", "Transport", "ProxiesTypes", "RequestOptions", "Payi", "AsyncPayi", "Client", "AsyncClient"]
 
 
 class Payi(SyncAPIClient):
-    budgets: resources.BudgetsResource
-    ingest: resources.IngestResource
-    categories: resources.CategoriesResource
-    experiences: resources.ExperiencesResource
-    evaluations: resources.EvaluationsResource
+    limits: limits.LimitsResource
+    ingest: ingest.IngestResource
+    categories: categories.CategoriesResource
+    experiences: experiences.ExperiencesResource
+    billing_models: billing_models.BillingModelsResource
+    price_modifiers: price_modifiers.PriceModifiersResource
+    requests: requests.RequestsResource
     with_raw_response: PayiWithRawResponse
     with_streaming_response: PayiWithStreamedResponse
 
@@ -108,11 +105,13 @@ class Payi(SyncAPIClient):
             _strict_response_validation=_strict_response_validation,
         )
 
-        self.budgets = resources.BudgetsResource(self)
-        self.ingest = resources.IngestResource(self)
-        self.categories = resources.CategoriesResource(self)
-        self.experiences = resources.ExperiencesResource(self)
-        self.evaluations = resources.EvaluationsResource(self)
+        self.limits = limits.LimitsResource(self)
+        self.ingest = ingest.IngestResource(self)
+        self.categories = categories.CategoriesResource(self)
+        self.experiences = experiences.ExperiencesResource(self)
+        self.billing_models = billing_models.BillingModelsResource(self)
+        self.price_modifiers = price_modifiers.PriceModifiersResource(self)
+        self.requests = requests.RequestsResource(self)
         self.with_raw_response = PayiWithRawResponse(self)
         self.with_streaming_response = PayiWithStreamedResponse(self)
 
@@ -125,7 +124,7 @@ class Payi(SyncAPIClient):
     @override
     def auth_headers(self) -> dict[str, str]:
         api_key = self.api_key
-        return {"Authorization": api_key}
+        return {"xProxy-api-key": api_key}
 
     @property
     @override
@@ -222,11 +221,13 @@ class Payi(SyncAPIClient):
 
 
 class AsyncPayi(AsyncAPIClient):
-    budgets: resources.AsyncBudgetsResource
-    ingest: resources.AsyncIngestResource
-    categories: resources.AsyncCategoriesResource
-    experiences: resources.AsyncExperiencesResource
-    evaluations: resources.AsyncEvaluationsResource
+    limits: limits.AsyncLimitsResource
+    ingest: ingest.AsyncIngestResource
+    categories: categories.AsyncCategoriesResource
+    experiences: experiences.AsyncExperiencesResource
+    billing_models: billing_models.AsyncBillingModelsResource
+    price_modifiers: price_modifiers.AsyncPriceModifiersResource
+    requests: requests.AsyncRequestsResource
     with_raw_response: AsyncPayiWithRawResponse
     with_streaming_response: AsyncPayiWithStreamedResponse
 
@@ -284,11 +285,13 @@ class AsyncPayi(AsyncAPIClient):
             _strict_response_validation=_strict_response_validation,
         )
 
-        self.budgets = resources.AsyncBudgetsResource(self)
-        self.ingest = resources.AsyncIngestResource(self)
-        self.categories = resources.AsyncCategoriesResource(self)
-        self.experiences = resources.AsyncExperiencesResource(self)
-        self.evaluations = resources.AsyncEvaluationsResource(self)
+        self.limits = limits.AsyncLimitsResource(self)
+        self.ingest = ingest.AsyncIngestResource(self)
+        self.categories = categories.AsyncCategoriesResource(self)
+        self.experiences = experiences.AsyncExperiencesResource(self)
+        self.billing_models = billing_models.AsyncBillingModelsResource(self)
+        self.price_modifiers = price_modifiers.AsyncPriceModifiersResource(self)
+        self.requests = requests.AsyncRequestsResource(self)
         self.with_raw_response = AsyncPayiWithRawResponse(self)
         self.with_streaming_response = AsyncPayiWithStreamedResponse(self)
 
@@ -301,7 +304,7 @@ class AsyncPayi(AsyncAPIClient):
     @override
     def auth_headers(self) -> dict[str, str]:
         api_key = self.api_key
-        return {"Authorization": api_key}
+        return {"xProxy-api-key": api_key}
 
     @property
     @override
@@ -399,38 +402,46 @@ class AsyncPayi(AsyncAPIClient):
 
 class PayiWithRawResponse:
     def __init__(self, client: Payi) -> None:
-        self.budgets = resources.BudgetsResourceWithRawResponse(client.budgets)
-        self.ingest = resources.IngestResourceWithRawResponse(client.ingest)
-        self.categories = resources.CategoriesResourceWithRawResponse(client.categories)
-        self.experiences = resources.ExperiencesResourceWithRawResponse(client.experiences)
-        self.evaluations = resources.EvaluationsResourceWithRawResponse(client.evaluations)
+        self.limits = limits.LimitsResourceWithRawResponse(client.limits)
+        self.ingest = ingest.IngestResourceWithRawResponse(client.ingest)
+        self.categories = categories.CategoriesResourceWithRawResponse(client.categories)
+        self.experiences = experiences.ExperiencesResourceWithRawResponse(client.experiences)
+        self.billing_models = billing_models.BillingModelsResourceWithRawResponse(client.billing_models)
+        self.price_modifiers = price_modifiers.PriceModifiersResourceWithRawResponse(client.price_modifiers)
+        self.requests = requests.RequestsResourceWithRawResponse(client.requests)
 
 
 class AsyncPayiWithRawResponse:
     def __init__(self, client: AsyncPayi) -> None:
-        self.budgets = resources.AsyncBudgetsResourceWithRawResponse(client.budgets)
-        self.ingest = resources.AsyncIngestResourceWithRawResponse(client.ingest)
-        self.categories = resources.AsyncCategoriesResourceWithRawResponse(client.categories)
-        self.experiences = resources.AsyncExperiencesResourceWithRawResponse(client.experiences)
-        self.evaluations = resources.AsyncEvaluationsResourceWithRawResponse(client.evaluations)
+        self.limits = limits.AsyncLimitsResourceWithRawResponse(client.limits)
+        self.ingest = ingest.AsyncIngestResourceWithRawResponse(client.ingest)
+        self.categories = categories.AsyncCategoriesResourceWithRawResponse(client.categories)
+        self.experiences = experiences.AsyncExperiencesResourceWithRawResponse(client.experiences)
+        self.billing_models = billing_models.AsyncBillingModelsResourceWithRawResponse(client.billing_models)
+        self.price_modifiers = price_modifiers.AsyncPriceModifiersResourceWithRawResponse(client.price_modifiers)
+        self.requests = requests.AsyncRequestsResourceWithRawResponse(client.requests)
 
 
 class PayiWithStreamedResponse:
     def __init__(self, client: Payi) -> None:
-        self.budgets = resources.BudgetsResourceWithStreamingResponse(client.budgets)
-        self.ingest = resources.IngestResourceWithStreamingResponse(client.ingest)
-        self.categories = resources.CategoriesResourceWithStreamingResponse(client.categories)
-        self.experiences = resources.ExperiencesResourceWithStreamingResponse(client.experiences)
-        self.evaluations = resources.EvaluationsResourceWithStreamingResponse(client.evaluations)
+        self.limits = limits.LimitsResourceWithStreamingResponse(client.limits)
+        self.ingest = ingest.IngestResourceWithStreamingResponse(client.ingest)
+        self.categories = categories.CategoriesResourceWithStreamingResponse(client.categories)
+        self.experiences = experiences.ExperiencesResourceWithStreamingResponse(client.experiences)
+        self.billing_models = billing_models.BillingModelsResourceWithStreamingResponse(client.billing_models)
+        self.price_modifiers = price_modifiers.PriceModifiersResourceWithStreamingResponse(client.price_modifiers)
+        self.requests = requests.RequestsResourceWithStreamingResponse(client.requests)
 
 
 class AsyncPayiWithStreamedResponse:
     def __init__(self, client: AsyncPayi) -> None:
-        self.budgets = resources.AsyncBudgetsResourceWithStreamingResponse(client.budgets)
-        self.ingest = resources.AsyncIngestResourceWithStreamingResponse(client.ingest)
-        self.categories = resources.AsyncCategoriesResourceWithStreamingResponse(client.categories)
-        self.experiences = resources.AsyncExperiencesResourceWithStreamingResponse(client.experiences)
-        self.evaluations = resources.AsyncEvaluationsResourceWithStreamingResponse(client.evaluations)
+        self.limits = limits.AsyncLimitsResourceWithStreamingResponse(client.limits)
+        self.ingest = ingest.AsyncIngestResourceWithStreamingResponse(client.ingest)
+        self.categories = categories.AsyncCategoriesResourceWithStreamingResponse(client.categories)
+        self.experiences = experiences.AsyncExperiencesResourceWithStreamingResponse(client.experiences)
+        self.billing_models = billing_models.AsyncBillingModelsResourceWithStreamingResponse(client.billing_models)
+        self.price_modifiers = price_modifiers.AsyncPriceModifiersResourceWithStreamingResponse(client.price_modifiers)
+        self.requests = requests.AsyncRequestsResourceWithStreamingResponse(client.requests)
 
 
 Client = Payi

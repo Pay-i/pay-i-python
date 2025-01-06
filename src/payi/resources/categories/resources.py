@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Union
+from typing import Dict, Union
 from datetime import datetime
 
 import httpx
@@ -53,10 +53,10 @@ class ResourcesResource(SyncAPIResource):
         resource: str,
         *,
         category: str,
-        input_price: float | NotGiven = NOT_GIVEN,
+        units: Dict[str, resource_create_params.Units],
         max_input_units: int | NotGiven = NOT_GIVEN,
         max_output_units: int | NotGiven = NOT_GIVEN,
-        output_price: float | NotGiven = NOT_GIVEN,
+        max_total_units: int | NotGiven = NOT_GIVEN,
         start_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -85,10 +85,10 @@ class ResourcesResource(SyncAPIResource):
             f"/api/v1/categories/{category}/resources/{resource}",
             body=maybe_transform(
                 {
-                    "input_price": input_price,
+                    "units": units,
                     "max_input_units": max_input_units,
                     "max_output_units": max_output_units,
-                    "output_price": output_price,
+                    "max_total_units": max_total_units,
                     "start_timestamp": start_timestamp,
                 },
                 resource_create_params.ResourceCreateParams,
@@ -239,10 +239,10 @@ class AsyncResourcesResource(AsyncAPIResource):
         resource: str,
         *,
         category: str,
-        input_price: float | NotGiven = NOT_GIVEN,
+        units: Dict[str, resource_create_params.Units],
         max_input_units: int | NotGiven = NOT_GIVEN,
         max_output_units: int | NotGiven = NOT_GIVEN,
-        output_price: float | NotGiven = NOT_GIVEN,
+        max_total_units: int | NotGiven = NOT_GIVEN,
         start_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -271,10 +271,10 @@ class AsyncResourcesResource(AsyncAPIResource):
             f"/api/v1/categories/{category}/resources/{resource}",
             body=await async_maybe_transform(
                 {
-                    "input_price": input_price,
+                    "units": units,
                     "max_input_units": max_input_units,
                     "max_output_units": max_output_units,
-                    "output_price": output_price,
+                    "max_total_units": max_total_units,
                     "start_timestamp": start_timestamp,
                 },
                 resource_create_params.ResourceCreateParams,
