@@ -32,14 +32,6 @@ from .categories import (
     CategoriesResourceWithStreamingResponse,
     AsyncCategoriesResourceWithStreamingResponse,
 )
-from .evaluations import (
-    EvaluationsResource,
-    AsyncEvaluationsResource,
-    EvaluationsResourceWithRawResponse,
-    AsyncEvaluationsResourceWithRawResponse,
-    EvaluationsResourceWithStreamingResponse,
-    AsyncEvaluationsResourceWithStreamingResponse,
-)
 from .experiences import (
     ExperiencesResource,
     AsyncExperiencesResource,
