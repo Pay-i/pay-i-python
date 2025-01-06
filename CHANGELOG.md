@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.34 (2025-01-06)
+
+Full Changelog: [v0.1.0-alpha.33...v0.1.0-alpha.34](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.33...v0.1.0-alpha.34)
+
+### Features
+
+* **api:** rename budgets to limits ([#166](https://github.com/Pay-i/pay-i-python/issues/166)) ([7b7bdf3](https://github.com/Pay-i/pay-i-python/commit/7b7bdf3e9deade234ddd46ec1ad8bb9255f4ab64))
+
+
+### Chores
+
+* **internal:** codegen related update ([#164](https://github.com/Pay-i/pay-i-python/issues/164)) ([c8be7a0](https://github.com/Pay-i/pay-i-python/commit/c8be7a00beab6874fbdae426c52b63c509eba450))
+
 ## 0.1.0-alpha.33 (2024-12-18)
 
 Full Changelog: [v0.1.0-alpha.32...v0.1.0-alpha.33](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.32...v0.1.0-alpha.33)
