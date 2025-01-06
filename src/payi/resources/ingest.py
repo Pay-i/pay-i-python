@@ -129,7 +129,7 @@ class IngestResource(SyncAPIResource):
           
           event_timestamp: (str, datetime, None): The timestamp of the event. Defaults to None.
           
-          budget_ids (list[str], optional): The budget IDs to associate with the request. Defaults to None.
+          limit_ids (list[str], optional): The limit IDs to associate with the request. Defaults to None.
           
           request_tags (list[str], optional): The request tags to associate with the request. Defaults to None.
 
@@ -152,10 +152,10 @@ class IngestResource(SyncAPIResource):
 
         if limit_ids is None or isinstance(limit_ids, NotGiven):
             valid_ids_str = NOT_GIVEN
-        elif not isinstance(budget_ids, list): # type: ignore
-            raise TypeError("budget_ids must be a list")
+        elif not isinstance(limit_ids, list): # type: ignore
+            raise TypeError("limit_ids must be a list")
         else:
-            # Proceed with the list comprehension if budget_ids is not NotGiven
+            # Proceed with the list comprehension if limit_ids is not NotGiven
             valid_ids = [id.strip() for id in limit_ids if id.strip()]
             valid_ids_str = ",".join(valid_ids) if valid_ids else NOT_GIVEN
 
@@ -164,7 +164,7 @@ class IngestResource(SyncAPIResource):
         elif not isinstance(request_tags, list): # type: ignore
             raise TypeError("request_tags must be a list")
         else:
-            # Proceed with the list comprehension if budget_ids is not NotGiven
+            # Proceed with the list comprehension if request_tags is not NotGiven
             valid_tags = [tag.strip() for tag in request_tags if tag.strip()]
             valid_tags_str = ",".join(valid_tags) if valid_tags else NOT_GIVEN
 
@@ -315,7 +315,7 @@ class AsyncIngestResource(AsyncAPIResource):
           
           event_timestamp: (datetime, None): The timestamp of the event. Defaults to None.
           
-          budget_ids (list[str], optional): The budget IDs to associate with the request. Defaults to None.
+          limit_ids (list[str], optional): The limit IDs to associate with the request. Defaults to None.
           
           request_tags (list[str], optional): The request tags to associate with the request. Defaults to None.
           
@@ -338,10 +338,10 @@ class AsyncIngestResource(AsyncAPIResource):
 
         if limit_ids is None or isinstance(limit_ids, NotGiven):
             valid_ids_str = NOT_GIVEN
-        elif not isinstance(budget_ids, list): # type: ignore
-            raise TypeError("budget_ids must be a list")
+        elif not isinstance(limit_ids, list): # type: ignore
+            raise TypeError("limit_ids must be a list")
         else:
-            # Proceed with the list comprehension if budget_ids is not NotGiven
+            # Proceed with the list comprehension if limit_ids is not NotGiven
             valid_ids = [id.strip() for id in limit_ids if id.strip()]
             valid_ids_str = ",".join(valid_ids) if valid_ids else NOT_GIVEN
 
@@ -350,7 +350,7 @@ class AsyncIngestResource(AsyncAPIResource):
         elif not isinstance(request_tags, list): # type: ignore
             raise TypeError("request_tags must be a list")
         else:
-            # Proceed with the list comprehension if budget_ids is not NotGiven
+            # Proceed with the list comprehension if request_tags is not NotGiven
             valid_tags = [tag.strip() for tag in request_tags if tag.strip()]
             valid_tags_str = ",".join(valid_tags) if valid_tags else NOT_GIVEN
 

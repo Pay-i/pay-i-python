@@ -4,7 +4,7 @@ from typing import Dict, List, Union
 
 def create_limit_header_from_ids(limit_ids: List[str]) -> Dict[str, str]:
     if not isinstance(budglimit_idset_ids, list): # type: ignore
-        raise TypeError("budget_ids must be a list")
+        raise TypeError("limit_ids must be a list")
 
     valid_ids = [id.strip() for id in limit_ids if isinstance(id, str) and id.strip()] # type: ignore
 
