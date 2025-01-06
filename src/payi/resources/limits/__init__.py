@@ -8,13 +8,13 @@ from .tags import (
     TagsResourceWithStreamingResponse,
     AsyncTagsResourceWithStreamingResponse,
 )
-from .budgets import (
-    BudgetsResource,
-    AsyncBudgetsResource,
-    BudgetsResourceWithRawResponse,
-    AsyncBudgetsResourceWithRawResponse,
-    BudgetsResourceWithStreamingResponse,
-    AsyncBudgetsResourceWithStreamingResponse,
+from .limits import (
+    LimitsResource,
+    AsyncLimitsResource,
+    LimitsResourceWithRawResponse,
+    AsyncLimitsResourceWithRawResponse,
+    LimitsResourceWithStreamingResponse,
+    AsyncLimitsResourceWithStreamingResponse,
 )
 
 __all__ = [
@@ -24,10 +24,10 @@ __all__ = [
     "AsyncTagsResourceWithRawResponse",
     "TagsResourceWithStreamingResponse",
     "AsyncTagsResourceWithStreamingResponse",
-    "BudgetsResource",
-    "AsyncBudgetsResource",
-    "BudgetsResourceWithRawResponse",
-    "AsyncBudgetsResourceWithRawResponse",
-    "BudgetsResourceWithStreamingResponse",
-    "AsyncBudgetsResourceWithStreamingResponse",
+    "LimitsResource",
+    "AsyncLimitsResource",
+    "LimitsResourceWithRawResponse",
+    "AsyncLimitsResourceWithRawResponse",
+    "LimitsResourceWithStreamingResponse",
+    "AsyncLimitsResourceWithStreamingResponse",
 ]

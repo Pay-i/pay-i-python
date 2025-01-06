@@ -32,7 +32,7 @@ from ._base_client import (
     SyncAPIClient,
     AsyncAPIClient,
 )
-from .resources.budgets import budgets
+from .resources.limits import limits
 from .resources.requests import requests
 from .resources.categories import categories
 from .resources.experiences import experiences
@@ -41,7 +41,7 @@ __all__ = ["Timeout", "Transport", "ProxiesTypes", "RequestOptions", "Payi", "As
 
 
 class Payi(SyncAPIClient):
-    budgets: budgets.BudgetsResource
+    limits: limits.LimitsResource
     ingest: ingest.IngestResource
     categories: categories.CategoriesResource
     experiences: experiences.ExperiencesResource
@@ -105,7 +105,7 @@ class Payi(SyncAPIClient):
             _strict_response_validation=_strict_response_validation,
         )
 
-        self.budgets = budgets.BudgetsResource(self)
+        self.limits = limits.LimitsResource(self)
         self.ingest = ingest.IngestResource(self)
         self.categories = categories.CategoriesResource(self)
         self.experiences = experiences.ExperiencesResource(self)
@@ -221,7 +221,7 @@ class Payi(SyncAPIClient):
 
 
 class AsyncPayi(AsyncAPIClient):
-    budgets: budgets.AsyncBudgetsResource
+    limits: limits.AsyncLimitsResource
     ingest: ingest.AsyncIngestResource
     categories: categories.AsyncCategoriesResource
     experiences: experiences.AsyncExperiencesResource
@@ -285,7 +285,7 @@ class AsyncPayi(AsyncAPIClient):
             _strict_response_validation=_strict_response_validation,
         )
 
-        self.budgets = budgets.AsyncBudgetsResource(self)
+        self.limits = limits.AsyncLimitsResource(self)
         self.ingest = ingest.AsyncIngestResource(self)
         self.categories = categories.AsyncCategoriesResource(self)
         self.experiences = experiences.AsyncExperiencesResource(self)
@@ -402,7 +402,7 @@ class AsyncPayi(AsyncAPIClient):
 
 class PayiWithRawResponse:
     def __init__(self, client: Payi) -> None:
-        self.budgets = budgets.BudgetsResourceWithRawResponse(client.budgets)
+        self.limits = limits.LimitsResourceWithRawResponse(client.limits)
         self.ingest = ingest.IngestResourceWithRawResponse(client.ingest)
         self.categories = categories.CategoriesResourceWithRawResponse(client.categories)
         self.experiences = experiences.ExperiencesResourceWithRawResponse(client.experiences)
@@ -413,7 +413,7 @@ class PayiWithRawResponse:
 
 class AsyncPayiWithRawResponse:
     def __init__(self, client: AsyncPayi) -> None:
-        self.budgets = budgets.AsyncBudgetsResourceWithRawResponse(client.budgets)
+        self.limits = limits.AsyncLimitsResourceWithRawResponse(client.limits)
         self.ingest = ingest.AsyncIngestResourceWithRawResponse(client.ingest)
         self.categories = categories.AsyncCategoriesResourceWithRawResponse(client.categories)
         self.experiences = experiences.AsyncExperiencesResourceWithRawResponse(client.experiences)
@@ -424,7 +424,7 @@ class AsyncPayiWithRawResponse:
 
 class PayiWithStreamedResponse:
     def __init__(self, client: Payi) -> None:
-        self.budgets = budgets.BudgetsResourceWithStreamingResponse(client.budgets)
+        self.limits = limits.LimitsResourceWithStreamingResponse(client.limits)
         self.ingest = ingest.IngestResourceWithStreamingResponse(client.ingest)
         self.categories = categories.CategoriesResourceWithStreamingResponse(client.categories)
         self.experiences = experiences.ExperiencesResourceWithStreamingResponse(client.experiences)
@@ -435,7 +435,7 @@ class PayiWithStreamedResponse:
 
 class AsyncPayiWithStreamedResponse:
     def __init__(self, client: AsyncPayi) -> None:
-        self.budgets = budgets.AsyncBudgetsResourceWithStreamingResponse(client.budgets)
+        self.limits = limits.AsyncLimitsResourceWithStreamingResponse(client.limits)
         self.ingest = ingest.AsyncIngestResourceWithStreamingResponse(client.ingest)
         self.categories = categories.AsyncCategoriesResourceWithStreamingResponse(client.categories)
         self.experiences = experiences.AsyncExperiencesResourceWithStreamingResponse(client.experiences)

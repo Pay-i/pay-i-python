@@ -24,8 +24,6 @@ class IngestEventParam(TypedDict, total=False):
 
     units: Required[Dict[str, Units]]
 
-    budget_ids: Optional[List[str]]
-
     csat_rating: Optional[int]
 
     end_to_end_latency_ms: Optional[int]
@@ -36,7 +34,23 @@ class IngestEventParam(TypedDict, total=False):
 
     experience_name: Optional[str]
 
+    experience_properties: Optional[Dict[str, str]]
+
     http_status_code: Optional[int]
+
+    limit_ids: Optional[List[str]]
+
+    properties: Optional[Dict[str, str]]
+
+    provider_prompt: Optional[str]
+
+    provider_request_headers: Optional[Dict[str, List[str]]]
+
+    provider_response: Optional[List[str]]
+
+    provider_response_headers: Optional[Dict[str, List[str]]]
+
+    provider_uri: Optional[str]
 
     provisioned_resource_name: Optional[str]
 

@@ -18,7 +18,7 @@ class BillingModel(BaseModel):
 
     name: str
 
-    type: Literal["invalid", "costplus", "subscription", "hybrid"]
+    type: Literal["costplus", "subscription", "hybrid"]
 
     updated_on: datetime
 

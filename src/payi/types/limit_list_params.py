@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from typing_extensions import TypedDict
 
-__all__ = ["BudgetListParams"]
+__all__ = ["LimitListParams"]
 
 
-class BudgetListParams(TypedDict, total=False):
-    budget_name: str
+class LimitListParams(TypedDict, total=False):
+    limit_name: str
 
     page_number: int
 
