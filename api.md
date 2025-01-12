@@ -127,18 +127,6 @@ Methods:
 - <code title="get /api/v1/experiences/types">client.experiences.types.<a href="./src/payi/resources/experiences/types.py">list</a>(\*\*<a href="src/payi/types/experiences/type_list_params.py">params</a>) -> <a href="./src/payi/types/experiences/type_list_response.py">TypeListResponse</a></code>
 - <code title="delete /api/v1/experiences/types/{experience_name}">client.experiences.types.<a href="./src/payi/resources/experiences/types.py">delete</a>(experience_name) -> <a href="./src/payi/types/experiences/experience_type.py">ExperienceType</a></code>
 
-## Csat
-
-Types:
-
-```python
-from payi.types.experiences import CsatResponse
-```
-
-Methods:
-
-- <code title="post /api/v1/experiences/instances/{experience_id}/csat">client.experiences.csat.<a href="./src/payi/resources/experiences/csat.py">create</a>(experience_id, \*\*<a href="src/payi/types/experiences/csat_create_params.py">params</a>) -> <a href="./src/payi/types/experiences/csat_response.py">CsatResponse</a></code>
-
 ## Properties
 
 Types:

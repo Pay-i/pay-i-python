@@ -19,7 +19,7 @@ class LimitHistory(BaseModel):
 
     limit_tags: Optional[List[str]] = None
 
-    limittype: Optional[Literal["block", "allow"]] = None
+    limit_type: Optional[Literal["block", "allow"]] = None
 
     max: Optional[float] = None
 
