@@ -92,12 +92,21 @@ class TestIngest:
             experience_properties={"foo": "string"},
             http_status_code=0,
             properties={"foo": "string"},
-            provider_prompt="provider_prompt",
-            provider_request_headers={"foo": ["string"]},
-            provider_response=["string"],
-            provider_response_headers={"foo": ["string"]},
+            provider_request_headers=[
+                {
+                    "name": "x",
+                    "value": "value",
+                }
+            ],
+            provider_request_json="provider_request_json",
+            provider_response_headers=[
+                {
+                    "name": "x",
+                    "value": "value",
+                }
+            ],
+            provider_response_json="string",
             provider_uri="provider_uri",
-            provisioned_resource_name="provisioned_resource_name",
             time_to_first_token_ms=0,
             limit_ids=["limitId1", "limitId_2"],
             request_tags=["requestTag1", "request_tag_2"],
@@ -213,12 +222,21 @@ class TestAsyncIngest:
             experience_properties={"foo": "string"},
             http_status_code=0,
             properties={"foo": "string"},
-            provider_prompt="provider_prompt",
-            provider_request_headers={"foo": ["string"]},
-            provider_response=["string"],
-            provider_response_headers={"foo": ["string"]},
+            provider_request_headers=[
+                {
+                    "name": "x",
+                    "value": "value",
+                }
+            ],
+            provider_request_json="provider_request_json",
+            provider_response_headers=[
+                {
+                    "name": "x",
+                    "value": "value",
+                }
+            ],
+            provider_response_json="string",
             provider_uri="provider_uri",
-            provisioned_resource_name="provisioned_resource_name",
             time_to_first_token_ms=0,
             limit_ids=["limitId1", "limitId_2"],
             request_tags=["requestTag1", "request_tag_2"],

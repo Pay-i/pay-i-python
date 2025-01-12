@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.1.0-alpha.35 (2025-01-12)
+
+Full Changelog: [v0.1.0-alpha.34...v0.1.0-alpha.35](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.34...v0.1.0-alpha.35)
+
+### Features
+
+* **api:** manual updates ([#175](https://github.com/Pay-i/pay-i-python/issues/175)) ([3dd351e](https://github.com/Pay-i/pay-i-python/commit/3dd351ecb7d7c34ce73d8a26590000fb4dc38dbc))
+
+
+### Bug Fixes
+
+* **client:** only call .close() when needed ([#172](https://github.com/Pay-i/pay-i-python/issues/172)) ([75baf12](https://github.com/Pay-i/pay-i-python/commit/75baf1247d05a1b8a02fcfc4aa1342a11ef882b2))
+
+
+### Chores
+
+* **internal:** bump httpx dependency ([#171](https://github.com/Pay-i/pay-i-python/issues/171)) ([e7bf93a](https://github.com/Pay-i/pay-i-python/commit/e7bf93a87ae1bec99ee4f0fd049b2e4c8f6ef68d))
+* **internal:** codegen related update ([#169](https://github.com/Pay-i/pay-i-python/issues/169)) ([03a0803](https://github.com/Pay-i/pay-i-python/commit/03a0803e49689e31d3d7b42d2da7ed9e886434a8))
+* **internal:** codegen related update ([#174](https://github.com/Pay-i/pay-i-python/issues/174)) ([21d0af0](https://github.com/Pay-i/pay-i-python/commit/21d0af0f6b7a15efa62f9c514681f61fa1f9ddb8))
+
+
+### Documentation
+
+* fix typos ([#173](https://github.com/Pay-i/pay-i-python/issues/173)) ([3d97187](https://github.com/Pay-i/pay-i-python/commit/3d971877582257b349fa59bc83535b6cc3374c43))
+
 ## 0.1.0-alpha.34 (2025-01-06)
 
 Full Changelog: [v0.1.0-alpha.33...v0.1.0-alpha.34](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.33...v0.1.0-alpha.34)
