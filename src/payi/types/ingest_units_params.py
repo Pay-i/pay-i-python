@@ -40,16 +40,15 @@ class IngestUnitsParams(TypedDict, total=False):
 
     time_to_first_token_ms: Optional[int]
 
-    x_proxy_experience_id: Annotated[str, PropertyInfo(alias="xProxy-Experience-ID")]
+    limit_ids: Annotated[Union[list[str], None], PropertyInfo(alias="xProxy-Limit-IDs")]
 
-    x_proxy_experience_name: Annotated[str, PropertyInfo(alias="xProxy-Experience-Name")]
+    request_tags: Annotated[Union[list[str], None], PropertyInfo(alias="xProxy-Request-Tags")]
 
-    x_proxy_limit_ids: Annotated[str, PropertyInfo(alias="xProxy-Limit-IDs")]
+    experience_name: Annotated[Union[str, None], PropertyInfo(alias="xProxy-Experience-Name")]
 
-    x_proxy_request_tags: Annotated[str, PropertyInfo(alias="xProxy-Request-Tags")]
+    experience_id: Annotated[Union[str, None], PropertyInfo(alias="xProxy-Experience-Id")]
 
-    x_proxy_user_id: Annotated[str, PropertyInfo(alias="xProxy-User-ID")]
-
+    user_id: Annotated[Union[str, None], PropertyInfo(alias="xProxy-User-ID")]
 
 class Units(TypedDict, total=False):
     input: int

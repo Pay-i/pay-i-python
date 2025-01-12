@@ -27,7 +27,7 @@ class TestLimits:
     def test_method_create(self, client: Payi) -> None:
         limit = client.limits.create(
             limit_name="x",
-            max=0,
+            max=1,
         )
         assert_matches_type(LimitResponse, limit, path=["response"])
 
@@ -35,7 +35,7 @@ class TestLimits:
     def test_method_create_with_all_params(self, client: Payi) -> None:
         limit = client.limits.create(
             limit_name="x",
-            max=0,
+            max=1,
             billing_model_id="billing_model_id",
             cost_basis="base",
             currency="usd",
@@ -49,7 +49,7 @@ class TestLimits:
     def test_raw_response_create(self, client: Payi) -> None:
         response = client.limits.with_raw_response.create(
             limit_name="x",
-            max=0,
+            max=1,
         )
 
         assert response.is_closed is True
@@ -61,7 +61,7 @@ class TestLimits:
     def test_streaming_response_create(self, client: Payi) -> None:
         with client.limits.with_streaming_response.create(
             limit_name="x",
-            max=0,
+            max=1,
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -121,7 +121,7 @@ class TestLimits:
         limit = client.limits.update(
             limit_id="limit_id",
             limit_name="limit_name",
-            max=0,
+            max=1,
         )
         assert_matches_type(LimitResponse, limit, path=["response"])
 
@@ -285,7 +285,7 @@ class TestAsyncLimits:
     async def test_method_create(self, async_client: AsyncPayi) -> None:
         limit = await async_client.limits.create(
             limit_name="x",
-            max=0,
+            max=1,
         )
         assert_matches_type(LimitResponse, limit, path=["response"])
 
@@ -293,7 +293,7 @@ class TestAsyncLimits:
     async def test_method_create_with_all_params(self, async_client: AsyncPayi) -> None:
         limit = await async_client.limits.create(
             limit_name="x",
-            max=0,
+            max=1,
             billing_model_id="billing_model_id",
             cost_basis="base",
             currency="usd",
@@ -307,7 +307,7 @@ class TestAsyncLimits:
     async def test_raw_response_create(self, async_client: AsyncPayi) -> None:
         response = await async_client.limits.with_raw_response.create(
             limit_name="x",
-            max=0,
+            max=1,
         )
 
         assert response.is_closed is True
@@ -319,7 +319,7 @@ class TestAsyncLimits:
     async def test_streaming_response_create(self, async_client: AsyncPayi) -> None:
         async with async_client.limits.with_streaming_response.create(
             limit_name="x",
-            max=0,
+            max=1,
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -379,7 +379,7 @@ class TestAsyncLimits:
         limit = await async_client.limits.update(
             limit_id="limit_id",
             limit_name="limit_name",
-            max=0,
+            max=1,
         )
         assert_matches_type(LimitResponse, limit, path=["response"])
 
