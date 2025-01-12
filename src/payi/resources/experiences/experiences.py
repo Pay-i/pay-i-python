@@ -4,14 +4,6 @@ from __future__ import annotations
 
 import httpx
 
-from .csat import (
-    CsatResource,
-    AsyncCsatResource,
-    CsatResourceWithRawResponse,
-    AsyncCsatResourceWithRawResponse,
-    CsatResourceWithStreamingResponse,
-    AsyncCsatResourceWithStreamingResponse,
-)
 from .types import (
     TypesResource,
     AsyncTypesResource,
@@ -47,10 +39,6 @@ class ExperiencesResource(SyncAPIResource):
     @cached_property
     def types(self) -> TypesResource:
         return TypesResource(self._client)
-
-    @cached_property
-    def csat(self) -> CsatResource:
-        return CsatResource(self._client)
 
     @cached_property
     def properties(self) -> PropertiesResource:
@@ -179,10 +167,6 @@ class AsyncExperiencesResource(AsyncAPIResource):
     @cached_property
     def types(self) -> AsyncTypesResource:
         return AsyncTypesResource(self._client)
-
-    @cached_property
-    def csat(self) -> AsyncCsatResource:
-        return AsyncCsatResource(self._client)
 
     @cached_property
     def properties(self) -> AsyncPropertiesResource:
@@ -326,10 +310,6 @@ class ExperiencesResourceWithRawResponse:
         return TypesResourceWithRawResponse(self._experiences.types)
 
     @cached_property
-    def csat(self) -> CsatResourceWithRawResponse:
-        return CsatResourceWithRawResponse(self._experiences.csat)
-
-    @cached_property
     def properties(self) -> PropertiesResourceWithRawResponse:
         return PropertiesResourceWithRawResponse(self._experiences.properties)
 
@@ -351,10 +331,6 @@ class AsyncExperiencesResourceWithRawResponse:
     @cached_property
     def types(self) -> AsyncTypesResourceWithRawResponse:
         return AsyncTypesResourceWithRawResponse(self._experiences.types)
-
-    @cached_property
-    def csat(self) -> AsyncCsatResourceWithRawResponse:
-        return AsyncCsatResourceWithRawResponse(self._experiences.csat)
 
     @cached_property
     def properties(self) -> AsyncPropertiesResourceWithRawResponse:
@@ -380,10 +356,6 @@ class ExperiencesResourceWithStreamingResponse:
         return TypesResourceWithStreamingResponse(self._experiences.types)
 
     @cached_property
-    def csat(self) -> CsatResourceWithStreamingResponse:
-        return CsatResourceWithStreamingResponse(self._experiences.csat)
-
-    @cached_property
     def properties(self) -> PropertiesResourceWithStreamingResponse:
         return PropertiesResourceWithStreamingResponse(self._experiences.properties)
 
@@ -405,10 +377,6 @@ class AsyncExperiencesResourceWithStreamingResponse:
     @cached_property
     def types(self) -> AsyncTypesResourceWithStreamingResponse:
         return AsyncTypesResourceWithStreamingResponse(self._experiences.types)
-
-    @cached_property
-    def csat(self) -> AsyncCsatResourceWithStreamingResponse:
-        return AsyncCsatResourceWithStreamingResponse(self._experiences.csat)
 
     @cached_property
     def properties(self) -> AsyncPropertiesResourceWithStreamingResponse:

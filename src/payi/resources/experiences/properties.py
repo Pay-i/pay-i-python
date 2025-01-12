@@ -59,7 +59,7 @@ class PropertiesResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> ExperienceInstanceResponse:
         """
-        Update an Experience properties
+        Update Experience properties
 
         Args:
           extra_headers: Send extra headers
@@ -115,7 +115,7 @@ class AsyncPropertiesResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> ExperienceInstanceResponse:
         """
-        Update an Experience properties
+        Update Experience properties
 
         Args:
           extra_headers: Send extra headers

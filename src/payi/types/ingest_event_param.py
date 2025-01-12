@@ -2,19 +2,31 @@
 
 from __future__ import annotations
 
-from typing import Dict, List, Union, Optional
+from typing import Dict, List, Union, Iterable, Optional
 from datetime import datetime
 from typing_extensions import Required, Annotated, TypedDict
 
 from .._utils import PropertyInfo
 
-__all__ = ["IngestEventParam", "Units"]
+__all__ = ["IngestEventParam", "Units", "ProviderRequestHeader", "ProviderResponseHeader"]
 
 
 class Units(TypedDict, total=False):
     input: int
 
     output: int
+
+
+class ProviderRequestHeader(TypedDict, total=False):
+    name: Required[str]
+
+    value: Optional[str]
+
+
+class ProviderResponseHeader(TypedDict, total=False):
+    name: Required[str]
+
+    value: Optional[str]
 
 
 class IngestEventParam(TypedDict, total=False):
@@ -42,17 +54,15 @@ class IngestEventParam(TypedDict, total=False):
 
     properties: Optional[Dict[str, str]]
 
-    provider_prompt: Optional[str]
+    provider_request_headers: Optional[Iterable[ProviderRequestHeader]]
 
-    provider_request_headers: Optional[Dict[str, List[str]]]
+    provider_request_json: Optional[str]
 
-    provider_response: Optional[List[str]]
+    provider_response_headers: Optional[Iterable[ProviderResponseHeader]]
 
-    provider_response_headers: Optional[Dict[str, List[str]]]
+    provider_response_json: Union[str, List[str], None]
 
     provider_uri: Optional[str]
-
-    provisioned_resource_name: Optional[str]
 
     request_tags: Optional[List[str]]
 
