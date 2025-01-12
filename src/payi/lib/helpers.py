@@ -1,6 +1,7 @@
 # Step 1: Define the new methods outside of the Payi class definition
 from typing import Dict, List, Union
 
+
 def create_limit_header_from_ids(limit_ids: List[str]) -> Dict[str, str]:
     if not isinstance(limit_ids, list): # type: ignore
         raise TypeError("limit_ids must be a list")
