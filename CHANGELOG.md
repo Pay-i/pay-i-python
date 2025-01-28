@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.1.0-alpha.36 (2025-01-28)
+
+Full Changelog: [v0.1.0-alpha.35...v0.1.0-alpha.36](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.35...v0.1.0-alpha.36)
+
+### Bug Fixes
+
+* **tests:** make test_get_platform less flaky ([#181](https://github.com/Pay-i/pay-i-python/issues/181)) ([86d5b4a](https://github.com/Pay-i/pay-i-python/commit/86d5b4aa623c276776f0bdba5fa936d5408c6ab3))
+
+
+### Chores
+
+* **internal:** avoid pytest-asyncio deprecation warning ([#182](https://github.com/Pay-i/pay-i-python/issues/182)) ([38bb22c](https://github.com/Pay-i/pay-i-python/commit/38bb22ca2fa0f6dd88942b4744f9b0ffee030d5c))
+* **internal:** codegen related update ([#178](https://github.com/Pay-i/pay-i-python/issues/178)) ([315a2c5](https://github.com/Pay-i/pay-i-python/commit/315a2c576e14d51239590f3bfc53872a288559c7))
+* **internal:** codegen related update ([#183](https://github.com/Pay-i/pay-i-python/issues/183)) ([00fdbe7](https://github.com/Pay-i/pay-i-python/commit/00fdbe791e16fa12e73e1203dd0ab02270127e27))
+* **internal:** codegen related update ([#184](https://github.com/Pay-i/pay-i-python/issues/184)) ([bf04c0e](https://github.com/Pay-i/pay-i-python/commit/bf04c0e4707fc2218da6fa6e676fd6c2e85bff07))
+* **internal:** codegen related update ([#185](https://github.com/Pay-i/pay-i-python/issues/185)) ([e0d7ab1](https://github.com/Pay-i/pay-i-python/commit/e0d7ab154ce6d0a60095d8740b9ba5949a37aa00))
+
+
+### Documentation
+
+* **raw responses:** fix duplicate `the` ([#180](https://github.com/Pay-i/pay-i-python/issues/180)) ([ef72f36](https://github.com/Pay-i/pay-i-python/commit/ef72f367b02d8a71b6ef108a8e3544be77d5bd60))
+
 ## 0.1.0-alpha.35 (2025-01-12)
 
 Full Changelog: [v0.1.0-alpha.34...v0.1.0-alpha.35](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.34...v0.1.0-alpha.35)
