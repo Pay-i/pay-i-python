@@ -704,7 +704,7 @@ class TestPayi:
         with pytest.raises(APITimeoutError):
             self.client.post(
                 "/api/v1/limits",
-                body=cast(object, dict(limit_name="x", max=0)),
+                body=cast(object, dict(limit_name="x", max=1)),
                 cast_to=httpx.Response,
                 options={"headers": {RAW_RESPONSE_HEADER: "stream"}},
             )
@@ -719,7 +719,7 @@ class TestPayi:
         with pytest.raises(APIStatusError):
             self.client.post(
                 "/api/v1/limits",
-                body=cast(object, dict(limit_name="x", max=0)),
+                body=cast(object, dict(limit_name="x", max=1)),
                 cast_to=httpx.Response,
                 options={"headers": {RAW_RESPONSE_HEADER: "stream"}},
             )
@@ -752,7 +752,7 @@ class TestPayi:
 
         respx_mock.post("/api/v1/limits").mock(side_effect=retry_handler)
 
-        response = client.limits.with_raw_response.create(limit_name="x", max=0)
+        response = client.limits.with_raw_response.create(limit_name="x", max=1)
 
         assert response.retries_taken == failures_before_success
         assert int(response.http_request.headers.get("x-stainless-retry-count")) == failures_before_success
@@ -775,7 +775,7 @@ class TestPayi:
         respx_mock.post("/api/v1/limits").mock(side_effect=retry_handler)
 
         response = client.limits.with_raw_response.create(
-            limit_name="x", max=0, extra_headers={"x-stainless-retry-count": Omit()}
+            limit_name="x", max=1, extra_headers={"x-stainless-retry-count": Omit()}
         )
 
         assert len(response.http_request.headers.get_list("x-stainless-retry-count")) == 0
@@ -800,7 +800,7 @@ class TestPayi:
         respx_mock.post("/api/v1/limits").mock(side_effect=retry_handler)
 
         response = client.limits.with_raw_response.create(
-            limit_name="x", max=0, extra_headers={"x-stainless-retry-count": "42"}
+            limit_name="x", max=1, extra_headers={"x-stainless-retry-count": "42"}
         )
 
         assert response.http_request.headers.get("x-stainless-retry-count") == "42"
@@ -1472,7 +1472,7 @@ class TestAsyncPayi:
         with pytest.raises(APITimeoutError):
             await self.client.post(
                 "/api/v1/limits",
-                body=cast(object, dict(limit_name="x", max=0)),
+                body=cast(object, dict(limit_name="x", max=1)),
                 cast_to=httpx.Response,
                 options={"headers": {RAW_RESPONSE_HEADER: "stream"}},
             )
@@ -1487,7 +1487,7 @@ class TestAsyncPayi:
         with pytest.raises(APIStatusError):
             await self.client.post(
                 "/api/v1/limits",
-                body=cast(object, dict(limit_name="x", max=0)),
+                body=cast(object, dict(limit_name="x", max=1)),
                 cast_to=httpx.Response,
                 options={"headers": {RAW_RESPONSE_HEADER: "stream"}},
             )
@@ -1521,7 +1521,7 @@ class TestAsyncPayi:
 
         respx_mock.post("/api/v1/limits").mock(side_effect=retry_handler)
 
-        response = await client.limits.with_raw_response.create(limit_name="x", max=0)
+        response = await client.limits.with_raw_response.create(limit_name="x", max=1)
 
         assert response.retries_taken == failures_before_success
         assert int(response.http_request.headers.get("x-stainless-retry-count")) == failures_before_success
@@ -1547,7 +1547,7 @@ class TestAsyncPayi:
         respx_mock.post("/api/v1/limits").mock(side_effect=retry_handler)
 
         response = await client.limits.with_raw_response.create(
-            limit_name="x", max=0, extra_headers={"x-stainless-retry-count": Omit()}
+            limit_name="x", max=1, extra_headers={"x-stainless-retry-count": Omit()}
         )
 
         assert len(response.http_request.headers.get_list("x-stainless-retry-count")) == 0
@@ -1573,7 +1573,7 @@ class TestAsyncPayi:
         respx_mock.post("/api/v1/limits").mock(side_effect=retry_handler)
 
         response = await client.limits.with_raw_response.create(
-            limit_name="x", max=0, extra_headers={"x-stainless-retry-count": "42"}
+            limit_name="x", max=1, extra_headers={"x-stainless-retry-count": "42"}
         )
 
         assert response.http_request.headers.get("x-stainless-retry-count") == "42"
