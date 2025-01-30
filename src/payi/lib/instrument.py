@@ -259,8 +259,6 @@ class PayiInstrumentor:
             if user_id:
                 ingest["user_id"] = user_id
 
-            extra_headers: dict[str, str] = kwargs.get("extra_headers") or {}
-
             if len(extra_headers) > 0:
                 ingest["provider_request_headers"] = {k: [v] for k, v in extra_headers.items()}  # type: ignore
 
