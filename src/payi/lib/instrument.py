@@ -216,13 +216,13 @@ class PayiInstrumentor:
             # should not happen
             return wrapped(*args, **kwargs)
 
+        # after _udpate_headers, all metadata to add to ingest is in extra_headers, keyed by the xproxy-xxx header name
+        extra_headers = kwargs.get("extra_headers", {})
+        self._update_headers(context, extra_headers)
+
         if context.get("proxy", True):
-            proxy_extra_headers = kwargs.get("extra_headers", {})
-
-            self._update_headers(context, proxy_extra_headers)
-
             if "extra_headers" not in kwargs:
-                kwargs["extra_headers"] = proxy_extra_headers
+                kwargs["extra_headers"] = extra_headers
 
             return wrapped(*args, **kwargs)
 
@@ -242,16 +242,16 @@ class PayiInstrumentor:
         stream = kwargs.get("stream", False)
 
         try:
-            limit_ids = context.get("limit_ids")
-            request_tags = context.get("request_tags")
-            experience_name = context.get("experience_name")
-            experience_id = context.get("experience_id")
-            user_id = context.get("user_id")
+            limit_ids = extra_headers.pop("xProxy-Limit-IDs", None)
+            request_tags = extra_headers.pop("xProxy-Request-Tags", None)
+            experience_name = extra_headers.pop("xProxy-Experience-Name", None)
+            experience_id = extra_headers.pop("xProxy-Experience-ID", None)
+            user_id = extra_headers.pop("xProxy-User-ID", None)
 
             if limit_ids:
-                ingest["limit_ids"] = limit_ids
+                ingest["limit_ids"] = limit_ids.split(",")
             if request_tags:
-                ingest["request_tags"] = request_tags
+                ingest["request_tags"] = request_tags.split(",")
             if experience_name:
                 ingest["experience_name"] = experience_name
             if experience_id:
@@ -321,30 +321,40 @@ class PayiInstrumentor:
         experience_id: Optional[str] = context.get("experience_id")
         user_id: Optional[str] = context.get("user_id")
 
+        # Merge limits from the decorator and extra headers
         if limit_ids is not None:
-            existing_limit_ids = extra_headers.get("xProxy-Limit-IDs")
-            limit_ids_str = ",".join(limit_ids)
-            if existing_limit_ids is None:
-                extra_headers["xProxy-Limit-IDs"] = limit_ids_str
+            existing_limit_ids = extra_headers.get("xProxy-Limit-IDs", None)
+            
+            if not existing_limit_ids:
+                extra_headers["xProxy-Limit-IDs"] = ",".join(limit_ids)
             else:
-                extra_headers["xProxy-Limit-IDs"] = f"{existing_limit_ids},{limit_ids_str}"
+                existing_ids = existing_limit_ids.split(',')
+                combined_ids = list(set(existing_ids + limit_ids))
+                extra_headers["xProxy-Limit-IDs"] = ",".join(combined_ids)
 
+        # Merge request from the decorator and extra headers
         if request_tags is not None:
-            existing_request_tags = extra_headers.get("xProxy-Request-Tags")
-            request_tags_str = ",".join(request_tags)
-            if existing_request_tags is None:
-                extra_headers["xProxy-Request-Tags"] = request_tags_str
+            existing_request_tags = extra_headers.get("xProxy-Request-Tags", None)
+
+            if not existing_request_tags:
+                extra_headers["xProxy-Request-Tags"] = ",".join(request_tags)
             else:
-                extra_headers["xProxy-Request-Tags"] = f"{existing_request_tags},{request_tags_str}"
+                existing_tags = existing_request_tags.split(',')
+                combined_tags = list(set(existing_tags + request_tags))
+                extra_headers["xProxy-Request-Tags"] = ",".join(combined_tags)
 
-        if experience_name is not None:
-            extra_headers["xProxy-Experience-Name"] = experience_name
+        # inner extra_headers user_id takes precedence over outer decorator user_id
+        if user_id is not None and extra_headers.get("xProxy-User-ID", None) is None:
+            extra_headers["xProxy-User-ID"] = user_id   
 
-        if experience_id is not None:
-            extra_headers["xProxy-Experience-ID"] = experience_id
+        # inner extra_headers experience_name and experience_id take precedence over outer decorator experience_name and experience_id
+        # if either inner value is specified, ignore outer decorator values
+        if extra_headers.get("xProxy-Experience-Name", None) is None and extra_headers.get("xProxy-Experience-ID", None) is None:
+            if experience_name is not None:
+                extra_headers["xProxy-Experience-Name"] = experience_name
 
-        if user_id is not None:
-            extra_headers["xProxy-User-ID"] = user_id
+            if experience_id is not None:
+                extra_headers["xProxy-Experience-ID"] = experience_id
 
     @staticmethod
     def payi_wrapper(func: Any) -> Any:
