@@ -50,6 +50,7 @@ class IngestUnitsParams(TypedDict, total=False):
 
     user_id: Annotated[Union[str, None], PropertyInfo(alias="xProxy-User-ID")]
 
+
 class Units(TypedDict, total=False):
     input: int
 
