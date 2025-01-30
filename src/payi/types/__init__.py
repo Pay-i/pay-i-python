@@ -34,3 +34,6 @@ from .price_modifier_update_params import PriceModifierUpdateParams as PriceModi
 from .category_list_resources_response import CategoryListResourcesResponse as CategoryListResourcesResponse
 from .price_modifier_retrieve_response import PriceModifierRetrieveResponse as PriceModifierRetrieveResponse
 from .category_delete_resource_response import CategoryDeleteResourceResponse as CategoryDeleteResourceResponse
+from .pay_i_common_models_api_router_header_info_param import (
+    PayICommonModelsAPIRouterHeaderInfoParam as PayICommonModelsAPIRouterHeaderInfoParam,
+)

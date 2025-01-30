@@ -26,6 +26,7 @@ from .._base_client import make_request_options
 from ..types.ingest_response import IngestResponse
 from ..types.ingest_event_param import IngestEventParam
 from ..types.bulk_ingest_response import BulkIngestResponse
+from ..types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
 __all__ = ["IngestResource", "AsyncIngestResource"]
 
@@ -93,10 +94,9 @@ class IngestResource(SyncAPIResource):
         experience_properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
         http_status_code: Optional[int] | NotGiven = NOT_GIVEN,
         properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
-        provider_request_headers: Optional[Iterable[ingest_units_params.ProviderRequestHeader]] | NotGiven = NOT_GIVEN,
+        provider_request_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | NotGiven = NOT_GIVEN,
         provider_request_json: Optional[str] | NotGiven = NOT_GIVEN,
-        provider_response_headers: Optional[Iterable[ingest_units_params.ProviderResponseHeader]]
-        | NotGiven = NOT_GIVEN,
+        provider_response_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | NotGiven = NOT_GIVEN,
         provider_response_json: Union[str, List[str], None] | NotGiven = NOT_GIVEN,
         provider_uri: Optional[str] | NotGiven = NOT_GIVEN,
         time_to_first_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
@@ -227,10 +227,9 @@ class AsyncIngestResource(AsyncAPIResource):
         experience_properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
         http_status_code: Optional[int] | NotGiven = NOT_GIVEN,
         properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
-        provider_request_headers: Optional[Iterable[ingest_units_params.ProviderRequestHeader]] | NotGiven = NOT_GIVEN,
+        provider_request_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | NotGiven = NOT_GIVEN,
         provider_request_json: Optional[str] | NotGiven = NOT_GIVEN,
-        provider_response_headers: Optional[Iterable[ingest_units_params.ProviderResponseHeader]]
-        | NotGiven = NOT_GIVEN,
+        provider_response_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | NotGiven = NOT_GIVEN,
         provider_response_json: Union[str, List[str], None] | NotGiven = NOT_GIVEN,
         provider_uri: Optional[str] | NotGiven = NOT_GIVEN,
         time_to_first_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
