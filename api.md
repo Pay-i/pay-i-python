@@ -52,7 +52,13 @@ Methods:
 Types:
 
 ```python
-from payi.types import BulkIngestResponse, IngestEvent, IngestResponse, IngestUnits
+from payi.types import (
+    BulkIngestResponse,
+    IngestEvent,
+    IngestResponse,
+    IngestUnits,
+    PayICommonModelsAPIRouterHeaderInfo,
+)
 ```
 
 Methods:
