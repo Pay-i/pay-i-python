@@ -7,26 +7,15 @@ from datetime import datetime
 from typing_extensions import Required, Annotated, TypedDict
 
 from .._utils import PropertyInfo
+from .pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
-__all__ = ["IngestEventParam", "Units", "ProviderRequestHeader", "ProviderResponseHeader"]
+__all__ = ["IngestEventParam", "Units"]
 
 
 class Units(TypedDict, total=False):
     input: int
 
     output: int
-
-
-class ProviderRequestHeader(TypedDict, total=False):
-    name: Required[str]
-
-    value: Optional[str]
-
-
-class ProviderResponseHeader(TypedDict, total=False):
-    name: Required[str]
-
-    value: Optional[str]
 
 
 class IngestEventParam(TypedDict, total=False):
@@ -54,11 +43,11 @@ class IngestEventParam(TypedDict, total=False):
 
     properties: Optional[Dict[str, str]]
 
-    provider_request_headers: Optional[Iterable[ProviderRequestHeader]]
+    provider_request_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]]
 
     provider_request_json: Optional[str]
 
-    provider_response_headers: Optional[Iterable[ProviderResponseHeader]]
+    provider_response_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]]
 
     provider_response_json: Union[str, List[str], None]
 
