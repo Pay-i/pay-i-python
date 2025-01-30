@@ -33,7 +33,7 @@ client = Payi(
 
 limit_response = client.limits.create(
     limit_name="x",
-    max=0,
+    max=1,
 )
 print(limit_response.request_id)
 ```
@@ -60,7 +60,7 @@ client = AsyncPayi(
 async def main() -> None:
     limit_response = await client.limits.create(
         limit_name="x",
-        max=0,
+        max=1,
     )
     print(limit_response.request_id)
 
@@ -97,7 +97,7 @@ client = Payi()
 try:
     client.limits.create(
         limit_name="x",
-        max=0,
+        max=1,
     )
 except payi.APIConnectionError as e:
     print("The server could not be reached")
@@ -143,7 +143,7 @@ client = Payi(
 # Or, configure per-request:
 client.with_options(max_retries=5).limits.create(
     limit_name="x",
-    max=0,
+    max=1,
 )
 ```
 
@@ -169,7 +169,7 @@ client = Payi(
 # Override per-request:
 client.with_options(timeout=5.0).limits.create(
     limit_name="x",
-    max=0,
+    max=1,
 )
 ```
 
@@ -213,7 +213,7 @@ from payi import Payi
 client = Payi()
 response = client.limits.with_raw_response.create(
     limit_name="x",
-    max=0,
+    max=1,
 )
 print(response.headers.get('X-My-Header'))
 
@@ -234,7 +234,7 @@ To stream the response body, use `.with_streaming_response` instead, which requi
 ```python
 with client.limits.with_streaming_response.create(
     limit_name="x",
-    max=0,
+    max=1,
 ) as response:
     print(response.headers.get("X-My-Header"))
 

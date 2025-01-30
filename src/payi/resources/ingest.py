@@ -34,7 +34,7 @@ class IngestResource(SyncAPIResource):
     @cached_property
     def with_raw_response(self) -> IngestResourceWithRawResponse:
         """
-        This property can be used as a prefix for any HTTP method call to return the
+        This property can be used as a prefix for any HTTP method call to return
         the raw response object instead of the parsed content.
 
         For more information, see https://www.github.com/Pay-i/pay-i-python#accessing-raw-response-data-eg-headers
@@ -80,7 +80,7 @@ class IngestResource(SyncAPIResource):
             "/api/v1/ingest/bulk",
             body=maybe_transform(events, Iterable[IngestEventParam]),
             options=make_request_options(
-                    extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
             cast_to=BulkIngestResponse,
         )
@@ -122,29 +122,29 @@ class IngestResource(SyncAPIResource):
           category (str): The name of the category
 
           resource (str): The name of the resource
-          
+
           input (int): The number of input units
 
           output (int): The number of output units
-          
+
           event_timestamp: (str, datetime, None): The timestamp of the event. Defaults to None.
-          
+
           limit_ids (list[str], optional): The limit IDs to associate with the request. Defaults to None.
-          
+
           request_tags (list[str], optional): The request tags to associate with the request. Defaults to None.
 
           experience_name (str, optional): The experience name
-          
+
           experience_id (str, optional): The experience instance id
-          
+
           user_id (str, optional): The user id
-          
+
           extra_headers (Dict[str, str], optional): Additional headers for the request. Defaults to None.
-          
+
           extra_query (Dict[str, str], optional): Additional query parameters. Defaults to None.
-          
+
           extra_body (Dict[str, Any], optional): Additional body parameters. Defaults to None.
-          
+
           timeout (Union[float, None], optional): The timeout for the request in seconds. Defaults to None.
         """
         valid_ids_str: str | NotGiven = NOT_GIVEN
@@ -152,7 +152,7 @@ class IngestResource(SyncAPIResource):
 
         if limit_ids is None or isinstance(limit_ids, NotGiven):
             valid_ids_str = NOT_GIVEN
-        elif not isinstance(limit_ids, list): # type: ignore
+        elif not isinstance(limit_ids, list):  # type: ignore
             raise TypeError("limit_ids must be a list")
         else:
             # Proceed with the list comprehension if limit_ids is not NotGiven
@@ -161,7 +161,7 @@ class IngestResource(SyncAPIResource):
 
         if request_tags is None or isinstance(request_tags, NotGiven):
             valid_tags_str = NOT_GIVEN
-        elif not isinstance(request_tags, list): # type: ignore
+        elif not isinstance(request_tags, list):  # type: ignore
             raise TypeError("request_tags must be a list")
         else:
             # Proceed with the list comprehension if request_tags is not NotGiven
@@ -173,7 +173,7 @@ class IngestResource(SyncAPIResource):
 
         if experience_id is None or isinstance(experience_id, NotGiven):
             experience_id = NOT_GIVEN
-        
+
         if user_id is None or isinstance(user_id, NotGiven):
             user_id = NOT_GIVEN
 
@@ -221,7 +221,7 @@ class AsyncIngestResource(AsyncAPIResource):
     @cached_property
     def with_raw_response(self) -> AsyncIngestResourceWithRawResponse:
         """
-        This property can be used as a prefix for any HTTP method call to return the
+        This property can be used as a prefix for any HTTP method call to return
         the raw response object instead of the parsed content.
 
         For more information, see https://www.github.com/Pay-i/pay-i-python#accessing-raw-response-data-eg-headers
@@ -307,29 +307,29 @@ class AsyncIngestResource(AsyncAPIResource):
           category (str): The name of the category
 
           resource (str): The name of the resource
-          
+
           input (int): The number of input units
-          
+
           output (int): The number of output units
-          
+
           event_timestamp: (datetime, None): The timestamp of the event. Defaults to None.
-          
+
           limit_ids (list[str], optional): The limit IDs to associate with the request. Defaults to None.
-          
+
           request_tags (list[str], optional): The request tags to associate with the request. Defaults to None.
-          
+
           experience_name (str, optional): The experience name
-          
+
           experience_id (str, optional): The experience instance id
-          
+
           user_id (str, optional): The user id
-          
+
           extra_headers (Dict[str, str], optional): Additional headers for the request. Defaults to None.
-          
+
           extra_query (Dict[str, str], optional): Additional query parameters. Defaults to None.
-          
+
           extra_body (Dict[str, Any], optional): Additional body parameters. Defaults to None.
-          
+
           timeout (Union[float, None], optional): The timeout for the request in seconds. Defaults to None.
         """
         valid_ids_str: str | NotGiven = NOT_GIVEN
@@ -337,7 +337,7 @@ class AsyncIngestResource(AsyncAPIResource):
 
         if limit_ids is None or isinstance(limit_ids, NotGiven):
             valid_ids_str = NOT_GIVEN
-        elif not isinstance(limit_ids, list): # type: ignore
+        elif not isinstance(limit_ids, list):  # type: ignore
             raise TypeError("limit_ids must be a list")
         else:
             # Proceed with the list comprehension if limit_ids is not NotGiven
@@ -346,7 +346,7 @@ class AsyncIngestResource(AsyncAPIResource):
 
         if request_tags is None or isinstance(request_tags, NotGiven):
             valid_tags_str = NOT_GIVEN
-        elif not isinstance(request_tags, list): # type: ignore
+        elif not isinstance(request_tags, list):  # type: ignore
             raise TypeError("request_tags must be a list")
         else:
             # Proceed with the list comprehension if request_tags is not NotGiven
@@ -358,7 +358,7 @@ class AsyncIngestResource(AsyncAPIResource):
 
         if experience_id is None or isinstance(experience_id, NotGiven):
             experience_id = NOT_GIVEN
-        
+
         if user_id is None or isinstance(user_id, NotGiven):
             user_id = NOT_GIVEN
 
