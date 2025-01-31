@@ -13,8 +13,6 @@ __all__ = ["PagedLimitList", "Item"]
 
 
 class Item(BaseModel):
-    currency: Literal["usd"]
-
     limit_creation_timestamp: datetime
 
     limit_id: str
