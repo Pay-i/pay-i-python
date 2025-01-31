@@ -10,12 +10,15 @@ from wrapt import ObjectProxy  # type: ignore
 
 from payi import Payi, AsyncPayi
 from payi.types import IngestUnitsParams
+from payi.types.ingest_units_params import Units
 
 from .Stopwatch import Stopwatch
 from .Instruments import Instruments
 
 
 class PayiInstrumentor:
+    estimated_prompt_tokens: str = "estimated_prompt_tokens"
+
     def __init__(
         self,
         payi: Union[Payi, AsyncPayi, None] = None,
@@ -204,11 +207,12 @@ class PayiInstrumentor:
         self,
         category: str,
         process_chunk: Callable[[Any, IngestUnitsParams], None],
+        process_request: Optional[Callable[[IngestUnitsParams, Any], None]],
         process_synchronous_response: Optional[Callable[[Any, IngestUnitsParams, bool], None]],
         wrapped: Any,
         instance: Any,
         args: Any,
-        kwargs: Any,
+        kwargs: 'dict[str, Any]',
     ) -> Any:
         context = self.get_context()
 
@@ -226,7 +230,7 @@ class PayiInstrumentor:
 
             return wrapped(*args, **kwargs)
 
-        ingest: IngestUnitsParams = {"category": category, "resource": kwargs.get("model"), "units": {}}
+        ingest: IngestUnitsParams = {"category": category, "resource": kwargs.get("model"), "units": {}} # type: ignore
 
         # blocked_limit = next((limit for limit in (context.get('limit_ids') or []) if limit in self._blocked_limits), None)
         # if blocked_limit:
@@ -235,8 +239,10 @@ class PayiInstrumentor:
         # f_back excludes the current frame, strip() cleans up whitespace and newlines
         stack = [frame.strip() for frame in traceback.format_stack(current_frame.f_back)]  # type: ignore
 
-        # TODO add back once feature is in prod
-        # ingest['properties'] = { 'system.stack_trace': json.dumps(stack) }
+        ingest['properties'] = { 'system.stack_trace': json.dumps(stack) }
+
+        if process_request:
+            process_request(ingest, kwargs)
 
         sw = Stopwatch()
         stream = kwargs.get("stream", False)
@@ -353,6 +359,17 @@ class PayiInstrumentor:
 
             if experience_id is not None:
                 extra_headers["xProxy-Experience-ID"] = experience_id
+
+    @staticmethod
+    def update_for_vision(input: int, units: 'dict[str, Units]') -> int:
+        if PayiInstrumentor.estimated_prompt_tokens in units:
+            prompt_token_estimate: int = units.pop(PayiInstrumentor.estimated_prompt_tokens)["input"] # type: ignore
+            vision = input - prompt_token_estimate
+            if (vision > 0):
+                units["vision"] = Units(input=vision, output=0)
+                input = prompt_token_estimate
+        
+        return input
 
     @staticmethod
     def payi_wrapper(func: Any) -> Any:

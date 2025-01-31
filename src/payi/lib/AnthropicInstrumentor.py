@@ -1,6 +1,7 @@
 import logging
-from typing import Any
+from typing import Any, Union
 
+import tiktoken
 from wrapt import wrap_function_wrapper  # type: ignore
 
 from payi.types import IngestUnitsParams
@@ -49,6 +50,7 @@ def chat_wrapper(
     return instrumentor.chat_wrapper(
         "system.anthropic",
         process_chunk,
+        process_request,
         process_synchronous_response,
         wrapped,
         instance,
@@ -62,7 +64,9 @@ def process_chunk(chunk: Any, ingest: IngestUnitsParams) -> None:
         usage = chunk.message.usage
         units = ingest["units"]
 
-        units["text"] = Units(input=usage.input_tokens, output=0)
+        input = PayiInstrumentor.update_for_vision(usage.input_tokens, units)
+
+        units["text"] = Units(input=input, output=0)
 
         if hasattr(usage, "cache_creation_input_tokens") and usage.cache_creation_input_tokens > 0:
             text_cache_write = usage.cache_creation_input_tokens
@@ -91,7 +95,41 @@ def process_synchronous_response(response: Any, ingest: IngestUnitsParams, log_p
         text_cache_read = usage.cache_read_input_tokens
         units["text_cache_read"] = Units(input=text_cache_read, output=0)
 
+    input = PayiInstrumentor.update_for_vision(input, units)
+
     units["text"] = Units(input=input, output=ouptut)
 
     if log_prompt_and_response:
         ingest["provider_response_json"] = response.to_json()
+
+def has_image_and_get_texts(encoding: tiktoken.Encoding, content: Union[str, 'list[Any]']) -> 'tuple[bool, int]':
+    if isinstance(content, str):
+        return False, 0
+    elif isinstance(content, list): # type: ignore
+        has_image = any(item.get("type") == "image" for item in content)
+        if has_image is False:
+            return has_image, 0
+        
+        token_count = sum(len(encoding.encode(item.get("text", ""))) for item in content if item.get("type") == "text")
+        return has_image, token_count
+
+def process_request(ingest: IngestUnitsParams, kwargs: Any) -> None:
+    messages = kwargs.get("messages")
+    if not messages or len(messages) == 0:
+        return
+    
+    estimated_token_count = 0 
+    has_image = False
+
+    enc = tiktoken.get_encoding("cl100k_base")
+    
+    for message in messages:
+        msg_has_image, msg_prompt_tokens = has_image_and_get_texts(enc, message.get('content', ''))
+        if msg_has_image:
+            has_image = True
+            estimated_token_count += msg_prompt_tokens
+    
+    if not has_image or estimated_token_count == 0:
+        return
+
+    ingest["units"][PayiInstrumentor.estimated_prompt_tokens] = Units(input=estimated_token_count, output=0)

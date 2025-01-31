@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.40 (2025-01-31)
+
+Full Changelog: [v0.1.0-alpha.39...v0.1.0-alpha.40](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.39...v0.1.0-alpha.40)
+
+### Features
+
+* update units calculation ([a8dda4a](https://github.com/Pay-i/pay-i-python/commit/a8dda4a72b4fa6720e7e3b621f503e435630481f))
+
 ## 0.1.0-alpha.39 (2025-01-31)
 
 Full Changelog: [v0.1.0-alpha.38...v0.1.0-alpha.39](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.38...v0.1.0-alpha.39)
