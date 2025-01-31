@@ -2,6 +2,14 @@
 
 from __future__ import annotations
 
+from .result import (
+    ResultResource,
+    AsyncResultResource,
+    ResultResourceWithRawResponse,
+    AsyncResultResourceWithRawResponse,
+    ResultResourceWithStreamingResponse,
+    AsyncResultResourceWithStreamingResponse,
+)
 from ..._compat import cached_property
 from .properties import (
     PropertiesResource,
@@ -20,6 +28,10 @@ class RequestsResource(SyncAPIResource):
     @cached_property
     def properties(self) -> PropertiesResource:
         return PropertiesResource(self._client)
+
+    @cached_property
+    def result(self) -> ResultResource:
+        return ResultResource(self._client)
 
     @cached_property
     def with_raw_response(self) -> RequestsResourceWithRawResponse:
@@ -45,6 +57,10 @@ class AsyncRequestsResource(AsyncAPIResource):
     @cached_property
     def properties(self) -> AsyncPropertiesResource:
         return AsyncPropertiesResource(self._client)
+
+    @cached_property
+    def result(self) -> AsyncResultResource:
+        return AsyncResultResource(self._client)
 
     @cached_property
     def with_raw_response(self) -> AsyncRequestsResourceWithRawResponse:
@@ -74,6 +90,10 @@ class RequestsResourceWithRawResponse:
     def properties(self) -> PropertiesResourceWithRawResponse:
         return PropertiesResourceWithRawResponse(self._requests.properties)
 
+    @cached_property
+    def result(self) -> ResultResourceWithRawResponse:
+        return ResultResourceWithRawResponse(self._requests.result)
+
 
 class AsyncRequestsResourceWithRawResponse:
     def __init__(self, requests: AsyncRequestsResource) -> None:
@@ -82,6 +102,10 @@ class AsyncRequestsResourceWithRawResponse:
     @cached_property
     def properties(self) -> AsyncPropertiesResourceWithRawResponse:
         return AsyncPropertiesResourceWithRawResponse(self._requests.properties)
+
+    @cached_property
+    def result(self) -> AsyncResultResourceWithRawResponse:
+        return AsyncResultResourceWithRawResponse(self._requests.result)
 
 
 class RequestsResourceWithStreamingResponse:
@@ -92,6 +116,10 @@ class RequestsResourceWithStreamingResponse:
     def properties(self) -> PropertiesResourceWithStreamingResponse:
         return PropertiesResourceWithStreamingResponse(self._requests.properties)
 
+    @cached_property
+    def result(self) -> ResultResourceWithStreamingResponse:
+        return ResultResourceWithStreamingResponse(self._requests.result)
+
 
 class AsyncRequestsResourceWithStreamingResponse:
     def __init__(self, requests: AsyncRequestsResource) -> None:
@@ -100,3 +128,7 @@ class AsyncRequestsResourceWithStreamingResponse:
     @cached_property
     def properties(self) -> AsyncPropertiesResourceWithStreamingResponse:
         return AsyncPropertiesResourceWithStreamingResponse(self._requests.properties)
+
+    @cached_property
+    def result(self) -> AsyncResultResourceWithStreamingResponse:
+        return AsyncResultResourceWithStreamingResponse(self._requests.result)

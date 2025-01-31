@@ -15,9 +15,7 @@ class LimitCreateParams(TypedDict, total=False):
 
     billing_model_id: Optional[str]
 
-    cost_basis: Literal["base", "billed"]
-
-    currency: Literal["usd"]
+    limit_basis: Literal["base", "billed"]
 
     limit_tags: Optional[List[str]]
 

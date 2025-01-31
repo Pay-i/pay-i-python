@@ -1,3 +1,9 @@
+# Shared Types
+
+```python
+from payi.types import PayICommonModelsBudgetManagementCostDetailsBase
+```
+
 # Limits
 
 Types:
@@ -127,11 +133,18 @@ from payi.types.experiences import ExperienceType, TypeListResponse
 
 Methods:
 
-- <code title="post /api/v1/experiences/types">client.experiences.types.<a href="./src/payi/resources/experiences/types.py">create</a>(\*\*<a href="src/payi/types/experiences/type_create_params.py">params</a>) -> <a href="./src/payi/types/experiences/experience_type.py">ExperienceType</a></code>
-- <code title="get /api/v1/experiences/types/{experience_name}">client.experiences.types.<a href="./src/payi/resources/experiences/types.py">retrieve</a>(experience_name) -> <a href="./src/payi/types/experiences/experience_type.py">ExperienceType</a></code>
-- <code title="patch /api/v1/experiences/types/{experience_name}">client.experiences.types.<a href="./src/payi/resources/experiences/types.py">update</a>(experience_name, \*\*<a href="src/payi/types/experiences/type_update_params.py">params</a>) -> <a href="./src/payi/types/experiences/experience_type.py">ExperienceType</a></code>
-- <code title="get /api/v1/experiences/types">client.experiences.types.<a href="./src/payi/resources/experiences/types.py">list</a>(\*\*<a href="src/payi/types/experiences/type_list_params.py">params</a>) -> <a href="./src/payi/types/experiences/type_list_response.py">TypeListResponse</a></code>
-- <code title="delete /api/v1/experiences/types/{experience_name}">client.experiences.types.<a href="./src/payi/resources/experiences/types.py">delete</a>(experience_name) -> <a href="./src/payi/types/experiences/experience_type.py">ExperienceType</a></code>
+- <code title="post /api/v1/experiences/types">client.experiences.types.<a href="./src/payi/resources/experiences/types/types.py">create</a>(\*\*<a href="src/payi/types/experiences/type_create_params.py">params</a>) -> <a href="./src/payi/types/experiences/experience_type.py">ExperienceType</a></code>
+- <code title="get /api/v1/experiences/types/{experience_name}">client.experiences.types.<a href="./src/payi/resources/experiences/types/types.py">retrieve</a>(experience_name) -> <a href="./src/payi/types/experiences/experience_type.py">ExperienceType</a></code>
+- <code title="patch /api/v1/experiences/types/{experience_name}">client.experiences.types.<a href="./src/payi/resources/experiences/types/types.py">update</a>(experience_name, \*\*<a href="src/payi/types/experiences/type_update_params.py">params</a>) -> <a href="./src/payi/types/experiences/experience_type.py">ExperienceType</a></code>
+- <code title="get /api/v1/experiences/types">client.experiences.types.<a href="./src/payi/resources/experiences/types/types.py">list</a>(\*\*<a href="src/payi/types/experiences/type_list_params.py">params</a>) -> <a href="./src/payi/types/experiences/type_list_response.py">TypeListResponse</a></code>
+- <code title="delete /api/v1/experiences/types/{experience_name}">client.experiences.types.<a href="./src/payi/resources/experiences/types/types.py">delete</a>(experience_name) -> <a href="./src/payi/types/experiences/experience_type.py">ExperienceType</a></code>
+
+### LimitConfig
+
+Methods:
+
+- <code title="post /api/v1/experiences/types/{experience_name}/limit_config">client.experiences.types.limit_config.<a href="./src/payi/resources/experiences/types/limit_config.py">create</a>(experience_name, \*\*<a href="src/payi/types/experiences/types/limit_config_create_params.py">params</a>) -> <a href="./src/payi/types/experiences/experience_type.py">ExperienceType</a></code>
+- <code title="delete /api/v1/experiences/types/{experience_name}/limit_config">client.experiences.types.limit_config.<a href="./src/payi/resources/experiences/types/limit_config.py">delete</a>(experience_name) -> <a href="./src/payi/types/experiences/experience_type.py">ExperienceType</a></code>
 
 ## Properties
 
@@ -182,3 +195,15 @@ Methods:
 Methods:
 
 - <code title="post /api/v1/requests/{request_id}/properties">client.requests.properties.<a href="./src/payi/resources/requests/properties.py">create</a>(request_id, \*\*<a href="src/payi/types/requests/property_create_params.py">params</a>) -> <a href="./src/payi/types/experiences/properties_response.py">PropertiesResponse</a></code>
+
+## Result
+
+Types:
+
+```python
+from payi.types.requests import RequestResult
+```
+
+Methods:
+
+- <code title="get /api/v1/requests/result/{category}/{request_id}">client.requests.result.<a href="./src/payi/resources/requests/result.py">retrieve</a>(request_id, \*, category) -> <a href="./src/payi/types/requests/request_result.py">RequestResult</a></code>
