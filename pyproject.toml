@@ -15,6 +15,7 @@ dependencies = [
     "distro>=1.7.0, <2",
     "sniffio",
     "wrapt>=1.17.2",
+    "tiktoken>=0.8.0",
 ]
 requires-python = ">= 3.8"
 classifiers = [

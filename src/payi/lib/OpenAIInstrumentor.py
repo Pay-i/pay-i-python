@@ -1,8 +1,9 @@
 import json
 import logging
-from typing import Any
+from typing import Any, Union
 from importlib.metadata import version
 
+import tiktoken
 from wrapt import wrap_function_wrapper  # type: ignore
 
 from payi.types import IngestUnitsParams
@@ -38,6 +39,7 @@ def chat_wrapper(
     return instrumentor.chat_wrapper(
         "system.openai",
         process_chat_chunk,
+        process_request,
         process_chat_synchronous_response,
         wrapped,
         instance,
@@ -84,6 +86,41 @@ def add_usage_units(usage: "dict[str, Any]", units: "dict[str, Units]") -> None:
         if input_cache != 0:
             units["text_cache_read"] = Units(input=input_cache, output=0)
 
-    input -= input_cache
+    input = PayiInstrumentor.update_for_vision(input - input_cache, units)
 
     units["text"] = Units(input=input, output=output)
+
+def has_image_and_get_texts(encoding: tiktoken.Encoding, content: Union[str, 'list[Any]']) -> 'tuple[bool, int]':
+    if isinstance(content, str):
+        return False, 0
+    elif isinstance(content, list): # type: ignore
+        has_image = any(item.get("type") == "image_url" for item in content)
+        if has_image is False:
+            return has_image, 0
+        
+        token_count = sum(len(encoding.encode(item.get("text", ""))) for item in content if item.get("type") == "text")
+        return has_image, token_count
+
+def process_request(ingest: IngestUnitsParams, kwargs: Any):
+    messages = kwargs.get("messages")
+    if not messages or len(messages) == 0:
+        return
+    
+    estimated_token_count = 0 
+    has_image = False
+
+    try: 
+        enc = tiktoken.encoding_for_model(kwargs.get("model"))
+    except KeyError:
+        enc = tiktoken.get_encoding("o200k_base")
+    
+    for message in messages:
+        msg_has_image, msg_prompt_tokens = has_image_and_get_texts(enc, message.get('content', ''))
+        if msg_has_image:
+            has_image = True
+            estimated_token_count += msg_prompt_tokens
+    
+    if not has_image or estimated_token_count == 0:
+        return
+
+    ingest["units"][PayiInstrumentor.estimated_prompt_tokens] = Units(input=estimated_token_count, output=0)
