@@ -4,14 +4,6 @@ from __future__ import annotations
 
 import httpx
 
-from .types import (
-    TypesResource,
-    AsyncTypesResource,
-    TypesResourceWithRawResponse,
-    AsyncTypesResourceWithRawResponse,
-    TypesResourceWithStreamingResponse,
-    AsyncTypesResourceWithStreamingResponse,
-)
 from ..._types import NOT_GIVEN, Body, Query, Headers, NotGiven
 from ..._compat import cached_property
 from .properties import (
@@ -28,6 +20,14 @@ from ..._response import (
     to_streamed_response_wrapper,
     async_to_raw_response_wrapper,
     async_to_streamed_response_wrapper,
+)
+from .types.types import (
+    TypesResource,
+    AsyncTypesResource,
+    TypesResourceWithRawResponse,
+    AsyncTypesResourceWithRawResponse,
+    TypesResourceWithStreamingResponse,
+    AsyncTypesResourceWithStreamingResponse,
 )
 from ..._base_client import make_request_options
 from ...types.experience_instance_response import ExperienceInstanceResponse

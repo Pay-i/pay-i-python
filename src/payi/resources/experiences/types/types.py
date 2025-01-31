@@ -6,28 +6,40 @@ from typing import Optional
 
 import httpx
 
-from ..._types import NOT_GIVEN, Body, Query, Headers, NotGiven
-from ..._utils import (
+from ...._types import NOT_GIVEN, Body, Query, Headers, NotGiven
+from ...._utils import (
     maybe_transform,
     async_maybe_transform,
 )
-from ..._compat import cached_property
-from ..._resource import SyncAPIResource, AsyncAPIResource
-from ..._response import (
+from ...._compat import cached_property
+from ...._resource import SyncAPIResource, AsyncAPIResource
+from ...._response import (
     to_raw_response_wrapper,
     to_streamed_response_wrapper,
     async_to_raw_response_wrapper,
     async_to_streamed_response_wrapper,
 )
-from ..._base_client import make_request_options
-from ...types.experiences import type_list_params, type_create_params, type_update_params
-from ...types.experiences.experience_type import ExperienceType
-from ...types.experiences.type_list_response import TypeListResponse
+from .limit_config import (
+    LimitConfigResource,
+    AsyncLimitConfigResource,
+    LimitConfigResourceWithRawResponse,
+    AsyncLimitConfigResourceWithRawResponse,
+    LimitConfigResourceWithStreamingResponse,
+    AsyncLimitConfigResourceWithStreamingResponse,
+)
+from ...._base_client import make_request_options
+from ....types.experiences import type_list_params, type_create_params, type_update_params
+from ....types.experiences.experience_type import ExperienceType
+from ....types.experiences.type_list_response import TypeListResponse
 
 __all__ = ["TypesResource", "AsyncTypesResource"]
 
 
 class TypesResource(SyncAPIResource):
+    @cached_property
+    def limit_config(self) -> LimitConfigResource:
+        return LimitConfigResource(self._client)
+
     @cached_property
     def with_raw_response(self) -> TypesResourceWithRawResponse:
         """
@@ -52,6 +64,7 @@ class TypesResource(SyncAPIResource):
         *,
         description: str,
         name: str,
+        limit_config: type_create_params.LimitConfig | NotGiven = NOT_GIVEN,
         logging_enabled: Optional[bool] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -78,6 +91,7 @@ class TypesResource(SyncAPIResource):
                 {
                     "description": description,
                     "name": name,
+                    "limit_config": limit_config,
                     "logging_enabled": logging_enabled,
                 },
                 type_create_params.TypeCreateParams,
@@ -125,7 +139,7 @@ class TypesResource(SyncAPIResource):
         self,
         experience_name: str,
         *,
-        description: Optional[str],
+        description: Optional[str] | NotGiven = NOT_GIVEN,
         logging_enabled: Optional[bool] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -236,6 +250,10 @@ class TypesResource(SyncAPIResource):
 
 class AsyncTypesResource(AsyncAPIResource):
     @cached_property
+    def limit_config(self) -> AsyncLimitConfigResource:
+        return AsyncLimitConfigResource(self._client)
+
+    @cached_property
     def with_raw_response(self) -> AsyncTypesResourceWithRawResponse:
         """
         This property can be used as a prefix for any HTTP method call to return
@@ -259,6 +277,7 @@ class AsyncTypesResource(AsyncAPIResource):
         *,
         description: str,
         name: str,
+        limit_config: type_create_params.LimitConfig | NotGiven = NOT_GIVEN,
         logging_enabled: Optional[bool] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -285,6 +304,7 @@ class AsyncTypesResource(AsyncAPIResource):
                 {
                     "description": description,
                     "name": name,
+                    "limit_config": limit_config,
                     "logging_enabled": logging_enabled,
                 },
                 type_create_params.TypeCreateParams,
@@ -332,7 +352,7 @@ class AsyncTypesResource(AsyncAPIResource):
         self,
         experience_name: str,
         *,
-        description: Optional[str],
+        description: Optional[str] | NotGiven = NOT_GIVEN,
         logging_enabled: Optional[bool] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -461,6 +481,10 @@ class TypesResourceWithRawResponse:
             types.delete,
         )
 
+    @cached_property
+    def limit_config(self) -> LimitConfigResourceWithRawResponse:
+        return LimitConfigResourceWithRawResponse(self._types.limit_config)
+
 
 class AsyncTypesResourceWithRawResponse:
     def __init__(self, types: AsyncTypesResource) -> None:
@@ -481,6 +505,10 @@ class AsyncTypesResourceWithRawResponse:
         self.delete = async_to_raw_response_wrapper(
             types.delete,
         )
+
+    @cached_property
+    def limit_config(self) -> AsyncLimitConfigResourceWithRawResponse:
+        return AsyncLimitConfigResourceWithRawResponse(self._types.limit_config)
 
 
 class TypesResourceWithStreamingResponse:
@@ -503,6 +531,10 @@ class TypesResourceWithStreamingResponse:
             types.delete,
         )
 
+    @cached_property
+    def limit_config(self) -> LimitConfigResourceWithStreamingResponse:
+        return LimitConfigResourceWithStreamingResponse(self._types.limit_config)
+
 
 class AsyncTypesResourceWithStreamingResponse:
     def __init__(self, types: AsyncTypesResource) -> None:
@@ -523,3 +555,7 @@ class AsyncTypesResourceWithStreamingResponse:
         self.delete = async_to_streamed_response_wrapper(
             types.delete,
         )
+
+    @cached_property
+    def limit_config(self) -> AsyncLimitConfigResourceWithStreamingResponse:
+        return AsyncLimitConfigResourceWithStreamingResponse(self._types.limit_config)
