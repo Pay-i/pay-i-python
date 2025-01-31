@@ -101,7 +101,7 @@ def has_image_and_get_texts(encoding: tiktoken.Encoding, content: Union[str, 'li
         token_count = sum(len(encoding.encode(item.get("text", ""))) for item in content if item.get("type") == "text")
         return has_image, token_count
 
-def process_request(ingest: IngestUnitsParams, kwargs: Any):
+def process_request(ingest: IngestUnitsParams, kwargs: Any) -> None:
     messages = kwargs.get("messages")
     if not messages or len(messages) == 0:
         return
