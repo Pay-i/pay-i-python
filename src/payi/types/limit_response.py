@@ -11,8 +11,6 @@ __all__ = ["LimitResponse", "Limit"]
 
 
 class Limit(BaseModel):
-    currency: Literal["usd"]
-
     limit_creation_timestamp: datetime
 
     limit_id: str

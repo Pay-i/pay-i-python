@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .shared import EvaluationResponse as EvaluationResponse
+from .shared import PayICommonModelsBudgetManagementCostDetailsBase as PayICommonModelsBudgetManagementCostDetailsBase
 from .cost_data import CostData as CostData
 from .cost_details import CostDetails as CostDetails
 from .billing_model import BillingModel as BillingModel

@@ -1,16 +1,15 @@
 # File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
 from typing import Dict, List, Optional
-from datetime import datetime
 from typing_extensions import Literal
 
-from .._models import BaseModel
-from .cost_details import CostDetails
-from .shared.pay_i_common_models_budget_management_cost_details_base import (
+from ..._models import BaseModel
+from ..cost_details import CostDetails
+from ..shared.pay_i_common_models_budget_management_cost_details_base import (
     PayICommonModelsBudgetManagementCostDetailsBase,
 )
 
-__all__ = ["IngestResponse", "XproxyResult", "XproxyResultCost", "XproxyResultLimits"]
+__all__ = ["RequestResult", "XproxyResult", "XproxyResultCost", "XproxyResultLimits"]
 
 
 class XproxyResultCost(BaseModel):
@@ -45,11 +44,5 @@ class XproxyResult(BaseModel):
     user_id: Optional[str] = None
 
 
-class IngestResponse(BaseModel):
-    event_timestamp: datetime
-
-    ingest_timestamp: datetime
-
-    request_id: str
-
+class RequestResult(BaseModel):
     xproxy_result: XproxyResult
