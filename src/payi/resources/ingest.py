@@ -66,11 +66,11 @@ class IngestResource(SyncAPIResource):
         provider_response_json: Union[str, List[str], None] | NotGiven = NOT_GIVEN,
         provider_uri: Optional[str] | NotGiven = NOT_GIVEN,
         time_to_first_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
-        x_proxy_experience_id: str | NotGiven = NOT_GIVEN,
-        x_proxy_experience_name: str | NotGiven = NOT_GIVEN,
-        x_proxy_limit_ids: str | NotGiven = NOT_GIVEN,
-        x_proxy_request_tags: str | NotGiven = NOT_GIVEN,
-        x_proxy_user_id: str | NotGiven = NOT_GIVEN,
+        limit_ids: Union[list[str], None] | NotGiven = NOT_GIVEN,
+        request_tags: Union[list[str], None] | NotGiven = NOT_GIVEN,
+        experience_id: Union[str, None] | NotGiven = NOT_GIVEN,
+        experience_name: Union[str, None] | NotGiven = NOT_GIVEN,
+        user_id: Union[str, None] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -82,22 +82,72 @@ class IngestResource(SyncAPIResource):
         Ingest an Event
 
         Args:
-          extra_headers: Send extra headers
+          category (str): The name of the category
 
-          extra_query: Add additional query parameters to the request
+          resource (str): The name of the resource
 
-          extra_body: Add additional JSON properties to the request
+          input (int): The number of input units
 
-          timeout: Override the client-level default timeout for this request, in seconds
+          output (int): The number of output units
+
+          event_timestamp: (str, datetime, None): The timestamp of the event. Defaults to None.
+
+          limit_ids (list[str], optional): The limit IDs to associate with the request. Defaults to None.
+
+          request_tags (list[str], optional): The request tags to associate with the request. Defaults to None.
+
+          experience_name (str, optional): The experience name
+
+          experience_id (str, optional): The experience instance id
+
+          user_id (str, optional): The user id
+
+          extra_headers (Dict[str, str], optional): Additional headers for the request. Defaults to None.
+
+          extra_query (Dict[str, str], optional): Additional query parameters. Defaults to None.
+
+          extra_body (Dict[str, Any], optional): Additional body parameters. Defaults to None.
+
+          timeout (Union[float, None], optional): The timeout for the request in seconds. Defaults to None.
         """
+        valid_ids_str: str | NotGiven = NOT_GIVEN
+        valid_tags_str: str | NotGiven = NOT_GIVEN
+
+        if limit_ids is None or isinstance(limit_ids, NotGiven):
+            valid_ids_str = NOT_GIVEN
+        elif not isinstance(limit_ids, list):  # type: ignore
+            raise TypeError("limit_ids must be a list")
+        else:
+            # Proceed with the list comprehension if limit_ids is not NotGiven
+            valid_ids = [id.strip() for id in limit_ids if id.strip()]
+            valid_ids_str = ",".join(valid_ids) if valid_ids else NOT_GIVEN
+
+        if request_tags is None or isinstance(request_tags, NotGiven):
+            valid_tags_str = NOT_GIVEN
+        elif not isinstance(request_tags, list):  # type: ignore
+            raise TypeError("request_tags must be a list")
+        else:
+            # Proceed with the list comprehension if request_tags is not NotGiven
+            valid_tags = [tag.strip() for tag in request_tags if tag.strip()]
+            valid_tags_str = ",".join(valid_tags) if valid_tags else NOT_GIVEN
+
+        if experience_name is None or isinstance(experience_name, NotGiven):
+            experience_name = NOT_GIVEN
+
+        if experience_id is None or isinstance(experience_id, NotGiven):
+            experience_id = NOT_GIVEN
+
+        if user_id is None or isinstance(user_id, NotGiven):
+            user_id = NOT_GIVEN
+
         extra_headers = {
             **strip_not_given(
                 {
-                    "xProxy-Experience-ID": x_proxy_experience_id,
-                    "xProxy-Experience-Name": x_proxy_experience_name,
-                    "xProxy-Limit-IDs": x_proxy_limit_ids,
-                    "xProxy-Request-Tags": x_proxy_request_tags,
-                    "xProxy-User-ID": x_proxy_user_id,
+                    "xProxy-Limit-IDs": valid_ids_str,
+                    "xProxy-Request-Tags": valid_tags_str,
+                    "xProxy-Experience-Id": experience_id,
+                    "xProxy-Experience-Name": experience_name,
+                    "xProxy-User-ID": user_id,
                 }
             ),
             **(extra_headers or {}),
@@ -167,12 +217,11 @@ class AsyncIngestResource(AsyncAPIResource):
         provider_response_json: Union[str, List[str], None] | NotGiven = NOT_GIVEN,
         provider_uri: Optional[str] | NotGiven = NOT_GIVEN,
         time_to_first_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
-        x_proxy_experience_id: str | NotGiven = NOT_GIVEN,
-        x_proxy_experience_name: str | NotGiven = NOT_GIVEN,
-        x_proxy_limit_ids: str | NotGiven = NOT_GIVEN,
-        x_proxy_request_tags: str | NotGiven = NOT_GIVEN,
-        x_proxy_user_id: str | NotGiven = NOT_GIVEN,
-        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        limit_ids: Union[list[str], None] | NotGiven = NOT_GIVEN,
+        request_tags: Union[list[str], None] | NotGiven = NOT_GIVEN,
+        experience_name: Union[str, None] | NotGiven = NOT_GIVEN,
+        experience_id: Union[str, None] | NotGiven = NOT_GIVEN,
+        user_id: Union[str, None] | NotGiven = NOT_GIVEN,
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
@@ -183,22 +232,72 @@ class AsyncIngestResource(AsyncAPIResource):
         Ingest an Event
 
         Args:
-          extra_headers: Send extra headers
+          category (str): The name of the category
 
-          extra_query: Add additional query parameters to the request
+          resource (str): The name of the resource
 
-          extra_body: Add additional JSON properties to the request
+          input (int): The number of input units
 
-          timeout: Override the client-level default timeout for this request, in seconds
+          output (int): The number of output units
+
+          event_timestamp: (datetime, None): The timestamp of the event. Defaults to None.
+
+          limit_ids (list[str], optional): The limit IDs to associate with the request. Defaults to None.
+
+          request_tags (list[str], optional): The request tags to associate with the request. Defaults to None.
+
+          experience_name (str, optional): The experience name
+
+          experience_id (str, optional): The experience instance id
+
+          user_id (str, optional): The user id
+
+          extra_headers (Dict[str, str], optional): Additional headers for the request. Defaults to None.
+
+          extra_query (Dict[str, str], optional): Additional query parameters. Defaults to None.
+
+          extra_body (Dict[str, Any], optional): Additional body parameters. Defaults to None.
+
+          timeout (Union[float, None], optional): The timeout for the request in seconds. Defaults to None.
         """
+        valid_ids_str: str | NotGiven = NOT_GIVEN
+        valid_tags_str: str | NotGiven = NOT_GIVEN
+
+        if limit_ids is None or isinstance(limit_ids, NotGiven):
+            valid_ids_str = NOT_GIVEN
+        elif not isinstance(limit_ids, list):  # type: ignore
+            raise TypeError("limit_ids must be a list")
+        else:
+            # Proceed with the list comprehension if limit_ids is not NotGiven
+            valid_ids = [id.strip() for id in limit_ids if id.strip()]
+            valid_ids_str = ",".join(valid_ids) if valid_ids else NOT_GIVEN
+
+        if request_tags is None or isinstance(request_tags, NotGiven):
+            valid_tags_str = NOT_GIVEN
+        elif not isinstance(request_tags, list):  # type: ignore
+            raise TypeError("request_tags must be a list")
+        else:
+            # Proceed with the list comprehension if request_tags is not NotGiven
+            valid_tags = [tag.strip() for tag in request_tags if tag.strip()]
+            valid_tags_str = ",".join(valid_tags) if valid_tags else NOT_GIVEN
+
+        if experience_name is None or isinstance(experience_name, NotGiven):
+            experience_name = NOT_GIVEN
+
+        if experience_id is None or isinstance(experience_id, NotGiven):
+            experience_id = NOT_GIVEN
+
+        if user_id is None or isinstance(user_id, NotGiven):
+            user_id = NOT_GIVEN
+
         extra_headers = {
             **strip_not_given(
                 {
-                    "xProxy-Experience-ID": x_proxy_experience_id,
-                    "xProxy-Experience-Name": x_proxy_experience_name,
-                    "xProxy-Limit-IDs": x_proxy_limit_ids,
-                    "xProxy-Request-Tags": x_proxy_request_tags,
-                    "xProxy-User-ID": x_proxy_user_id,
+                    "xProxy-Limit-IDs": valid_ids_str,
+                    "xProxy-Request-Tags": valid_tags_str,
+                    "xProxy-Experience-Name": experience_name,
+                    "xProxy-Experience-Id": experience_id,
+                    "xProxy-User-ID": user_id,
                 }
             ),
             **(extra_headers or {}),
