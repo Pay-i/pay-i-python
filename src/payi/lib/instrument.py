@@ -235,8 +235,10 @@ class PayiInstrumentor:
     ) -> Any:
         context = self.get_context()
 
+        is_bedrock:bool = category == "system.aws.bedrock"
+
         if not context:
-            if category == "system.aws.bedrock":
+            if is_bedrock:
                 # boto3 doesn't allow extra_headers
                 kwargs.pop("extra_headers", None)
     
@@ -254,7 +256,7 @@ class PayiInstrumentor:
             return wrapped(*args, **kwargs)
 
         ingest: IngestUnitsParams = {"category": category, "units": {}} # type: ignore
-        if category == "system.aws.bedrock":
+        if is_bedrock:
             # boto3 doesn't allow extra_headers
             kwargs.pop("extra_headers", None)
             ingest["resource"] = kwargs.get("modelId", "")
@@ -325,7 +327,7 @@ class PayiInstrumentor:
             raise e
 
         if stream:
-            return ChatStreamWrapper(
+            stream_result = ChatStreamWrapper(
                 response=response,
                 instance=instance,
                 instrumentor=self,
@@ -333,7 +335,14 @@ class PayiInstrumentor:
                 ingest=ingest,
                 stopwatch=sw,
                 process_chunk=process_chunk,
+                is_bedrock=is_bedrock,
             )
+
+            if is_bedrock:
+                response['body'] = stream_result
+                return response
+            
+            return stream_result
 
         sw.stop()
         duration = sw.elapsed_ms_int()
@@ -437,7 +446,12 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
         stopwatch: Stopwatch,
         process_chunk: Optional[Callable[[Any, IngestUnitsParams], None]] = None,
         log_prompt_and_response: bool = True,
+        is_bedrock: bool = False,
     ) -> None:
+
+        if is_bedrock:
+            response = response['body']
+
         super().__init__(response)  # type: ignore
 
         self._response = response
@@ -452,6 +466,7 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
         self._process_chunk: Optional[Callable[[Any, IngestUnitsParams], None]] = process_chunk
 
         self._first_token: bool = True
+        self._is_bedrock: bool = is_bedrock
 
     def __enter__(self) -> Any:
         return self
@@ -465,8 +480,18 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         await self.__wrapped__.__aexit__(exc_type, exc_val, exc_tb)  # type: ignore
 
-    def __iter__(self) -> Any:
-        return self
+    def __iter__(self) -> Any:  
+        if not self._is_bedrock:
+            return self
+
+        # botocore EventStream doesn't have a __next__ method so iterate over the wrapped object in place
+        for event in self.__wrapped__: # type: ignore
+            chunk = event.get('chunk') # type: ignore
+            if chunk:
+                decode = chunk.get('bytes').decode() # type: ignore
+                self._evaluate_chunk(decode)
+            yield event
+        self._stop_iteration()
 
     def __aiter__(self) -> Any:
         return self
@@ -499,7 +524,7 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
             self._first_token = False
 
         if self._log_prompt_and_response:
-            self._responses.append(chunk.to_json())
+            self._responses.append(chunk if isinstance(chunk, str) else chunk.to_json())
 
         if self._process_chunk:
             self._process_chunk(chunk, self._ingest)

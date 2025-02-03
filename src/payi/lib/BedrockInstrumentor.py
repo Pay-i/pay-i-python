@@ -117,7 +117,7 @@ def wrap_invoke(instrumentor: PayiInstrumentor, wrapped: Any) -> Any:
         if modelId.startswith("meta.llama3") or modelId.startswith("anthropic."):
             return instrumentor.chat_wrapper(
                 category="system.aws.bedrock",
-                process_chunk=process_chunk,
+                process_chunk=process_invoke_streaming_chunk,
                 process_request=process_request,  
                 process_synchronous_response=process_synchronous_invoke_response,  
                 is_streaming=IsStreaming.false,
@@ -138,7 +138,7 @@ def wrap_streaming_invoke(instrumentor: PayiInstrumentor, wrapped: Any) -> Any:
         if modelId.startswith("meta.llama3") or modelId.startswith("anthropic."):
             return instrumentor.chat_wrapper(
                 category="system.aws.bedrock",
-                process_chunk=process_chunk,
+                process_chunk=process_invoke_streaming_chunk,
                 process_request=process_request, 
                 process_synchronous_response=None,  
                 is_streaming=IsStreaming.true,
@@ -151,14 +151,29 @@ def wrap_streaming_invoke(instrumentor: PayiInstrumentor, wrapped: Any) -> Any:
 
     return invoke_wrapper
 
-def process_chunk(chunk: Any, ingest: IngestUnitsParams) -> None:
-    if not chunk:
-        return
+def process_invoke_streaming_chunk(chunk: str, ingest: IngestUnitsParams) -> None:
+    chunk_dict =  json.loads(chunk)
+    type = chunk_dict.get("type", "")
 
-        # response: Any,
-        # instrumentor: PayiInstrumentor,
-        # ingest: IngestUnitsParams,
-        # log_prompt_and_response: bool
+    if type == "message_start":
+        usage = chunk_dict['message']['usage']
+        units = ingest["units"]
+
+        input = PayiInstrumentor.update_for_vision(usage['input_tokens'], units)
+
+        units["text"] = Units(input=input, output=0)
+
+        text_cache_write: int = usage.get("cache_creation_input_tokens", 0)
+        if text_cache_write > 0:
+            units["text_cache_write"] = Units(input=text_cache_write, output=0)
+
+        text_cache_read: int = usage.get("cache_read_input_tokens", 0)
+        if text_cache_read > 0:
+            units["text_cache_read"] = Units(input=text_cache_read, output=0)
+
+    elif type == "message_delta":
+        usage = chunk_dict['usage']
+        ingest["units"]["text"]["output"] = usage['output_tokens']
 
 def process_synchronous_invoke_response(
         response: Any,
