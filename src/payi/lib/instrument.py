@@ -4,6 +4,7 @@ import asyncio
 import inspect
 import logging
 import traceback
+from enum import Enum
 from typing import Any, Set, Union, Callable, Optional
 
 from wrapt import ObjectProxy  # type: ignore
@@ -15,6 +16,11 @@ from payi.types.ingest_units_params import Units
 from .Stopwatch import Stopwatch
 from .Instruments import Instruments
 
+
+class IsStreaming(Enum):
+    false = 0
+    true = 1 
+    kwargs = 2
 
 class PayiInstrumentor:
     estimated_prompt_tokens: str = "estimated_prompt_tokens"
@@ -44,12 +50,15 @@ class PayiInstrumentor:
     def _instrument_all(self) -> None:
         self._instrument_openai()
         self._instrument_anthropic()
+        self._instrument_aws_bedrock()
 
     def _instrument_specific(self, instruments: Set[Instruments]) -> None:
         if Instruments.OPENAI in instruments:
             self._instrument_openai()
         if Instruments.ANTHROPIC in instruments:
             self._instrument_anthropic()
+        if Instruments.AWS_BEDROCK in instruments:
+            self._instrument_aws_bedrock()
 
     def _instrument_openai(self) -> None:
         from .OpenAIInstrumentor import OpenAiInstrumentor
@@ -68,6 +77,15 @@ class PayiInstrumentor:
 
         except Exception as e:
             logging.error(f"Error instrumenting Anthropic: {e}")
+
+    def _instrument_aws_bedrock(self) -> None:
+        from .BedrockInstrumentor import BedrockInstrumentor
+
+        try:
+            BedrockInstrumentor.instrument(self)
+
+        except Exception as e:
+            logging.error(f"Error instrumenting AWS bedrock: {e}")
 
     def _ingest_units(self, ingest_units: IngestUnitsParams) -> None:
         # return early if there are no units to ingest and on a successul ingest request
@@ -208,16 +226,21 @@ class PayiInstrumentor:
         category: str,
         process_chunk: Callable[[Any, IngestUnitsParams], None],
         process_request: Optional[Callable[[IngestUnitsParams, Any], None]],
-        process_synchronous_response: Optional[Callable[[Any, IngestUnitsParams, bool], None]],
+        process_synchronous_response: Any,
+        is_streaming: IsStreaming,
         wrapped: Any,
         instance: Any,
         args: Any,
-        kwargs: 'dict[str, Any]',
+        kwargs: Any,
     ) -> Any:
         context = self.get_context()
 
         if not context:
-            # should not happen
+            if category == "system.aws.bedrock":
+                # boto3 doesn't allow extra_headers
+                kwargs.pop("extra_headers", None)
+    
+            # wrapped function invoked outside of decorator scope
             return wrapped(*args, **kwargs)
 
         # after _udpate_headers, all metadata to add to ingest is in extra_headers, keyed by the xproxy-xxx header name
@@ -230,11 +253,14 @@ class PayiInstrumentor:
 
             return wrapped(*args, **kwargs)
 
-        ingest: IngestUnitsParams = {"category": category, "resource": kwargs.get("model"), "units": {}} # type: ignore
+        ingest: IngestUnitsParams = {"category": category, "units": {}} # type: ignore
+        if category == "system.aws.bedrock":
+            # boto3 doesn't allow extra_headers
+            kwargs.pop("extra_headers", None)
+            ingest["resource"] = kwargs.get("modelId", "")
+        else:
+            ingest["resource"] = kwargs.get("model", "")
 
-        # blocked_limit = next((limit for limit in (context.get('limit_ids') or []) if limit in self._blocked_limits), None)
-        # if blocked_limit:
-        #      raise Exception(f"Limit {blocked_limit} is blocked")
         current_frame = inspect.currentframe()
         # f_back excludes the current frame, strip() cleans up whitespace and newlines
         stack = [frame.strip() for frame in traceback.format_stack(current_frame.f_back)]  # type: ignore
@@ -245,7 +271,14 @@ class PayiInstrumentor:
             process_request(ingest, kwargs)
 
         sw = Stopwatch()
-        stream = kwargs.get("stream", False)
+        stream: bool = False
+        
+        if is_streaming == IsStreaming.kwargs:
+            stream = kwargs.get("stream", False)
+        elif is_streaming == IsStreaming.true:
+            stream = True
+        else:
+            stream = False
 
         try:
             limit_ids = extra_headers.pop("xProxy-Limit-IDs", None)
@@ -308,7 +341,13 @@ class PayiInstrumentor:
         ingest["http_status_code"] = 200
 
         if process_synchronous_response:
-            process_synchronous_response(response, ingest, self._log_prompt_and_response)
+            return_result: Any = process_synchronous_response(
+                response=response,
+                ingest=ingest,
+                log_prompt_and_response=self._log_prompt_and_response,
+                instrumentor=self)
+            if return_result:
+                return return_result
 
         self._ingest_units(ingest)
 

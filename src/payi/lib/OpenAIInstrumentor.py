@@ -9,7 +9,7 @@ from wrapt import wrap_function_wrapper  # type: ignore
 from payi.types import IngestUnitsParams
 from payi.types.ingest_units_params import Units
 
-from .instrument import PayiInstrumentor
+from .instrument import IsStreaming, PayiInstrumentor
 
 
 class OpenAiInstrumentor:
@@ -37,18 +37,19 @@ def chat_wrapper(
     kwargs: Any,
 ) -> Any:
     return instrumentor.chat_wrapper(
-        "system.openai",
-        process_chat_chunk,
-        process_request,
-        process_chat_synchronous_response,
-        wrapped,
-        instance,
-        args,
-        kwargs,
+        category="system.openai",
+        process_chunk=process_chat_chunk,
+        process_request=process_request,
+        process_synchronous_response=process_chat_synchronous_response,
+        is_streaming=IsStreaming.kwargs,
+        wrapped=wrapped,
+        instance=instance,
+        args=args,
+        kwargs=kwargs,
     )
 
 
-def process_chat_synchronous_response(response: str, ingest: IngestUnitsParams, log_prompt_and_response: bool) -> None:
+def process_chat_synchronous_response(response: str, ingest: IngestUnitsParams, log_prompt_and_response: bool, **kwargs: Any) -> Any: #  noqa: ARG001
     response_dict = model_to_dict(response)
 
     add_usage_units(response_dict["usage"], ingest["units"])
@@ -56,6 +57,7 @@ def process_chat_synchronous_response(response: str, ingest: IngestUnitsParams, 
     if log_prompt_and_response:
         ingest["provider_response_json"] = [json.dumps(response_dict)]
 
+    return None
 
 def process_chat_chunk(chunk: Any, ingest: IngestUnitsParams) -> None:
     model = model_to_dict(chunk)

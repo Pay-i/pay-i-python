@@ -7,7 +7,7 @@ from wrapt import wrap_function_wrapper  # type: ignore
 from payi.types import IngestUnitsParams
 from payi.types.ingest_units_params import Units
 
-from .instrument import PayiInstrumentor
+from .instrument import IsStreaming, PayiInstrumentor
 
 
 class AnthropicIntrumentor:
@@ -48,14 +48,15 @@ def chat_wrapper(
     kwargs: Any,
 ) -> Any:
     return instrumentor.chat_wrapper(
-        "system.anthropic",
-        process_chunk,
-        process_request,
-        process_synchronous_response,
-        wrapped,
-        instance,
-        args,
-        kwargs,
+        category="system.anthropic",
+        process_chunk=process_chunk,
+        process_request=process_request,
+        process_synchronous_response=process_synchronous_response,
+        is_streaming=IsStreaming.kwargs,
+        wrapped=wrapped,
+        instance=instance,
+        args=args,
+        kwargs=kwargs,
     )
 
 
@@ -81,10 +82,10 @@ def process_chunk(chunk: Any, ingest: IngestUnitsParams) -> None:
         ingest["units"]["text"]["output"] = usage.output_tokens
 
 
-def process_synchronous_response(response: Any, ingest: IngestUnitsParams, log_prompt_and_response: bool) -> None:
+def process_synchronous_response(response: Any, ingest: IngestUnitsParams, log_prompt_and_response: bool, *args: Any, **kwargs: 'dict[str, Any]') -> Any: # noqa: ARG001
     usage = response.usage
     input = usage.input_tokens
-    ouptut = usage.output_tokens
+    output = usage.output_tokens
     units: dict[str, Units] = ingest["units"]
 
     if hasattr(usage, "cache_creation_input_tokens") and usage.cache_creation_input_tokens > 0:
@@ -97,10 +98,12 @@ def process_synchronous_response(response: Any, ingest: IngestUnitsParams, log_p
 
     input = PayiInstrumentor.update_for_vision(input, units)
 
-    units["text"] = Units(input=input, output=ouptut)
+    units["text"] = Units(input=input, output=output)
 
     if log_prompt_and_response:
         ingest["provider_response_json"] = response.to_json()
+
+    return None
 
 def has_image_and_get_texts(encoding: tiktoken.Encoding, content: Union[str, 'list[Any]']) -> 'tuple[bool, int]':
     if isinstance(content, str):
