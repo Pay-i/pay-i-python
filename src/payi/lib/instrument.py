@@ -12,6 +12,7 @@ from wrapt import ObjectProxy  # type: ignore
 from payi import Payi, AsyncPayi
 from payi.types import IngestUnitsParams
 from payi.types.ingest_units_params import Units
+from payi.types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
 from .Stopwatch import Stopwatch
 from .Instruments import Instruments
@@ -224,7 +225,7 @@ class PayiInstrumentor:
     def chat_wrapper(
         self,
         category: str,
-        process_chunk: Callable[[Any, IngestUnitsParams], None],
+        process_chunk: Optional[Callable[[Any, IngestUnitsParams], None]],
         process_request: Optional[Callable[[IngestUnitsParams, Any], None]],
         process_synchronous_response: Any,
         is_streaming: IsStreaming,
@@ -301,7 +302,7 @@ class PayiInstrumentor:
                 ingest["user_id"] = user_id
 
             if len(extra_headers) > 0:
-                ingest["provider_request_headers"] = {k: [v] for k, v in extra_headers.items()}  # type: ignore
+                ingest["provider_request_headers"] = [PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) for k, v in extra_headers.items()]
 
             provider_prompt = {}
             for k, v in kwargs.items():
@@ -339,7 +340,10 @@ class PayiInstrumentor:
             )
 
             if is_bedrock:
-                response['body'] = stream_result
+                if "body" in response:
+                    response["body"] = stream_result
+                else:
+                    response["stream"] = stream_result
                 return response
             
             return stream_result
@@ -435,7 +439,6 @@ class PayiInstrumentor:
 
         return _payi_wrapper
 
-
 class ChatStreamWrapper(ObjectProxy):  # type: ignore
     def __init__(
         self,
@@ -449,8 +452,15 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
         is_bedrock: bool = False,
     ) -> None:
 
+        bedrock_from_stream: bool = False
         if is_bedrock:
-            response = response['body']
+            stream = response.get("stream", None)
+            if stream:
+                response = stream
+                bedrock_from_stream = True
+            else:
+                response = response.get("body")
+                bedrock_from_stream = False
 
         super().__init__(response)  # type: ignore
 
@@ -467,6 +477,7 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
 
         self._first_token: bool = True
         self._is_bedrock: bool = is_bedrock
+        self._bedrock_from_stream: bool = bedrock_from_stream
 
     def __enter__(self) -> Any:
         return self
@@ -486,11 +497,15 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
 
         # botocore EventStream doesn't have a __next__ method so iterate over the wrapped object in place
         for event in self.__wrapped__: # type: ignore
-            chunk = event.get('chunk') # type: ignore
-            if chunk:
-                decode = chunk.get('bytes').decode() # type: ignore
-                self._evaluate_chunk(decode)
+            if (self._bedrock_from_stream):
+                self._evaluate_chunk(event)
+            else:
+                chunk = event.get('chunk') # type: ignore
+                if chunk:
+                    decode = chunk.get('bytes').decode() # type: ignore
+                    self._evaluate_chunk(decode)
             yield event
+
         self._stop_iteration()
 
     def __aiter__(self) -> Any:
@@ -524,7 +539,7 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
             self._first_token = False
 
         if self._log_prompt_and_response:
-            self._responses.append(chunk if isinstance(chunk, str) else chunk.to_json())
+            self._responses.append(self.chunk_to_json(chunk))
 
         if self._process_chunk:
             self._process_chunk(chunk, self._ingest)
@@ -539,10 +554,20 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
 
         self._instrumentor._ingest_units(self._ingest)
 
+    @staticmethod
+    def chunk_to_json(chunk: Any) -> str:
+        if hasattr(chunk, "to_json"):
+            return str(chunk.to_json())
+        elif isinstance(chunk, bytes):
+            return chunk.decode()
+        elif isinstance(chunk, str):
+            return chunk
+        else:
+            # assume dict
+            return json.dumps(chunk)
 
 global _instrumentor
 _instrumentor: PayiInstrumentor
-
 
 def payi_instrument(
     payi: Optional[Union[Payi, AsyncPayi]] = None,
@@ -583,7 +608,6 @@ def ingest(
         return _ingest_wrapper
 
     return _ingest
-
 
 def proxy(
     limit_ids: Optional["list[str]"] = None,

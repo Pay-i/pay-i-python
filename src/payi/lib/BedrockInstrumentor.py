@@ -6,6 +6,7 @@ from functools import wraps
 from wrapt import ObjectProxy, wrap_function_wrapper  # type: ignore
 
 from payi.types.ingest_units_params import Units, IngestUnitsParams
+from payi.types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
 from .instrument import IsStreaming, PayiInstrumentor
 
@@ -46,7 +47,9 @@ def create_client_wrapper(instrumentor: PayiInstrumentor, wrapped: Any, instance
     try:
         client: Any = wrapped(*args, **kwargs)
         client.invoke_model = wrap_invoke(instrumentor, client.invoke_model)
-        client.invoke_model_with_response_stream = wrap_streaming_invoke(instrumentor, client.invoke_model_with_response_stream)
+        client.invoke_model_with_response_stream = wrap_invoke_stream(instrumentor, client.invoke_model_with_response_stream)
+        client.converse = wrap_converse(instrumentor, client.converse)
+        client.converse_stream = wrap_converse_stream(instrumentor, client.converse_stream)
 
         return client
     except Exception as e:
@@ -89,17 +92,6 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
             usage = response['usage']
             input = usage['input_tokens']
             output = usage['output_tokens']
-        
-        # if hasattr(usage, "cache_creation_input_tokens") and usage.cache_creation_input_tokens > 0:
-        #     text_cache_write = usage.cache_creation_input_tokens
-        #     units["text_cache_write"] = Units(input=text_cache_write, output=0)
-
-        # if hasattr(usage, "cache_read_input_tokens") and usage.cache_read_input_tokens > 0:
-        #     text_cache_read = usage.cache_read_input_tokens
-        #     units["text_cache_read"] = Units(input=text_cache_read, output=0)
-
-        # input = PayiInstrumentor.update_for_vision(input, units)
-
         units["text"] = Units(input=input, output=output)
 
         if self._log_prompt_and_response:
@@ -112,13 +104,13 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
 def wrap_invoke(instrumentor: PayiInstrumentor, wrapped: Any) -> Any:
     @wraps(wrapped)
     def invoke_wrapper(*args: Any, **kwargs: 'dict[str, Any]') -> Any:
-        modelId:str = kwargs.get("modelId", "") # type: ignore TODO get resource name
+        modelId:str = kwargs.get("modelId", "") # type: ignore
 
         if modelId.startswith("meta.llama3") or modelId.startswith("anthropic."):
             return instrumentor.chat_wrapper(
                 category="system.aws.bedrock",
-                process_chunk=process_invoke_streaming_chunk,
-                process_request=process_request,  
+                process_chunk=None,
+                process_request=process_invoke_request,  
                 process_synchronous_response=process_synchronous_invoke_response,  
                 is_streaming=IsStreaming.false,
                 wrapped=wrapped,
@@ -130,16 +122,16 @@ def wrap_invoke(instrumentor: PayiInstrumentor, wrapped: Any) -> Any:
     
     return invoke_wrapper
 
-def wrap_streaming_invoke(instrumentor: PayiInstrumentor, wrapped: Any) -> Any:
+def wrap_invoke_stream(instrumentor: PayiInstrumentor, wrapped: Any) -> Any:
     @wraps(wrapped)
     def invoke_wrapper(*args: Any, **kwargs: Any) -> Any:
-        modelId:str = kwargs.get("modelId", "") # type: ignore TODO get resource name
+        modelId:str = kwargs.get("modelId", "") # type: ignore
 
         if modelId.startswith("meta.llama3") or modelId.startswith("anthropic."):
             return instrumentor.chat_wrapper(
                 category="system.aws.bedrock",
-                process_chunk=process_invoke_streaming_chunk,
-                process_request=process_request, 
+                process_chunk=process_invoke_streaming_anthropic_chunk if modelId.startswith("anthropic.") else process_invoke_streaming_llama_chunk,
+                process_request=process_invoke_request, 
                 process_synchronous_response=None,  
                 is_streaming=IsStreaming.true,
                 wrapped=wrapped,
@@ -151,7 +143,49 @@ def wrap_streaming_invoke(instrumentor: PayiInstrumentor, wrapped: Any) -> Any:
 
     return invoke_wrapper
 
-def process_invoke_streaming_chunk(chunk: str, ingest: IngestUnitsParams) -> None:
+def wrap_converse(instrumentor: PayiInstrumentor, wrapped: Any) -> Any:
+    @wraps(wrapped)
+    def invoke_wrapper(*args: Any, **kwargs: 'dict[str, Any]') -> Any:
+        modelId:str = kwargs.get("modelId", "") # type: ignore
+
+        if modelId.startswith("meta.llama3") or modelId.startswith("anthropic."):
+            return instrumentor.chat_wrapper(
+                category="system.aws.bedrock",
+                process_chunk=None,
+                process_request=process_converse_request,  
+                process_synchronous_response=process_synchronous_converse_response,  
+                is_streaming=IsStreaming.false,
+                wrapped=wrapped,
+                instance=None,
+                args=args,
+                kwargs=kwargs,
+        )
+        return wrapped(*args, **kwargs)
+    
+    return invoke_wrapper
+
+def wrap_converse_stream(instrumentor: PayiInstrumentor, wrapped: Any) -> Any:
+    @wraps(wrapped)
+    def invoke_wrapper(*args: Any, **kwargs: Any) -> Any:
+        modelId:str = kwargs.get("modelId", "") # type: ignore
+
+        if modelId.startswith("meta.llama3") or modelId.startswith("anthropic."):
+            return instrumentor.chat_wrapper(
+                category="system.aws.bedrock",
+                process_chunk=process_converse_streaming_chunk,
+                process_request=process_converse_request, 
+                process_synchronous_response=None,  
+                is_streaming=IsStreaming.true,
+                wrapped=wrapped,
+                instance=None,
+                args=args,
+                kwargs=kwargs,
+            )
+        return wrapped(*args, **kwargs)
+
+    return invoke_wrapper
+
+def process_invoke_streaming_anthropic_chunk(chunk: str, ingest: IngestUnitsParams) -> None:
     chunk_dict =  json.loads(chunk)
     type = chunk_dict.get("type", "")
 
@@ -175,13 +209,31 @@ def process_invoke_streaming_chunk(chunk: str, ingest: IngestUnitsParams) -> Non
         usage = chunk_dict['usage']
         ingest["units"]["text"]["output"] = usage['output_tokens']
 
+def process_invoke_streaming_llama_chunk(chunk: str, ingest: IngestUnitsParams) -> None:
+    chunk_dict =  json.loads(chunk)
+    metrics = chunk_dict.get("amazon-bedrock-invocationMetrics", {})
+    if metrics:
+        input = metrics.get("inputTokenCount", 0)
+        output = metrics.get("outputTokenCount", 0)
+        ingest["units"]["text"] = Units(input=input, output=output)
+    
 def process_synchronous_invoke_response(
         response: Any,
         ingest: IngestUnitsParams,
         log_prompt_and_response: bool,
         instrumentor: PayiInstrumentor,
         **kargs: Any) -> Any: #  noqa: ARG001
-    
+
+    metadata = response.get("ResponseMetadata", {})
+
+    # request_id = metadata.get("RequestId", "")
+    # if request_id:
+    #     ingest["provider_request_id"] = request_id
+
+    response_headers = metadata.get("HTTPHeaders", {}).copy()
+    if response_headers:
+        ingest["provider_response_headers"] = [PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) for k, v in response_headers.items()]
+
     response["body"] = InvokeResponseWrapper(
         response=response["body"],
         instrumentor=instrumentor,
@@ -190,24 +242,47 @@ def process_synchronous_invoke_response(
 
     return response
 
-def process_request(ingest: IngestUnitsParams, kwargs: Any) -> None: #  noqa: ARG001
+def process_invoke_request(ingest: IngestUnitsParams, kwargs: Any) -> None: #  noqa: ARG001
     return
-    # messages = kwargs.get("messages")
-    # if not messages or len(messages) == 0:
-    #     return
-    
-    # estimated_token_count = 0 
-    # has_image = False
 
-    # enc = tiktoken.get_encoding("cl100k_base")
-    
-    # for message in messages:
-    #     msg_has_image, msg_prompt_tokens = has_image_and_get_texts(enc, message.get('content', ''))
-    #     if msg_has_image:
-    #         has_image = True
-    #         estimated_token_count += msg_prompt_tokens
-    
-    # if not has_image or estimated_token_count == 0:
-    #     return
+def process_converse_streaming_chunk(chunk: 'dict[str, Any]', ingest: IngestUnitsParams) -> None:
+    metadata = chunk.get("metadata", {})
 
-    # ingest["units"][PayiInstrumentor.estimated_prompt_tokens] = Units(input=estimated_token_count, output=0)
+    if metadata:
+        usage = metadata['usage']
+        input = usage["inputTokens"]
+        output = usage["outputTokens"]
+        ingest["units"]["text"] = Units(input=input, output=output)
+
+def process_synchronous_converse_response(
+        response: 'dict[str, Any]',
+        ingest: IngestUnitsParams,
+        log_prompt_and_response: bool,
+        **kargs: Any) -> Any: #  noqa: ARG001
+
+    usage = response["usage"]
+    input = usage["inputTokens"]
+    output = usage["outputTokens"]
+    
+    units: dict[str, Units] = ingest["units"]
+    units["text"] = Units(input=input, output=output)
+
+    metadata = response.get("ResponseMetadata", {})
+
+    # request_id = metadata.get("RequestId", "")
+    # if request_id:
+    #     ingest["provider_request_id"] = request_id
+
+    response_headers = metadata.get("HTTPHeaders", {})
+    if response_headers:
+        ingest["provider_response_headers"] = [PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) for k, v in response_headers.items()]
+
+    if log_prompt_and_response:
+        response_without_metadata = response.copy()
+        response_without_metadata.pop("ResponseMetadata", None)
+        ingest["provider_response_json"] = json.dumps(response_without_metadata)
+
+    return None    
+
+def process_converse_request(ingest: IngestUnitsParams, kwargs: Any) -> None: #  noqa: ARG001
+    return
