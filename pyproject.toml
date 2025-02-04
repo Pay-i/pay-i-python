@@ -1,6 +1,6 @@
 [project]
 name = "payi"
-version = "0.1.0-alpha.40"
+version = "0.1.0-alpha.41"
 description = "The official Python library for the payi API"
 dynamic = ["readme"]
 license = "Apache-2.0"
@@ -180,7 +180,7 @@ select = [
   "T201",
   "T203",
   # misuse of typing.TYPE_CHECKING
-  "TCH004",
+  "TC004",
   # import rules
   "TID251",
 ]

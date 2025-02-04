@@ -4,6 +4,7 @@ import asyncio
 import inspect
 import logging
 import traceback
+from enum import Enum
 from typing import Any, Set, Union, Callable, Optional
 
 from wrapt import ObjectProxy  # type: ignore
@@ -11,10 +12,16 @@ from wrapt import ObjectProxy  # type: ignore
 from payi import Payi, AsyncPayi
 from payi.types import IngestUnitsParams
 from payi.types.ingest_units_params import Units
+from payi.types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
 from .Stopwatch import Stopwatch
 from .Instruments import Instruments
 
+
+class IsStreaming(Enum):
+    false = 0
+    true = 1 
+    kwargs = 2
 
 class PayiInstrumentor:
     estimated_prompt_tokens: str = "estimated_prompt_tokens"
@@ -44,12 +51,15 @@ class PayiInstrumentor:
     def _instrument_all(self) -> None:
         self._instrument_openai()
         self._instrument_anthropic()
+        self._instrument_aws_bedrock()
 
     def _instrument_specific(self, instruments: Set[Instruments]) -> None:
         if Instruments.OPENAI in instruments:
             self._instrument_openai()
         if Instruments.ANTHROPIC in instruments:
             self._instrument_anthropic()
+        if Instruments.AWS_BEDROCK in instruments:
+            self._instrument_aws_bedrock()
 
     def _instrument_openai(self) -> None:
         from .OpenAIInstrumentor import OpenAiInstrumentor
@@ -68,6 +78,15 @@ class PayiInstrumentor:
 
         except Exception as e:
             logging.error(f"Error instrumenting Anthropic: {e}")
+
+    def _instrument_aws_bedrock(self) -> None:
+        from .BedrockInstrumentor import BedrockInstrumentor
+
+        try:
+            BedrockInstrumentor.instrument(self)
+
+        except Exception as e:
+            logging.error(f"Error instrumenting AWS bedrock: {e}")
 
     def _ingest_units(self, ingest_units: IngestUnitsParams) -> None:
         # return early if there are no units to ingest and on a successul ingest request
@@ -206,18 +225,25 @@ class PayiInstrumentor:
     def chat_wrapper(
         self,
         category: str,
-        process_chunk: Callable[[Any, IngestUnitsParams], None],
+        process_chunk: Optional[Callable[[Any, IngestUnitsParams], None]],
         process_request: Optional[Callable[[IngestUnitsParams, Any], None]],
-        process_synchronous_response: Optional[Callable[[Any, IngestUnitsParams, bool], None]],
+        process_synchronous_response: Any,
+        is_streaming: IsStreaming,
         wrapped: Any,
         instance: Any,
         args: Any,
-        kwargs: 'dict[str, Any]',
+        kwargs: Any,
     ) -> Any:
         context = self.get_context()
 
+        is_bedrock:bool = category == "system.aws.bedrock"
+
         if not context:
-            # should not happen
+            if is_bedrock:
+                # boto3 doesn't allow extra_headers
+                kwargs.pop("extra_headers", None)
+    
+            # wrapped function invoked outside of decorator scope
             return wrapped(*args, **kwargs)
 
         # after _udpate_headers, all metadata to add to ingest is in extra_headers, keyed by the xproxy-xxx header name
@@ -230,11 +256,14 @@ class PayiInstrumentor:
 
             return wrapped(*args, **kwargs)
 
-        ingest: IngestUnitsParams = {"category": category, "resource": kwargs.get("model"), "units": {}} # type: ignore
+        ingest: IngestUnitsParams = {"category": category, "units": {}} # type: ignore
+        if is_bedrock:
+            # boto3 doesn't allow extra_headers
+            kwargs.pop("extra_headers", None)
+            ingest["resource"] = kwargs.get("modelId", "")
+        else:
+            ingest["resource"] = kwargs.get("model", "")
 
-        # blocked_limit = next((limit for limit in (context.get('limit_ids') or []) if limit in self._blocked_limits), None)
-        # if blocked_limit:
-        #      raise Exception(f"Limit {blocked_limit} is blocked")
         current_frame = inspect.currentframe()
         # f_back excludes the current frame, strip() cleans up whitespace and newlines
         stack = [frame.strip() for frame in traceback.format_stack(current_frame.f_back)]  # type: ignore
@@ -245,7 +274,14 @@ class PayiInstrumentor:
             process_request(ingest, kwargs)
 
         sw = Stopwatch()
-        stream = kwargs.get("stream", False)
+        stream: bool = False
+        
+        if is_streaming == IsStreaming.kwargs:
+            stream = kwargs.get("stream", False)
+        elif is_streaming == IsStreaming.true:
+            stream = True
+        else:
+            stream = False
 
         try:
             limit_ids = extra_headers.pop("xProxy-Limit-IDs", None)
@@ -266,7 +302,7 @@ class PayiInstrumentor:
                 ingest["user_id"] = user_id
 
             if len(extra_headers) > 0:
-                ingest["provider_request_headers"] = {k: [v] for k, v in extra_headers.items()}  # type: ignore
+                ingest["provider_request_headers"] = [PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) for k, v in extra_headers.items()]
 
             provider_prompt = {}
             for k, v in kwargs.items():
@@ -292,7 +328,7 @@ class PayiInstrumentor:
             raise e
 
         if stream:
-            return ChatStreamWrapper(
+            stream_result = ChatStreamWrapper(
                 response=response,
                 instance=instance,
                 instrumentor=self,
@@ -300,7 +336,17 @@ class PayiInstrumentor:
                 ingest=ingest,
                 stopwatch=sw,
                 process_chunk=process_chunk,
+                is_bedrock=is_bedrock,
             )
+
+            if is_bedrock:
+                if "body" in response:
+                    response["body"] = stream_result
+                else:
+                    response["stream"] = stream_result
+                return response
+            
+            return stream_result
 
         sw.stop()
         duration = sw.elapsed_ms_int()
@@ -308,7 +354,13 @@ class PayiInstrumentor:
         ingest["http_status_code"] = 200
 
         if process_synchronous_response:
-            process_synchronous_response(response, ingest, self._log_prompt_and_response)
+            return_result: Any = process_synchronous_response(
+                response=response,
+                ingest=ingest,
+                log_prompt_and_response=self._log_prompt_and_response,
+                instrumentor=self)
+            if return_result:
+                return return_result
 
         self._ingest_units(ingest)
 
@@ -387,7 +439,6 @@ class PayiInstrumentor:
 
         return _payi_wrapper
 
-
 class ChatStreamWrapper(ObjectProxy):  # type: ignore
     def __init__(
         self,
@@ -398,7 +449,19 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
         stopwatch: Stopwatch,
         process_chunk: Optional[Callable[[Any, IngestUnitsParams], None]] = None,
         log_prompt_and_response: bool = True,
+        is_bedrock: bool = False,
     ) -> None:
+
+        bedrock_from_stream: bool = False
+        if is_bedrock:
+            stream = response.get("stream", None)
+            if stream:
+                response = stream
+                bedrock_from_stream = True
+            else:
+                response = response.get("body")
+                bedrock_from_stream = False
+
         super().__init__(response)  # type: ignore
 
         self._response = response
@@ -413,6 +476,8 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
         self._process_chunk: Optional[Callable[[Any, IngestUnitsParams], None]] = process_chunk
 
         self._first_token: bool = True
+        self._is_bedrock: bool = is_bedrock
+        self._bedrock_from_stream: bool = bedrock_from_stream
 
     def __enter__(self) -> Any:
         return self
@@ -426,8 +491,25 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         await self.__wrapped__.__aexit__(exc_type, exc_val, exc_tb)  # type: ignore
 
-    def __iter__(self) -> Any:
+    def __iter__(self) -> Any:  
+        if self._is_bedrock:
+            # MUST be reside in a separate function so that the yield statement doesn't implicitly return its own iterator and overriding self
+            return self._iter_bedrock()
         return self
+
+    def _iter_bedrock(self) -> Any:
+        # botocore EventStream doesn't have a __next__ method so iterate over the wrapped object in place
+        for event in self.__wrapped__: # type: ignore
+            if (self._bedrock_from_stream):
+                self._evaluate_chunk(event)
+            else:
+                chunk = event.get('chunk') # type: ignore
+                if chunk:
+                    decode = chunk.get('bytes').decode() # type: ignore
+                    self._evaluate_chunk(decode)
+            yield event
+
+        self._stop_iteration()
 
     def __aiter__(self) -> Any:
         return self
@@ -460,7 +542,7 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
             self._first_token = False
 
         if self._log_prompt_and_response:
-            self._responses.append(chunk.to_json())
+            self._responses.append(self.chunk_to_json(chunk))
 
         if self._process_chunk:
             self._process_chunk(chunk, self._ingest)
@@ -475,10 +557,20 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
 
         self._instrumentor._ingest_units(self._ingest)
 
+    @staticmethod
+    def chunk_to_json(chunk: Any) -> str:
+        if hasattr(chunk, "to_json"):
+            return str(chunk.to_json())
+        elif isinstance(chunk, bytes):
+            return chunk.decode()
+        elif isinstance(chunk, str):
+            return chunk
+        else:
+            # assume dict
+            return json.dumps(chunk)
 
 global _instrumentor
 _instrumentor: PayiInstrumentor
-
 
 def payi_instrument(
     payi: Optional[Union[Payi, AsyncPayi]] = None,
@@ -519,7 +611,6 @@ def ingest(
         return _ingest_wrapper
 
     return _ingest
-
 
 def proxy(
     limit_ids: Optional["list[str]"] = None,
