@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-alpha.41 (2025-02-04)
+
+Full Changelog: [v0.1.0-alpha.40...v0.1.0-alpha.41](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.40...v0.1.0-alpha.41)
+
+### Chores
+
+* **internal:** bummp ruff dependency ([#204](https://github.com/Pay-i/pay-i-python/issues/204)) ([d6e457f](https://github.com/Pay-i/pay-i-python/commit/d6e457f7e62b5d08199e170abfda75fab75099f6))
+* **internal:** change default timeout to an int ([#202](https://github.com/Pay-i/pay-i-python/issues/202)) ([c65e2c5](https://github.com/Pay-i/pay-i-python/commit/c65e2c5c8f420505025be81f7d566f048aa7bc19))
+
 ## 0.1.0-alpha.40 (2025-01-31)
 
 Full Changelog: [v0.1.0-alpha.39...v0.1.0-alpha.40](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.39...v0.1.0-alpha.40)
