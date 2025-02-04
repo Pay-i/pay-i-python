@@ -492,9 +492,12 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
         await self.__wrapped__.__aexit__(exc_type, exc_val, exc_tb)  # type: ignore
 
     def __iter__(self) -> Any:  
-        if not self._is_bedrock:
-            return self
+        if self._is_bedrock:
+            # MUST be reside in a separate function so that the yield statement doesn't implicitly return its own iterator and overriding self
+            return self._iter_bedrock()
+        return self
 
+    def _iter_bedrock(self) -> Any:
         # botocore EventStream doesn't have a __next__ method so iterate over the wrapped object in place
         for event in self.__wrapped__: # type: ignore
             if (self._bedrock_from_stream):
