@@ -24,6 +24,8 @@ from .._response import (
 )
 from .._base_client import make_request_options
 from ..types.ingest_response import IngestResponse
+from ..types.ingest_event_param import IngestEventParam
+from ..types.bulk_ingest_response import BulkIngestResponse
 from ..types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
 __all__ = ["IngestResource", "AsyncIngestResource"]
@@ -48,6 +50,38 @@ class IngestResource(SyncAPIResource):
         For more information, see https://www.github.com/Pay-i/pay-i-python#with_streaming_response
         """
         return IngestResourceWithStreamingResponse(self)
+
+    def bulk(
+        self,
+        *,
+        events: Iterable[IngestEventParam],
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+    ) -> BulkIngestResponse:
+        """
+        Bulk Ingest
+
+        Args:
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        return self._post(
+            "/api/v1/ingest/bulk",
+            body=maybe_transform(events, Iterable[IngestEventParam]),
+            options=make_request_options(
+                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+            ),
+            cast_to=BulkIngestResponse,
+        )
 
     def units(
         self,
@@ -150,6 +184,38 @@ class AsyncIngestResource(AsyncAPIResource):
         """
         return AsyncIngestResourceWithStreamingResponse(self)
 
+    async def bulk(
+        self,
+        *,
+        events: Iterable[IngestEventParam],
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+    ) -> BulkIngestResponse:
+        """
+        Bulk Ingest
+
+        Args:
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        return await self._post(
+            "/api/v1/ingest/bulk",
+            body=await async_maybe_transform(events, Iterable[IngestEventParam]),
+            options=make_request_options(
+                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+            ),
+            cast_to=BulkIngestResponse,
+        )
+
     async def units(
         self,
         *,
@@ -235,6 +301,9 @@ class IngestResourceWithRawResponse:
     def __init__(self, ingest: IngestResource) -> None:
         self._ingest = ingest
 
+        self.bulk = to_raw_response_wrapper(
+            ingest.bulk,
+        )
         self.units = to_raw_response_wrapper(
             ingest.units,
         )
@@ -244,6 +313,9 @@ class AsyncIngestResourceWithRawResponse:
     def __init__(self, ingest: AsyncIngestResource) -> None:
         self._ingest = ingest
 
+        self.bulk = async_to_raw_response_wrapper(
+            ingest.bulk,
+        )
         self.units = async_to_raw_response_wrapper(
             ingest.units,
         )
@@ -253,6 +325,9 @@ class IngestResourceWithStreamingResponse:
     def __init__(self, ingest: IngestResource) -> None:
         self._ingest = ingest
 
+        self.bulk = to_streamed_response_wrapper(
+            ingest.bulk,
+        )
         self.units = to_streamed_response_wrapper(
             ingest.units,
         )
@@ -262,6 +337,9 @@ class AsyncIngestResourceWithStreamingResponse:
     def __init__(self, ingest: AsyncIngestResource) -> None:
         self._ingest = ingest
 
+        self.bulk = async_to_streamed_response_wrapper(
+            ingest.bulk,
+        )
         self.units = async_to_streamed_response_wrapper(
             ingest.units,
         )
