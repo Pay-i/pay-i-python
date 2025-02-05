@@ -16,12 +16,6 @@ class AnthropicIntrumentor:
         try:
             import anthropic  # type: ignore #  noqa: F401  I001
 
-            # wrap_function_wrapper(
-            #     "anthropic.resources.completions",
-            #     "Completions.create",
-            #     chat_wrapper(instrumentor),
-            # )
-
             wrap_function_wrapper(
                 "anthropic.resources.messages",
                 "Messages.create",
@@ -34,6 +28,18 @@ class AnthropicIntrumentor:
                 chat_wrapper(instrumentor),
             )
 
+            wrap_function_wrapper(
+                "anthropic.resources.messages",
+                "AsyncMessages.create",
+                achat_wrapper(instrumentor),
+            )
+
+            wrap_function_wrapper(
+                "anthropic.resources.messages",
+                "AsyncMessages.stream",
+                achat_wrapper(instrumentor),
+            )
+
         except Exception as e:
             logging.debug(f"Error instrumenting anthropic: {e}")
             return
@@ -44,19 +50,39 @@ def chat_wrapper(
     instrumentor: PayiInstrumentor,
     wrapped: Any,
     instance: Any,
-    args: Any,
-    kwargs: Any,
+    *args: Any,
+    **kwargs: Any,
 ) -> Any:
     return instrumentor.chat_wrapper(
-        category="system.anthropic",
-        process_chunk=process_chunk,
-        process_request=process_request,
-        process_synchronous_response=process_synchronous_response,
-        is_streaming=IsStreaming.kwargs,
-        wrapped=wrapped,
-        instance=instance,
-        args=args,
-        kwargs=kwargs,
+        "system.anthropic",
+        process_chunk,
+        process_request,
+        process_synchronous_response,
+        IsStreaming.kwargs,
+        wrapped,
+        instance,
+        args,
+        kwargs,
+    )
+
+@PayiInstrumentor.payi_awrapper
+async def achat_wrapper(
+    instrumentor: PayiInstrumentor,
+    wrapped: Any,
+    instance: Any,
+    *args: Any,
+    **kwargs: Any,
+) -> Any:
+    return await instrumentor.achat_wrapper(
+        "system.anthropic",
+        process_chunk,
+        process_request,
+        process_synchronous_response,
+        IsStreaming.kwargs,
+        wrapped,
+        instance,
+        args,
+        kwargs,
     )
 
 
@@ -116,7 +142,7 @@ def has_image_and_get_texts(encoding: tiktoken.Encoding, content: Union[str, 'li
         token_count = sum(len(encoding.encode(item.get("text", ""))) for item in content if item.get("type") == "text")
         return has_image, token_count
 
-def process_request(ingest: IngestUnitsParams, kwargs: Any) -> None:
+def process_request(ingest: IngestUnitsParams, *args: Any, **kwargs: Any) -> None: # noqa: ARG001
     messages = kwargs.get("messages")
     if not messages or len(messages) == 0:
         return

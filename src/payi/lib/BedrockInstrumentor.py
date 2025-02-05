@@ -17,12 +17,6 @@ class BedrockInstrumentor:
         try:
             import boto3  # type: ignore #  noqa: F401  I001
 
-            # wrap_function_wrapper(
-            #     "anthropic.resources.completions",
-            #     "Completions.create",
-            #     chat_wrapper(instrumentor),
-            # )
-
             wrap_function_wrapper(
                 "botocore.client",
                 "ClientCreator.create_client",
@@ -40,7 +34,7 @@ class BedrockInstrumentor:
             return
 
 @PayiInstrumentor.payi_wrapper
-def create_client_wrapper(instrumentor: PayiInstrumentor, wrapped: Any, instance: Any, args: Any, kwargs: Any) -> Any: #  noqa: ARG001
+def create_client_wrapper(instrumentor: PayiInstrumentor, wrapped: Any, instance: Any, *args: Any, **kwargs: Any) -> Any: #  noqa: ARG001
     if kwargs.get("service_name") != "bedrock-runtime":
         return wrapped(*args, **kwargs)
 
@@ -108,15 +102,15 @@ def wrap_invoke(instrumentor: PayiInstrumentor, wrapped: Any) -> Any:
 
         if modelId.startswith("meta.llama3") or modelId.startswith("anthropic."):
             return instrumentor.chat_wrapper(
-                category="system.aws.bedrock",
-                process_chunk=None,
-                process_request=process_invoke_request,  
-                process_synchronous_response=process_synchronous_invoke_response,  
-                is_streaming=IsStreaming.false,
-                wrapped=wrapped,
-                instance=None,
-                args=args,
-                kwargs=kwargs,
+                "system.aws.bedrock",
+                None,
+                process_invoke_request,  
+                process_synchronous_invoke_response,  
+                IsStreaming.false,
+                wrapped,
+                None,
+                args,
+                kwargs,
         )
         return wrapped(*args, **kwargs)
     
@@ -129,15 +123,15 @@ def wrap_invoke_stream(instrumentor: PayiInstrumentor, wrapped: Any) -> Any:
 
         if modelId.startswith("meta.llama3") or modelId.startswith("anthropic."):
             return instrumentor.chat_wrapper(
-                category="system.aws.bedrock",
-                process_chunk=process_invoke_streaming_anthropic_chunk if modelId.startswith("anthropic.") else process_invoke_streaming_llama_chunk,
-                process_request=process_invoke_request, 
-                process_synchronous_response=None,  
-                is_streaming=IsStreaming.true,
-                wrapped=wrapped,
-                instance=None,
-                args=args,
-                kwargs=kwargs,
+                "system.aws.bedrock",
+                process_invoke_streaming_anthropic_chunk if modelId.startswith("anthropic.") else process_invoke_streaming_llama_chunk,
+                process_invoke_request, 
+                None,  
+                IsStreaming.true,
+                wrapped,
+                None,
+                args,
+                kwargs,
             )
         return wrapped(*args, **kwargs)
 
@@ -150,15 +144,15 @@ def wrap_converse(instrumentor: PayiInstrumentor, wrapped: Any) -> Any:
 
         if modelId.startswith("meta.llama3") or modelId.startswith("anthropic."):
             return instrumentor.chat_wrapper(
-                category="system.aws.bedrock",
-                process_chunk=None,
-                process_request=process_converse_request,  
-                process_synchronous_response=process_synchronous_converse_response,  
-                is_streaming=IsStreaming.false,
-                wrapped=wrapped,
-                instance=None,
-                args=args,
-                kwargs=kwargs,
+                "system.aws.bedrock",
+                None,
+                process_converse_request,  
+                process_synchronous_converse_response,  
+                IsStreaming.false,
+                wrapped,
+                None,
+                args,
+                kwargs,
         )
         return wrapped(*args, **kwargs)
     
@@ -171,15 +165,15 @@ def wrap_converse_stream(instrumentor: PayiInstrumentor, wrapped: Any) -> Any:
 
         if modelId.startswith("meta.llama3") or modelId.startswith("anthropic."):
             return instrumentor.chat_wrapper(
-                category="system.aws.bedrock",
-                process_chunk=process_converse_streaming_chunk,
-                process_request=process_converse_request, 
-                process_synchronous_response=None,  
-                is_streaming=IsStreaming.true,
-                wrapped=wrapped,
-                instance=None,
-                args=args,
-                kwargs=kwargs,
+                "system.aws.bedrock",
+                process_converse_streaming_chunk,
+                process_converse_request, 
+                None,  
+                IsStreaming.true,
+                wrapped,
+                None,
+                args,
+                kwargs,
             )
         return wrapped(*args, **kwargs)
 
@@ -242,7 +236,7 @@ def process_synchronous_invoke_response(
 
     return response
 
-def process_invoke_request(ingest: IngestUnitsParams, kwargs: Any) -> None: #  noqa: ARG001
+def process_invoke_request(ingest: IngestUnitsParams, *args: Any, **kwargs: Any) -> None: #  noqa: ARG001
     return
 
 def process_converse_streaming_chunk(chunk: 'dict[str, Any]', ingest: IngestUnitsParams) -> None:
@@ -284,5 +278,5 @@ def process_synchronous_converse_response(
 
     return None    
 
-def process_converse_request(ingest: IngestUnitsParams, kwargs: Any) -> None: #  noqa: ARG001
+def process_converse_request(ingest: IngestUnitsParams, *args: Any, **kwargs: Any) -> None: #  noqa: ARG001
     return

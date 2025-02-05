@@ -3,7 +3,7 @@ import logging
 from typing import Any, Union
 from importlib.metadata import version
 
-import tiktoken
+import tiktoken  # type: ignore
 from wrapt import wrap_function_wrapper  # type: ignore
 
 from payi.types import IngestUnitsParams
@@ -23,6 +23,13 @@ class OpenAiInstrumentor:
                 "Completions.create",
                 chat_wrapper(instrumentor),
             )
+
+            wrap_function_wrapper(
+                "openai.resources.chat.completions",
+                "AsyncCompletions.create",
+                achat_wrapper(instrumentor),
+            )
+
         except Exception as e:
             logging.debug(f"Error instrumenting openai: {e}")
             return
@@ -33,19 +40,39 @@ def chat_wrapper(
     instrumentor: PayiInstrumentor,
     wrapped: Any,
     instance: Any,
-    args: Any,
-    kwargs: Any,
+    *args: Any,
+    **kwargs: Any,
 ) -> Any:
     return instrumentor.chat_wrapper(
-        category="system.openai",
-        process_chunk=process_chat_chunk,
-        process_request=process_request,
-        process_synchronous_response=process_chat_synchronous_response,
-        is_streaming=IsStreaming.kwargs,
-        wrapped=wrapped,
-        instance=instance,
-        args=args,
-        kwargs=kwargs,
+        "system.openai",
+        process_chat_chunk,
+        process_request,
+        process_chat_synchronous_response,
+        IsStreaming.kwargs,
+        wrapped,
+        instance,
+        args,
+        kwargs,
+    )
+
+@PayiInstrumentor.payi_awrapper
+async def achat_wrapper(
+    instrumentor: PayiInstrumentor,
+    wrapped: Any,
+    instance: Any,
+    *args: Any,
+    **kwargs: Any,
+) -> Any:
+    return await instrumentor.achat_wrapper(
+        "system.openai",
+        process_chat_chunk,
+        process_request,
+        process_chat_synchronous_response,
+        IsStreaming.kwargs,
+        wrapped,
+        instance,
+        args,
+        kwargs,
     )
 
 
@@ -103,7 +130,7 @@ def has_image_and_get_texts(encoding: tiktoken.Encoding, content: Union[str, 'li
         token_count = sum(len(encoding.encode(item.get("text", ""))) for item in content if item.get("type") == "text")
         return has_image, token_count
 
-def process_request(ingest: IngestUnitsParams, kwargs: Any) -> None:
+def process_request(ingest: IngestUnitsParams, *args: Any, **kwargs: Any) -> None: # noqa: ARG001
     messages = kwargs.get("messages")
     if not messages or len(messages) == 0:
         return
@@ -112,9 +139,9 @@ def process_request(ingest: IngestUnitsParams, kwargs: Any) -> None:
     has_image = False
 
     try: 
-        enc = tiktoken.encoding_for_model(kwargs.get("model"))
+        enc = tiktoken.encoding_for_model(kwargs.get("model")) # type: ignore
     except KeyError:
-        enc = tiktoken.get_encoding("o200k_base")
+        enc = tiktoken.get_encoding("o200k_base") # type: ignore
     
     for message in messages:
         msg_has_image, msg_prompt_tokens = has_image_and_get_texts(enc, message.get('content', ''))
