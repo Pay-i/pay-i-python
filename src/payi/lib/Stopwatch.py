@@ -15,7 +15,7 @@ class Stopwatch:
 
     def elapsed_s(self) -> float:
         if self.start_time is None:
-            raise ValueError("Stopwatch has not been started")
+            return 0.0 # ValueError("Stopwatch has not been started")
         if self.end_time is None:
             return time.perf_counter() - self.start_time
         return self.end_time - self.start_time

@@ -1,6 +1,5 @@
 import json
 import uuid
-import asyncio
 import inspect
 import logging
 import traceback
@@ -11,6 +10,7 @@ from wrapt import ObjectProxy  # type: ignore
 
 from payi import Payi, AsyncPayi
 from payi.types import IngestUnitsParams
+from payi.types.ingest_response import IngestResponse
 from payi.types.ingest_units_params import Units
 from payi.types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
@@ -88,66 +88,170 @@ class PayiInstrumentor:
         except Exception as e:
             logging.error(f"Error instrumenting AWS bedrock: {e}")
 
-    def _ingest_units(self, ingest_units: IngestUnitsParams) -> None:
-        # return early if there are no units to ingest and on a successul ingest request
+    def _process_ingest_units(self, ingest_units: IngestUnitsParams, log_data: 'dict[str, str]') -> bool:
         if int(ingest_units.get("http_status_code") or 0) < 400:
             units = ingest_units.get("units", {})
             if not units or all(unit.get("input", 0) == 0 and unit.get("output", 0) == 0 for unit in units.values()):
                 logging.error(
                     'No units to ingest.  For OpenAI streaming calls, make sure you pass stream_options={"include_usage": True}'
                 )
-                return
+                return False
+
+        if self._log_prompt_and_response and self._prompt_and_response_logger:
+            response_json = ingest_units.pop("provider_response_json", None)
+            request_json = ingest_units.pop("provider_request_json", None)
+            stack_trace = ingest_units.get("properties", {}).pop("system.stack_trace", None)  # type: ignore
+
+            if response_json is not None:
+                # response_json is a list of strings, convert a single json string
+                log_data["provider_response_json"] = json.dumps(response_json)
+            if request_json is not None:
+                log_data["provider_request_json"] = request_json
+            if stack_trace is not None:
+                log_data["stack_trace"] = stack_trace
+
+        return True
+
+    def _process_ingest_units_response(self, ingest_response: IngestResponse) -> None:
+        if ingest_response.xproxy_result.limits:
+            for limit_id, state in ingest_response.xproxy_result.limits.items():
+                removeBlockedId: bool = False
+
+                if state.state == "blocked":
+                    self._blocked_limits.add(limit_id)
+                elif state.state == "exceeded":
+                    self._exceeded_limits.add(limit_id)
+                    removeBlockedId = True
+                elif state.state == "ok":
+                    removeBlockedId = True
+
+                # opportunistically remove blocked limits
+                if removeBlockedId:
+                    self._blocked_limits.discard(limit_id)
+
+    async def _aingest_units(self, ingest_units: IngestUnitsParams) -> None:
+        # return early if there are no units to ingest and on a successul ingest request
+        log_data: 'dict[str,str]' = {}
+        if not self._process_ingest_units(ingest_units, log_data):
+            return
 
         try:
             if isinstance(self._payi, AsyncPayi):
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                try:
-                    ingest_result = loop.run_until_complete(self._payi.ingest.units(**ingest_units))
-                finally:
-                    loop.close()
-            elif isinstance(self._payi, Payi):
-                ingest_result = self._payi.ingest.units(**ingest_units)
+                ingest_response= await self._payi.ingest.units(**ingest_units)
+
+                self._process_ingest_units_response(ingest_response)
+
+                if self._log_prompt_and_response and self._prompt_and_response_logger:
+                    request_id = ingest_response.xproxy_result.request_id
+                    self._prompt_and_response_logger(request_id, log_data)  # type: ignore
             else:
                 logging.error("No payi instance to ingest units")
                 return
-
-            if ingest_result.xproxy_result.limits:
-                for limit_id, state in ingest_result.xproxy_result.limits.items():
-                    removeBlockedId: bool = False
-
-                    if state.state == "blocked":
-                        self._blocked_limits.add(limit_id)
-                    elif state.state == "exceeded":
-                        self._exceeded_limits.add(limit_id)
-                        removeBlockedId = True
-                    elif state.state == "ok":
-                        removeBlockedId = True
-
-                    # opportunistically remove blocked limits
-                    if removeBlockedId:
-                        self._blocked_limits.discard(limit_id)
-
-            if self._log_prompt_and_response and self._prompt_and_response_logger:
-                request_id = ingest_result.xproxy_result.request_id
-
-                log_data = {}
-                response_json = ingest_units.pop("provider_response_json", None)
-                request_json = ingest_units.pop("provider_request_json", None)
-                stack_trace = ingest_units.get("properties", {}).pop("system.stack_trace", None)  # type: ignore
-
-                if response_json is not None:
-                    # response_json is a list of strings, convert a single json string
-                    log_data["provider_response_json"] = json.dumps(response_json)
-                if request_json is not None:
-                    log_data["provider_request_json"] = request_json
-                if stack_trace is not None:
-                    log_data["stack_trace"] = stack_trace
-
-                self._prompt_and_response_logger(request_id, log_data)  # type: ignore
-
         except Exception as e:
             logging.error(f"Error Pay-i ingesting result: {e}")
+
+    def _ingest_units(self, ingest_units: IngestUnitsParams) -> None:
+        # return early if there are no units to ingest and on a successul ingest request
+        log_data: 'dict[str,str]' = {}
+        if not self._process_ingest_units(ingest_units, log_data):
+            return
+
+        try:
+            if isinstance(self._payi, Payi):
+                ingest_response = self._payi.ingest.units(**ingest_units)
+
+                self._process_ingest_units_response(ingest_response)
+
+                if self._log_prompt_and_response and self._prompt_and_response_logger:
+                    request_id = ingest_response.xproxy_result.request_id
+                    self._prompt_and_response_logger(request_id, log_data)  # type: ignore
+            else:
+                logging.error("No payi instance to ingest units")
+                return
+        except Exception as e:
+            logging.error(f"Error Pay-i ingesting result: {e}")
+
+    def _setup_call_func(
+        self
+        ) -> 'tuple[dict[str, Any], Optional[str], Optional[str]]':
+        if len(self._context_stack) > 0:
+            # copy current context into the upcoming context
+            context = self._context_stack[-1].copy()
+            context.pop("proxy", None)
+            previous_experience_name = context["experience_name"]
+            previous_experience_id = context["experience_id"]
+        else:
+            context = {}
+            previous_experience_name = None
+            previous_experience_id = None
+        return (context, previous_experience_name, previous_experience_id)
+
+    def _init_context(
+        self,
+        context: "dict[str, Any]",
+        previous_experience_name: Optional[str],
+        previous_experience_id: Optional[str],
+        proxy: bool,
+        limit_ids: Optional["list[str]"],
+        request_tags: Optional["list[str]"],
+        experience_name: Optional[str],
+        experience_id: Optional[str],
+        user_id: Optional[str],
+        ) -> None:
+        context["proxy"] = proxy
+
+        # Handle experience name and ID logic
+        if not experience_name:
+            # If no experience_name specified, use previous values
+            context["experience_name"] = previous_experience_name
+            context["experience_id"] = previous_experience_id
+        else:
+            # If experience_name is specified
+            if experience_name == previous_experience_name:
+                # Same experience name, use previous ID unless new one specified
+                context["experience_name"] = experience_name
+                context["experience_id"] = experience_id if experience_id else previous_experience_id
+            else:
+                # Different experience name, use specified ID or generate one
+                context["experience_name"] = experience_name
+                context["experience_id"] = experience_id if experience_id else str(uuid.uuid4())
+
+        # set any values explicitly passed by the caller, otherwise use what is already in the context
+        if limit_ids:
+            context["limit_ids"] = limit_ids
+        if request_tags:
+            context["request_tags"] = request_tags
+        if user_id:
+            context["user_id"] = user_id
+
+        self.set_context(context)
+        
+    async def _acall_func(
+        self,
+        func: Any,
+        proxy: bool,
+        limit_ids: Optional["list[str]"],
+        request_tags: Optional["list[str]"],
+        experience_name: Optional[str],
+        experience_id: Optional[str],
+        user_id: Optional[str],
+        *args: Any,
+        **kwargs: Any,
+    ) -> Any:
+        context, previous_experience_name, previous_experience_id = self._setup_call_func()
+
+        with self:
+            self._init_context(
+                context,
+                previous_experience_name,
+                previous_experience_id,
+                proxy, 
+                limit_ids, 
+                request_tags,
+                experience_name,
+                experience_id,
+                user_id)
+            return await func(*args, **kwargs)
 
     def _call_func(
         self,
@@ -161,46 +265,19 @@ class PayiInstrumentor:
         *args: Any,
         **kwargs: Any,
     ) -> Any:
-        if len(self._context_stack) > 0:
-            # copy current context into the upcoming context
-            context = self._context_stack[-1].copy()
-            context.pop("proxy", None)
-            previous_experience_name = context["experience_name"]
-            previous_experience_id = context["experience_id"]
-        else:
-            context = {}
-            previous_experience_name = None
-            previous_experience_id = None
+        context, previous_experience_name, previous_experience_id = self._setup_call_func()
 
         with self:
-            context["proxy"] = proxy
-
-            # Handle experience name and ID logic
-            if not experience_name:
-                # If no experience_name specified, use previous values
-                context["experience_name"] = previous_experience_name
-                context["experience_id"] = previous_experience_id
-            else:
-                # If experience_name is specified
-                if experience_name == previous_experience_name:
-                    # Same experience name, use previous ID unless new one specified
-                    context["experience_name"] = experience_name
-                    context["experience_id"] = experience_id if experience_id else previous_experience_id
-                else:
-                    # Different experience name, use specified ID or generate one
-                    context["experience_name"] = experience_name
-                    context["experience_id"] = experience_id if experience_id else str(uuid.uuid4())
-
-            # set any values explicitly passed by the caller, otherwise use what is already in the context
-            if limit_ids:
-                context["limit_ids"] = limit_ids
-            if request_tags:
-                context["request_tags"] = request_tags
-            if user_id:
-                context["user_id"] = user_id
-
-            self.set_context(context)
-
+            self._init_context(
+                context,
+                previous_experience_name,
+                previous_experience_id,
+                proxy, 
+                limit_ids, 
+                request_tags,
+                experience_name,
+                experience_id,
+                user_id)
             return func(*args, **kwargs)
 
     def __enter__(self) -> Any:
@@ -222,11 +299,163 @@ class PayiInstrumentor:
         # Return the current top of the stack
         return self._context_stack[-1] if self._context_stack else None
 
+
+    def _prepare_ingest(
+        self,
+        ingest: IngestUnitsParams,
+        ingest_extra_headers: "dict[str, str]", # do not coflict potential kwargs["extra_headers"]
+        **kwargs: Any,
+    ) -> None:
+        limit_ids = ingest_extra_headers.pop("xProxy-Limit-IDs", None)
+        request_tags = ingest_extra_headers.pop("xProxy-Request-Tags", None)
+        experience_name = ingest_extra_headers.pop("xProxy-Experience-Name", None)
+        experience_id = ingest_extra_headers.pop("xProxy-Experience-ID", None)
+        user_id = ingest_extra_headers.pop("xProxy-User-ID", None)
+
+        if limit_ids:
+            ingest["limit_ids"] = limit_ids.split(",")
+        if request_tags:
+            ingest["request_tags"] = request_tags.split(",")
+        if experience_name:
+            ingest["experience_name"] = experience_name
+        if experience_id:
+            ingest["experience_id"] = experience_id
+        if user_id:
+            ingest["user_id"] = user_id
+
+        if len(ingest_extra_headers) > 0:
+            ingest["provider_request_headers"] = [PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) for k, v in ingest_extra_headers.items()]
+
+        provider_prompt = {}
+        for k, v in kwargs.items():
+            if k == "messages":
+                provider_prompt[k] = [m.model_dump() if hasattr(m, "model_dump") else m for m in v]
+            elif k in ["extra_headers", "extra_query"]:
+                pass
+            else:
+                provider_prompt[k] = v
+
+        if self._log_prompt_and_response:
+            ingest["provider_request_json"] = json.dumps(provider_prompt)
+
+    async def achat_wrapper(
+        self,
+        category: str,
+        process_chunk: Optional[Callable[[Any, IngestUnitsParams], None]],
+        process_request: Optional[Callable[[IngestUnitsParams, Any, Any], None]],
+        process_synchronous_response: Any,
+        is_streaming: IsStreaming,
+        wrapped: Any,
+        instance: Any,
+        args: Any,
+        kwargs: Any,
+    ) -> Any:
+        context = self.get_context()
+
+        is_bedrock:bool = category == "system.aws.bedrock"
+
+        if not context:
+            if is_bedrock:
+                # boto3 doesn't allow extra_headers
+                kwargs.pop("extra_headers", None)
+    
+            # wrapped function invoked outside of decorator scope
+            return await wrapped(*args, **kwargs)
+
+        # after _udpate_headers, all metadata to add to ingest is in extra_headers, keyed by the xproxy-xxx header name
+        extra_headers = kwargs.get("extra_headers", {})
+        self._update_headers(context, extra_headers)
+
+        if context.get("proxy", True):
+            if "extra_headers" not in kwargs:
+                kwargs["extra_headers"] = extra_headers
+
+            return await wrapped(*args, **kwargs)
+
+        ingest: IngestUnitsParams = {"category": category, "units": {}} # type: ignore
+        if is_bedrock:
+            # boto3 doesn't allow extra_headers
+            kwargs.pop("extra_headers", None)
+            ingest["resource"] = kwargs.get("modelId", "")
+        else:
+            ingest["resource"] = kwargs.get("model", "")
+
+        current_frame = inspect.currentframe()
+        # f_back excludes the current frame, strip() cleans up whitespace and newlines
+        stack = [frame.strip() for frame in traceback.format_stack(current_frame.f_back)]  # type: ignore
+
+        ingest['properties'] = { 'system.stack_trace': json.dumps(stack) }
+
+        if process_request:
+            process_request(ingest, (), instance)
+
+        sw = Stopwatch()
+        stream: bool = False
+        
+        if is_streaming == IsStreaming.kwargs:
+            stream = kwargs.get("stream", False)
+        elif is_streaming == IsStreaming.true:
+            stream = True
+        else:
+            stream = False
+
+        try:
+            self._prepare_ingest(ingest, extra_headers, **kwargs)
+            sw.start()
+            response = await wrapped(*args, **kwargs)
+
+        except Exception as e:  # pylint: disable=broad-except
+            sw.stop()
+            duration = sw.elapsed_ms_int()
+
+            # TODO ingest error
+
+            raise e
+
+        if stream:
+            stream_result = ChatStreamWrapper(
+                response=response,
+                instance=instance,
+                instrumentor=self,
+                log_prompt_and_response=self._log_prompt_and_response,
+                ingest=ingest,
+                stopwatch=sw,
+                process_chunk=process_chunk,
+                is_bedrock=is_bedrock,
+            )
+
+            if is_bedrock:
+                if "body" in response:
+                    response["body"] = stream_result
+                else:
+                    response["stream"] = stream_result
+                return response
+            
+            return stream_result
+
+        sw.stop()
+        duration = sw.elapsed_ms_int()
+        ingest["end_to_end_latency_ms"] = duration
+        ingest["http_status_code"] = 200
+
+        if process_synchronous_response:
+            return_result: Any = process_synchronous_response(
+                response=response,
+                ingest=ingest,
+                log_prompt_and_response=self._log_prompt_and_response,
+                instrumentor=self)
+            if return_result:
+                return return_result
+
+        await self._aingest_units(ingest)
+
+        return response
+
     def chat_wrapper(
         self,
         category: str,
         process_chunk: Optional[Callable[[Any, IngestUnitsParams], None]],
-        process_request: Optional[Callable[[IngestUnitsParams, Any], None]],
+        process_request: Optional[Callable[[IngestUnitsParams, Any, Any], None]],
         process_synchronous_response: Any,
         is_streaming: IsStreaming,
         wrapped: Any,
@@ -255,7 +484,7 @@ class PayiInstrumentor:
                 kwargs["extra_headers"] = extra_headers
 
             return wrapped(*args, **kwargs)
-
+        
         ingest: IngestUnitsParams = {"category": category, "units": {}} # type: ignore
         if is_bedrock:
             # boto3 doesn't allow extra_headers
@@ -271,7 +500,7 @@ class PayiInstrumentor:
         ingest['properties'] = { 'system.stack_trace': json.dumps(stack) }
 
         if process_request:
-            process_request(ingest, kwargs)
+            process_request(ingest, (), kwargs)
 
         sw = Stopwatch()
         stream: bool = False
@@ -284,40 +513,9 @@ class PayiInstrumentor:
             stream = False
 
         try:
-            limit_ids = extra_headers.pop("xProxy-Limit-IDs", None)
-            request_tags = extra_headers.pop("xProxy-Request-Tags", None)
-            experience_name = extra_headers.pop("xProxy-Experience-Name", None)
-            experience_id = extra_headers.pop("xProxy-Experience-ID", None)
-            user_id = extra_headers.pop("xProxy-User-ID", None)
-
-            if limit_ids:
-                ingest["limit_ids"] = limit_ids.split(",")
-            if request_tags:
-                ingest["request_tags"] = request_tags.split(",")
-            if experience_name:
-                ingest["experience_name"] = experience_name
-            if experience_id:
-                ingest["experience_id"] = experience_id
-            if user_id:
-                ingest["user_id"] = user_id
-
-            if len(extra_headers) > 0:
-                ingest["provider_request_headers"] = [PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) for k, v in extra_headers.items()]
-
-            provider_prompt = {}
-            for k, v in kwargs.items():
-                if k == "messages":
-                    provider_prompt[k] = [m.model_dump() if hasattr(m, "model_dump") else m for m in v]
-                elif k in ["extra_headers", "extra_query"]:
-                    pass
-                else:
-                    provider_prompt[k] = v
-
-            if self._log_prompt_and_response:
-                ingest["provider_request_json"] = json.dumps(provider_prompt)
-
+            self._prepare_ingest(ingest, extra_headers, **kwargs)
             sw.start()
-            response = wrapped(*args, **kwargs.copy())
+            response = wrapped(*args, **kwargs)
 
         except Exception as e:  # pylint: disable=broad-except
             sw.stop()
@@ -431,13 +629,29 @@ class PayiInstrumentor:
                     o,
                     wrapped,
                     instance,
-                    args,
-                    kwargs,
+                    *args,
+                    **kwargs,
                 )
 
             return wrapper
 
         return _payi_wrapper
+
+    @staticmethod
+    def payi_awrapper(func: Any) -> Any:
+        def _payi_awrapper(o: Any) -> Any:
+            async def wrapper(wrapped: Any, instance: Any, args: Any, kwargs: Any) -> Any:
+                return await func(
+                    o,
+                    wrapped,
+                    instance,
+                    *args,
+                    **kwargs,
+                )
+
+            return wrapper
+
+        return _payi_awrapper
 
 class ChatStreamWrapper(ObjectProxy):  # type: ignore
     def __init__(
@@ -530,7 +744,7 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
             chunk: Any = await self.__wrapped__.__anext__()  # type: ignore
         except Exception as e:
             if isinstance(e, StopAsyncIteration):
-                self._stop_iteration()
+                await self._astop_iteration()
             raise e
         else:
             self._evaluate_chunk(chunk)
@@ -547,7 +761,7 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
         if self._process_chunk:
             self._process_chunk(chunk, self._ingest)
 
-    def _stop_iteration(self) -> None:
+    def _process_stop_iteration(self) -> None:
         self._stopwatch.stop()
         self._ingest["end_to_end_latency_ms"] = self._stopwatch.elapsed_ms_int()
         self._ingest["http_status_code"] = 200
@@ -555,6 +769,12 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
         if self._log_prompt_and_response:
             self._ingest["provider_response_json"] = self._responses
 
+    async def _astop_iteration(self) -> None:
+        self._process_stop_iteration()
+        await self._instrumentor._aingest_units(self._ingest)
+
+    def _stop_iteration(self) -> None:
+        self._process_stop_iteration()
         self._instrumentor._ingest_units(self._ingest)
 
     @staticmethod
@@ -586,7 +806,6 @@ def payi_instrument(
         prompt_and_response_logger=prompt_and_response_logger,
     )
 
-
 def ingest(
     limit_ids: Optional["list[str]"] = None,
     request_tags: Optional["list[str]"] = None,
@@ -595,21 +814,36 @@ def ingest(
     user_id: Optional[str] = None,
 ) -> Any:
     def _ingest(func: Any) -> Any:
-        def _ingest_wrapper(*args: Any, **kwargs: Any) -> Any:
-            return _instrumentor._call_func(
-                func,
-                False,  # false -> ingest
-                limit_ids,
-                request_tags,
-                experience_name,
-                experience_id,
-                user_id,
-                *args,
-                **kwargs,
-            )
-
-        return _ingest_wrapper
-
+        import asyncio
+        if asyncio.iscoroutinefunction(func):
+            async def awrapper(*args: Any, **kwargs: Any) -> Any:
+                # Call the instrumentor's _call_func for async functions
+                return await _instrumentor._acall_func(
+                    func,
+                    False,
+                    limit_ids,
+                    request_tags,
+                    experience_name,
+                    experience_id,
+                    user_id,
+                    *args,
+                    *kwargs,
+                )
+            return awrapper
+        else:
+            def wrapper(*args: Any, **kwargs: Any) -> Any:
+                return _instrumentor._call_func(
+                    func,
+                    False,
+                    limit_ids,
+                    request_tags,
+                    experience_name,
+                    experience_id,
+                    user_id,
+                    *args,
+                    **kwargs,
+                )
+            return wrapper
     return _ingest
 
 def proxy(
@@ -620,11 +854,36 @@ def proxy(
     user_id: Optional[str] = None,
 ) -> Any:
     def _proxy(func: Any) -> Any:
-        def _proxy_wrapper(*args: Any, **kwargs: Any) -> Any:
-            return _instrumentor._call_func(
-                func, True, limit_ids, request_tags, experience_name, experience_id, user_id, *args, **kwargs
-            )
+        import asyncio
+        if asyncio.iscoroutinefunction(func):
+            async def _proxy_awrapper(*args: Any, **kwargs: Any) -> Any:
+                return await _instrumentor._call_func(
+                    func,
+                    True,
+                    limit_ids,
+                    request_tags,
+                    experience_name,
+                    experience_id,
+                    user_id,
+                    *args,
+                    **kwargs
+                )
 
-        return _proxy_wrapper
+            return _proxy_awrapper
+        else:
+            def _proxy_wrapper(*args: Any, **kwargs: Any) -> Any:
+                return _instrumentor._call_func(
+                    func,
+                    True,
+                    limit_ids,
+                    request_tags,
+                    experience_name,
+                    experience_id,
+                    user_id,
+                    *args,
+                    **kwargs
+                )
+
+            return _proxy_wrapper
 
     return _proxy
