@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.44 (2025-02-06)
+
+Full Changelog: [v0.1.0-alpha.43...v0.1.0-alpha.44](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.43...v0.1.0-alpha.44)
+
+### Features
+
+* feat(api): azure openai ([#215](https://github.com/Pay-i/pay-i-python/issues/215)) ([55781bc](https://github.com/Pay-i/pay-i-python/commit/55781bc055535677c2b694a20172abfde595c596))
+
 ## 0.1.0-alpha.43 (2025-02-06)
 
 Full Changelog: [v0.1.0-alpha.42...v0.1.0-alpha.43](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.42...v0.1.0-alpha.43)
