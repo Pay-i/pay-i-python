@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.45 (2025-02-06)
+
+Full Changelog: [v0.1.0-alpha.44...v0.1.0-alpha.45](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.44...v0.1.0-alpha.45)
+
+### Features
+
+* fix: preserve kwargs ([7d82f65](https://github.com/Pay-i/pay-i-python/commit/7d82f65c1dc74bf83cb661aca9a2f6dfe268c2df))
+
 ## 0.1.0-alpha.44 (2025-02-06)
 
 Full Changelog: [v0.1.0-alpha.43...v0.1.0-alpha.44](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.43...v0.1.0-alpha.44)
