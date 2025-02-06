@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.46 (2025-02-06)
+
+Full Changelog: [v0.1.0-alpha.45...v0.1.0-alpha.46](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.45...v0.1.0-alpha.46)
+
+### Features
+
+* feat: OpenAI embeddings instrumentation ([8649277](https://github.com/Pay-i/pay-i-python/commit/864927729c11c54b4505123ee9c8c3ac6fec2304))
+
 ## 0.1.0-alpha.45 (2025-02-06)
 
 Full Changelog: [v0.1.0-alpha.44...v0.1.0-alpha.45](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.44...v0.1.0-alpha.45)
