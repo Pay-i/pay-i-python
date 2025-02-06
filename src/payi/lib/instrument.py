@@ -1,3 +1,5 @@
+import asyncio
+import nest_asyncio # type: ignore
 import json
 import uuid
 import inspect
@@ -131,28 +133,54 @@ class PayiInstrumentor:
                 if removeBlockedId:
                     self._blocked_limits.discard(limit_id)
 
-    async def _aingest_units(self, ingest_units: IngestUnitsParams) -> None:
+    async def _aingest_units(self, ingest_units: IngestUnitsParams) -> Optional[IngestResponse]:
+        ingest_response: Optional[IngestResponse] = None
+    
         # return early if there are no units to ingest and on a successul ingest request
         log_data: 'dict[str,str]' = {}
         if not self._process_ingest_units(ingest_units, log_data):
             return
 
         try:
-            if self._apayi:
+            if self._apayi:    
                 ingest_response= await self._apayi.ingest.units(**ingest_units)
-
-                self._process_ingest_units_response(ingest_response)
-
-                if self._log_prompt_and_response and self._prompt_and_response_logger:
-                    request_id = ingest_response.xproxy_result.request_id
-                    self._prompt_and_response_logger(request_id, log_data)  # type: ignore
+            elif self._payi:
+                ingest_response = self._payi.ingest.units(**ingest_units)
             else:
                 logging.error("No payi instance to ingest units")
-                return                
+                return None         
+
+            if ingest_response:
+                self._process_ingest_units_response(ingest_response)
+
+                if ingest_response and self._log_prompt_and_response and self._prompt_and_response_logger:
+                    request_id = ingest_response.xproxy_result.request_id
+                    self._prompt_and_response_logger(request_id, log_data)  # type: ignore
+
+            return ingest_response
         except Exception as e:
             logging.error(f"Error Pay-i ingesting result: {e}")
-
-    def _ingest_units(self, ingest_units: IngestUnitsParams) -> None:
+    
+        return None         
+    
+    def _call_aingest_sync(self, ingest_units: IngestUnitsParams) -> Optional[IngestResponse]:
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+        
+        try:
+            if loop and loop.is_running():
+                nest_asyncio.apply(loop) # type: ignore
+                return asyncio.run(self._aingest_units(ingest_units))                
+            else:
+                # When there's no running loop, create a new one
+                return asyncio.run(self._aingest_units(ingest_units))
+        except Exception as e:
+            logging.error(f"Error calling aingest_units synchronously: {e}")
+        return None
+        
+    def _ingest_units(self, ingest_units: IngestUnitsParams) -> Optional[IngestResponse]:
         # return early if there are no units to ingest and on a successul ingest request
         log_data: 'dict[str,str]' = {}
         if not self._process_ingest_units(ingest_units, log_data):
@@ -161,17 +189,24 @@ class PayiInstrumentor:
         try:
             if self._payi:
                 ingest_response = self._payi.ingest.units(**ingest_units)
-
                 self._process_ingest_units_response(ingest_response)
 
                 if self._log_prompt_and_response and self._prompt_and_response_logger:
                     request_id = ingest_response.xproxy_result.request_id
                     self._prompt_and_response_logger(request_id, log_data)  # type: ignore
+
+                return ingest_response
+            elif self._apayi:
+                # task runs async. aingest_units will invoke the callback and post process
+                ingest_response = self._call_aingest_sync(ingest_units)
+                return ingest_response
             else:
                 logging.error("No payi instance to ingest units")
-                return
+
         except Exception as e:
             logging.error(f"Error Pay-i ingesting result: {e}")
+        
+        return None
 
     def _setup_call_func(
         self

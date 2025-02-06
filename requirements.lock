@@ -7,6 +7,7 @@
 #   all-features: true
 #   with-sources: false
 #   generate-hashes: false
+#   universal: false
 
 -e file:.
 annotated-types==0.6.0
@@ -34,6 +35,8 @@ idna==3.4
     # via anyio
     # via httpx
     # via requests
+nest-asyncio==1.6.0
+    # via payi
 pydantic==2.10.3
     # via payi
 pydantic-core==2.27.1
