@@ -1,13 +1,13 @@
-import asyncio
-import nest_asyncio # type: ignore
 import json
 import uuid
+import asyncio
 import inspect
 import logging
 import traceback
 from enum import Enum
 from typing import Any, Set, Union, Callable, Optional
 
+import nest_asyncio  # type: ignore
 from wrapt import ObjectProxy  # type: ignore
 
 from payi import Payi, AsyncPayi
@@ -139,7 +139,7 @@ class PayiInstrumentor:
         # return early if there are no units to ingest and on a successul ingest request
         log_data: 'dict[str,str]' = {}
         if not self._process_ingest_units(ingest_units, log_data):
-            return
+            return None
 
         try:
             if self._apayi:    
@@ -181,10 +181,12 @@ class PayiInstrumentor:
         return None
         
     def _ingest_units(self, ingest_units: IngestUnitsParams) -> Optional[IngestResponse]:
+        ingest_response: Optional[IngestResponse] = None
+        
         # return early if there are no units to ingest and on a successul ingest request
         log_data: 'dict[str,str]' = {}
         if not self._process_ingest_units(ingest_units, log_data):
-            return
+            return None
 
         try:
             if self._payi:
