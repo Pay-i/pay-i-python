@@ -23,7 +23,7 @@ class OpenAiInstrumentor:
     def instrument(instrumentor: PayiInstrumentor) -> None:
         try:
             from openai import OpenAI  # type: ignore #  noqa: F401  I001
-
+            
             wrap_function_wrapper(
                 "openai.resources.chat.completions",
                 "Completions.create",
@@ -36,10 +36,62 @@ class OpenAiInstrumentor:
                 achat_wrapper(instrumentor),
             )
 
+            wrap_function_wrapper(
+                "openai.resources.embeddings",
+                "Embeddings.create",
+                embeddings_wrapper(instrumentor),
+            )
+
+            wrap_function_wrapper(
+                "openai.resources.embeddings",
+                 "AsyncEmbeddings.create",
+                aembeddings_wrapper(instrumentor),
+            )
+
         except Exception as e:
             logging.debug(f"Error instrumenting openai: {e}")
             return
 
+
+@PayiInstrumentor.payi_wrapper
+def embeddings_wrapper(
+    instrumentor: PayiInstrumentor,
+    wrapped: Any,
+    instance: Any,
+    *args: Any,
+    **kwargs: Any,
+) -> Any:
+    return instrumentor.chat_wrapper(
+        "system.openai",
+        None, # process_chat_chunk,
+        None, # process_chat_request,
+        process_ebmeddings_synchronous_response,
+        IsStreaming.false,
+        wrapped,
+        instance,
+        args,
+        kwargs,
+    )
+
+@PayiInstrumentor.payi_wrapper
+async def aembeddings_wrapper(
+    instrumentor: PayiInstrumentor,
+    wrapped: Any,
+    instance: Any,
+    *args: Any,
+    **kwargs: Any,
+) -> Any:
+    return await instrumentor.achat_wrapper(
+        "system.openai",
+        None, # process_chat_chunk,
+        None, # process_chat_request,
+        process_ebmeddings_synchronous_response,
+        IsStreaming.false,
+        wrapped,
+        instance,
+        args,
+        kwargs,
+    )
 
 @PayiInstrumentor.payi_wrapper
 def chat_wrapper(
@@ -52,7 +104,7 @@ def chat_wrapper(
     return instrumentor.chat_wrapper(
         "system.openai",
         process_chat_chunk,
-        process_request,
+        process_chat_request,
         process_chat_synchronous_response,
         IsStreaming.kwargs,
         wrapped,
@@ -72,7 +124,7 @@ async def achat_wrapper(
     return await instrumentor.achat_wrapper(
         "system.openai",
         process_chat_chunk,
-        process_request,
+        process_chat_request,
         process_chat_synchronous_response,
         IsStreaming.kwargs,
         wrapped,
@@ -81,11 +133,13 @@ async def achat_wrapper(
         kwargs,
     )
 
+def process_ebmeddings_synchronous_response(response: str, ingest: IngestUnitsParams, log_prompt_and_response: bool, **kwargs: Any) -> Any: #  noqa: ARG001
+    return process_chat_synchronous_response(response, ingest, log_prompt_and_response, **kwargs)
 
 def process_chat_synchronous_response(response: str, ingest: IngestUnitsParams, log_prompt_and_response: bool, **kwargs: Any) -> Any: #  noqa: ARG001
     response_dict = model_to_dict(response)
 
-    add_usage_units(response_dict["usage"], ingest["units"])
+    add_usage_units(response_dict.get("usage", {}), ingest["units"])
 
     if log_prompt_and_response:
         ingest["provider_response_json"] = [json.dumps(response_dict)]
@@ -136,7 +190,7 @@ def has_image_and_get_texts(encoding: tiktoken.Encoding, content: Union[str, 'li
         token_count = sum(len(encoding.encode(item.get("text", ""))) for item in content if item.get("type") == "text")
         return has_image, token_count
 
-def process_request(ingest: IngestUnitsParams, *args: Any, **kwargs: Any) -> None: # noqa: ARG001
+def process_chat_request(ingest: IngestUnitsParams, *args: Any, **kwargs: Any) -> None: # noqa: ARG001
     messages = kwargs.get("messages")
     if not messages or len(messages) == 0:
         return
