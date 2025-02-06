@@ -897,7 +897,7 @@ def ingest(
                     experience_id,
                     user_id,
                     *args,
-                    *kwargs,
+                    **kwargs,
                 )
             return awrapper
         else:
