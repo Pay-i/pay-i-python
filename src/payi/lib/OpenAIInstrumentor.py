@@ -14,6 +14,12 @@ from .instrument import IsStreaming, PayiInstrumentor
 
 class OpenAiInstrumentor:
     @staticmethod
+    def is_azure(instance: Any) -> bool:
+        from openai import AzureOpenAI, AsyncAzureOpenAI # type: ignore # noqa: I001
+
+        return isinstance(instance._client, (AsyncAzureOpenAI, AzureOpenAI))
+
+    @staticmethod
     def instrument(instrumentor: PayiInstrumentor) -> None:
         try:
             from openai import OpenAI  # type: ignore #  noqa: F401  I001

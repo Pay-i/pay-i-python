@@ -1,11 +1,13 @@
 import json
 import uuid
+import asyncio
 import inspect
 import logging
 import traceback
 from enum import Enum
 from typing import Any, Set, Union, Callable, Optional
 
+import nest_asyncio  # type: ignore
 from wrapt import ObjectProxy  # type: ignore
 
 from payi import Payi, AsyncPayi
@@ -28,14 +30,16 @@ class PayiInstrumentor:
 
     def __init__(
         self,
-        payi: Union[Payi, AsyncPayi, None] = None,
+        payi: Optional[Payi],
+        apayi: Optional[AsyncPayi],
         instruments: Union[Set[Instruments], None] = None,
         log_prompt_and_response: bool = True,
         prompt_and_response_logger: Optional[
             Callable[[str, "dict[str, str]"], None]
         ] = None,  # (request id, dict of data to store) -> None
     ):
-        self._payi: Union[Payi, AsyncPayi, None] = payi
+        self._payi: Optional[Payi] = payi
+        self._apayi: Optional[AsyncPayi] = apayi
         self._context_stack: list[dict[str, Any]] = []  # Stack of context dictionaries
         self._log_prompt_and_response: bool = log_prompt_and_response
         self._prompt_and_response_logger: Optional[Callable[[str, dict[str, str]], None]] = prompt_and_response_logger
@@ -129,47 +133,82 @@ class PayiInstrumentor:
                 if removeBlockedId:
                     self._blocked_limits.discard(limit_id)
 
-    async def _aingest_units(self, ingest_units: IngestUnitsParams) -> None:
+    async def _aingest_units(self, ingest_units: IngestUnitsParams) -> Optional[IngestResponse]:
+        ingest_response: Optional[IngestResponse] = None
+    
         # return early if there are no units to ingest and on a successul ingest request
         log_data: 'dict[str,str]' = {}
         if not self._process_ingest_units(ingest_units, log_data):
-            return
+            return None
 
         try:
-            if isinstance(self._payi, AsyncPayi):
-                ingest_response= await self._payi.ingest.units(**ingest_units)
-
-                self._process_ingest_units_response(ingest_response)
-
-                if self._log_prompt_and_response and self._prompt_and_response_logger:
-                    request_id = ingest_response.xproxy_result.request_id
-                    self._prompt_and_response_logger(request_id, log_data)  # type: ignore
-            else:
-                logging.error("No payi instance to ingest units")
-                return
-        except Exception as e:
-            logging.error(f"Error Pay-i ingesting result: {e}")
-
-    def _ingest_units(self, ingest_units: IngestUnitsParams) -> None:
-        # return early if there are no units to ingest and on a successul ingest request
-        log_data: 'dict[str,str]' = {}
-        if not self._process_ingest_units(ingest_units, log_data):
-            return
-
-        try:
-            if isinstance(self._payi, Payi):
+            if self._apayi:    
+                ingest_response= await self._apayi.ingest.units(**ingest_units)
+            elif self._payi:
                 ingest_response = self._payi.ingest.units(**ingest_units)
+            else:
+                logging.error("No payi instance to ingest units")
+                return None         
 
+            if ingest_response:
+                self._process_ingest_units_response(ingest_response)
+
+                if ingest_response and self._log_prompt_and_response and self._prompt_and_response_logger:
+                    request_id = ingest_response.xproxy_result.request_id
+                    self._prompt_and_response_logger(request_id, log_data)  # type: ignore
+
+            return ingest_response
+        except Exception as e:
+            logging.error(f"Error Pay-i ingesting result: {e}")
+    
+        return None         
+    
+    def _call_aingest_sync(self, ingest_units: IngestUnitsParams) -> Optional[IngestResponse]:
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+        
+        try:
+            if loop and loop.is_running():
+                nest_asyncio.apply(loop) # type: ignore
+                return asyncio.run(self._aingest_units(ingest_units))                
+            else:
+                # When there's no running loop, create a new one
+                return asyncio.run(self._aingest_units(ingest_units))
+        except Exception as e:
+            logging.error(f"Error calling aingest_units synchronously: {e}")
+        return None
+        
+    def _ingest_units(self, ingest_units: IngestUnitsParams) -> Optional[IngestResponse]:
+        ingest_response: Optional[IngestResponse] = None
+        
+        # return early if there are no units to ingest and on a successul ingest request
+        log_data: 'dict[str,str]' = {}
+        if not self._process_ingest_units(ingest_units, log_data):
+            return None
+
+        try:
+            if self._payi:
+                ingest_response = self._payi.ingest.units(**ingest_units)
                 self._process_ingest_units_response(ingest_response)
 
                 if self._log_prompt_and_response and self._prompt_and_response_logger:
                     request_id = ingest_response.xproxy_result.request_id
                     self._prompt_and_response_logger(request_id, log_data)  # type: ignore
+
+                return ingest_response
+            elif self._apayi:
+                # task runs async. aingest_units will invoke the callback and post process
+                ingest_response = self._call_aingest_sync(ingest_units)
+                return ingest_response
             else:
                 logging.error("No payi instance to ingest units")
-                return
+
         except Exception as e:
             logging.error(f"Error Pay-i ingesting result: {e}")
+        
+        return None
 
     def _setup_call_func(
         self
@@ -352,13 +391,9 @@ class PayiInstrumentor:
     ) -> Any:
         context = self.get_context()
 
-        is_bedrock:bool = category == "system.aws.bedrock"
+        # Bedrock client does not have an async method
 
-        if not context:
-            if is_bedrock:
-                # boto3 doesn't allow extra_headers
-                kwargs.pop("extra_headers", None)
-    
+        if not context:   
             # wrapped function invoked outside of decorator scope
             return await wrapped(*args, **kwargs)
 
@@ -373,12 +408,20 @@ class PayiInstrumentor:
             return await wrapped(*args, **kwargs)
 
         ingest: IngestUnitsParams = {"category": category, "units": {}} # type: ignore
-        if is_bedrock:
-            # boto3 doesn't allow extra_headers
-            kwargs.pop("extra_headers", None)
-            ingest["resource"] = kwargs.get("modelId", "")
-        else:
-            ingest["resource"] = kwargs.get("model", "")
+        ingest["resource"] = kwargs.get("model", "")
+
+        if category == "system.openai" and instance and hasattr(instance, "_client"):
+            from .OpenAIInstrumentor import OpenAiInstrumentor # noqa: I001
+
+            if OpenAiInstrumentor.is_azure(instance):
+                resource = extra_headers.pop("xProxy-RouteAs-Resource", None)
+                if not resource:
+                    logging.error("Azure OpenAI route as resource not found, not ingesting")
+                    return await wrapped(*args, **kwargs)
+
+                category = "system.azureopenai"
+                ingest["category"] = category
+                ingest["resource"] = resource
 
         current_frame = inspect.currentframe()
         # f_back excludes the current frame, strip() cleans up whitespace and newlines
@@ -421,16 +464,9 @@ class PayiInstrumentor:
                 ingest=ingest,
                 stopwatch=sw,
                 process_chunk=process_chunk,
-                is_bedrock=is_bedrock,
+                is_bedrock=False,
             )
 
-            if is_bedrock:
-                if "body" in response:
-                    response["body"] = stream_result
-                else:
-                    response["stream"] = stream_result
-                return response
-            
             return stream_result
 
         sw.stop()
@@ -492,6 +528,18 @@ class PayiInstrumentor:
             ingest["resource"] = kwargs.get("modelId", "")
         else:
             ingest["resource"] = kwargs.get("model", "")
+
+        if category == "system.openai" and instance and hasattr(instance, "_client"):
+            from .OpenAIInstrumentor import OpenAiInstrumentor
+            if OpenAiInstrumentor.is_azure(instance):
+                resource = extra_headers.pop("xProxy-RouteAs-Resource", None)
+                if not resource:
+                    logging.error("Azure OpenAI route as resource not found, not ingesting")
+                    return wrapped(*args, **kwargs)
+
+                category = "system.azureopenai"
+                ingest["category"] = category
+                ingest["resource"] = resource
 
         current_frame = inspect.currentframe()
         # f_back excludes the current frame, strip() cleans up whitespace and newlines
@@ -790,17 +838,37 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
             return json.dumps(chunk)
 
 global _instrumentor
-_instrumentor: PayiInstrumentor
+_instrumentor: Optional[PayiInstrumentor] = None
 
 def payi_instrument(
-    payi: Optional[Union[Payi, AsyncPayi]] = None,
+    payi: Optional[Union[Payi, AsyncPayi, 'list[Union[Payi, AsyncPayi]]']] = None,
     instruments: Optional[Set[Instruments]] = None,
     log_prompt_and_response: bool = True,
     prompt_and_response_logger: Optional[Callable[[str, "dict[str, str]"], None]] = None,
 ) -> None:
     global _instrumentor
+    if _instrumentor:
+        return
+    
+    payi_param: Optional[Payi] = None
+    apayi_param: Optional[AsyncPayi] = None
+
+    if isinstance(payi, Payi):
+        payi_param = payi
+    elif isinstance(payi, AsyncPayi):
+        apayi_param = payi
+    elif isinstance(payi, list):
+        for p in payi:
+            if isinstance(p, Payi):
+                payi_param = p
+            elif isinstance(p, AsyncPayi): # type: ignore
+                apayi_param = p
+
+    # allow for both payi and apayi to be None for the @proxy case
+    
     _instrumentor = PayiInstrumentor(
-        payi=payi,
+        payi=payi_param,
+        apayi=apayi_param,
         instruments=instruments,
         log_prompt_and_response=log_prompt_and_response,
         prompt_and_response_logger=prompt_and_response_logger,
@@ -817,6 +885,8 @@ def ingest(
         import asyncio
         if asyncio.iscoroutinefunction(func):
             async def awrapper(*args: Any, **kwargs: Any) -> Any:
+                if not _instrumentor:
+                    return await func(*args, **kwargs)
                 # Call the instrumentor's _call_func for async functions
                 return await _instrumentor._acall_func(
                     func,
@@ -832,6 +902,8 @@ def ingest(
             return awrapper
         else:
             def wrapper(*args: Any, **kwargs: Any) -> Any:
+                if not _instrumentor:
+                    return func(*args, **kwargs)
                 return _instrumentor._call_func(
                     func,
                     False,
@@ -857,6 +929,8 @@ def proxy(
         import asyncio
         if asyncio.iscoroutinefunction(func):
             async def _proxy_awrapper(*args: Any, **kwargs: Any) -> Any:
+                if not _instrumentor:
+                    return await func(*args, **kwargs)
                 return await _instrumentor._call_func(
                     func,
                     True,
@@ -872,6 +946,8 @@ def proxy(
             return _proxy_awrapper
         else:
             def _proxy_wrapper(*args: Any, **kwargs: Any) -> Any:
+                if not _instrumentor:
+                    return func(*args, **kwargs)
                 return _instrumentor._call_func(
                     func,
                     True,
