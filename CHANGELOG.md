@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.43 (2025-02-06)
+
+Full Changelog: [v0.1.0-alpha.42...v0.1.0-alpha.43](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.42...v0.1.0-alpha.43)
+
+### Features
+
+* **client:** send `X-Stainless-Read-Timeout` header ([#210](https://github.com/Pay-i/pay-i-python/issues/210)) ([fd485f6](https://github.com/Pay-i/pay-i-python/commit/fd485f692182c38d869cfadddc57d1d7c623df8e))
+
 ## 0.1.0-alpha.42 (2025-02-05)
 
 Full Changelog: [v0.1.0-alpha.41...v0.1.0-alpha.42](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.41...v0.1.0-alpha.42)
