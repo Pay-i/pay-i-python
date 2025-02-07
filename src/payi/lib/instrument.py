@@ -5,13 +5,14 @@ import inspect
 import logging
 import traceback
 from enum import Enum
-from typing import Any, Set, Union, Callable, Optional
+from typing import Any, Set, Union, Callable, Optional, TypedDict
 
 import nest_asyncio  # type: ignore
 from wrapt import ObjectProxy  # type: ignore
 
 from payi import Payi, AsyncPayi
 from payi.types import IngestUnitsParams
+from payi.lib.helpers import PayiHeaderNames
 from payi.types.ingest_response import IngestResponse
 from payi.types.ingest_units_params import Units
 from payi.types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
@@ -19,6 +20,14 @@ from payi.types.pay_i_common_models_api_router_header_info_param import PayIComm
 from .Stopwatch import Stopwatch
 from .Instruments import Instruments
 
+
+class Context(TypedDict, total=False):
+    proxy: bool
+    experience_name: Optional[str]
+    experience_id: Optional[str]
+    limit_ids: Optional['list[str]']
+    request_tags: Optional['list[str]']
+    user_id: Optional[str]
 
 class IsStreaming(Enum):
     false = 0
@@ -40,7 +49,7 @@ class PayiInstrumentor:
     ):
         self._payi: Optional[Payi] = payi
         self._apayi: Optional[AsyncPayi] = apayi
-        self._context_stack: list[dict[str, Any]] = []  # Stack of context dictionaries
+        self._context_stack: list[Context] = []  # Stack of context dictionaries
         self._log_prompt_and_response: bool = log_prompt_and_response
         self._prompt_and_response_logger: Optional[Callable[[str, dict[str, str]], None]] = prompt_and_response_logger
 
@@ -212,22 +221,22 @@ class PayiInstrumentor:
 
     def _setup_call_func(
         self
-        ) -> 'tuple[dict[str, Any], Optional[str], Optional[str]]':
+        ) -> 'tuple[Context, Optional[str], Optional[str]]':
         if len(self._context_stack) > 0:
             # copy current context into the upcoming context
             context = self._context_stack[-1].copy()
-            context.pop("proxy", None)
-            previous_experience_name = context["experience_name"]
-            previous_experience_id = context["experience_id"]
+            context.pop("proxy")
+            previous_experience_name = context.get("experience_name", None)
+            previous_experience_id = context.get("experience_id", None)
         else:
-            context = {}
+            context: Context = {}
             previous_experience_name = None
             previous_experience_id = None
         return (context, previous_experience_name, previous_experience_id)
 
     def _init_context(
         self,
-        context: "dict[str, Any]",
+        context: Context,
         previous_experience_name: Optional[str],
         previous_experience_id: Optional[str],
         proxy: bool,
@@ -329,12 +338,12 @@ class PayiInstrumentor:
         if self._context_stack:
             self._context_stack.pop()
 
-    def set_context(self, context: "dict[str, Any]") -> None:
+    def set_context(self, context: Context) -> None:
         # Update the current top of the stack with the provided context
         if self._context_stack:
             self._context_stack[-1].update(context)
 
-    def get_context(self) -> Optional["dict[str, Any]"]:
+    def get_context(self) -> Optional[Context]:
         # Return the current top of the stack
         return self._context_stack[-1] if self._context_stack else None
 
@@ -345,11 +354,11 @@ class PayiInstrumentor:
         ingest_extra_headers: "dict[str, str]", # do not coflict potential kwargs["extra_headers"]
         **kwargs: Any,
     ) -> None:
-        limit_ids = ingest_extra_headers.pop("xProxy-Limit-IDs", None)
-        request_tags = ingest_extra_headers.pop("xProxy-Request-Tags", None)
-        experience_name = ingest_extra_headers.pop("xProxy-Experience-Name", None)
-        experience_id = ingest_extra_headers.pop("xProxy-Experience-ID", None)
-        user_id = ingest_extra_headers.pop("xProxy-User-ID", None)
+        limit_ids = ingest_extra_headers.pop(PayiHeaderNames.limit_ids, None)
+        request_tags = ingest_extra_headers.pop(PayiHeaderNames.request_tags, None)
+        experience_name = ingest_extra_headers.pop(PayiHeaderNames.experience_name, None)
+        experience_id = ingest_extra_headers.pop(PayiHeaderNames.experience_id, None)
+        user_id = ingest_extra_headers.pop(PayiHeaderNames.user_id, None)
 
         if limit_ids:
             ingest["limit_ids"] = limit_ids.split(",")
@@ -414,7 +423,7 @@ class PayiInstrumentor:
             from .OpenAIInstrumentor import OpenAiInstrumentor # noqa: I001
 
             if OpenAiInstrumentor.is_azure(instance):
-                resource = extra_headers.pop("xProxy-RouteAs-Resource", None)
+                resource = extra_headers.pop(PayiHeaderNames.route_as_resource, None)
                 if not resource:
                     logging.error("Azure OpenAI route as resource not found, not ingesting")
                     return await wrapped(*args, **kwargs)
@@ -532,7 +541,7 @@ class PayiInstrumentor:
         if category == "system.openai" and instance and hasattr(instance, "_client"):
             from .OpenAIInstrumentor import OpenAiInstrumentor
             if OpenAiInstrumentor.is_azure(instance):
-                resource = extra_headers.pop("xProxy-RouteAs-Resource", None)
+                resource = extra_headers.pop(PayiHeaderNames.route_as_resource, None)
                 if not resource:
                     logging.error("Azure OpenAI route as resource not found, not ingesting")
                     return wrapped(*args, **kwargs)
@@ -614,7 +623,7 @@ class PayiInstrumentor:
 
     @staticmethod
     def _update_headers(
-        context: "dict[str, Any]",
+        context: Context,
         extra_headers: "dict[str, str]",
     ) -> None:
         limit_ids: Optional[list[str]] = context.get("limit_ids")
@@ -625,38 +634,38 @@ class PayiInstrumentor:
 
         # Merge limits from the decorator and extra headers
         if limit_ids is not None:
-            existing_limit_ids = extra_headers.get("xProxy-Limit-IDs", None)
+            existing_limit_ids = extra_headers.get(PayiHeaderNames.limit_ids, None)
             
             if not existing_limit_ids:
-                extra_headers["xProxy-Limit-IDs"] = ",".join(limit_ids)
+                extra_headers[PayiHeaderNames.limit_ids] = ",".join(limit_ids)
             else:
                 existing_ids = existing_limit_ids.split(',')
                 combined_ids = list(set(existing_ids + limit_ids))
-                extra_headers["xProxy-Limit-IDs"] = ",".join(combined_ids)
+                extra_headers[PayiHeaderNames.limit_ids] = ",".join(combined_ids)
 
         # Merge request from the decorator and extra headers
         if request_tags is not None:
-            existing_request_tags = extra_headers.get("xProxy-Request-Tags", None)
+            existing_request_tags = extra_headers.get(PayiHeaderNames.request_tags, None)
 
             if not existing_request_tags:
-                extra_headers["xProxy-Request-Tags"] = ",".join(request_tags)
+                extra_headers[PayiHeaderNames.request_tags] = ",".join(request_tags)
             else:
                 existing_tags = existing_request_tags.split(',')
                 combined_tags = list(set(existing_tags + request_tags))
-                extra_headers["xProxy-Request-Tags"] = ",".join(combined_tags)
+                extra_headers[PayiHeaderNames.request_tags] = ",".join(combined_tags)
 
         # inner extra_headers user_id takes precedence over outer decorator user_id
-        if user_id is not None and extra_headers.get("xProxy-User-ID", None) is None:
-            extra_headers["xProxy-User-ID"] = user_id   
+        if user_id is not None and extra_headers.get(PayiHeaderNames.user_id, None) is None:
+            extra_headers[PayiHeaderNames.user_id] = user_id   
 
         # inner extra_headers experience_name and experience_id take precedence over outer decorator experience_name and experience_id
         # if either inner value is specified, ignore outer decorator values
-        if extra_headers.get("xProxy-Experience-Name", None) is None and extra_headers.get("xProxy-Experience-ID", None) is None:
+        if extra_headers.get(PayiHeaderNames.experience_name, None) is None and extra_headers.get(PayiHeaderNames.experience_id, None) is None:
             if experience_name is not None:
-                extra_headers["xProxy-Experience-Name"] = experience_name
+                extra_headers[PayiHeaderNames.experience_name] = experience_name
 
             if experience_id is not None:
-                extra_headers["xProxy-Experience-ID"] = experience_id
+                extra_headers[PayiHeaderNames.experience_id] = experience_id
 
     @staticmethod
     def update_for_vision(input: int, units: 'dict[str, Units]') -> int:
