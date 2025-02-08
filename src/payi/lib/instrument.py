@@ -222,6 +222,8 @@ class PayiInstrumentor:
     def _setup_call_func(
         self
         ) -> 'tuple[Context, Optional[str], Optional[str]]':
+        context: Context = {}
+
         if len(self._context_stack) > 0:
             # copy current context into the upcoming context
             context = self._context_stack[-1].copy()
@@ -229,7 +231,6 @@ class PayiInstrumentor:
             previous_experience_name = context.get("experience_name", None)
             previous_experience_id = context.get("experience_id", None)
         else:
-            context: Context = {}
             previous_experience_name = None
             previous_experience_id = None
         return (context, previous_experience_name, previous_experience_id)
@@ -660,12 +661,22 @@ class PayiInstrumentor:
 
         # inner extra_headers experience_name and experience_id take precedence over outer decorator experience_name and experience_id
         # if either inner value is specified, ignore outer decorator values
-        if extra_headers.get(PayiHeaderNames.experience_name, None) is None and extra_headers.get(PayiHeaderNames.experience_id, None) is None:
+        if PayiHeaderNames.experience_name not in extra_headers and PayiHeaderNames.experience_id not in extra_headers:
+
+            # use both decorator values
             if experience_name is not None:
                 extra_headers[PayiHeaderNames.experience_name] = experience_name
-
             if experience_id is not None:
                 extra_headers[PayiHeaderNames.experience_id] = experience_id
+        
+        elif PayiHeaderNames.experience_id in extra_headers and PayiHeaderNames.experience_name not in extra_headers:
+            # use the decorator experience name and the inner experience id
+            if experience_name is not None:
+                extra_headers[PayiHeaderNames.experience_name] = experience_name
+        
+        else:
+            # use the inner experience name and id as-is
+            ...
 
     @staticmethod
     def update_for_vision(input: int, units: 'dict[str, Units]') -> int:
