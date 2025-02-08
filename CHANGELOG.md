@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-alpha.48 (2025-02-08)
+
+Full Changelog: [v0.1.0-alpha.47...v0.1.0-alpha.48](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.47...v0.1.0-alpha.48)
+
+### Chores
+
+* **internal:** fix type traversing dictionary params ([#223](https://github.com/Pay-i/pay-i-python/issues/223)) ([a68875f](https://github.com/Pay-i/pay-i-python/commit/a68875ff18bff2222b50567d2aeab5e3da1f2491))
+* **internal:** minor type handling changes ([#225](https://github.com/Pay-i/pay-i-python/issues/225)) ([d0085cf](https://github.com/Pay-i/pay-i-python/commit/d0085cf20ded356b6e00c4969bef62cd4fb68bc8))
+
 ## 0.1.0-alpha.47 (2025-02-08)
 
 Full Changelog: [v0.1.0-alpha.46...v0.1.0-alpha.47](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.46...v0.1.0-alpha.47)
