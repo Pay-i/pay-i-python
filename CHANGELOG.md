@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-alpha.47 (2025-02-08)
+
+Full Changelog: [v0.1.0-alpha.46...v0.1.0-alpha.47](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.46...v0.1.0-alpha.47)
+
+### Features
+
+* chore: single header names declaration ([e4f634c](https://github.com/Pay-i/pay-i-python/commit/e4f634ce5c903133278aeb29cb1a98262bcd3e0f))
+* fix linter ([912b631](https://github.com/Pay-i/pay-i-python/commit/912b6314aaa4075a79aeb378aeb9e93fff47019e))
+
 ## 0.1.0-alpha.46 (2025-02-06)
 
 Full Changelog: [v0.1.0-alpha.45...v0.1.0-alpha.46](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.45...v0.1.0-alpha.46)
