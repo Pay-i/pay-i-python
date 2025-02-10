@@ -105,6 +105,7 @@ class TestIngest:
                     "value": "value",
                 }
             ],
+            provider_response_id="provider_response_id",
             provider_response_json="string",
             provider_uri="provider_uri",
             time_to_first_token_ms=0,
@@ -235,6 +236,7 @@ class TestAsyncIngest:
                     "value": "value",
                 }
             ],
+            provider_response_id="provider_response_id",
             provider_response_json="string",
             provider_uri="provider_uri",
             time_to_first_token_ms=0,

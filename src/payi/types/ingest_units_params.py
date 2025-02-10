@@ -35,6 +35,8 @@ class IngestUnitsParams(TypedDict, total=False):
 
     provider_response_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]]
 
+    provider_response_id: Optional[str]
+
     provider_response_json: Union[str, List[str], None]
 
     provider_uri: Optional[str]
