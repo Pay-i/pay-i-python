@@ -144,10 +144,17 @@ def process_chat_synchronous_response(response: str, ingest: IngestUnitsParams, 
     if log_prompt_and_response:
         ingest["provider_response_json"] = [json.dumps(response_dict)]
 
+    if "id" in response_dict:
+        ingest["provider_response_id"] = response_dict["id"]
+
     return None
 
 def process_chat_chunk(chunk: Any, ingest: IngestUnitsParams) -> None:
     model = model_to_dict(chunk)
+    
+    if "provider_response_id" not in ingest and "id" in model:
+        ingest["provider_response_id"] = model["id"]
+
     usage = model.get("usage")
     if usage:
         add_usage_units(usage, ingest["units"])
