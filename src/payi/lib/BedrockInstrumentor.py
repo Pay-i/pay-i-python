@@ -222,7 +222,7 @@ def process_synchronous_invoke_response(
 
     request_id = metadata.get("RequestId", "")
     if request_id:
-        ingest["provider_request_id"] = request_id
+        ingest["provider_response_id"] = request_id
 
     response_headers = metadata.get("HTTPHeaders", {}).copy()
     if response_headers:
@@ -265,7 +265,7 @@ def process_synchronous_converse_response(
 
     request_id = metadata.get("RequestId", "")
     if request_id:
-        ingest["provider_request_id"] = request_id
+        ingest["provider_response_id"] = request_id
 
     response_headers = metadata.get("HTTPHeaders", {})
     if response_headers:

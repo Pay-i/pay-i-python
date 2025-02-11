@@ -152,8 +152,10 @@ def process_chat_synchronous_response(response: str, ingest: IngestUnitsParams, 
 def process_chat_chunk(chunk: Any, ingest: IngestUnitsParams) -> None:
     model = model_to_dict(chunk)
     
-    if "provider_response_id" not in ingest and "id" in model:
-        ingest["provider_response_id"] = model["id"]
+    if "provider_response_id" not in ingest:
+        response_id = model.get("id", None)
+        if response_id:
+            ingest["provider_response_id"] = response_id
 
     usage = model.get("usage")
     if usage:

@@ -736,7 +736,7 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
 
         bedrock_from_stream: bool = False
         if is_bedrock:
-            ingest["provider_request_id"] = response["ResponseMetadata"]["RequestId"]
+            ingest["provider_response_id"] = response["ResponseMetadata"]["RequestId"]
             stream = response.get("stream", None)
 
             if stream:
