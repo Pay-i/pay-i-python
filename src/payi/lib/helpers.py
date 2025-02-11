@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Dict, List, Union
 
 PAYI_BASE_URL = "https://api.pay-i.com"
@@ -11,12 +12,12 @@ class PayiHeaderNames:
     route_as_resource:str = "xProxy-RouteAs-Resource"
     provider_base_uri = "xProxy-Provider-BaseUri"
 
-class PayiCategories:
+class PayiCategories(Enum):
     anthropic = "system.anthropic"
     openai = "system.openai"
     azure_openai = "system.azureopenai"
     aws_bedrock = "system.aws.bedrock"
-    
+
 def create_limit_header_from_ids(limit_ids: List[str]) -> Dict[str, str]:
     if not isinstance(limit_ids, list):  # type: ignore
         raise TypeError("limit_ids must be a list")
