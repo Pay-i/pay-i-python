@@ -17,8 +17,8 @@ from payi.types.ingest_response import IngestResponse
 from payi.types.ingest_units_params import Units
 from payi.types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
+from .helpers import PayiCategories
 from .Stopwatch import Stopwatch
-from .Instruments import Instruments
 
 
 class Context(TypedDict, total=False):
@@ -41,7 +41,7 @@ class PayiInstrumentor:
         self,
         payi: Optional[Payi],
         apayi: Optional[AsyncPayi],
-        instruments: Union[Set[Instruments], None] = None,
+        instruments: Union[Set[PayiCategories], None] = None,
         log_prompt_and_response: bool = True,
         prompt_and_response_logger: Optional[
             Callable[[str, "dict[str, str]"], None]
@@ -56,7 +56,7 @@ class PayiInstrumentor:
         self._blocked_limits: set[str] = set()
         self._exceeded_limits: set[str] = set()
 
-        if instruments is None or Instruments.ALL in instruments:
+        if instruments is None:
             self._instrument_all()
         else:
             self._instrument_specific(instruments)
@@ -66,12 +66,12 @@ class PayiInstrumentor:
         self._instrument_anthropic()
         self._instrument_aws_bedrock()
 
-    def _instrument_specific(self, instruments: Set[Instruments]) -> None:
-        if Instruments.OPENAI in instruments:
+    def _instrument_specific(self, instruments: Set[PayiCategories]) -> None:
+        if PayiCategories.openai in instruments or PayiCategories.azure_openai in instruments:
             self._instrument_openai()
-        if Instruments.ANTHROPIC in instruments:
+        if PayiCategories.anthropic in instruments:
             self._instrument_anthropic()
-        if Instruments.AWS_BEDROCK in instruments:
+        if PayiCategories.aws_bedrock in instruments:
             self._instrument_aws_bedrock()
 
     def _instrument_openai(self) -> None:
@@ -736,7 +736,9 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
 
         bedrock_from_stream: bool = False
         if is_bedrock:
+            ingest["provider_response_id"] = response["ResponseMetadata"]["RequestId"]
             stream = response.get("stream", None)
+
             if stream:
                 response = stream
                 bedrock_from_stream = True
@@ -862,7 +864,7 @@ _instrumentor: Optional[PayiInstrumentor] = None
 
 def payi_instrument(
     payi: Optional[Union[Payi, AsyncPayi, 'list[Union[Payi, AsyncPayi]]']] = None,
-    instruments: Optional[Set[Instruments]] = None,
+    instruments: Optional[Set[PayiCategories]] = None,
     log_prompt_and_response: bool = True,
     prompt_and_response_logger: Optional[Callable[[str, "dict[str, str]"], None]] = None,
 ) -> None:

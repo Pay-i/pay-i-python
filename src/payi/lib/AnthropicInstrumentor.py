@@ -88,6 +88,8 @@ async def achat_wrapper(
 
 def process_chunk(chunk: Any, ingest: IngestUnitsParams) -> None:
     if chunk.type == "message_start":
+        ingest["provider_response_id"] = chunk.message.id
+
         usage = chunk.message.usage
         units = ingest["units"]
 
@@ -128,7 +130,9 @@ def process_synchronous_response(response: Any, ingest: IngestUnitsParams, log_p
 
     if log_prompt_and_response:
         ingest["provider_response_json"] = response.to_json()
-
+    
+    ingest["provider_response_id"] = response.id
+    
     return None
 
 def has_image_and_get_texts(encoding: tiktoken.Encoding, content: Union[str, 'list[Any]']) -> 'tuple[bool, int]':

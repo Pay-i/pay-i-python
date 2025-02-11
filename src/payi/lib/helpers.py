@@ -1,5 +1,7 @@
+from enum import Enum
 from typing import Dict, List, Union
 
+PAYI_BASE_URL = "https://api.pay-i.com"
 
 class PayiHeaderNames:
     limit_ids:str  = "xProxy-Limit-IDs"
@@ -9,6 +11,12 @@ class PayiHeaderNames:
     user_id:str = "xProxy-User-ID"
     route_as_resource:str = "xProxy-RouteAs-Resource"
     provider_base_uri = "xProxy-Provider-BaseUri"
+
+class PayiCategories(Enum):
+    anthropic = "system.anthropic"
+    openai = "system.openai"
+    azure_openai = "system.azureopenai"
+    aws_bedrock = "system.aws.bedrock"
 
 def create_limit_header_from_ids(limit_ids: List[str]) -> Dict[str, str]:
     if not isinstance(limit_ids, list):  # type: ignore
@@ -49,3 +57,23 @@ def create_headers(
         headers.update({ PayiHeaderNames.experience_name: experience_name})
 
     return headers
+
+def payi_anthropic_url(payi_base_url: Union[str, None] = None) -> str:
+    if payi_base_url is None:
+        payi_base_url = PAYI_BASE_URL
+    return payi_base_url + "/api/v1/proxy/anthropic"
+
+def payi_openai_url(payi_base_url: Union[str, None] = None) -> str:
+    if payi_base_url is None:
+        payi_base_url = PAYI_BASE_URL
+    return payi_base_url +  "/api/v1/proxy/openai/v1"
+
+def payi_azure_openai_url(payi_base_url: Union[str, None] = None) -> str:
+    if payi_base_url is None:
+        payi_base_url = PAYI_BASE_URL
+    return payi_base_url + "/api/v1/proxy/azure.openai"
+
+def payi_aws_bedrock_url(payi_base_url: Union[str, None] = None) -> str:
+    if payi_base_url is None:
+        payi_base_url = PAYI_BASE_URL
+    return payi_base_url + "/api/v1/proxy/aws.bedrock"
