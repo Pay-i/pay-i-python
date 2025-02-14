@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.50 (2025-02-14)
+
+Full Changelog: [v0.1.0-alpha.49...v0.1.0-alpha.50](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.49...v0.1.0-alpha.50)
+
+### Bug Fixes
+
+* asyncify on non-asyncio runtimes ([#233](https://github.com/Pay-i/pay-i-python/issues/233)) ([fa695e3](https://github.com/Pay-i/pay-i-python/commit/fa695e32df5f90064a16e547ff5e1d2aa7e6655c))
+
+
+### Chores
+
+* **internal:** update client tests ([#231](https://github.com/Pay-i/pay-i-python/issues/231)) ([9ed5673](https://github.com/Pay-i/pay-i-python/commit/9ed567342c9360349be4a7770580929a96b306be))
+
 ## 0.1.0-alpha.49 (2025-02-10)
 
 Full Changelog: [v0.1.0-alpha.48...v0.1.0-alpha.49](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.48...v0.1.0-alpha.49)
