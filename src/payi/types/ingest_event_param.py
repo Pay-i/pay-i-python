@@ -25,8 +25,6 @@ class IngestEventParam(TypedDict, total=False):
 
     units: Required[Dict[str, Units]]
 
-    csat_rating: Optional[int]
-
     end_to_end_latency_ms: Optional[int]
 
     event_timestamp: Annotated[Union[str, datetime, None], PropertyInfo(format="iso8601")]

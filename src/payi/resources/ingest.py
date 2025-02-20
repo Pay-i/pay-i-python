@@ -101,11 +101,12 @@ class IngestResource(SyncAPIResource):
         provider_response_json: Union[str, List[str], None] | NotGiven = NOT_GIVEN,
         provider_uri: Optional[str] | NotGiven = NOT_GIVEN,
         time_to_first_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
-        limit_ids: Union[list[str], None] | NotGiven = NOT_GIVEN,
-        request_tags: Union[list[str], None] | NotGiven = NOT_GIVEN,
-        experience_id: Union[str, None] | NotGiven = NOT_GIVEN,
-        experience_name: Union[str, None] | NotGiven = NOT_GIVEN,
-        user_id: Union[str, None] | NotGiven = NOT_GIVEN,
+        limit_ids: Optional[list[str]] | NotGiven = NOT_GIVEN,
+        request_tags: Optional[list[str]] | NotGiven = NOT_GIVEN,
+        experience_id: Optional[str] | NotGiven = NOT_GIVEN,
+        experience_name: Optional[str] | NotGiven = NOT_GIVEN,
+        user_id: Optional[str] | NotGiven = NOT_GIVEN,
+        resource_scope: Optional[str] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -136,6 +137,8 @@ class IngestResource(SyncAPIResource):
           experience_id (str, optional): The experience instance id
 
           user_id (str, optional): The user id
+          
+          resource_scope(str, optional): The scope of the resource
 
           extra_headers (Dict[str, str], optional): Additional headers for the request. Defaults to None.
 
@@ -176,17 +179,17 @@ class IngestResource(SyncAPIResource):
             user_id = NOT_GIVEN
 
         extra_headers = {
-            **strip_not_given(
-                {
-                    "xProxy-Limit-IDs": valid_ids_str,
-                    "xProxy-Request-Tags": valid_tags_str,
-                    "xProxy-Experience-Id": experience_id,
-                    "xProxy-Experience-Name": experience_name,
-                    "xProxy-User-ID": user_id,
-                }
-            ),
+            **{key: value for key, value in strip_not_given({
+                "xProxy-Limit-IDs": valid_ids_str,
+                "xProxy-Request-Tags": valid_tags_str,
+                "xProxy-Experience-Name": experience_name,
+                "xProxy-Experience-Id": experience_id,
+                "xProxy-User-ID": user_id,
+                "xProxy-Resource-Scope": resource_scope,
+            }).items() if value is not None},  # Ensure no 'None' values are included
             **(extra_headers or {}),
         }
+
         return self._post(
             "/api/v1/ingest",
             body=maybe_transform(
@@ -286,11 +289,12 @@ class AsyncIngestResource(AsyncAPIResource):
         provider_response_json: Union[str, List[str], None] | NotGiven = NOT_GIVEN,
         provider_uri: Optional[str] | NotGiven = NOT_GIVEN,
         time_to_first_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
-        limit_ids: Union[list[str], None] | NotGiven = NOT_GIVEN,
-        request_tags: Union[list[str], None] | NotGiven = NOT_GIVEN,
-        experience_name: Union[str, None] | NotGiven = NOT_GIVEN,
-        experience_id: Union[str, None] | NotGiven = NOT_GIVEN,
-        user_id: Union[str, None] | NotGiven = NOT_GIVEN,
+        limit_ids: Optional[list[str]] | NotGiven = NOT_GIVEN,
+        request_tags: Optional[list[str]] | NotGiven = NOT_GIVEN,
+        experience_name: Optional[str] | NotGiven = NOT_GIVEN,
+        experience_id: Optional[str] | NotGiven = NOT_GIVEN,
+        user_id: Optional[str] | NotGiven = NOT_GIVEN,
+        resource_scope: Union[str, None] | NotGiven = NOT_GIVEN,
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
@@ -320,6 +324,8 @@ class AsyncIngestResource(AsyncAPIResource):
           experience_id (str, optional): The experience instance id
 
           user_id (str, optional): The user id
+          
+          resource_scope (str, optional): The scope of the resource
 
           extra_headers (Dict[str, str], optional): Additional headers for the request. Defaults to None.
 
@@ -360,15 +366,14 @@ class AsyncIngestResource(AsyncAPIResource):
             user_id = NOT_GIVEN
 
         extra_headers = {
-            **strip_not_given(
-                {
-                    "xProxy-Limit-IDs": valid_ids_str,
-                    "xProxy-Request-Tags": valid_tags_str,
-                    "xProxy-Experience-Name": experience_name,
-                    "xProxy-Experience-Id": experience_id,
-                    "xProxy-User-ID": user_id,
-                }
-            ),
+            **{key: value for key, value in strip_not_given({
+                "xProxy-Limit-IDs": valid_ids_str,
+                "xProxy-Request-Tags": valid_tags_str,
+                "xProxy-Experience-Name": experience_name,
+                "xProxy-Experience-Id": experience_id,
+                "xProxy-User-ID": user_id,
+                "xProxy-Resource-Scope": resource_scope,
+            }).items() if value is not None},  # Ensure no 'None' values are included
             **(extra_headers or {}),
         }
         return await self._post(

@@ -51,6 +51,8 @@ class IngestUnitsParams(TypedDict, total=False):
 
     experience_id: Annotated[Union[str, None], PropertyInfo(alias="xProxy-Experience-Id")]
 
+    resource_scope: Annotated[Union[str, None], PropertyInfo(alias="xProxy-Resource-Scope")]
+
     user_id: Annotated[Union[str, None], PropertyInfo(alias="xProxy-User-ID")]
 
 
