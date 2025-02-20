@@ -51,6 +51,8 @@ class IngestUnitsParams(TypedDict, total=False):
 
     x_proxy_request_tags: Annotated[str, PropertyInfo(alias="xProxy-Request-Tags")]
 
+    x_proxy_resource_scope: Annotated[str, PropertyInfo(alias="xProxy-Resource-Scope")]
+
     x_proxy_user_id: Annotated[str, PropertyInfo(alias="xProxy-User-ID")]
 
 
