@@ -113,6 +113,7 @@ class TestIngest:
             request_tags=["requestTag1", "request_tag_2"],
             experience_name="experience_name",
             experience_id="experience_id",
+            resource_scope="datazone",
             user_id="UserName123",
         )
         assert_matches_type(IngestResponse, ingest, path=["response"])
@@ -244,6 +245,7 @@ class TestAsyncIngest:
             request_tags=["requestTag1", "request_tag_2"],
             experience_name="experience_name",
             experience_id="experience_id",
+            resource_scope="datazone",
             user_id="UserName123",
         )
         assert_matches_type(IngestResponse, ingest, path=["response"])

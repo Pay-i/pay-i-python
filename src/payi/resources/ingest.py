@@ -106,6 +106,7 @@ class IngestResource(SyncAPIResource):
         experience_id: Union[str, None] | NotGiven = NOT_GIVEN,
         experience_name: Union[str, None] | NotGiven = NOT_GIVEN,
         user_id: Union[str, None] | NotGiven = NOT_GIVEN,
+        resource_scope: Union[str, None] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -136,6 +137,8 @@ class IngestResource(SyncAPIResource):
           experience_id (str, optional): The experience instance id
 
           user_id (str, optional): The user id
+          
+          resource_scope(str, optional): The scope of the resource
 
           extra_headers (Dict[str, str], optional): Additional headers for the request. Defaults to None.
 
@@ -183,6 +186,7 @@ class IngestResource(SyncAPIResource):
                     "xProxy-Experience-Id": experience_id,
                     "xProxy-Experience-Name": experience_name,
                     "xProxy-User-ID": user_id,
+                    "xProxy-Resource-Scope": resource_scope,
                 }
             ),
             **(extra_headers or {}),
@@ -291,6 +295,7 @@ class AsyncIngestResource(AsyncAPIResource):
         experience_name: Union[str, None] | NotGiven = NOT_GIVEN,
         experience_id: Union[str, None] | NotGiven = NOT_GIVEN,
         user_id: Union[str, None] | NotGiven = NOT_GIVEN,
+        resource_scope: Union[str, None] | NotGiven = NOT_GIVEN,
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
@@ -320,6 +325,8 @@ class AsyncIngestResource(AsyncAPIResource):
           experience_id (str, optional): The experience instance id
 
           user_id (str, optional): The user id
+          
+          resource_scope (str, optional): The scope of the resource
 
           extra_headers (Dict[str, str], optional): Additional headers for the request. Defaults to None.
 
@@ -367,6 +374,7 @@ class AsyncIngestResource(AsyncAPIResource):
                     "xProxy-Experience-Name": experience_name,
                     "xProxy-Experience-Id": experience_id,
                     "xProxy-User-ID": user_id,
+                    "xProxy-Resource-Scope": resource_scope,
                 }
             ),
             **(extra_headers or {}),
