@@ -41,7 +41,7 @@ class PayiInstrumentor:
         self,
         payi: Optional[Payi],
         apayi: Optional[AsyncPayi],
-        instruments: Union[Set[PayiCategories], None] = None,
+        instruments: Union[Set[str], None] = None,
         log_prompt_and_response: bool = True,
         prompt_and_response_logger: Optional[
             Callable[[str, "dict[str, str]"], None]
@@ -56,7 +56,7 @@ class PayiInstrumentor:
         self._blocked_limits: set[str] = set()
         self._exceeded_limits: set[str] = set()
 
-        if instruments is None:
+        if instruments is None or "*" in instruments:
             self._instrument_all()
         else:
             self._instrument_specific(instruments)
@@ -66,7 +66,7 @@ class PayiInstrumentor:
         self._instrument_anthropic()
         self._instrument_aws_bedrock()
 
-    def _instrument_specific(self, instruments: Set[PayiCategories]) -> None:
+    def _instrument_specific(self, instruments: Set[str]) -> None:
         if PayiCategories.openai in instruments or PayiCategories.azure_openai in instruments:
             self._instrument_openai()
         if PayiCategories.anthropic in instruments:
@@ -375,14 +375,18 @@ class PayiInstrumentor:
         if len(ingest_extra_headers) > 0:
             ingest["provider_request_headers"] = [PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) for k, v in ingest_extra_headers.items()]
 
-        provider_prompt = {}
+        provider_prompt: "dict[str, Any]" = {}
         for k, v in kwargs.items():
             if k == "messages":
                 provider_prompt[k] = [m.model_dump() if hasattr(m, "model_dump") else m for m in v]
             elif k in ["extra_headers", "extra_query"]:
                 pass
             else:
-                provider_prompt[k] = v
+                try:
+                    json.dumps(v)
+                    provider_prompt[k] = v
+                except (TypeError, ValueError):
+                    pass
 
         if self._log_prompt_and_response:
             ingest["provider_request_json"] = json.dumps(provider_prompt)
@@ -420,18 +424,28 @@ class PayiInstrumentor:
         ingest: IngestUnitsParams = {"category": category, "units": {}} # type: ignore
         ingest["resource"] = kwargs.get("model", "")
 
-        if category == "system.openai" and instance and hasattr(instance, "_client"):
+        if category == PayiCategories.openai and instance and hasattr(instance, "_client"):
             from .OpenAIInstrumentor import OpenAiInstrumentor # noqa: I001
 
             if OpenAiInstrumentor.is_azure(instance):
-                resource = extra_headers.pop(PayiHeaderNames.route_as_resource, None)
-                if not resource:
+                route_as_resource = extra_headers.pop(PayiHeaderNames.route_as_resource, None)
+                resource_scope = extra_headers.pop(PayiHeaderNames.resource_scope, None)
+
+                if not route_as_resource:
                     logging.error("Azure OpenAI route as resource not found, not ingesting")
                     return await wrapped(*args, **kwargs)
 
-                category = "system.azureopenai"
+                if resource_scope:
+                    if not(resource_scope in ["global", "datazone"] or resource_scope.startswith("region")):
+                        logging.error("Azure OpenAI invalid resource scope, not ingesting")
+                        return wrapped(*args, **kwargs)
+
+                    ingest["resource_scope"] = resource_scope
+
+                category = PayiCategories.azure_openai
+
                 ingest["category"] = category
-                ingest["resource"] = resource
+                ingest["resource"] = route_as_resource
 
         current_frame = inspect.currentframe()
         # f_back excludes the current frame, strip() cleans up whitespace and newlines
@@ -511,7 +525,7 @@ class PayiInstrumentor:
     ) -> Any:
         context = self.get_context()
 
-        is_bedrock:bool = category == "system.aws.bedrock"
+        is_bedrock:bool = category == PayiCategories.aws_bedrock
 
         if not context:
             if is_bedrock:
@@ -539,17 +553,28 @@ class PayiInstrumentor:
         else:
             ingest["resource"] = kwargs.get("model", "")
 
-        if category == "system.openai" and instance and hasattr(instance, "_client"):
-            from .OpenAIInstrumentor import OpenAiInstrumentor
+        if category == PayiCategories.openai and instance and hasattr(instance, "_client"):
+            from .OpenAIInstrumentor import OpenAiInstrumentor # noqa: I001
+
             if OpenAiInstrumentor.is_azure(instance):
-                resource = extra_headers.pop(PayiHeaderNames.route_as_resource, None)
-                if not resource:
+                route_as_resource:str = extra_headers.pop(PayiHeaderNames.route_as_resource, None)
+                resource_scope:str = extra_headers.pop(PayiHeaderNames.resource_scope, None)
+
+                if not route_as_resource:
                     logging.error("Azure OpenAI route as resource not found, not ingesting")
                     return wrapped(*args, **kwargs)
 
-                category = "system.azureopenai"
+                if resource_scope:
+                    if not(resource_scope in ["global", "datazone"] or resource_scope.startswith("region")):
+                        logging.error("Azure OpenAI invalid resource scope, not ingesting")
+                        return wrapped(*args, **kwargs)
+
+                    ingest["resource_scope"] = resource_scope
+
+                category = PayiCategories.azure_openai
+
                 ingest["category"] = category
-                ingest["resource"] = resource
+                ingest["resource"] = route_as_resource
 
         current_frame = inspect.currentframe()
         # f_back excludes the current frame, strip() cleans up whitespace and newlines
@@ -864,7 +889,7 @@ _instrumentor: Optional[PayiInstrumentor] = None
 
 def payi_instrument(
     payi: Optional[Union[Payi, AsyncPayi, 'list[Union[Payi, AsyncPayi]]']] = None,
-    instruments: Optional[Set[PayiCategories]] = None,
+    instruments: Optional[Set[str]] = None,
     log_prompt_and_response: bool = True,
     prompt_and_response_logger: Optional[Callable[[str, "dict[str, str]"], None]] = None,
 ) -> None:
