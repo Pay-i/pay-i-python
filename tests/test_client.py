@@ -23,10 +23,12 @@ from pydantic import ValidationError
 
 from payi import Payi, AsyncPayi, APIResponseValidationError
 from payi._types import Omit
+from payi._utils import maybe_transform
 from payi._models import BaseModel, FinalRequestOptions
 from payi._constants import RAW_RESPONSE_HEADER
 from payi._exceptions import PayiError, APIStatusError, APITimeoutError, APIResponseValidationError
 from payi._base_client import DEFAULT_TIMEOUT, HTTPX_DEFAULT_TIMEOUT, BaseClient, make_request_options
+from payi.types.limit_create_params import LimitCreateParams
 
 from .utils import update_env
 
@@ -704,7 +706,7 @@ class TestPayi:
         with pytest.raises(APITimeoutError):
             self.client.post(
                 "/api/v1/limits",
-                body=cast(object, dict(limit_name="x", max=1)),
+                body=cast(object, maybe_transform(dict(limit_name="x", max=1), LimitCreateParams)),
                 cast_to=httpx.Response,
                 options={"headers": {RAW_RESPONSE_HEADER: "stream"}},
             )
@@ -719,7 +721,7 @@ class TestPayi:
         with pytest.raises(APIStatusError):
             self.client.post(
                 "/api/v1/limits",
-                body=cast(object, dict(limit_name="x", max=1)),
+                body=cast(object, maybe_transform(dict(limit_name="x", max=1), LimitCreateParams)),
                 cast_to=httpx.Response,
                 options={"headers": {RAW_RESPONSE_HEADER: "stream"}},
             )
@@ -1472,7 +1474,7 @@ class TestAsyncPayi:
         with pytest.raises(APITimeoutError):
             await self.client.post(
                 "/api/v1/limits",
-                body=cast(object, dict(limit_name="x", max=1)),
+                body=cast(object, maybe_transform(dict(limit_name="x", max=1), LimitCreateParams)),
                 cast_to=httpx.Response,
                 options={"headers": {RAW_RESPONSE_HEADER: "stream"}},
             )
@@ -1487,7 +1489,7 @@ class TestAsyncPayi:
         with pytest.raises(APIStatusError):
             await self.client.post(
                 "/api/v1/limits",
-                body=cast(object, dict(limit_name="x", max=1)),
+                body=cast(object, maybe_transform(dict(limit_name="x", max=1), LimitCreateParams)),
                 cast_to=httpx.Response,
                 options={"headers": {RAW_RESPONSE_HEADER: "stream"}},
             )
