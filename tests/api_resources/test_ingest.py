@@ -113,6 +113,7 @@ class TestIngest:
             x_proxy_experience_name="experience_name",
             x_proxy_limit_ids="limitId1, limitId_2",
             x_proxy_request_tags="requestTag1, request_tag_2",
+            x_proxy_resource_scope="datazone",
             x_proxy_user_id="UserName123",
         )
         assert_matches_type(IngestResponse, ingest, path=["response"])
@@ -244,6 +245,7 @@ class TestAsyncIngest:
             x_proxy_experience_name="experience_name",
             x_proxy_limit_ids="limitId1, limitId_2",
             x_proxy_request_tags="requestTag1, request_tag_2",
+            x_proxy_resource_scope="datazone",
             x_proxy_user_id="UserName123",
         )
         assert_matches_type(IngestResponse, ingest, path=["response"])
