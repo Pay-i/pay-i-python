@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.52 (2025-02-20)
+
+Full Changelog: [v0.1.0-alpha.51...v0.1.0-alpha.52](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.51...v0.1.0-alpha.52)
+
+### Features
+
+* feat: ingest support for resource scope ([e2b4ce8](https://github.com/Pay-i/pay-i-python/commit/e2b4ce847b3f54df1bc5be7a78cf81dccd80c88c))
+
 ## 0.1.0-alpha.51 (2025-02-20)
 
 Full Changelog: [v0.1.0-alpha.50...v0.1.0-alpha.51](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.50...v0.1.0-alpha.51)
