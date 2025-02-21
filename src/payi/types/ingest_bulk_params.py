@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typing import Iterable
-from typing_extensions import Required, TypedDict
+from typing_extensions import TypedDict
 
 from .ingest_event_param import IngestEventParam
 
@@ -11,4 +11,4 @@ __all__ = ["IngestBulkParams"]
 
 
 class IngestBulkParams(TypedDict, total=False):
-    events: Required[Iterable[IngestEventParam]]
+    events: Iterable[IngestEventParam]

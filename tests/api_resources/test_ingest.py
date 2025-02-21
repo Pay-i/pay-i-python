@@ -20,12 +20,49 @@ class TestIngest:
 
     @parametrize
     def test_method_bulk(self, client: Payi) -> None:
+        ingest = client.ingest.bulk()
+        assert_matches_type(BulkIngestResponse, ingest, path=["response"])
+
+    @parametrize
+    def test_method_bulk_with_all_params(self, client: Payi) -> None:
         ingest = client.ingest.bulk(
             events=[
                 {
                     "category": "x",
                     "resource": "x",
-                    "units": {"foo": {}},
+                    "units": {
+                        "foo": {
+                            "input": 0,
+                            "output": 0,
+                        }
+                    },
+                    "end_to_end_latency_ms": 0,
+                    "event_timestamp": parse_datetime("2019-12-27T18:11:19.117Z"),
+                    "experience_id": "experience_id",
+                    "experience_name": "experience_name",
+                    "experience_properties": {"foo": "string"},
+                    "http_status_code": 0,
+                    "limit_ids": ["string"],
+                    "properties": {"foo": "string"},
+                    "provider_request_headers": [
+                        {
+                            "name": "x",
+                            "value": "value",
+                        }
+                    ],
+                    "provider_request_json": "provider_request_json",
+                    "provider_response_headers": [
+                        {
+                            "name": "x",
+                            "value": "value",
+                        }
+                    ],
+                    "provider_response_id": "provider_response_id",
+                    "provider_response_json": "string",
+                    "provider_uri": "provider_uri",
+                    "request_tags": ["string"],
+                    "time_to_first_token_ms": 0,
+                    "user_id": "user_id",
                 }
             ],
         )
@@ -33,15 +70,7 @@ class TestIngest:
 
     @parametrize
     def test_raw_response_bulk(self, client: Payi) -> None:
-        response = client.ingest.with_raw_response.bulk(
-            events=[
-                {
-                    "category": "x",
-                    "resource": "x",
-                    "units": {"foo": {}},
-                }
-            ],
-        )
+        response = client.ingest.with_raw_response.bulk()
 
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -50,15 +79,7 @@ class TestIngest:
 
     @parametrize
     def test_streaming_response_bulk(self, client: Payi) -> None:
-        with client.ingest.with_streaming_response.bulk(
-            events=[
-                {
-                    "category": "x",
-                    "resource": "x",
-                    "units": {"foo": {}},
-                }
-            ],
-        ) as response:
+        with client.ingest.with_streaming_response.bulk() as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
@@ -152,12 +173,49 @@ class TestAsyncIngest:
 
     @parametrize
     async def test_method_bulk(self, async_client: AsyncPayi) -> None:
+        ingest = await async_client.ingest.bulk()
+        assert_matches_type(BulkIngestResponse, ingest, path=["response"])
+
+    @parametrize
+    async def test_method_bulk_with_all_params(self, async_client: AsyncPayi) -> None:
         ingest = await async_client.ingest.bulk(
             events=[
                 {
                     "category": "x",
                     "resource": "x",
-                    "units": {"foo": {}},
+                    "units": {
+                        "foo": {
+                            "input": 0,
+                            "output": 0,
+                        }
+                    },
+                    "end_to_end_latency_ms": 0,
+                    "event_timestamp": parse_datetime("2019-12-27T18:11:19.117Z"),
+                    "experience_id": "experience_id",
+                    "experience_name": "experience_name",
+                    "experience_properties": {"foo": "string"},
+                    "http_status_code": 0,
+                    "limit_ids": ["string"],
+                    "properties": {"foo": "string"},
+                    "provider_request_headers": [
+                        {
+                            "name": "x",
+                            "value": "value",
+                        }
+                    ],
+                    "provider_request_json": "provider_request_json",
+                    "provider_response_headers": [
+                        {
+                            "name": "x",
+                            "value": "value",
+                        }
+                    ],
+                    "provider_response_id": "provider_response_id",
+                    "provider_response_json": "string",
+                    "provider_uri": "provider_uri",
+                    "request_tags": ["string"],
+                    "time_to_first_token_ms": 0,
+                    "user_id": "user_id",
                 }
             ],
         )
@@ -165,15 +223,7 @@ class TestAsyncIngest:
 
     @parametrize
     async def test_raw_response_bulk(self, async_client: AsyncPayi) -> None:
-        response = await async_client.ingest.with_raw_response.bulk(
-            events=[
-                {
-                    "category": "x",
-                    "resource": "x",
-                    "units": {"foo": {}},
-                }
-            ],
-        )
+        response = await async_client.ingest.with_raw_response.bulk()
 
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -182,15 +232,7 @@ class TestAsyncIngest:
 
     @parametrize
     async def test_streaming_response_bulk(self, async_client: AsyncPayi) -> None:
-        async with async_client.ingest.with_streaming_response.bulk(
-            events=[
-                {
-                    "category": "x",
-                    "resource": "x",
-                    "units": {"foo": {}},
-                }
-            ],
-        ) as response:
+        async with async_client.ingest.with_streaming_response.bulk() as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
