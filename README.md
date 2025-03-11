@@ -79,6 +79,28 @@ Nested request parameters are [TypedDicts](https://docs.python.org/3/library/typ
 
 Typed requests and responses provide autocomplete and documentation within your editor. If you would like to see type errors in VS Code to help catch bugs earlier, set `python.analysis.typeCheckingMode` to `basic`.
 
+## Nested params
+
+Nested parameters are dictionaries, typed using `TypedDict`, for example:
+
+```python
+from payi import Payi
+
+client = Payi()
+
+experience_type = client.experiences.types.create(
+    description="x",
+    name="x",
+    limit_config={
+        "max": 0,
+        "limit_tags": ["tag1", "tag2"],
+        "limit_type": "block",
+        "threshold": 0,
+    },
+)
+print(experience_type.limit_config)
+```
+
 ## Handling errors
 
 When the library is unable to connect to the API (for example, due to network connection problems or a timeout), a subclass of `payi.APIConnectionError` is raised.
