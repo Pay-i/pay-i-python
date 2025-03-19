@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.55 (2025-03-19)
+
+Full Changelog: [v0.1.0-alpha.54...v0.1.0-alpha.55](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.54...v0.1.0-alpha.55)
+
+### Bug Fixes
+
+* **ci:** remove publishing patch ([#257](https://github.com/Pay-i/pay-i-python/issues/257)) ([0c5bfb4](https://github.com/Pay-i/pay-i-python/commit/0c5bfb4725777b366fb50199209f4e8a50711ad9))
+
 ## 0.1.0-alpha.54 (2025-03-17)
 
 Full Changelog: [v0.1.0-alpha.53...v0.1.0-alpha.54](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.53...v0.1.0-alpha.54)
