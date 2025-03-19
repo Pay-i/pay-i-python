@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.1.0-alpha.54 (2025-03-17)
+
+Full Changelog: [v0.1.0-alpha.53...v0.1.0-alpha.54](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.53...v0.1.0-alpha.54)
+
+### Bug Fixes
+
+* **ci:** ensure pip is always available ([#256](https://github.com/Pay-i/pay-i-python/issues/256)) ([13c3e2c](https://github.com/Pay-i/pay-i-python/commit/13c3e2c3c83f97bc0add1a7e670113e609e3c5d1))
+* **types:** handle more discriminated union shapes ([#255](https://github.com/Pay-i/pay-i-python/issues/255)) ([be986f1](https://github.com/Pay-i/pay-i-python/commit/be986f12ea82af0a7a51e7b08803758381050086))
+
+
+### Chores
+
+* **internal:** bump rye to 0.44.0 ([#254](https://github.com/Pay-i/pay-i-python/issues/254)) ([789c413](https://github.com/Pay-i/pay-i-python/commit/789c413b306c96905507c1b4de8c835cc484b2b8))
+* **internal:** remove extra empty newlines ([#252](https://github.com/Pay-i/pay-i-python/issues/252)) ([8b33100](https://github.com/Pay-i/pay-i-python/commit/8b33100d0fee1693e3adc9fc6c652bd4150a2642))
+* **internal:** remove unused http client options forwarding ([#248](https://github.com/Pay-i/pay-i-python/issues/248)) ([5f7bf7b](https://github.com/Pay-i/pay-i-python/commit/5f7bf7b9d3745fd3d63c49502bbc9b63ff8cd333))
+
+
+### Documentation
+
+* revise readme docs about nested params ([#250](https://github.com/Pay-i/pay-i-python/issues/250)) ([19c655d](https://github.com/Pay-i/pay-i-python/commit/19c655d13bbe82916c599a5b9f8292057f7b4b0e))
+
 ## 0.1.0-alpha.53 (2025-03-01)
 
 Full Changelog: [v0.1.0-alpha.52...v0.1.0-alpha.53](https://github.com/pay-i/pay-i-python/compare/v0.1.0-alpha.52...v0.1.0-alpha.53)

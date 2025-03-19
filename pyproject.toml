@@ -1,6 +1,6 @@
 [project]
 name = "payi"
-version = "0.1.0-alpha.53"
+version = "0.1.0-alpha.54"
 description = "The official Python library for the payi API"
 dynamic = ["readme"]
 license = "Apache-2.0"
@@ -39,7 +39,6 @@ classifiers = [
 [project.urls]
 Homepage = "https://github.com/Pay-i/pay-i-python"
 Repository = "https://github.com/Pay-i/pay-i-python"
-
 
 
 [tool.rye]
@@ -155,7 +154,6 @@ reportImplicitOverride = true
 
 reportImportCycles = false
 reportPrivateUsage = false
-
 
 [tool.ruff]
 line-length = 120
