@@ -105,6 +105,9 @@ class IngestResource(SyncAPIResource):
         request_tags: Optional[list[str]] | NotGiven = NOT_GIVEN,
         experience_id: Optional[str] | NotGiven = NOT_GIVEN,
         experience_name: Optional[str] | NotGiven = NOT_GIVEN,
+        use_case__id: Optional[str] | NotGiven = NOT_GIVEN,
+        use_case_name: Optional[str] | NotGiven = NOT_GIVEN,
+        use_case_version: Optional[str] | NotGiven = NOT_GIVEN,
         user_id: Optional[str] | NotGiven = NOT_GIVEN,
         resource_scope: Optional[str] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
@@ -132,9 +135,15 @@ class IngestResource(SyncAPIResource):
 
           request_tags (list[str], optional): The request tags to associate with the request. Defaults to None.
 
-          experience_name (str, optional): The experience name
+          experience_name (str, optional): DEPRECATED, replaced with use_case_name. 
 
-          experience_id (str, optional): The experience instance id
+          experience_id (str, optional): DEPRECATED, replaced with use_case_id.
+
+          use_case_name (str, optional): The use case name
+
+          use_case_id (str, optional): The use case instance id
+
+          use_case_version (str, optional): The use case instance version
 
           user_id (str, optional): The user id
           
@@ -175,6 +184,15 @@ class IngestResource(SyncAPIResource):
         if experience_id is None or isinstance(experience_id, NotGiven):
             experience_id = NOT_GIVEN
 
+        if use_case_name is None or isinstance(use_case_name, NotGiven):
+            use_case_name = NOT_GIVEN
+        
+        if use_case__id is None or isinstance(use_case__id, NotGiven):
+            use_case__id = NOT_GIVEN
+        
+        if use_case_version is None or isinstance(use_case_version, NotGiven):
+            use_case_version = NOT_GIVEN
+
         if user_id is None or isinstance(user_id, NotGiven):
             user_id = NOT_GIVEN
 
@@ -183,7 +201,10 @@ class IngestResource(SyncAPIResource):
                 "xProxy-Limit-IDs": valid_ids_str,
                 "xProxy-Request-Tags": valid_tags_str,
                 "xProxy-Experience-Name": experience_name,
-                "xProxy-Experience-Id": experience_id,
+                "xProxy-Experience-ID": experience_id,
+                "xProxy-UseCase-ID": use_case__id,
+                "xProxy-UseCase-Name": use_case_name,
+                "xProxy-UseCase-Version": use_case_version,
                 "xProxy-User-ID": user_id,
                 "xProxy-Resource-Scope": resource_scope,
             }).items() if value is not None},  # Ensure no 'None' values are included
@@ -293,6 +314,9 @@ class AsyncIngestResource(AsyncAPIResource):
         request_tags: Optional[list[str]] | NotGiven = NOT_GIVEN,
         experience_name: Optional[str] | NotGiven = NOT_GIVEN,
         experience_id: Optional[str] | NotGiven = NOT_GIVEN,
+        use_case_id: Optional[str] | NotGiven = NOT_GIVEN,
+        use_case_name: Optional[str] | NotGiven = NOT_GIVEN,
+        use_case_version: Optional[str] | NotGiven = NOT_GIVEN,
         user_id: Optional[str] | NotGiven = NOT_GIVEN,
         resource_scope: Union[str, None] | NotGiven = NOT_GIVEN,
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -319,9 +343,15 @@ class AsyncIngestResource(AsyncAPIResource):
 
           request_tags (list[str], optional): The request tags to associate with the request. Defaults to None.
 
-          experience_name (str, optional): The experience name
+          experience_name (str, optional): DEPRECATED, replaced with use_case_name. 
 
-          experience_id (str, optional): The experience instance id
+          experience_id (str, optional): DEPRECATED, replaced with use_case_id.
+
+          use_case_name (str, optional): The use case name
+
+          use_case_id (str, optional): The use case instance id
+
+          use_case_version (str, optional): The use case instance version
 
           user_id (str, optional): The user id
           
@@ -362,6 +392,15 @@ class AsyncIngestResource(AsyncAPIResource):
         if experience_id is None or isinstance(experience_id, NotGiven):
             experience_id = NOT_GIVEN
 
+        if use_case_name is None or isinstance(use_case_name, NotGiven):
+            use_case_name = NOT_GIVEN
+        
+        if use_case_id is None or isinstance(use_case_id, NotGiven):
+            use_case_id = NOT_GIVEN
+
+        if use_case_version is None or isinstance(use_case_version, NotGiven):
+            use_case_version = NOT_GIVEN
+
         if user_id is None or isinstance(user_id, NotGiven):
             user_id = NOT_GIVEN
 
@@ -370,7 +409,10 @@ class AsyncIngestResource(AsyncAPIResource):
                 "xProxy-Limit-IDs": valid_ids_str,
                 "xProxy-Request-Tags": valid_tags_str,
                 "xProxy-Experience-Name": experience_name,
-                "xProxy-Experience-Id": experience_id,
+                "xProxy-Experience-ID": experience_id,
+                "xProxy-UseCase-ID": use_case_id,
+                "xProxy-UseCase-Name": use_case_name,
+                "xProxy-UseCase-Version": use_case_version,
                 "xProxy-User-ID": user_id,
                 "xProxy-Resource-Scope": resource_scope,
             }).items() if value is not None},  # Ensure no 'None' values are included
