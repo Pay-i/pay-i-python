@@ -3,68 +3,82 @@
 from __future__ import annotations
 
 from typing import Optional
-from typing_extensions import Literal
 
 import httpx
 
-from ..types import billing_model_create_params, billing_model_update_params
-from .._types import NOT_GIVEN, Body, Query, Headers, NotGiven
-from .._utils import (
+from ...._types import NOT_GIVEN, Body, Query, Headers, NotGiven
+from ...._utils import (
     maybe_transform,
     async_maybe_transform,
 )
-from .._compat import cached_property
-from .._resource import SyncAPIResource, AsyncAPIResource
-from .._response import (
+from ...._compat import cached_property
+from ...._resource import SyncAPIResource, AsyncAPIResource
+from ...._response import (
     to_raw_response_wrapper,
     to_streamed_response_wrapper,
     async_to_raw_response_wrapper,
     async_to_streamed_response_wrapper,
 )
-from .._base_client import make_request_options
-from ..types.billing_model import BillingModel
-from ..types.billing_model_list_response import BillingModelListResponse
+from .limit_config import (
+    LimitConfigResource,
+    AsyncLimitConfigResource,
+    LimitConfigResourceWithRawResponse,
+    AsyncLimitConfigResourceWithRawResponse,
+    LimitConfigResourceWithStreamingResponse,
+    AsyncLimitConfigResourceWithStreamingResponse,
+)
+from ...._base_client import make_request_options
+from ....types.use_cases import type_list_params, type_create_params, type_update_params
+from ....types.use_cases.use_case_type import UseCaseType
+from ....types.use_cases.type_list_response import TypeListResponse
+from ....types.shared_params.pay_i_common_models_budget_management_create_limit_base import (
+    PayICommonModelsBudgetManagementCreateLimitBase,
+)
 
-__all__ = ["BillingModelsResource", "AsyncBillingModelsResource"]
+__all__ = ["TypesResource", "AsyncTypesResource"]
 
 
-class BillingModelsResource(SyncAPIResource):
+class TypesResource(SyncAPIResource):
     @cached_property
-    def with_raw_response(self) -> BillingModelsResourceWithRawResponse:
+    def limit_config(self) -> LimitConfigResource:
+        return LimitConfigResource(self._client)
+
+    @cached_property
+    def with_raw_response(self) -> TypesResourceWithRawResponse:
         """
         This property can be used as a prefix for any HTTP method call to return
         the raw response object instead of the parsed content.
 
         For more information, see https://www.github.com/Pay-i/pay-i-python#accessing-raw-response-data-eg-headers
         """
-        return BillingModelsResourceWithRawResponse(self)
+        return TypesResourceWithRawResponse(self)
 
     @cached_property
-    def with_streaming_response(self) -> BillingModelsResourceWithStreamingResponse:
+    def with_streaming_response(self) -> TypesResourceWithStreamingResponse:
         """
         An alternative to `.with_raw_response` that doesn't eagerly read the response body.
 
         For more information, see https://www.github.com/Pay-i/pay-i-python#with_streaming_response
         """
-        return BillingModelsResourceWithStreamingResponse(self)
+        return TypesResourceWithStreamingResponse(self)
 
     def create(
         self,
         *,
+        description: str,
         name: str,
-        type: Literal["costplus", "subscription", "hybrid"],
-        default_price_modifier: Optional[float] | NotGiven = NOT_GIVEN,
-        prepaid_amount: Optional[float] | NotGiven = NOT_GIVEN,
-        prepaid_max: Optional[float] | NotGiven = NOT_GIVEN,
-        threshold: Optional[float] | NotGiven = NOT_GIVEN,
+        limit_config: PayICommonModelsBudgetManagementCreateLimitBase | NotGiven = NOT_GIVEN,
+        logging_enabled: Optional[bool] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> BillingModel:
+    ) -> UseCaseType:
         """
+        Create a new Use Case
+
         Args:
           extra_headers: Send extra headers
 
@@ -75,27 +89,25 @@ class BillingModelsResource(SyncAPIResource):
           timeout: Override the client-level default timeout for this request, in seconds
         """
         return self._post(
-            "/api/v1/billing-model",
+            "/api/v1/use_cases/types",
             body=maybe_transform(
                 {
+                    "description": description,
                     "name": name,
-                    "type": type,
-                    "default_price_modifier": default_price_modifier,
-                    "prepaid_amount": prepaid_amount,
-                    "prepaid_max": prepaid_max,
-                    "threshold": threshold,
+                    "limit_config": limit_config,
+                    "logging_enabled": logging_enabled,
                 },
-                billing_model_create_params.BillingModelCreateParams,
+                type_create_params.TypeCreateParams,
             ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=BillingModel,
+            cast_to=UseCaseType,
         )
 
     def retrieve(
         self,
-        billing_model_id: str,
+        use_case_name: str,
         *,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -103,8 +115,10 @@ class BillingModelsResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> BillingModel:
+    ) -> UseCaseType:
         """
+        Get Use Case details
+
         Args:
           extra_headers: Send extra headers
 
@@ -114,34 +128,32 @@ class BillingModelsResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not billing_model_id:
-            raise ValueError(f"Expected a non-empty value for `billing_model_id` but received {billing_model_id!r}")
+        if not use_case_name:
+            raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return self._get(
-            f"/api/v1/billing-model/{billing_model_id}",
+            f"/api/v1/use_cases/types/{use_case_name}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=BillingModel,
+            cast_to=UseCaseType,
         )
 
     def update(
         self,
-        billing_model_id: str,
+        use_case_name: str,
         *,
-        type: Literal["costplus", "subscription", "hybrid"],
-        default_price_modifier: Optional[float] | NotGiven = NOT_GIVEN,
-        name: Optional[str] | NotGiven = NOT_GIVEN,
-        prepaid_amount: Optional[float] | NotGiven = NOT_GIVEN,
-        prepaid_max: Optional[float] | NotGiven = NOT_GIVEN,
-        threshold: Optional[float] | NotGiven = NOT_GIVEN,
+        description: Optional[str] | NotGiven = NOT_GIVEN,
+        logging_enabled: Optional[bool] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> BillingModel:
+    ) -> UseCaseType:
         """
+        Update a Use Case configuration
+
         Args:
           extra_headers: Send extra headers
 
@@ -151,48 +163,63 @@ class BillingModelsResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not billing_model_id:
-            raise ValueError(f"Expected a non-empty value for `billing_model_id` but received {billing_model_id!r}")
-        return self._put(
-            f"/api/v1/billing-model/{billing_model_id}",
+        if not use_case_name:
+            raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
+        return self._patch(
+            f"/api/v1/use_cases/types/{use_case_name}",
             body=maybe_transform(
                 {
-                    "type": type,
-                    "default_price_modifier": default_price_modifier,
-                    "name": name,
-                    "prepaid_amount": prepaid_amount,
-                    "prepaid_max": prepaid_max,
-                    "threshold": threshold,
+                    "description": description,
+                    "logging_enabled": logging_enabled,
                 },
-                billing_model_update_params.BillingModelUpdateParams,
+                type_update_params.TypeUpdateParams,
             ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=BillingModel,
+            cast_to=UseCaseType,
         )
 
     def list(
         self,
         *,
+        use_case_name: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> BillingModelListResponse:
+    ) -> TypeListResponse:
+        """
+        Get all Use Cases
+
+        Args:
+          use_case_name: Use Case name
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
         return self._get(
-            "/api/v1/billing-model",
+            "/api/v1/use_cases/types",
             options=make_request_options(
-                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+                extra_headers=extra_headers,
+                extra_query=extra_query,
+                extra_body=extra_body,
+                timeout=timeout,
+                query=maybe_transform({"use_case_name": use_case_name}, type_list_params.TypeListParams),
             ),
-            cast_to=BillingModelListResponse,
+            cast_to=TypeListResponse,
         )
 
-    def set_default(
+    def delete(
         self,
-        billing_model_id: str,
+        use_case_name: str,
         *,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -200,8 +227,10 @@ class BillingModelsResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> BillingModel:
+    ) -> UseCaseType:
         """
+        Delete a Use Case
+
         Args:
           extra_headers: Send extra headers
 
@@ -211,54 +240,58 @@ class BillingModelsResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not billing_model_id:
-            raise ValueError(f"Expected a non-empty value for `billing_model_id` but received {billing_model_id!r}")
-        return self._put(
-            f"/api/v1/billing-model/{billing_model_id}/default",
+        if not use_case_name:
+            raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
+        return self._delete(
+            f"/api/v1/use_cases/types/{use_case_name}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=BillingModel,
+            cast_to=UseCaseType,
         )
 
 
-class AsyncBillingModelsResource(AsyncAPIResource):
+class AsyncTypesResource(AsyncAPIResource):
     @cached_property
-    def with_raw_response(self) -> AsyncBillingModelsResourceWithRawResponse:
+    def limit_config(self) -> AsyncLimitConfigResource:
+        return AsyncLimitConfigResource(self._client)
+
+    @cached_property
+    def with_raw_response(self) -> AsyncTypesResourceWithRawResponse:
         """
         This property can be used as a prefix for any HTTP method call to return
         the raw response object instead of the parsed content.
 
         For more information, see https://www.github.com/Pay-i/pay-i-python#accessing-raw-response-data-eg-headers
         """
-        return AsyncBillingModelsResourceWithRawResponse(self)
+        return AsyncTypesResourceWithRawResponse(self)
 
     @cached_property
-    def with_streaming_response(self) -> AsyncBillingModelsResourceWithStreamingResponse:
+    def with_streaming_response(self) -> AsyncTypesResourceWithStreamingResponse:
         """
         An alternative to `.with_raw_response` that doesn't eagerly read the response body.
 
         For more information, see https://www.github.com/Pay-i/pay-i-python#with_streaming_response
         """
-        return AsyncBillingModelsResourceWithStreamingResponse(self)
+        return AsyncTypesResourceWithStreamingResponse(self)
 
     async def create(
         self,
         *,
+        description: str,
         name: str,
-        type: Literal["costplus", "subscription", "hybrid"],
-        default_price_modifier: Optional[float] | NotGiven = NOT_GIVEN,
-        prepaid_amount: Optional[float] | NotGiven = NOT_GIVEN,
-        prepaid_max: Optional[float] | NotGiven = NOT_GIVEN,
-        threshold: Optional[float] | NotGiven = NOT_GIVEN,
+        limit_config: PayICommonModelsBudgetManagementCreateLimitBase | NotGiven = NOT_GIVEN,
+        logging_enabled: Optional[bool] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> BillingModel:
+    ) -> UseCaseType:
         """
+        Create a new Use Case
+
         Args:
           extra_headers: Send extra headers
 
@@ -269,27 +302,25 @@ class AsyncBillingModelsResource(AsyncAPIResource):
           timeout: Override the client-level default timeout for this request, in seconds
         """
         return await self._post(
-            "/api/v1/billing-model",
+            "/api/v1/use_cases/types",
             body=await async_maybe_transform(
                 {
+                    "description": description,
                     "name": name,
-                    "type": type,
-                    "default_price_modifier": default_price_modifier,
-                    "prepaid_amount": prepaid_amount,
-                    "prepaid_max": prepaid_max,
-                    "threshold": threshold,
+                    "limit_config": limit_config,
+                    "logging_enabled": logging_enabled,
                 },
-                billing_model_create_params.BillingModelCreateParams,
+                type_create_params.TypeCreateParams,
             ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=BillingModel,
+            cast_to=UseCaseType,
         )
 
     async def retrieve(
         self,
-        billing_model_id: str,
+        use_case_name: str,
         *,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -297,8 +328,10 @@ class AsyncBillingModelsResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> BillingModel:
+    ) -> UseCaseType:
         """
+        Get Use Case details
+
         Args:
           extra_headers: Send extra headers
 
@@ -308,34 +341,32 @@ class AsyncBillingModelsResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not billing_model_id:
-            raise ValueError(f"Expected a non-empty value for `billing_model_id` but received {billing_model_id!r}")
+        if not use_case_name:
+            raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return await self._get(
-            f"/api/v1/billing-model/{billing_model_id}",
+            f"/api/v1/use_cases/types/{use_case_name}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=BillingModel,
+            cast_to=UseCaseType,
         )
 
     async def update(
         self,
-        billing_model_id: str,
+        use_case_name: str,
         *,
-        type: Literal["costplus", "subscription", "hybrid"],
-        default_price_modifier: Optional[float] | NotGiven = NOT_GIVEN,
-        name: Optional[str] | NotGiven = NOT_GIVEN,
-        prepaid_amount: Optional[float] | NotGiven = NOT_GIVEN,
-        prepaid_max: Optional[float] | NotGiven = NOT_GIVEN,
-        threshold: Optional[float] | NotGiven = NOT_GIVEN,
+        description: Optional[str] | NotGiven = NOT_GIVEN,
+        logging_enabled: Optional[bool] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> BillingModel:
+    ) -> UseCaseType:
         """
+        Update a Use Case configuration
+
         Args:
           extra_headers: Send extra headers
 
@@ -345,48 +376,63 @@ class AsyncBillingModelsResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not billing_model_id:
-            raise ValueError(f"Expected a non-empty value for `billing_model_id` but received {billing_model_id!r}")
-        return await self._put(
-            f"/api/v1/billing-model/{billing_model_id}",
+        if not use_case_name:
+            raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
+        return await self._patch(
+            f"/api/v1/use_cases/types/{use_case_name}",
             body=await async_maybe_transform(
                 {
-                    "type": type,
-                    "default_price_modifier": default_price_modifier,
-                    "name": name,
-                    "prepaid_amount": prepaid_amount,
-                    "prepaid_max": prepaid_max,
-                    "threshold": threshold,
+                    "description": description,
+                    "logging_enabled": logging_enabled,
                 },
-                billing_model_update_params.BillingModelUpdateParams,
+                type_update_params.TypeUpdateParams,
             ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=BillingModel,
+            cast_to=UseCaseType,
         )
 
     async def list(
         self,
         *,
+        use_case_name: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> BillingModelListResponse:
+    ) -> TypeListResponse:
+        """
+        Get all Use Cases
+
+        Args:
+          use_case_name: Use Case name
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
         return await self._get(
-            "/api/v1/billing-model",
+            "/api/v1/use_cases/types",
             options=make_request_options(
-                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+                extra_headers=extra_headers,
+                extra_query=extra_query,
+                extra_body=extra_body,
+                timeout=timeout,
+                query=await async_maybe_transform({"use_case_name": use_case_name}, type_list_params.TypeListParams),
             ),
-            cast_to=BillingModelListResponse,
+            cast_to=TypeListResponse,
         )
 
-    async def set_default(
+    async def delete(
         self,
-        billing_model_id: str,
+        use_case_name: str,
         *,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -394,8 +440,10 @@ class AsyncBillingModelsResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> BillingModel:
+    ) -> UseCaseType:
         """
+        Delete a Use Case
+
         Args:
           extra_headers: Send extra headers
 
@@ -405,96 +453,112 @@ class AsyncBillingModelsResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not billing_model_id:
-            raise ValueError(f"Expected a non-empty value for `billing_model_id` but received {billing_model_id!r}")
-        return await self._put(
-            f"/api/v1/billing-model/{billing_model_id}/default",
+        if not use_case_name:
+            raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
+        return await self._delete(
+            f"/api/v1/use_cases/types/{use_case_name}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=BillingModel,
+            cast_to=UseCaseType,
         )
 
 
-class BillingModelsResourceWithRawResponse:
-    def __init__(self, billing_models: BillingModelsResource) -> None:
-        self._billing_models = billing_models
+class TypesResourceWithRawResponse:
+    def __init__(self, types: TypesResource) -> None:
+        self._types = types
 
         self.create = to_raw_response_wrapper(
-            billing_models.create,
+            types.create,
         )
         self.retrieve = to_raw_response_wrapper(
-            billing_models.retrieve,
+            types.retrieve,
         )
         self.update = to_raw_response_wrapper(
-            billing_models.update,
+            types.update,
         )
         self.list = to_raw_response_wrapper(
-            billing_models.list,
+            types.list,
         )
-        self.set_default = to_raw_response_wrapper(
-            billing_models.set_default,
+        self.delete = to_raw_response_wrapper(
+            types.delete,
         )
 
+    @cached_property
+    def limit_config(self) -> LimitConfigResourceWithRawResponse:
+        return LimitConfigResourceWithRawResponse(self._types.limit_config)
 
-class AsyncBillingModelsResourceWithRawResponse:
-    def __init__(self, billing_models: AsyncBillingModelsResource) -> None:
-        self._billing_models = billing_models
+
+class AsyncTypesResourceWithRawResponse:
+    def __init__(self, types: AsyncTypesResource) -> None:
+        self._types = types
 
         self.create = async_to_raw_response_wrapper(
-            billing_models.create,
+            types.create,
         )
         self.retrieve = async_to_raw_response_wrapper(
-            billing_models.retrieve,
+            types.retrieve,
         )
         self.update = async_to_raw_response_wrapper(
-            billing_models.update,
+            types.update,
         )
         self.list = async_to_raw_response_wrapper(
-            billing_models.list,
+            types.list,
         )
-        self.set_default = async_to_raw_response_wrapper(
-            billing_models.set_default,
+        self.delete = async_to_raw_response_wrapper(
+            types.delete,
         )
 
+    @cached_property
+    def limit_config(self) -> AsyncLimitConfigResourceWithRawResponse:
+        return AsyncLimitConfigResourceWithRawResponse(self._types.limit_config)
 
-class BillingModelsResourceWithStreamingResponse:
-    def __init__(self, billing_models: BillingModelsResource) -> None:
-        self._billing_models = billing_models
+
+class TypesResourceWithStreamingResponse:
+    def __init__(self, types: TypesResource) -> None:
+        self._types = types
 
         self.create = to_streamed_response_wrapper(
-            billing_models.create,
+            types.create,
         )
         self.retrieve = to_streamed_response_wrapper(
-            billing_models.retrieve,
+            types.retrieve,
         )
         self.update = to_streamed_response_wrapper(
-            billing_models.update,
+            types.update,
         )
         self.list = to_streamed_response_wrapper(
-            billing_models.list,
+            types.list,
         )
-        self.set_default = to_streamed_response_wrapper(
-            billing_models.set_default,
+        self.delete = to_streamed_response_wrapper(
+            types.delete,
         )
 
+    @cached_property
+    def limit_config(self) -> LimitConfigResourceWithStreamingResponse:
+        return LimitConfigResourceWithStreamingResponse(self._types.limit_config)
 
-class AsyncBillingModelsResourceWithStreamingResponse:
-    def __init__(self, billing_models: AsyncBillingModelsResource) -> None:
-        self._billing_models = billing_models
+
+class AsyncTypesResourceWithStreamingResponse:
+    def __init__(self, types: AsyncTypesResource) -> None:
+        self._types = types
 
         self.create = async_to_streamed_response_wrapper(
-            billing_models.create,
+            types.create,
         )
         self.retrieve = async_to_streamed_response_wrapper(
-            billing_models.retrieve,
+            types.retrieve,
         )
         self.update = async_to_streamed_response_wrapper(
-            billing_models.update,
+            types.update,
         )
         self.list = async_to_streamed_response_wrapper(
-            billing_models.list,
+            types.list,
         )
-        self.set_default = async_to_streamed_response_wrapper(
-            billing_models.set_default,
+        self.delete = async_to_streamed_response_wrapper(
+            types.delete,
         )
+
+    @cached_property
+    def limit_config(self) -> AsyncLimitConfigResourceWithStreamingResponse:
+        return AsyncLimitConfigResourceWithStreamingResponse(self._types.limit_config)

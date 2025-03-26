@@ -10,6 +10,7 @@ import httpx
 from ..types import ingest_units_params
 from .._types import NOT_GIVEN, Body, Query, Headers, NotGiven
 from .._utils import (
+    is_given,
     maybe_transform,
     strip_not_given,
     async_maybe_transform,
@@ -101,11 +102,12 @@ class IngestResource(SyncAPIResource):
         provider_response_json: Union[str, List[str], None] | NotGiven = NOT_GIVEN,
         provider_uri: Optional[str] | NotGiven = NOT_GIVEN,
         time_to_first_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
+        use_case_properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
         limit_ids: Optional[list[str]] | NotGiven = NOT_GIVEN,
         request_tags: Optional[list[str]] | NotGiven = NOT_GIVEN,
         experience_id: Optional[str] | NotGiven = NOT_GIVEN,
         experience_name: Optional[str] | NotGiven = NOT_GIVEN,
-        use_case__id: Optional[str] | NotGiven = NOT_GIVEN,
+        use_case_id: Optional[str] | NotGiven = NOT_GIVEN,
         use_case_name: Optional[str] | NotGiven = NOT_GIVEN,
         use_case_version: Optional[str] | NotGiven = NOT_GIVEN,
         user_id: Optional[str] | NotGiven = NOT_GIVEN,
@@ -187,8 +189,8 @@ class IngestResource(SyncAPIResource):
         if use_case_name is None or isinstance(use_case_name, NotGiven):
             use_case_name = NOT_GIVEN
         
-        if use_case__id is None or isinstance(use_case__id, NotGiven):
-            use_case__id = NOT_GIVEN
+        if use_case_id is None or isinstance(use_case_id, NotGiven):
+            use_case_id = NOT_GIVEN
         
         if use_case_version is None or isinstance(use_case_version, NotGiven):
             use_case_version = NOT_GIVEN
@@ -202,7 +204,7 @@ class IngestResource(SyncAPIResource):
                 "xProxy-Request-Tags": valid_tags_str,
                 "xProxy-Experience-Name": experience_name,
                 "xProxy-Experience-ID": experience_id,
-                "xProxy-UseCase-ID": use_case__id,
+                "xProxy-UseCase-ID": use_case_id,
                 "xProxy-UseCase-Name": use_case_name,
                 "xProxy-UseCase-Version": use_case_version,
                 "xProxy-User-ID": user_id,
@@ -230,6 +232,7 @@ class IngestResource(SyncAPIResource):
                     "provider_response_json": provider_response_json,
                     "provider_uri": provider_uri,
                     "time_to_first_token_ms": time_to_first_token_ms,
+                    "use_case_properties": use_case_properties,
                 },
                 ingest_units_params.IngestUnitsParams,
             ),
@@ -310,6 +313,7 @@ class AsyncIngestResource(AsyncAPIResource):
         provider_response_json: Union[str, List[str], None] | NotGiven = NOT_GIVEN,
         provider_uri: Optional[str] | NotGiven = NOT_GIVEN,
         time_to_first_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
+        use_case_properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
         limit_ids: Optional[list[str]] | NotGiven = NOT_GIVEN,
         request_tags: Optional[list[str]] | NotGiven = NOT_GIVEN,
         experience_name: Optional[str] | NotGiven = NOT_GIVEN,
@@ -437,6 +441,7 @@ class AsyncIngestResource(AsyncAPIResource):
                     "provider_response_json": provider_response_json,
                     "provider_uri": provider_uri,
                     "time_to_first_token_ms": time_to_first_token_ms,
+                    "use_case_properties": use_case_properties,
                 },
                 ingest_units_params.IngestUnitsParams,
             ),

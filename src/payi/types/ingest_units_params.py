@@ -43,13 +43,21 @@ class IngestUnitsParams(TypedDict, total=False):
 
     time_to_first_token_ms: Optional[int]
 
+    use_case_properties: Optional[Dict[str, str]]
+
     limit_ids: Annotated[Union[list[str], None], PropertyInfo(alias="xProxy-Limit-IDs")]
 
     request_tags: Annotated[Union[list[str], None], PropertyInfo(alias="xProxy-Request-Tags")]
 
     experience_name: Annotated[Union[str, None], PropertyInfo(alias="xProxy-Experience-Name")]
 
-    experience_id: Annotated[Union[str, None], PropertyInfo(alias="xProxy-Experience-Id")]
+    experience_id: Annotated[Union[str, None], PropertyInfo(alias="xProxy-Experience-ID")]
+
+    use_case_name: Annotated[Union[str, None], PropertyInfo(alias="xProxy-UseCase-Name")]
+
+    use_case_id: Annotated[Union[str, None], PropertyInfo(alias="xProxy-UseCase-ID")]
+
+    use_case_version: Annotated[Union[str, None], PropertyInfo(alias="xProxy-UseCase-Version")]
 
     resource_scope: Annotated[Union[str, None], PropertyInfo(alias="xProxy-Resource-Scope")]
 

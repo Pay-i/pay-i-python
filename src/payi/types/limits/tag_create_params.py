@@ -10,3 +10,4 @@ __all__ = ["TagCreateParams"]
 
 class TagCreateParams(TypedDict, total=False):
     limit_tags: Required[List[str]]
+    """List of limit tags"""

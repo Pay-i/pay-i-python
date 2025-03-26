@@ -9,9 +9,9 @@ __all__ = ["CategoryResourceResponse", "Units"]
 
 
 class Units(BaseModel):
-    input_price: float
+    input_price: Optional[float] = None
 
-    output_price: float
+    output_price: Optional[float] = None
 
 
 class CategoryResourceResponse(BaseModel):
