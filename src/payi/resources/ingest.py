@@ -160,6 +160,7 @@ class IngestResource(SyncAPIResource):
         """
         valid_ids_str: str | NotGiven = NOT_GIVEN
         valid_tags_str: str | NotGiven = NOT_GIVEN
+        use_case_version_str: str | NotGiven = NOT_GIVEN
 
         if limit_ids is None or isinstance(limit_ids, NotGiven):
             valid_ids_str = NOT_GIVEN
@@ -372,6 +373,7 @@ class AsyncIngestResource(AsyncAPIResource):
         """
         valid_ids_str: str | NotGiven = NOT_GIVEN
         valid_tags_str: str | NotGiven = NOT_GIVEN
+        use_case_version_str: str | NotGiven = NOT_GIVEN
 
         if limit_ids is None or isinstance(limit_ids, NotGiven):
             valid_ids_str = NOT_GIVEN

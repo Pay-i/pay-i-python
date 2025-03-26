@@ -136,7 +136,6 @@ class TestIngest:
             provider_uri="provider_uri",
             time_to_first_token_ms=0,
             use_case_properties={"foo": "string"},
-            x_proxy_user_id="UserName123",
             limit_ids=["limitId1", "limitId_2"],
             request_tags=["requestTag1", "request_tag_2"],
             experience_name="experience_name",
