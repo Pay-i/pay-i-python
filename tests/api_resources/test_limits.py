@@ -168,6 +168,7 @@ class TestLimits:
             page_size=0,
             sort_ascending=True,
             sort_by="sort_by",
+            tag_list=["string"],
             tags="tags",
         )
         assert_matches_type(PagedLimitList, limit, path=["response"])
@@ -425,6 +426,7 @@ class TestAsyncLimits:
             page_size=0,
             sort_ascending=True,
             sort_by="sort_by",
+            tag_list=["string"],
             tags="tags",
         )
         assert_matches_type(PagedLimitList, limit, path=["response"])

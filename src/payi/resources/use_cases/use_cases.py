@@ -4,62 +4,79 @@ from __future__ import annotations
 
 import httpx
 
-from ..types import price_modifier_create_params, price_modifier_update_params
-from .._types import NOT_GIVEN, Body, Query, Headers, NotGiven
-from .._utils import (
-    maybe_transform,
-    async_maybe_transform,
+from ..._types import NOT_GIVEN, Body, Query, Headers, NotGiven
+from ..._compat import cached_property
+from .properties import (
+    PropertiesResource,
+    AsyncPropertiesResource,
+    PropertiesResourceWithRawResponse,
+    AsyncPropertiesResourceWithRawResponse,
+    PropertiesResourceWithStreamingResponse,
+    AsyncPropertiesResourceWithStreamingResponse,
 )
-from .._compat import cached_property
-from .._resource import SyncAPIResource, AsyncAPIResource
-from .._response import (
+from ..._resource import SyncAPIResource, AsyncAPIResource
+from ..._response import (
     to_raw_response_wrapper,
     to_streamed_response_wrapper,
     async_to_raw_response_wrapper,
     async_to_streamed_response_wrapper,
 )
-from .._base_client import make_request_options
-from ..types.price_modifier import PriceModifier
-from ..types.price_modifier_retrieve_response import PriceModifierRetrieveResponse
+from .types.types import (
+    TypesResource,
+    AsyncTypesResource,
+    TypesResourceWithRawResponse,
+    AsyncTypesResourceWithRawResponse,
+    TypesResourceWithStreamingResponse,
+    AsyncTypesResourceWithStreamingResponse,
+)
+from ..._base_client import make_request_options
+from ...types.use_case_instance_response import UseCaseInstanceResponse
 
-__all__ = ["PriceModifiersResource", "AsyncPriceModifiersResource"]
+__all__ = ["UseCasesResource", "AsyncUseCasesResource"]
 
 
-class PriceModifiersResource(SyncAPIResource):
+class UseCasesResource(SyncAPIResource):
     @cached_property
-    def with_raw_response(self) -> PriceModifiersResourceWithRawResponse:
+    def types(self) -> TypesResource:
+        return TypesResource(self._client)
+
+    @cached_property
+    def properties(self) -> PropertiesResource:
+        return PropertiesResource(self._client)
+
+    @cached_property
+    def with_raw_response(self) -> UseCasesResourceWithRawResponse:
         """
         This property can be used as a prefix for any HTTP method call to return
         the raw response object instead of the parsed content.
 
         For more information, see https://www.github.com/Pay-i/pay-i-python#accessing-raw-response-data-eg-headers
         """
-        return PriceModifiersResourceWithRawResponse(self)
+        return UseCasesResourceWithRawResponse(self)
 
     @cached_property
-    def with_streaming_response(self) -> PriceModifiersResourceWithStreamingResponse:
+    def with_streaming_response(self) -> UseCasesResourceWithStreamingResponse:
         """
         An alternative to `.with_raw_response` that doesn't eagerly read the response body.
 
         For more information, see https://www.github.com/Pay-i/pay-i-python#with_streaming_response
         """
-        return PriceModifiersResourceWithStreamingResponse(self)
+        return UseCasesResourceWithStreamingResponse(self)
 
     def create(
         self,
+        use_case_name: str,
         *,
-        billing_model_id: str,
-        category: str,
-        price_modifier: float,
-        resource: str,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> PriceModifier:
+    ) -> UseCaseInstanceResponse:
         """
+        Create a Use Case instance
+
         Args:
           extra_headers: Send extra headers
 
@@ -69,26 +86,19 @@ class PriceModifiersResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
+        if not use_case_name:
+            raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return self._post(
-            "/api/v1/price-modifier",
-            body=maybe_transform(
-                {
-                    "billing_model_id": billing_model_id,
-                    "category": category,
-                    "price_modifier": price_modifier,
-                    "resource": resource,
-                },
-                price_modifier_create_params.PriceModifierCreateParams,
-            ),
+            f"/api/v1/use_cases/instances/{use_case_name}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=PriceModifier,
+            cast_to=UseCaseInstanceResponse,
         )
 
     def retrieve(
         self,
-        billing_model_id: str,
+        use_case_id: str,
         *,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -96,8 +106,10 @@ class PriceModifiersResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> PriceModifierRetrieveResponse:
+    ) -> UseCaseInstanceResponse:
         """
+        Get a Use Case instance details
+
         Args:
           extra_headers: Send extra headers
 
@@ -107,31 +119,30 @@ class PriceModifiersResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not billing_model_id:
-            raise ValueError(f"Expected a non-empty value for `billing_model_id` but received {billing_model_id!r}")
+        if not use_case_id:
+            raise ValueError(f"Expected a non-empty value for `use_case_id` but received {use_case_id!r}")
         return self._get(
-            f"/api/v1/price-modifier/{billing_model_id}",
+            f"/api/v1/use_cases/instances/{use_case_id}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=PriceModifierRetrieveResponse,
+            cast_to=UseCaseInstanceResponse,
         )
 
-    def update(
+    def delete(
         self,
+        use_case_id: str,
         *,
-        billing_model_id: str,
-        category: str,
-        price_modifier: float,
-        resource: str,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> PriceModifier:
+    ) -> UseCaseInstanceResponse:
         """
+        Delete a Use Case instance
+
         Args:
           extra_headers: Send extra headers
 
@@ -141,59 +152,59 @@ class PriceModifiersResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        return self._put(
-            "/api/v1/price-modifier",
-            body=maybe_transform(
-                {
-                    "billing_model_id": billing_model_id,
-                    "category": category,
-                    "price_modifier": price_modifier,
-                    "resource": resource,
-                },
-                price_modifier_update_params.PriceModifierUpdateParams,
-            ),
+        if not use_case_id:
+            raise ValueError(f"Expected a non-empty value for `use_case_id` but received {use_case_id!r}")
+        return self._delete(
+            f"/api/v1/use_cases/instances/{use_case_id}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=PriceModifier,
+            cast_to=UseCaseInstanceResponse,
         )
 
 
-class AsyncPriceModifiersResource(AsyncAPIResource):
+class AsyncUseCasesResource(AsyncAPIResource):
     @cached_property
-    def with_raw_response(self) -> AsyncPriceModifiersResourceWithRawResponse:
+    def types(self) -> AsyncTypesResource:
+        return AsyncTypesResource(self._client)
+
+    @cached_property
+    def properties(self) -> AsyncPropertiesResource:
+        return AsyncPropertiesResource(self._client)
+
+    @cached_property
+    def with_raw_response(self) -> AsyncUseCasesResourceWithRawResponse:
         """
         This property can be used as a prefix for any HTTP method call to return
         the raw response object instead of the parsed content.
 
         For more information, see https://www.github.com/Pay-i/pay-i-python#accessing-raw-response-data-eg-headers
         """
-        return AsyncPriceModifiersResourceWithRawResponse(self)
+        return AsyncUseCasesResourceWithRawResponse(self)
 
     @cached_property
-    def with_streaming_response(self) -> AsyncPriceModifiersResourceWithStreamingResponse:
+    def with_streaming_response(self) -> AsyncUseCasesResourceWithStreamingResponse:
         """
         An alternative to `.with_raw_response` that doesn't eagerly read the response body.
 
         For more information, see https://www.github.com/Pay-i/pay-i-python#with_streaming_response
         """
-        return AsyncPriceModifiersResourceWithStreamingResponse(self)
+        return AsyncUseCasesResourceWithStreamingResponse(self)
 
     async def create(
         self,
+        use_case_name: str,
         *,
-        billing_model_id: str,
-        category: str,
-        price_modifier: float,
-        resource: str,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> PriceModifier:
+    ) -> UseCaseInstanceResponse:
         """
+        Create a Use Case instance
+
         Args:
           extra_headers: Send extra headers
 
@@ -203,26 +214,19 @@ class AsyncPriceModifiersResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
+        if not use_case_name:
+            raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return await self._post(
-            "/api/v1/price-modifier",
-            body=await async_maybe_transform(
-                {
-                    "billing_model_id": billing_model_id,
-                    "category": category,
-                    "price_modifier": price_modifier,
-                    "resource": resource,
-                },
-                price_modifier_create_params.PriceModifierCreateParams,
-            ),
+            f"/api/v1/use_cases/instances/{use_case_name}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=PriceModifier,
+            cast_to=UseCaseInstanceResponse,
         )
 
     async def retrieve(
         self,
-        billing_model_id: str,
+        use_case_id: str,
         *,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -230,8 +234,10 @@ class AsyncPriceModifiersResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> PriceModifierRetrieveResponse:
+    ) -> UseCaseInstanceResponse:
         """
+        Get a Use Case instance details
+
         Args:
           extra_headers: Send extra headers
 
@@ -241,31 +247,30 @@ class AsyncPriceModifiersResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not billing_model_id:
-            raise ValueError(f"Expected a non-empty value for `billing_model_id` but received {billing_model_id!r}")
+        if not use_case_id:
+            raise ValueError(f"Expected a non-empty value for `use_case_id` but received {use_case_id!r}")
         return await self._get(
-            f"/api/v1/price-modifier/{billing_model_id}",
+            f"/api/v1/use_cases/instances/{use_case_id}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=PriceModifierRetrieveResponse,
+            cast_to=UseCaseInstanceResponse,
         )
 
-    async def update(
+    async def delete(
         self,
+        use_case_id: str,
         *,
-        billing_model_id: str,
-        category: str,
-        price_modifier: float,
-        resource: str,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> PriceModifier:
+    ) -> UseCaseInstanceResponse:
         """
+        Delete a Use Case instance
+
         Args:
           extra_headers: Send extra headers
 
@@ -275,79 +280,104 @@ class AsyncPriceModifiersResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        return await self._put(
-            "/api/v1/price-modifier",
-            body=await async_maybe_transform(
-                {
-                    "billing_model_id": billing_model_id,
-                    "category": category,
-                    "price_modifier": price_modifier,
-                    "resource": resource,
-                },
-                price_modifier_update_params.PriceModifierUpdateParams,
-            ),
+        if not use_case_id:
+            raise ValueError(f"Expected a non-empty value for `use_case_id` but received {use_case_id!r}")
+        return await self._delete(
+            f"/api/v1/use_cases/instances/{use_case_id}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=PriceModifier,
+            cast_to=UseCaseInstanceResponse,
         )
 
 
-class PriceModifiersResourceWithRawResponse:
-    def __init__(self, price_modifiers: PriceModifiersResource) -> None:
-        self._price_modifiers = price_modifiers
+class UseCasesResourceWithRawResponse:
+    def __init__(self, use_cases: UseCasesResource) -> None:
+        self._use_cases = use_cases
 
         self.create = to_raw_response_wrapper(
-            price_modifiers.create,
+            use_cases.create,
         )
         self.retrieve = to_raw_response_wrapper(
-            price_modifiers.retrieve,
+            use_cases.retrieve,
         )
-        self.update = to_raw_response_wrapper(
-            price_modifiers.update,
+        self.delete = to_raw_response_wrapper(
+            use_cases.delete,
         )
 
+    @cached_property
+    def types(self) -> TypesResourceWithRawResponse:
+        return TypesResourceWithRawResponse(self._use_cases.types)
 
-class AsyncPriceModifiersResourceWithRawResponse:
-    def __init__(self, price_modifiers: AsyncPriceModifiersResource) -> None:
-        self._price_modifiers = price_modifiers
+    @cached_property
+    def properties(self) -> PropertiesResourceWithRawResponse:
+        return PropertiesResourceWithRawResponse(self._use_cases.properties)
+
+
+class AsyncUseCasesResourceWithRawResponse:
+    def __init__(self, use_cases: AsyncUseCasesResource) -> None:
+        self._use_cases = use_cases
 
         self.create = async_to_raw_response_wrapper(
-            price_modifiers.create,
+            use_cases.create,
         )
         self.retrieve = async_to_raw_response_wrapper(
-            price_modifiers.retrieve,
+            use_cases.retrieve,
         )
-        self.update = async_to_raw_response_wrapper(
-            price_modifiers.update,
+        self.delete = async_to_raw_response_wrapper(
+            use_cases.delete,
         )
 
+    @cached_property
+    def types(self) -> AsyncTypesResourceWithRawResponse:
+        return AsyncTypesResourceWithRawResponse(self._use_cases.types)
 
-class PriceModifiersResourceWithStreamingResponse:
-    def __init__(self, price_modifiers: PriceModifiersResource) -> None:
-        self._price_modifiers = price_modifiers
+    @cached_property
+    def properties(self) -> AsyncPropertiesResourceWithRawResponse:
+        return AsyncPropertiesResourceWithRawResponse(self._use_cases.properties)
+
+
+class UseCasesResourceWithStreamingResponse:
+    def __init__(self, use_cases: UseCasesResource) -> None:
+        self._use_cases = use_cases
 
         self.create = to_streamed_response_wrapper(
-            price_modifiers.create,
+            use_cases.create,
         )
         self.retrieve = to_streamed_response_wrapper(
-            price_modifiers.retrieve,
+            use_cases.retrieve,
         )
-        self.update = to_streamed_response_wrapper(
-            price_modifiers.update,
+        self.delete = to_streamed_response_wrapper(
+            use_cases.delete,
         )
 
+    @cached_property
+    def types(self) -> TypesResourceWithStreamingResponse:
+        return TypesResourceWithStreamingResponse(self._use_cases.types)
 
-class AsyncPriceModifiersResourceWithStreamingResponse:
-    def __init__(self, price_modifiers: AsyncPriceModifiersResource) -> None:
-        self._price_modifiers = price_modifiers
+    @cached_property
+    def properties(self) -> PropertiesResourceWithStreamingResponse:
+        return PropertiesResourceWithStreamingResponse(self._use_cases.properties)
+
+
+class AsyncUseCasesResourceWithStreamingResponse:
+    def __init__(self, use_cases: AsyncUseCasesResource) -> None:
+        self._use_cases = use_cases
 
         self.create = async_to_streamed_response_wrapper(
-            price_modifiers.create,
+            use_cases.create,
         )
         self.retrieve = async_to_streamed_response_wrapper(
-            price_modifiers.retrieve,
+            use_cases.retrieve,
         )
-        self.update = async_to_streamed_response_wrapper(
-            price_modifiers.update,
+        self.delete = async_to_streamed_response_wrapper(
+            use_cases.delete,
         )
+
+    @cached_property
+    def types(self) -> AsyncTypesResourceWithStreamingResponse:
+        return AsyncTypesResourceWithStreamingResponse(self._use_cases.types)
+
+    @cached_property
+    def properties(self) -> AsyncPropertiesResourceWithStreamingResponse:
+        return AsyncPropertiesResourceWithStreamingResponse(self._use_cases.properties)
