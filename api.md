@@ -1,7 +1,11 @@
 # Shared Types
 
 ```python
-from payi.types import PayICommonModelsBudgetManagementCostDetailsBase
+from payi.types import (
+    PayICommonModelsBudgetManagementCostDetailsBase,
+    PayICommonModelsBudgetManagementCreateLimitBase,
+    PropertiesResponse,
+)
 ```
 
 # Limits
@@ -148,45 +152,52 @@ Methods:
 
 ## Properties
 
-Types:
-
-```python
-from payi.types.experiences import PropertiesResponse
-```
-
 Methods:
 
 - <code title="post /api/v1/experiences/instances/{experience_id}/properties">client.experiences.properties.<a href="./src/payi/resources/experiences/properties.py">create</a>(experience_id, \*\*<a href="src/payi/types/experiences/property_create_params.py">params</a>) -> <a href="./src/payi/types/experience_instance_response.py">ExperienceInstanceResponse</a></code>
 
-# BillingModels
+# UseCases
 
 Types:
 
 ```python
-from payi.types import BillingModel, BillingModelListResponse
+from payi.types import UseCaseInstanceResponse
 ```
 
 Methods:
 
-- <code title="post /api/v1/billing-model">client.billing_models.<a href="./src/payi/resources/billing_models.py">create</a>(\*\*<a href="src/payi/types/billing_model_create_params.py">params</a>) -> <a href="./src/payi/types/billing_model.py">BillingModel</a></code>
-- <code title="get /api/v1/billing-model/{billing_model_id}">client.billing_models.<a href="./src/payi/resources/billing_models.py">retrieve</a>(billing_model_id) -> <a href="./src/payi/types/billing_model.py">BillingModel</a></code>
-- <code title="put /api/v1/billing-model/{billing_model_id}">client.billing_models.<a href="./src/payi/resources/billing_models.py">update</a>(billing_model_id, \*\*<a href="src/payi/types/billing_model_update_params.py">params</a>) -> <a href="./src/payi/types/billing_model.py">BillingModel</a></code>
-- <code title="get /api/v1/billing-model">client.billing_models.<a href="./src/payi/resources/billing_models.py">list</a>() -> <a href="./src/payi/types/billing_model_list_response.py">BillingModelListResponse</a></code>
-- <code title="put /api/v1/billing-model/{billing_model_id}/default">client.billing_models.<a href="./src/payi/resources/billing_models.py">set_default</a>(billing_model_id) -> <a href="./src/payi/types/billing_model.py">BillingModel</a></code>
+- <code title="post /api/v1/use_cases/instances/{use_case_name}">client.use_cases.<a href="./src/payi/resources/use_cases/use_cases.py">create</a>(use_case_name) -> <a href="./src/payi/types/use_case_instance_response.py">UseCaseInstanceResponse</a></code>
+- <code title="get /api/v1/use_cases/instances/{use_case_id}">client.use_cases.<a href="./src/payi/resources/use_cases/use_cases.py">retrieve</a>(use_case_id) -> <a href="./src/payi/types/use_case_instance_response.py">UseCaseInstanceResponse</a></code>
+- <code title="delete /api/v1/use_cases/instances/{use_case_id}">client.use_cases.<a href="./src/payi/resources/use_cases/use_cases.py">delete</a>(use_case_id) -> <a href="./src/payi/types/use_case_instance_response.py">UseCaseInstanceResponse</a></code>
 
-# PriceModifiers
+## Types
 
 Types:
 
 ```python
-from payi.types import PriceModifier, PriceModifierRetrieveResponse
+from payi.types.use_cases import UseCaseType, TypeListResponse
 ```
 
 Methods:
 
-- <code title="post /api/v1/price-modifier">client.price_modifiers.<a href="./src/payi/resources/price_modifiers.py">create</a>(\*\*<a href="src/payi/types/price_modifier_create_params.py">params</a>) -> <a href="./src/payi/types/price_modifier.py">PriceModifier</a></code>
-- <code title="get /api/v1/price-modifier/{billing_model_id}">client.price_modifiers.<a href="./src/payi/resources/price_modifiers.py">retrieve</a>(billing_model_id) -> <a href="./src/payi/types/price_modifier_retrieve_response.py">PriceModifierRetrieveResponse</a></code>
-- <code title="put /api/v1/price-modifier">client.price_modifiers.<a href="./src/payi/resources/price_modifiers.py">update</a>(\*\*<a href="src/payi/types/price_modifier_update_params.py">params</a>) -> <a href="./src/payi/types/price_modifier.py">PriceModifier</a></code>
+- <code title="post /api/v1/use_cases/types">client.use_cases.types.<a href="./src/payi/resources/use_cases/types/types.py">create</a>(\*\*<a href="src/payi/types/use_cases/type_create_params.py">params</a>) -> <a href="./src/payi/types/use_cases/use_case_type.py">UseCaseType</a></code>
+- <code title="get /api/v1/use_cases/types/{use_case_name}">client.use_cases.types.<a href="./src/payi/resources/use_cases/types/types.py">retrieve</a>(use_case_name) -> <a href="./src/payi/types/use_cases/use_case_type.py">UseCaseType</a></code>
+- <code title="patch /api/v1/use_cases/types/{use_case_name}">client.use_cases.types.<a href="./src/payi/resources/use_cases/types/types.py">update</a>(use_case_name, \*\*<a href="src/payi/types/use_cases/type_update_params.py">params</a>) -> <a href="./src/payi/types/use_cases/use_case_type.py">UseCaseType</a></code>
+- <code title="get /api/v1/use_cases/types">client.use_cases.types.<a href="./src/payi/resources/use_cases/types/types.py">list</a>(\*\*<a href="src/payi/types/use_cases/type_list_params.py">params</a>) -> <a href="./src/payi/types/use_cases/type_list_response.py">TypeListResponse</a></code>
+- <code title="delete /api/v1/use_cases/types/{use_case_name}">client.use_cases.types.<a href="./src/payi/resources/use_cases/types/types.py">delete</a>(use_case_name) -> <a href="./src/payi/types/use_cases/use_case_type.py">UseCaseType</a></code>
+
+### LimitConfig
+
+Methods:
+
+- <code title="post /api/v1/use_cases/types/{use_case_name}/limit_config">client.use_cases.types.limit_config.<a href="./src/payi/resources/use_cases/types/limit_config.py">create</a>(use_case_name, \*\*<a href="src/payi/types/use_cases/types/limit_config_create_params.py">params</a>) -> <a href="./src/payi/types/use_cases/use_case_type.py">UseCaseType</a></code>
+- <code title="delete /api/v1/use_cases/types/{use_case_name}/limit_config">client.use_cases.types.limit_config.<a href="./src/payi/resources/use_cases/types/limit_config.py">delete</a>(use_case_name) -> <a href="./src/payi/types/use_cases/use_case_type.py">UseCaseType</a></code>
+
+## Properties
+
+Methods:
+
+- <code title="post /api/v1/use_cases/instances/{use_case_id}/properties">client.use_cases.properties.<a href="./src/payi/resources/use_cases/properties.py">create</a>(use_case_id, \*\*<a href="src/payi/types/use_cases/property_create_params.py">params</a>) -> <a href="./src/payi/types/use_case_instance_response.py">UseCaseInstanceResponse</a></code>
 
 # Requests
 
@@ -194,7 +205,7 @@ Methods:
 
 Methods:
 
-- <code title="post /api/v1/requests/{request_id}/properties">client.requests.properties.<a href="./src/payi/resources/requests/properties.py">create</a>(request_id, \*\*<a href="src/payi/types/requests/property_create_params.py">params</a>) -> <a href="./src/payi/types/experiences/properties_response.py">PropertiesResponse</a></code>
+- <code title="post /api/v1/requests/{request_id}/properties">client.requests.properties.<a href="./src/payi/resources/requests/properties.py">create</a>(request_id, \*\*<a href="src/payi/types/requests/property_create_params.py">params</a>) -> <a href="./src/payi/types/shared/properties_response.py">PropertiesResponse</a></code>
 
 ## Result
 

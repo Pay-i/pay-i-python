@@ -10,6 +10,7 @@ import httpx
 from ..types import ingest_units_params
 from .._types import NOT_GIVEN, Body, Query, Headers, NotGiven
 from .._utils import (
+    is_given,
     maybe_transform,
     strip_not_given,
     async_maybe_transform,
@@ -101,11 +102,16 @@ class IngestResource(SyncAPIResource):
         provider_response_json: Union[str, List[str], None] | NotGiven = NOT_GIVEN,
         provider_uri: Optional[str] | NotGiven = NOT_GIVEN,
         time_to_first_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
+        use_case_properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
         x_proxy_experience_id: str | NotGiven = NOT_GIVEN,
         x_proxy_experience_name: str | NotGiven = NOT_GIVEN,
+        x_proxy_experience_version: int | NotGiven = NOT_GIVEN,
         x_proxy_limit_ids: str | NotGiven = NOT_GIVEN,
         x_proxy_request_tags: str | NotGiven = NOT_GIVEN,
         x_proxy_resource_scope: str | NotGiven = NOT_GIVEN,
+        x_proxy_use_case_id: str | NotGiven = NOT_GIVEN,
+        x_proxy_use_case_name: str | NotGiven = NOT_GIVEN,
+        x_proxy_use_case_version: int | NotGiven = NOT_GIVEN,
         x_proxy_user_id: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -131,9 +137,17 @@ class IngestResource(SyncAPIResource):
                 {
                     "xProxy-Experience-ID": x_proxy_experience_id,
                     "xProxy-Experience-Name": x_proxy_experience_name,
+                    "xProxy-Experience-Version": str(x_proxy_experience_version)
+                    if is_given(x_proxy_experience_version)
+                    else NOT_GIVEN,
                     "xProxy-Limit-IDs": x_proxy_limit_ids,
                     "xProxy-Request-Tags": x_proxy_request_tags,
                     "xProxy-Resource-Scope": x_proxy_resource_scope,
+                    "xProxy-UseCase-ID": x_proxy_use_case_id,
+                    "xProxy-UseCase-Name": x_proxy_use_case_name,
+                    "xProxy-UseCase-Version": str(x_proxy_use_case_version)
+                    if is_given(x_proxy_use_case_version)
+                    else NOT_GIVEN,
                     "xProxy-User-ID": x_proxy_user_id,
                 }
             ),
@@ -158,6 +172,7 @@ class IngestResource(SyncAPIResource):
                     "provider_response_json": provider_response_json,
                     "provider_uri": provider_uri,
                     "time_to_first_token_ms": time_to_first_token_ms,
+                    "use_case_properties": use_case_properties,
                 },
                 ingest_units_params.IngestUnitsParams,
             ),
@@ -238,11 +253,16 @@ class AsyncIngestResource(AsyncAPIResource):
         provider_response_json: Union[str, List[str], None] | NotGiven = NOT_GIVEN,
         provider_uri: Optional[str] | NotGiven = NOT_GIVEN,
         time_to_first_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
+        use_case_properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
         x_proxy_experience_id: str | NotGiven = NOT_GIVEN,
         x_proxy_experience_name: str | NotGiven = NOT_GIVEN,
+        x_proxy_experience_version: int | NotGiven = NOT_GIVEN,
         x_proxy_limit_ids: str | NotGiven = NOT_GIVEN,
         x_proxy_request_tags: str | NotGiven = NOT_GIVEN,
         x_proxy_resource_scope: str | NotGiven = NOT_GIVEN,
+        x_proxy_use_case_id: str | NotGiven = NOT_GIVEN,
+        x_proxy_use_case_name: str | NotGiven = NOT_GIVEN,
+        x_proxy_use_case_version: int | NotGiven = NOT_GIVEN,
         x_proxy_user_id: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -268,9 +288,17 @@ class AsyncIngestResource(AsyncAPIResource):
                 {
                     "xProxy-Experience-ID": x_proxy_experience_id,
                     "xProxy-Experience-Name": x_proxy_experience_name,
+                    "xProxy-Experience-Version": str(x_proxy_experience_version)
+                    if is_given(x_proxy_experience_version)
+                    else NOT_GIVEN,
                     "xProxy-Limit-IDs": x_proxy_limit_ids,
                     "xProxy-Request-Tags": x_proxy_request_tags,
                     "xProxy-Resource-Scope": x_proxy_resource_scope,
+                    "xProxy-UseCase-ID": x_proxy_use_case_id,
+                    "xProxy-UseCase-Name": x_proxy_use_case_name,
+                    "xProxy-UseCase-Version": str(x_proxy_use_case_version)
+                    if is_given(x_proxy_use_case_version)
+                    else NOT_GIVEN,
                     "xProxy-User-ID": x_proxy_user_id,
                 }
             ),
@@ -295,6 +323,7 @@ class AsyncIngestResource(AsyncAPIResource):
                     "provider_response_json": provider_response_json,
                     "provider_uri": provider_uri,
                     "time_to_first_token_ms": time_to_first_token_ms,
+                    "use_case_properties": use_case_properties,
                 },
                 ingest_units_params.IngestUnitsParams,
             ),

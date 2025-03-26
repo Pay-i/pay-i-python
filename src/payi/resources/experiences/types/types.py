@@ -31,6 +31,9 @@ from ...._base_client import make_request_options
 from ....types.experiences import type_list_params, type_create_params, type_update_params
 from ....types.experiences.experience_type import ExperienceType
 from ....types.experiences.type_list_response import TypeListResponse
+from ....types.shared_params.pay_i_common_models_budget_management_create_limit_base import (
+    PayICommonModelsBudgetManagementCreateLimitBase,
+)
 
 __all__ = ["TypesResource", "AsyncTypesResource"]
 
@@ -64,7 +67,7 @@ class TypesResource(SyncAPIResource):
         *,
         description: str,
         name: str,
-        limit_config: type_create_params.LimitConfig | NotGiven = NOT_GIVEN,
+        limit_config: PayICommonModelsBudgetManagementCreateLimitBase | NotGiven = NOT_GIVEN,
         logging_enabled: Optional[bool] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -277,7 +280,7 @@ class AsyncTypesResource(AsyncAPIResource):
         *,
         description: str,
         name: str,
-        limit_config: type_create_params.LimitConfig | NotGiven = NOT_GIVEN,
+        limit_config: PayICommonModelsBudgetManagementCreateLimitBase | NotGiven = NOT_GIVEN,
         logging_enabled: Optional[bool] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.

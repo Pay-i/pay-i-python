@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .experience_type import ExperienceType as ExperienceType
+from .use_case_type import UseCaseType as UseCaseType
 from .type_list_params import TypeListParams as TypeListParams
 from .type_create_params import TypeCreateParams as TypeCreateParams
 from .type_list_response import TypeListResponse as TypeListResponse

@@ -66,6 +66,8 @@ class TagsResource(SyncAPIResource):
         Add Limit Tags
 
         Args:
+          limit_tags: List of limit tags
+
           extra_headers: Send extra headers
 
           extra_query: Add additional query parameters to the request
@@ -101,6 +103,8 @@ class TagsResource(SyncAPIResource):
         Update the Limit Tags
 
         Args:
+          limit_tags: List of limit tags
+
           extra_headers: Send extra headers
 
           extra_query: Add additional query parameters to the request
@@ -202,6 +206,8 @@ class TagsResource(SyncAPIResource):
         Remove Tags from Limit
 
         Args:
+          limit_tags: List of limit tags
+
           extra_headers: Send extra headers
 
           extra_query: Add additional query parameters to the request
@@ -258,6 +264,8 @@ class AsyncTagsResource(AsyncAPIResource):
         Add Limit Tags
 
         Args:
+          limit_tags: List of limit tags
+
           extra_headers: Send extra headers
 
           extra_query: Add additional query parameters to the request
@@ -293,6 +301,8 @@ class AsyncTagsResource(AsyncAPIResource):
         Update the Limit Tags
 
         Args:
+          limit_tags: List of limit tags
+
           extra_headers: Send extra headers
 
           extra_query: Add additional query parameters to the request
@@ -394,6 +404,8 @@ class AsyncTagsResource(AsyncAPIResource):
         Remove Tags from Limit
 
         Args:
+          limit_tags: List of limit tags
+
           extra_headers: Send extra headers
 
           extra_query: Add additional query parameters to the request

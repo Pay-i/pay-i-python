@@ -4,11 +4,11 @@ from typing import Optional
 
 from .._models import BaseModel
 
-__all__ = ["ExperienceInstanceResponse"]
+__all__ = ["UseCaseInstanceResponse"]
 
 
-class ExperienceInstanceResponse(BaseModel):
-    experience_id: str
+class UseCaseInstanceResponse(BaseModel):
+    use_case_id: str
 
     limit_id: Optional[str] = None
 

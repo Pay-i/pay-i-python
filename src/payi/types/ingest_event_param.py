@@ -35,6 +35,8 @@ class IngestEventParam(TypedDict, total=False):
 
     experience_properties: Optional[Dict[str, str]]
 
+    experience_version: Optional[int]
+
     http_status_code: Optional[int]
 
     limit_ids: Optional[List[str]]
@@ -56,5 +58,13 @@ class IngestEventParam(TypedDict, total=False):
     request_tags: Optional[List[str]]
 
     time_to_first_token_ms: Optional[int]
+
+    use_case_id: Optional[str]
+
+    use_case_name: Optional[str]
+
+    use_case_properties: Optional[Dict[str, str]]
+
+    use_case_version: Optional[int]
 
     user_id: Optional[str]
