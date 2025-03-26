@@ -47,7 +47,7 @@ def create_headers(
     experience_name: Union[str, None] = None,
     use_case_id: Union[str, None] = None,
     use_case_name: Union[str, None] = None,
-    use_case_version: Union[str, None] = None,
+    use_case_version: Union[int, None] = None,
 ) -> Dict[str, str]:
     headers: Dict[str, str] = {}
 
@@ -66,7 +66,7 @@ def create_headers(
     if use_case_name:
         headers.update({ PayiHeaderNames.use_case_name: use_case_name})
     if use_case_version:
-        headers.update({ PayiHeaderNames.use_case_version: use_case_version})
+        headers.update({ PayiHeaderNames.use_case_version: str(use_case_version)})
     return headers
 
 def payi_anthropic_url(payi_base_url: Union[str, None] = None) -> str:

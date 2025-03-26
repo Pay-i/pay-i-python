@@ -57,7 +57,7 @@ class IngestUnitsParams(TypedDict, total=False):
 
     use_case_id: Annotated[Union[str, None], PropertyInfo(alias="xProxy-UseCase-ID")]
 
-    use_case_version: Annotated[Union[str, None], PropertyInfo(alias="xProxy-UseCase-Version")]
+    use_case_version: Annotated[Union[int, None], PropertyInfo(alias="xProxy-UseCase-Version")]
 
     resource_scope: Annotated[Union[str, None], PropertyInfo(alias="xProxy-Resource-Scope")]
 
