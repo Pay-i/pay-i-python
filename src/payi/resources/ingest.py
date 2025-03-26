@@ -103,16 +103,15 @@ class IngestResource(SyncAPIResource):
         provider_uri: Optional[str] | NotGiven = NOT_GIVEN,
         time_to_first_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
         use_case_properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
-        x_proxy_experience_id: str | NotGiven = NOT_GIVEN,
-        x_proxy_experience_name: str | NotGiven = NOT_GIVEN,
-        x_proxy_experience_version: int | NotGiven = NOT_GIVEN,
-        x_proxy_limit_ids: str | NotGiven = NOT_GIVEN,
-        x_proxy_request_tags: str | NotGiven = NOT_GIVEN,
-        x_proxy_resource_scope: str | NotGiven = NOT_GIVEN,
-        x_proxy_use_case_id: str | NotGiven = NOT_GIVEN,
-        x_proxy_use_case_name: str | NotGiven = NOT_GIVEN,
-        x_proxy_use_case_version: int | NotGiven = NOT_GIVEN,
-        x_proxy_user_id: str | NotGiven = NOT_GIVEN,
+        limit_ids: Optional[list[str]] | NotGiven = NOT_GIVEN,
+        request_tags: Optional[list[str]] | NotGiven = NOT_GIVEN,
+        experience_id: Optional[str] | NotGiven = NOT_GIVEN,
+        experience_name: Optional[str] | NotGiven = NOT_GIVEN,
+        use_case_id: Optional[str] | NotGiven = NOT_GIVEN,
+        use_case_name: Optional[str] | NotGiven = NOT_GIVEN,
+        use_case_version: Optional[str] | NotGiven = NOT_GIVEN,
+        user_id: Optional[str] | NotGiven = NOT_GIVEN,
+        resource_scope: Optional[str] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -124,35 +123,96 @@ class IngestResource(SyncAPIResource):
         Ingest an Event
 
         Args:
-          extra_headers: Send extra headers
+          category (str): The name of the category
 
-          extra_query: Add additional query parameters to the request
+          resource (str): The name of the resource
 
-          extra_body: Add additional JSON properties to the request
+          input (int): The number of input units
 
-          timeout: Override the client-level default timeout for this request, in seconds
+          output (int): The number of output units
+
+          event_timestamp: (str, datetime, None): The timestamp of the event. Defaults to None.
+
+          limit_ids (list[str], optional): The limit IDs to associate with the request. Defaults to None.
+
+          request_tags (list[str], optional): The request tags to associate with the request. Defaults to None.
+
+          experience_name (str, optional): DEPRECATED, replaced with use_case_name. 
+
+          experience_id (str, optional): DEPRECATED, replaced with use_case_id.
+
+          use_case_name (str, optional): The use case name
+
+          use_case_id (str, optional): The use case instance id
+
+          use_case_version (str, optional): The use case instance version
+
+          user_id (str, optional): The user id
+          
+          resource_scope(str, optional): The scope of the resource
+
+          extra_headers (Dict[str, str], optional): Additional headers for the request. Defaults to None.
+
+          extra_query (Dict[str, str], optional): Additional query parameters. Defaults to None.
+
+          extra_body (Dict[str, Any], optional): Additional body parameters. Defaults to None.
+
+          timeout (Union[float, None], optional): The timeout for the request in seconds. Defaults to None.
         """
+        valid_ids_str: str | NotGiven = NOT_GIVEN
+        valid_tags_str: str | NotGiven = NOT_GIVEN
+
+        if limit_ids is None or isinstance(limit_ids, NotGiven):
+            valid_ids_str = NOT_GIVEN
+        elif not isinstance(limit_ids, list):  # type: ignore
+            raise TypeError("limit_ids must be a list")
+        else:
+            # Proceed with the list comprehension if limit_ids is not NotGiven
+            valid_ids = [id.strip() for id in limit_ids if id.strip()]
+            valid_ids_str = ",".join(valid_ids) if valid_ids else NOT_GIVEN
+
+        if request_tags is None or isinstance(request_tags, NotGiven):
+            valid_tags_str = NOT_GIVEN
+        elif not isinstance(request_tags, list):  # type: ignore
+            raise TypeError("request_tags must be a list")
+        else:
+            # Proceed with the list comprehension if request_tags is not NotGiven
+            valid_tags = [tag.strip() for tag in request_tags if tag.strip()]
+            valid_tags_str = ",".join(valid_tags) if valid_tags else NOT_GIVEN
+
+        if experience_name is None or isinstance(experience_name, NotGiven):
+            experience_name = NOT_GIVEN
+
+        if experience_id is None or isinstance(experience_id, NotGiven):
+            experience_id = NOT_GIVEN
+
+        if use_case_name is None or isinstance(use_case_name, NotGiven):
+            use_case_name = NOT_GIVEN
+        
+        if use_case_id is None or isinstance(use_case_id, NotGiven):
+            use_case_id = NOT_GIVEN
+        
+        if use_case_version is None or isinstance(use_case_version, NotGiven):
+            use_case_version = NOT_GIVEN
+
+        if user_id is None or isinstance(user_id, NotGiven):
+            user_id = NOT_GIVEN
+
         extra_headers = {
-            **strip_not_given(
-                {
-                    "xProxy-Experience-ID": x_proxy_experience_id,
-                    "xProxy-Experience-Name": x_proxy_experience_name,
-                    "xProxy-Experience-Version": str(x_proxy_experience_version)
-                    if is_given(x_proxy_experience_version)
-                    else NOT_GIVEN,
-                    "xProxy-Limit-IDs": x_proxy_limit_ids,
-                    "xProxy-Request-Tags": x_proxy_request_tags,
-                    "xProxy-Resource-Scope": x_proxy_resource_scope,
-                    "xProxy-UseCase-ID": x_proxy_use_case_id,
-                    "xProxy-UseCase-Name": x_proxy_use_case_name,
-                    "xProxy-UseCase-Version": str(x_proxy_use_case_version)
-                    if is_given(x_proxy_use_case_version)
-                    else NOT_GIVEN,
-                    "xProxy-User-ID": x_proxy_user_id,
-                }
-            ),
+            **{key: value for key, value in strip_not_given({
+                "xProxy-Limit-IDs": valid_ids_str,
+                "xProxy-Request-Tags": valid_tags_str,
+                "xProxy-Experience-Name": experience_name,
+                "xProxy-Experience-ID": experience_id,
+                "xProxy-UseCase-ID": use_case_id,
+                "xProxy-UseCase-Name": use_case_name,
+                "xProxy-UseCase-Version": use_case_version,
+                "xProxy-User-ID": user_id,
+                "xProxy-Resource-Scope": resource_scope,
+            }).items() if value is not None},  # Ensure no 'None' values are included
             **(extra_headers or {}),
         }
+
         return self._post(
             "/api/v1/ingest",
             body=maybe_transform(
@@ -254,17 +314,15 @@ class AsyncIngestResource(AsyncAPIResource):
         provider_uri: Optional[str] | NotGiven = NOT_GIVEN,
         time_to_first_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
         use_case_properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
-        x_proxy_experience_id: str | NotGiven = NOT_GIVEN,
-        x_proxy_experience_name: str | NotGiven = NOT_GIVEN,
-        x_proxy_experience_version: int | NotGiven = NOT_GIVEN,
-        x_proxy_limit_ids: str | NotGiven = NOT_GIVEN,
-        x_proxy_request_tags: str | NotGiven = NOT_GIVEN,
-        x_proxy_resource_scope: str | NotGiven = NOT_GIVEN,
-        x_proxy_use_case_id: str | NotGiven = NOT_GIVEN,
-        x_proxy_use_case_name: str | NotGiven = NOT_GIVEN,
-        x_proxy_use_case_version: int | NotGiven = NOT_GIVEN,
-        x_proxy_user_id: str | NotGiven = NOT_GIVEN,
-        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        limit_ids: Optional[list[str]] | NotGiven = NOT_GIVEN,
+        request_tags: Optional[list[str]] | NotGiven = NOT_GIVEN,
+        experience_name: Optional[str] | NotGiven = NOT_GIVEN,
+        experience_id: Optional[str] | NotGiven = NOT_GIVEN,
+        use_case_id: Optional[str] | NotGiven = NOT_GIVEN,
+        use_case_name: Optional[str] | NotGiven = NOT_GIVEN,
+        use_case_version: Optional[str] | NotGiven = NOT_GIVEN,
+        user_id: Optional[str] | NotGiven = NOT_GIVEN,
+        resource_scope: Union[str, None] | NotGiven = NOT_GIVEN,
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
@@ -275,33 +333,93 @@ class AsyncIngestResource(AsyncAPIResource):
         Ingest an Event
 
         Args:
-          extra_headers: Send extra headers
+          category (str): The name of the category
 
-          extra_query: Add additional query parameters to the request
+          resource (str): The name of the resource
 
-          extra_body: Add additional JSON properties to the request
+          input (int): The number of input units
 
-          timeout: Override the client-level default timeout for this request, in seconds
+          output (int): The number of output units
+
+          event_timestamp: (datetime, None): The timestamp of the event. Defaults to None.
+
+          limit_ids (list[str], optional): The limit IDs to associate with the request. Defaults to None.
+
+          request_tags (list[str], optional): The request tags to associate with the request. Defaults to None.
+
+          experience_name (str, optional): DEPRECATED, replaced with use_case_name. 
+
+          experience_id (str, optional): DEPRECATED, replaced with use_case_id.
+
+          use_case_name (str, optional): The use case name
+
+          use_case_id (str, optional): The use case instance id
+
+          use_case_version (str, optional): The use case instance version
+
+          user_id (str, optional): The user id
+          
+          resource_scope (str, optional): The scope of the resource
+
+          extra_headers (Dict[str, str], optional): Additional headers for the request. Defaults to None.
+
+          extra_query (Dict[str, str], optional): Additional query parameters. Defaults to None.
+
+          extra_body (Dict[str, Any], optional): Additional body parameters. Defaults to None.
+
+          timeout (Union[float, None], optional): The timeout for the request in seconds. Defaults to None.
         """
+        valid_ids_str: str | NotGiven = NOT_GIVEN
+        valid_tags_str: str | NotGiven = NOT_GIVEN
+
+        if limit_ids is None or isinstance(limit_ids, NotGiven):
+            valid_ids_str = NOT_GIVEN
+        elif not isinstance(limit_ids, list):  # type: ignore
+            raise TypeError("limit_ids must be a list")
+        else:
+            # Proceed with the list comprehension if limit_ids is not NotGiven
+            valid_ids = [id.strip() for id in limit_ids if id.strip()]
+            valid_ids_str = ",".join(valid_ids) if valid_ids else NOT_GIVEN
+
+        if request_tags is None or isinstance(request_tags, NotGiven):
+            valid_tags_str = NOT_GIVEN
+        elif not isinstance(request_tags, list):  # type: ignore
+            raise TypeError("request_tags must be a list")
+        else:
+            # Proceed with the list comprehension if request_tags is not NotGiven
+            valid_tags = [tag.strip() for tag in request_tags if tag.strip()]
+            valid_tags_str = ",".join(valid_tags) if valid_tags else NOT_GIVEN
+
+        if experience_name is None or isinstance(experience_name, NotGiven):
+            experience_name = NOT_GIVEN
+
+        if experience_id is None or isinstance(experience_id, NotGiven):
+            experience_id = NOT_GIVEN
+
+        if use_case_name is None or isinstance(use_case_name, NotGiven):
+            use_case_name = NOT_GIVEN
+        
+        if use_case_id is None or isinstance(use_case_id, NotGiven):
+            use_case_id = NOT_GIVEN
+
+        if use_case_version is None or isinstance(use_case_version, NotGiven):
+            use_case_version = NOT_GIVEN
+
+        if user_id is None or isinstance(user_id, NotGiven):
+            user_id = NOT_GIVEN
+
         extra_headers = {
-            **strip_not_given(
-                {
-                    "xProxy-Experience-ID": x_proxy_experience_id,
-                    "xProxy-Experience-Name": x_proxy_experience_name,
-                    "xProxy-Experience-Version": str(x_proxy_experience_version)
-                    if is_given(x_proxy_experience_version)
-                    else NOT_GIVEN,
-                    "xProxy-Limit-IDs": x_proxy_limit_ids,
-                    "xProxy-Request-Tags": x_proxy_request_tags,
-                    "xProxy-Resource-Scope": x_proxy_resource_scope,
-                    "xProxy-UseCase-ID": x_proxy_use_case_id,
-                    "xProxy-UseCase-Name": x_proxy_use_case_name,
-                    "xProxy-UseCase-Version": str(x_proxy_use_case_version)
-                    if is_given(x_proxy_use_case_version)
-                    else NOT_GIVEN,
-                    "xProxy-User-ID": x_proxy_user_id,
-                }
-            ),
+            **{key: value for key, value in strip_not_given({
+                "xProxy-Limit-IDs": valid_ids_str,
+                "xProxy-Request-Tags": valid_tags_str,
+                "xProxy-Experience-Name": experience_name,
+                "xProxy-Experience-ID": experience_id,
+                "xProxy-UseCase-ID": use_case_id,
+                "xProxy-UseCase-Name": use_case_name,
+                "xProxy-UseCase-Version": use_case_version,
+                "xProxy-User-ID": user_id,
+                "xProxy-Resource-Scope": resource_scope,
+            }).items() if value is not None},  # Ensure no 'None' values are included
             **(extra_headers or {}),
         }
         return await self._post(

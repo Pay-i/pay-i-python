@@ -45,25 +45,23 @@ class IngestUnitsParams(TypedDict, total=False):
 
     use_case_properties: Optional[Dict[str, str]]
 
-    x_proxy_experience_id: Annotated[str, PropertyInfo(alias="xProxy-Experience-ID")]
+    limit_ids: Annotated[Union[list[str], None], PropertyInfo(alias="xProxy-Limit-IDs")]
 
-    x_proxy_experience_name: Annotated[str, PropertyInfo(alias="xProxy-Experience-Name")]
+    request_tags: Annotated[Union[list[str], None], PropertyInfo(alias="xProxy-Request-Tags")]
 
-    x_proxy_experience_version: Annotated[int, PropertyInfo(alias="xProxy-Experience-Version")]
+    experience_name: Annotated[Union[str, None], PropertyInfo(alias="xProxy-Experience-Name")]
 
-    x_proxy_limit_ids: Annotated[str, PropertyInfo(alias="xProxy-Limit-IDs")]
+    experience_id: Annotated[Union[str, None], PropertyInfo(alias="xProxy-Experience-ID")]
 
-    x_proxy_request_tags: Annotated[str, PropertyInfo(alias="xProxy-Request-Tags")]
+    use_case_name: Annotated[Union[str, None], PropertyInfo(alias="xProxy-UseCase-Name")]
 
-    x_proxy_resource_scope: Annotated[str, PropertyInfo(alias="xProxy-Resource-Scope")]
+    use_case_id: Annotated[Union[str, None], PropertyInfo(alias="xProxy-UseCase-ID")]
 
-    x_proxy_use_case_id: Annotated[str, PropertyInfo(alias="xProxy-UseCase-ID")]
+    use_case_version: Annotated[Union[str, None], PropertyInfo(alias="xProxy-UseCase-Version")]
 
-    x_proxy_use_case_name: Annotated[str, PropertyInfo(alias="xProxy-UseCase-Name")]
+    resource_scope: Annotated[Union[str, None], PropertyInfo(alias="xProxy-Resource-Scope")]
 
-    x_proxy_use_case_version: Annotated[int, PropertyInfo(alias="xProxy-UseCase-Version")]
-
-    x_proxy_user_id: Annotated[str, PropertyInfo(alias="xProxy-User-ID")]
+    user_id: Annotated[Union[str, None], PropertyInfo(alias="xProxy-User-ID")]
 
 
 class Units(TypedDict, total=False):
