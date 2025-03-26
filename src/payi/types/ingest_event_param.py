@@ -63,8 +63,8 @@ class IngestEventParam(TypedDict, total=False):
 
     use_case_name: Optional[str]
 
-    use_case_properties: Optional[Dict[str, str]]
-
     use_case_version: Optional[int]
+
+    use_case_properties: Optional[Dict[str, str]]
 
     user_id: Optional[str]

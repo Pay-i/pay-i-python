@@ -10,7 +10,6 @@ import httpx
 from ..types import ingest_units_params
 from .._types import NOT_GIVEN, Body, Query, Headers, NotGiven
 from .._utils import (
-    is_given,
     maybe_transform,
     strip_not_given,
     async_maybe_transform,
@@ -109,7 +108,7 @@ class IngestResource(SyncAPIResource):
         experience_name: Optional[str] | NotGiven = NOT_GIVEN,
         use_case_id: Optional[str] | NotGiven = NOT_GIVEN,
         use_case_name: Optional[str] | NotGiven = NOT_GIVEN,
-        use_case_version: Optional[str] | NotGiven = NOT_GIVEN,
+        use_case_version: Optional[int] | NotGiven = NOT_GIVEN,
         user_id: Optional[str] | NotGiven = NOT_GIVEN,
         resource_scope: Optional[str] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
@@ -145,7 +144,7 @@ class IngestResource(SyncAPIResource):
 
           use_case_id (str, optional): The use case instance id
 
-          use_case_version (str, optional): The use case instance version
+          use_case_version (int, optional): The use case instance version
 
           user_id (str, optional): The user id
           
@@ -193,7 +192,9 @@ class IngestResource(SyncAPIResource):
             use_case_id = NOT_GIVEN
         
         if use_case_version is None or isinstance(use_case_version, NotGiven):
-            use_case_version = NOT_GIVEN
+            use_case_version_str = NOT_GIVEN
+        else:
+            use_case_version_str = str(use_case_version)
 
         if user_id is None or isinstance(user_id, NotGiven):
             user_id = NOT_GIVEN
@@ -206,7 +207,7 @@ class IngestResource(SyncAPIResource):
                 "xProxy-Experience-ID": experience_id,
                 "xProxy-UseCase-ID": use_case_id,
                 "xProxy-UseCase-Name": use_case_name,
-                "xProxy-UseCase-Version": use_case_version,
+                "xProxy-UseCase-Version": use_case_version_str,
                 "xProxy-User-ID": user_id,
                 "xProxy-Resource-Scope": resource_scope,
             }).items() if value is not None},  # Ensure no 'None' values are included
@@ -320,7 +321,7 @@ class AsyncIngestResource(AsyncAPIResource):
         experience_id: Optional[str] | NotGiven = NOT_GIVEN,
         use_case_id: Optional[str] | NotGiven = NOT_GIVEN,
         use_case_name: Optional[str] | NotGiven = NOT_GIVEN,
-        use_case_version: Optional[str] | NotGiven = NOT_GIVEN,
+        use_case_version: Optional[int] | NotGiven = NOT_GIVEN,
         user_id: Optional[str] | NotGiven = NOT_GIVEN,
         resource_scope: Union[str, None] | NotGiven = NOT_GIVEN,
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -355,7 +356,7 @@ class AsyncIngestResource(AsyncAPIResource):
 
           use_case_id (str, optional): The use case instance id
 
-          use_case_version (str, optional): The use case instance version
+          use_case_version (int, optional): The use case instance version
 
           user_id (str, optional): The user id
           
@@ -403,7 +404,9 @@ class AsyncIngestResource(AsyncAPIResource):
             use_case_id = NOT_GIVEN
 
         if use_case_version is None or isinstance(use_case_version, NotGiven):
-            use_case_version = NOT_GIVEN
+            use_case_version_str = NOT_GIVEN
+        else:
+            use_case_version_str = str(use_case_version)
 
         if user_id is None or isinstance(user_id, NotGiven):
             user_id = NOT_GIVEN
@@ -416,7 +419,7 @@ class AsyncIngestResource(AsyncAPIResource):
                 "xProxy-Experience-ID": experience_id,
                 "xProxy-UseCase-ID": use_case_id,
                 "xProxy-UseCase-Name": use_case_name,
-                "xProxy-UseCase-Version": use_case_version,
+                "xProxy-UseCase-Version": use_case_version_str,
                 "xProxy-User-ID": user_id,
                 "xProxy-Resource-Scope": resource_scope,
             }).items() if value is not None},  # Ensure no 'None' values are included
