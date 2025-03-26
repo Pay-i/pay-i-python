@@ -7,6 +7,9 @@ class PayiHeaderNames:
     request_tags:str = "xProxy-Request-Tags"
     experience_id:str = "xProxy-Experience-ID"
     experience_name:str = "xProxy-Experience-Name"
+    use_case_id:str = "xProxy-UseCase-ID"
+    use_case_name:str = "xProxy-UseCase-Name"
+    use_case_version:str = "xProxy-UseCase-Version"
     user_id:str = "xProxy-User-ID"
     route_as_resource:str = "xProxy-RouteAs-Resource"
     provider_base_uri = "xProxy-Provider-BaseUri"
@@ -42,6 +45,9 @@ def create_headers(
     user_id: Union[str, None] = None,
     experience_id: Union[str, None] = None,
     experience_name: Union[str, None] = None,
+    use_case_id: Union[str, None] = None,
+    use_case_name: Union[str, None] = None,
+    use_case_version: Union[str, None] = None,
 ) -> Dict[str, str]:
     headers: Dict[str, str] = {}
 
@@ -55,7 +61,12 @@ def create_headers(
         headers.update({ PayiHeaderNames.experience_id: experience_id})
     if experience_name:
         headers.update({ PayiHeaderNames.experience_name: experience_name})
-
+    if use_case_id:
+        headers.update({ PayiHeaderNames.use_case_id: use_case_id})
+    if use_case_name:
+        headers.update({ PayiHeaderNames.use_case_name: use_case_name})
+    if use_case_version:
+        headers.update({ PayiHeaderNames.use_case_version: use_case_version})
     return headers
 
 def payi_anthropic_url(payi_base_url: Union[str, None] = None) -> str:
