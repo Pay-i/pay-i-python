@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from typing_extensions import TypedDict
+from typing import List
+from typing_extensions import Annotated, TypedDict
+
+from .._utils import PropertyInfo
 
 __all__ = ["LimitListParams"]
 
@@ -17,5 +20,7 @@ class LimitListParams(TypedDict, total=False):
     sort_ascending: bool
 
     sort_by: str
+
+    tag_list: Annotated[List[str], PropertyInfo(alias="TagList")]
 
     tags: str

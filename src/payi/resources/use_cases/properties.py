@@ -20,8 +20,8 @@ from ..._response import (
     async_to_streamed_response_wrapper,
 )
 from ..._base_client import make_request_options
-from ...types.requests import property_create_params
-from ...types.shared.properties_response import PropertiesResponse
+from ...types.use_cases import property_create_params
+from ...types.use_case_instance_response import UseCaseInstanceResponse
 
 __all__ = ["PropertiesResource", "AsyncPropertiesResource"]
 
@@ -48,7 +48,7 @@ class PropertiesResource(SyncAPIResource):
 
     def create(
         self,
-        request_id: str,
+        use_case_id: str,
         *,
         properties: Dict[str, str],
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
@@ -57,9 +57,9 @@ class PropertiesResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> PropertiesResponse:
+    ) -> UseCaseInstanceResponse:
         """
-        Update Request properties
+        Update Use Case instance properties
 
         Args:
           extra_headers: Send extra headers
@@ -70,15 +70,15 @@ class PropertiesResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not request_id:
-            raise ValueError(f"Expected a non-empty value for `request_id` but received {request_id!r}")
+        if not use_case_id:
+            raise ValueError(f"Expected a non-empty value for `use_case_id` but received {use_case_id!r}")
         return self._post(
-            f"/api/v1/requests/{request_id}/properties",
+            f"/api/v1/use_cases/instances/{use_case_id}/properties",
             body=maybe_transform({"properties": properties}, property_create_params.PropertyCreateParams),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=PropertiesResponse,
+            cast_to=UseCaseInstanceResponse,
         )
 
 
@@ -104,7 +104,7 @@ class AsyncPropertiesResource(AsyncAPIResource):
 
     async def create(
         self,
-        request_id: str,
+        use_case_id: str,
         *,
         properties: Dict[str, str],
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
@@ -113,9 +113,9 @@ class AsyncPropertiesResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> PropertiesResponse:
+    ) -> UseCaseInstanceResponse:
         """
-        Update Request properties
+        Update Use Case instance properties
 
         Args:
           extra_headers: Send extra headers
@@ -126,15 +126,15 @@ class AsyncPropertiesResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not request_id:
-            raise ValueError(f"Expected a non-empty value for `request_id` but received {request_id!r}")
+        if not use_case_id:
+            raise ValueError(f"Expected a non-empty value for `use_case_id` but received {use_case_id!r}")
         return await self._post(
-            f"/api/v1/requests/{request_id}/properties",
+            f"/api/v1/use_cases/instances/{use_case_id}/properties",
             body=await async_maybe_transform({"properties": properties}, property_create_params.PropertyCreateParams),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=PropertiesResponse,
+            cast_to=UseCaseInstanceResponse,
         )
 
 

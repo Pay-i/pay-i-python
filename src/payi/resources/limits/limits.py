@@ -195,6 +195,7 @@ class LimitsResource(SyncAPIResource):
         page_size: int | NotGiven = NOT_GIVEN,
         sort_ascending: bool | NotGiven = NOT_GIVEN,
         sort_by: str | NotGiven = NOT_GIVEN,
+        tag_list: List[str] | NotGiven = NOT_GIVEN,
         tags: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -229,6 +230,7 @@ class LimitsResource(SyncAPIResource):
                         "page_size": page_size,
                         "sort_ascending": sort_ascending,
                         "sort_by": sort_by,
+                        "tag_list": tag_list,
                         "tags": tags,
                     },
                     limit_list_params.LimitListParams,
@@ -467,6 +469,7 @@ class AsyncLimitsResource(AsyncAPIResource):
         page_size: int | NotGiven = NOT_GIVEN,
         sort_ascending: bool | NotGiven = NOT_GIVEN,
         sort_by: str | NotGiven = NOT_GIVEN,
+        tag_list: List[str] | NotGiven = NOT_GIVEN,
         tags: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -501,6 +504,7 @@ class AsyncLimitsResource(AsyncAPIResource):
                         "page_size": page_size,
                         "sort_ascending": sort_ascending,
                         "sort_by": sort_by,
+                        "tag_list": tag_list,
                         "tags": tags,
                     },
                     limit_list_params.LimitListParams,

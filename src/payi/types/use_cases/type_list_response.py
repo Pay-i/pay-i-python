@@ -3,8 +3,8 @@
 from typing import List
 from typing_extensions import TypeAlias
 
-from .billing_model import BillingModel
+from .use_case_type import UseCaseType
 
-__all__ = ["BillingModelListResponse"]
+__all__ = ["TypeListResponse"]
 
-BillingModelListResponse: TypeAlias = List[BillingModel]
+TypeListResponse: TypeAlias = List[UseCaseType]

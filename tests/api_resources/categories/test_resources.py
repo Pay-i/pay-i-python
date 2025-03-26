@@ -24,12 +24,7 @@ class TestResources:
         resource = client.categories.resources.create(
             resource="resource",
             category="category",
-            units={
-                "foo": {
-                    "input_price": 0,
-                    "output_price": 0,
-                }
-            },
+            units={"foo": {}},
         )
         assert_matches_type(CategoryResourceResponse, resource, path=["response"])
 
@@ -56,12 +51,7 @@ class TestResources:
         response = client.categories.resources.with_raw_response.create(
             resource="resource",
             category="category",
-            units={
-                "foo": {
-                    "input_price": 0,
-                    "output_price": 0,
-                }
-            },
+            units={"foo": {}},
         )
 
         assert response.is_closed is True
@@ -74,12 +64,7 @@ class TestResources:
         with client.categories.resources.with_streaming_response.create(
             resource="resource",
             category="category",
-            units={
-                "foo": {
-                    "input_price": 0,
-                    "output_price": 0,
-                }
-            },
+            units={"foo": {}},
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -95,24 +80,14 @@ class TestResources:
             client.categories.resources.with_raw_response.create(
                 resource="resource",
                 category="",
-                units={
-                    "foo": {
-                        "input_price": 0,
-                        "output_price": 0,
-                    }
-                },
+                units={"foo": {}},
             )
 
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `resource` but received ''"):
             client.categories.resources.with_raw_response.create(
                 resource="",
                 category="category",
-                units={
-                    "foo": {
-                        "input_price": 0,
-                        "output_price": 0,
-                    }
-                },
+                units={"foo": {}},
             )
 
     @parametrize
@@ -292,12 +267,7 @@ class TestAsyncResources:
         resource = await async_client.categories.resources.create(
             resource="resource",
             category="category",
-            units={
-                "foo": {
-                    "input_price": 0,
-                    "output_price": 0,
-                }
-            },
+            units={"foo": {}},
         )
         assert_matches_type(CategoryResourceResponse, resource, path=["response"])
 
@@ -324,12 +294,7 @@ class TestAsyncResources:
         response = await async_client.categories.resources.with_raw_response.create(
             resource="resource",
             category="category",
-            units={
-                "foo": {
-                    "input_price": 0,
-                    "output_price": 0,
-                }
-            },
+            units={"foo": {}},
         )
 
         assert response.is_closed is True
@@ -342,12 +307,7 @@ class TestAsyncResources:
         async with async_client.categories.resources.with_streaming_response.create(
             resource="resource",
             category="category",
-            units={
-                "foo": {
-                    "input_price": 0,
-                    "output_price": 0,
-                }
-            },
+            units={"foo": {}},
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -363,24 +323,14 @@ class TestAsyncResources:
             await async_client.categories.resources.with_raw_response.create(
                 resource="resource",
                 category="",
-                units={
-                    "foo": {
-                        "input_price": 0,
-                        "output_price": 0,
-                    }
-                },
+                units={"foo": {}},
             )
 
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `resource` but received ''"):
             await async_client.categories.resources.with_raw_response.create(
                 resource="",
                 category="category",
-                units={
-                    "foo": {
-                        "input_price": 0,
-                        "output_price": 0,
-                    }
-                },
+                units={"foo": {}},
             )
 
     @parametrize

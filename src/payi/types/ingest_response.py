@@ -42,6 +42,8 @@ class XproxyResult(BaseModel):
 
     resource_id: Optional[str] = None
 
+    use_case_id: Optional[str] = None
+
     user_id: Optional[str] = None
 
 

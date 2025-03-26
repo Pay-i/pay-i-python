@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Union
+from typing import Dict, Union, Optional
 from datetime import datetime
 
 import httpx
@@ -54,9 +54,9 @@ class ResourcesResource(SyncAPIResource):
         *,
         category: str,
         units: Dict[str, resource_create_params.Units],
-        max_input_units: int | NotGiven = NOT_GIVEN,
-        max_output_units: int | NotGiven = NOT_GIVEN,
-        max_total_units: int | NotGiven = NOT_GIVEN,
+        max_input_units: Optional[int] | NotGiven = NOT_GIVEN,
+        max_output_units: Optional[int] | NotGiven = NOT_GIVEN,
+        max_total_units: Optional[int] | NotGiven = NOT_GIVEN,
         start_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -240,9 +240,9 @@ class AsyncResourcesResource(AsyncAPIResource):
         *,
         category: str,
         units: Dict[str, resource_create_params.Units],
-        max_input_units: int | NotGiven = NOT_GIVEN,
-        max_output_units: int | NotGiven = NOT_GIVEN,
-        max_total_units: int | NotGiven = NOT_GIVEN,
+        max_input_units: Optional[int] | NotGiven = NOT_GIVEN,
+        max_output_units: Optional[int] | NotGiven = NOT_GIVEN,
+        max_total_units: Optional[int] | NotGiven = NOT_GIVEN,
         start_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
