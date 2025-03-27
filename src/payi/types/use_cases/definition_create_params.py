@@ -9,10 +9,10 @@ from ..shared_params.pay_i_common_models_budget_management_create_limit_base imp
     PayICommonModelsBudgetManagementCreateLimitBase,
 )
 
-__all__ = ["TypeCreateParams"]
+__all__ = ["DefinitionCreateParams"]
 
 
-class TypeCreateParams(TypedDict, total=False):
+class DefinitionCreateParams(TypedDict, total=False):
     description: Required[str]
 
     name: Required[str]

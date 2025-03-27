@@ -5,10 +5,10 @@ from __future__ import annotations
 from typing import Optional
 from typing_extensions import TypedDict
 
-__all__ = ["TypeUpdateParams"]
+__all__ = ["DefinitionUpdateParams"]
 
 
-class TypeUpdateParams(TypedDict, total=False):
+class DefinitionUpdateParams(TypedDict, total=False):
     description: Optional[str]
 
     logging_enabled: Optional[bool]

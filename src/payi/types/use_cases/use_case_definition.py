@@ -7,10 +7,10 @@ from ..shared.pay_i_common_models_budget_management_create_limit_base import (
     PayICommonModelsBudgetManagementCreateLimitBase,
 )
 
-__all__ = ["UseCaseType"]
+__all__ = ["UseCaseDefinition"]
 
 
-class UseCaseType(BaseModel):
+class UseCaseDefinition(BaseModel):
     description: str
 
     name: str

@@ -3,8 +3,8 @@
 from typing import List
 from typing_extensions import TypeAlias
 
-from .use_case_type import UseCaseType
+from .use_case_definition import UseCaseDefinition
 
-__all__ = ["TypeListResponse"]
+__all__ = ["DefinitionListResponse"]
 
-TypeListResponse: TypeAlias = List[UseCaseType]
+DefinitionListResponse: TypeAlias = List[UseCaseDefinition]

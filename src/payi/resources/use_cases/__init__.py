@@ -1,13 +1,5 @@
 # File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-from .types import (
-    TypesResource,
-    AsyncTypesResource,
-    TypesResourceWithRawResponse,
-    AsyncTypesResourceWithRawResponse,
-    TypesResourceWithStreamingResponse,
-    AsyncTypesResourceWithStreamingResponse,
-)
 from .use_cases import (
     UseCasesResource,
     AsyncUseCasesResource,
@@ -24,14 +16,22 @@ from .properties import (
     PropertiesResourceWithStreamingResponse,
     AsyncPropertiesResourceWithStreamingResponse,
 )
+from .definitions import (
+    DefinitionsResource,
+    AsyncDefinitionsResource,
+    DefinitionsResourceWithRawResponse,
+    AsyncDefinitionsResourceWithRawResponse,
+    DefinitionsResourceWithStreamingResponse,
+    AsyncDefinitionsResourceWithStreamingResponse,
+)
 
 __all__ = [
-    "TypesResource",
-    "AsyncTypesResource",
-    "TypesResourceWithRawResponse",
-    "AsyncTypesResourceWithRawResponse",
-    "TypesResourceWithStreamingResponse",
-    "AsyncTypesResourceWithStreamingResponse",
+    "DefinitionsResource",
+    "AsyncDefinitionsResource",
+    "DefinitionsResourceWithRawResponse",
+    "AsyncDefinitionsResourceWithRawResponse",
+    "DefinitionsResourceWithStreamingResponse",
+    "AsyncDefinitionsResourceWithStreamingResponse",
     "PropertiesResource",
     "AsyncPropertiesResource",
     "PropertiesResourceWithRawResponse",

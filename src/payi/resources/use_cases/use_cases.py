@@ -21,15 +21,15 @@ from ..._response import (
     async_to_raw_response_wrapper,
     async_to_streamed_response_wrapper,
 )
-from .types.types import (
-    TypesResource,
-    AsyncTypesResource,
-    TypesResourceWithRawResponse,
-    AsyncTypesResourceWithRawResponse,
-    TypesResourceWithStreamingResponse,
-    AsyncTypesResourceWithStreamingResponse,
-)
 from ..._base_client import make_request_options
+from .definitions.definitions import (
+    DefinitionsResource,
+    AsyncDefinitionsResource,
+    DefinitionsResourceWithRawResponse,
+    AsyncDefinitionsResourceWithRawResponse,
+    DefinitionsResourceWithStreamingResponse,
+    AsyncDefinitionsResourceWithStreamingResponse,
+)
 from ...types.use_case_instance_response import UseCaseInstanceResponse
 
 __all__ = ["UseCasesResource", "AsyncUseCasesResource"]
@@ -37,8 +37,8 @@ __all__ = ["UseCasesResource", "AsyncUseCasesResource"]
 
 class UseCasesResource(SyncAPIResource):
     @cached_property
-    def types(self) -> TypesResource:
-        return TypesResource(self._client)
+    def definitions(self) -> DefinitionsResource:
+        return DefinitionsResource(self._client)
 
     @cached_property
     def properties(self) -> PropertiesResource:
@@ -165,8 +165,8 @@ class UseCasesResource(SyncAPIResource):
 
 class AsyncUseCasesResource(AsyncAPIResource):
     @cached_property
-    def types(self) -> AsyncTypesResource:
-        return AsyncTypesResource(self._client)
+    def definitions(self) -> AsyncDefinitionsResource:
+        return AsyncDefinitionsResource(self._client)
 
     @cached_property
     def properties(self) -> AsyncPropertiesResource:
@@ -306,8 +306,8 @@ class UseCasesResourceWithRawResponse:
         )
 
     @cached_property
-    def types(self) -> TypesResourceWithRawResponse:
-        return TypesResourceWithRawResponse(self._use_cases.types)
+    def definitions(self) -> DefinitionsResourceWithRawResponse:
+        return DefinitionsResourceWithRawResponse(self._use_cases.definitions)
 
     @cached_property
     def properties(self) -> PropertiesResourceWithRawResponse:
@@ -329,8 +329,8 @@ class AsyncUseCasesResourceWithRawResponse:
         )
 
     @cached_property
-    def types(self) -> AsyncTypesResourceWithRawResponse:
-        return AsyncTypesResourceWithRawResponse(self._use_cases.types)
+    def definitions(self) -> AsyncDefinitionsResourceWithRawResponse:
+        return AsyncDefinitionsResourceWithRawResponse(self._use_cases.definitions)
 
     @cached_property
     def properties(self) -> AsyncPropertiesResourceWithRawResponse:
@@ -352,8 +352,8 @@ class UseCasesResourceWithStreamingResponse:
         )
 
     @cached_property
-    def types(self) -> TypesResourceWithStreamingResponse:
-        return TypesResourceWithStreamingResponse(self._use_cases.types)
+    def definitions(self) -> DefinitionsResourceWithStreamingResponse:
+        return DefinitionsResourceWithStreamingResponse(self._use_cases.definitions)
 
     @cached_property
     def properties(self) -> PropertiesResourceWithStreamingResponse:
@@ -375,8 +375,8 @@ class AsyncUseCasesResourceWithStreamingResponse:
         )
 
     @cached_property
-    def types(self) -> AsyncTypesResourceWithStreamingResponse:
-        return AsyncTypesResourceWithStreamingResponse(self._use_cases.types)
+    def definitions(self) -> AsyncDefinitionsResourceWithStreamingResponse:
+        return AsyncDefinitionsResourceWithStreamingResponse(self._use_cases.definitions)
 
     @cached_property
     def properties(self) -> AsyncPropertiesResourceWithStreamingResponse:

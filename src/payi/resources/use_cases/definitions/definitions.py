@@ -6,6 +6,14 @@ from typing import Optional
 
 import httpx
 
+from .version import (
+    VersionResource,
+    AsyncVersionResource,
+    VersionResourceWithRawResponse,
+    AsyncVersionResourceWithRawResponse,
+    VersionResourceWithStreamingResponse,
+    AsyncVersionResourceWithStreamingResponse,
+)
 from ...._types import NOT_GIVEN, Body, Query, Headers, NotGiven
 from ...._utils import (
     maybe_transform,
@@ -28,39 +36,43 @@ from .limit_config import (
     AsyncLimitConfigResourceWithStreamingResponse,
 )
 from ...._base_client import make_request_options
-from ....types.use_cases import type_list_params, type_create_params, type_update_params
-from ....types.use_cases.use_case_type import UseCaseType
-from ....types.use_cases.type_list_response import TypeListResponse
+from ....types.use_cases import definition_list_params, definition_create_params, definition_update_params
+from ....types.use_cases.use_case_definition import UseCaseDefinition
+from ....types.use_cases.definition_list_response import DefinitionListResponse
 from ....types.shared_params.pay_i_common_models_budget_management_create_limit_base import (
     PayICommonModelsBudgetManagementCreateLimitBase,
 )
 
-__all__ = ["TypesResource", "AsyncTypesResource"]
+__all__ = ["DefinitionsResource", "AsyncDefinitionsResource"]
 
 
-class TypesResource(SyncAPIResource):
+class DefinitionsResource(SyncAPIResource):
     @cached_property
     def limit_config(self) -> LimitConfigResource:
         return LimitConfigResource(self._client)
 
     @cached_property
-    def with_raw_response(self) -> TypesResourceWithRawResponse:
+    def version(self) -> VersionResource:
+        return VersionResource(self._client)
+
+    @cached_property
+    def with_raw_response(self) -> DefinitionsResourceWithRawResponse:
         """
         This property can be used as a prefix for any HTTP method call to return
         the raw response object instead of the parsed content.
 
         For more information, see https://www.github.com/Pay-i/pay-i-python#accessing-raw-response-data-eg-headers
         """
-        return TypesResourceWithRawResponse(self)
+        return DefinitionsResourceWithRawResponse(self)
 
     @cached_property
-    def with_streaming_response(self) -> TypesResourceWithStreamingResponse:
+    def with_streaming_response(self) -> DefinitionsResourceWithStreamingResponse:
         """
         An alternative to `.with_raw_response` that doesn't eagerly read the response body.
 
         For more information, see https://www.github.com/Pay-i/pay-i-python#with_streaming_response
         """
-        return TypesResourceWithStreamingResponse(self)
+        return DefinitionsResourceWithStreamingResponse(self)
 
     def create(
         self,
@@ -75,7 +87,7 @@ class TypesResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> UseCaseType:
+    ) -> UseCaseDefinition:
         """
         Create a new Use Case
 
@@ -89,7 +101,7 @@ class TypesResource(SyncAPIResource):
           timeout: Override the client-level default timeout for this request, in seconds
         """
         return self._post(
-            "/api/v1/use_cases/types",
+            "/api/v1/use_cases/definitions",
             body=maybe_transform(
                 {
                     "description": description,
@@ -97,12 +109,12 @@ class TypesResource(SyncAPIResource):
                     "limit_config": limit_config,
                     "logging_enabled": logging_enabled,
                 },
-                type_create_params.TypeCreateParams,
+                definition_create_params.DefinitionCreateParams,
             ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=UseCaseType,
+            cast_to=UseCaseDefinition,
         )
 
     def retrieve(
@@ -115,7 +127,7 @@ class TypesResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> UseCaseType:
+    ) -> UseCaseDefinition:
         """
         Get Use Case details
 
@@ -131,11 +143,11 @@ class TypesResource(SyncAPIResource):
         if not use_case_name:
             raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return self._get(
-            f"/api/v1/use_cases/types/{use_case_name}",
+            f"/api/v1/use_cases/definitions/{use_case_name}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=UseCaseType,
+            cast_to=UseCaseDefinition,
         )
 
     def update(
@@ -150,9 +162,9 @@ class TypesResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> UseCaseType:
+    ) -> UseCaseDefinition:
         """
-        Update a Use Case configuration
+        Update a Use Case definition
 
         Args:
           extra_headers: Send extra headers
@@ -166,18 +178,18 @@ class TypesResource(SyncAPIResource):
         if not use_case_name:
             raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return self._patch(
-            f"/api/v1/use_cases/types/{use_case_name}",
+            f"/api/v1/use_cases/definitions/{use_case_name}",
             body=maybe_transform(
                 {
                     "description": description,
                     "logging_enabled": logging_enabled,
                 },
-                type_update_params.TypeUpdateParams,
+                definition_update_params.DefinitionUpdateParams,
             ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=UseCaseType,
+            cast_to=UseCaseDefinition,
         )
 
     def list(
@@ -190,7 +202,7 @@ class TypesResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> TypeListResponse:
+    ) -> DefinitionListResponse:
         """
         Get all Use Cases
 
@@ -206,15 +218,15 @@ class TypesResource(SyncAPIResource):
           timeout: Override the client-level default timeout for this request, in seconds
         """
         return self._get(
-            "/api/v1/use_cases/types",
+            "/api/v1/use_cases/definitions",
             options=make_request_options(
                 extra_headers=extra_headers,
                 extra_query=extra_query,
                 extra_body=extra_body,
                 timeout=timeout,
-                query=maybe_transform({"use_case_name": use_case_name}, type_list_params.TypeListParams),
+                query=maybe_transform({"use_case_name": use_case_name}, definition_list_params.DefinitionListParams),
             ),
-            cast_to=TypeListResponse,
+            cast_to=DefinitionListResponse,
         )
 
     def delete(
@@ -227,7 +239,7 @@ class TypesResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> UseCaseType:
+    ) -> UseCaseDefinition:
         """
         Delete a Use Case
 
@@ -243,37 +255,41 @@ class TypesResource(SyncAPIResource):
         if not use_case_name:
             raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return self._delete(
-            f"/api/v1/use_cases/types/{use_case_name}",
+            f"/api/v1/use_cases/definitions/{use_case_name}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=UseCaseType,
+            cast_to=UseCaseDefinition,
         )
 
 
-class AsyncTypesResource(AsyncAPIResource):
+class AsyncDefinitionsResource(AsyncAPIResource):
     @cached_property
     def limit_config(self) -> AsyncLimitConfigResource:
         return AsyncLimitConfigResource(self._client)
 
     @cached_property
-    def with_raw_response(self) -> AsyncTypesResourceWithRawResponse:
+    def version(self) -> AsyncVersionResource:
+        return AsyncVersionResource(self._client)
+
+    @cached_property
+    def with_raw_response(self) -> AsyncDefinitionsResourceWithRawResponse:
         """
         This property can be used as a prefix for any HTTP method call to return
         the raw response object instead of the parsed content.
 
         For more information, see https://www.github.com/Pay-i/pay-i-python#accessing-raw-response-data-eg-headers
         """
-        return AsyncTypesResourceWithRawResponse(self)
+        return AsyncDefinitionsResourceWithRawResponse(self)
 
     @cached_property
-    def with_streaming_response(self) -> AsyncTypesResourceWithStreamingResponse:
+    def with_streaming_response(self) -> AsyncDefinitionsResourceWithStreamingResponse:
         """
         An alternative to `.with_raw_response` that doesn't eagerly read the response body.
 
         For more information, see https://www.github.com/Pay-i/pay-i-python#with_streaming_response
         """
-        return AsyncTypesResourceWithStreamingResponse(self)
+        return AsyncDefinitionsResourceWithStreamingResponse(self)
 
     async def create(
         self,
@@ -288,7 +304,7 @@ class AsyncTypesResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> UseCaseType:
+    ) -> UseCaseDefinition:
         """
         Create a new Use Case
 
@@ -302,7 +318,7 @@ class AsyncTypesResource(AsyncAPIResource):
           timeout: Override the client-level default timeout for this request, in seconds
         """
         return await self._post(
-            "/api/v1/use_cases/types",
+            "/api/v1/use_cases/definitions",
             body=await async_maybe_transform(
                 {
                     "description": description,
@@ -310,12 +326,12 @@ class AsyncTypesResource(AsyncAPIResource):
                     "limit_config": limit_config,
                     "logging_enabled": logging_enabled,
                 },
-                type_create_params.TypeCreateParams,
+                definition_create_params.DefinitionCreateParams,
             ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=UseCaseType,
+            cast_to=UseCaseDefinition,
         )
 
     async def retrieve(
@@ -328,7 +344,7 @@ class AsyncTypesResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> UseCaseType:
+    ) -> UseCaseDefinition:
         """
         Get Use Case details
 
@@ -344,11 +360,11 @@ class AsyncTypesResource(AsyncAPIResource):
         if not use_case_name:
             raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return await self._get(
-            f"/api/v1/use_cases/types/{use_case_name}",
+            f"/api/v1/use_cases/definitions/{use_case_name}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=UseCaseType,
+            cast_to=UseCaseDefinition,
         )
 
     async def update(
@@ -363,9 +379,9 @@ class AsyncTypesResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> UseCaseType:
+    ) -> UseCaseDefinition:
         """
-        Update a Use Case configuration
+        Update a Use Case definition
 
         Args:
           extra_headers: Send extra headers
@@ -379,18 +395,18 @@ class AsyncTypesResource(AsyncAPIResource):
         if not use_case_name:
             raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return await self._patch(
-            f"/api/v1/use_cases/types/{use_case_name}",
+            f"/api/v1/use_cases/definitions/{use_case_name}",
             body=await async_maybe_transform(
                 {
                     "description": description,
                     "logging_enabled": logging_enabled,
                 },
-                type_update_params.TypeUpdateParams,
+                definition_update_params.DefinitionUpdateParams,
             ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=UseCaseType,
+            cast_to=UseCaseDefinition,
         )
 
     async def list(
@@ -403,7 +419,7 @@ class AsyncTypesResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> TypeListResponse:
+    ) -> DefinitionListResponse:
         """
         Get all Use Cases
 
@@ -419,15 +435,17 @@ class AsyncTypesResource(AsyncAPIResource):
           timeout: Override the client-level default timeout for this request, in seconds
         """
         return await self._get(
-            "/api/v1/use_cases/types",
+            "/api/v1/use_cases/definitions",
             options=make_request_options(
                 extra_headers=extra_headers,
                 extra_query=extra_query,
                 extra_body=extra_body,
                 timeout=timeout,
-                query=await async_maybe_transform({"use_case_name": use_case_name}, type_list_params.TypeListParams),
+                query=await async_maybe_transform(
+                    {"use_case_name": use_case_name}, definition_list_params.DefinitionListParams
+                ),
             ),
-            cast_to=TypeListResponse,
+            cast_to=DefinitionListResponse,
         )
 
     async def delete(
@@ -440,7 +458,7 @@ class AsyncTypesResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> UseCaseType:
+    ) -> UseCaseDefinition:
         """
         Delete a Use Case
 
@@ -456,109 +474,125 @@ class AsyncTypesResource(AsyncAPIResource):
         if not use_case_name:
             raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return await self._delete(
-            f"/api/v1/use_cases/types/{use_case_name}",
+            f"/api/v1/use_cases/definitions/{use_case_name}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=UseCaseType,
+            cast_to=UseCaseDefinition,
         )
 
 
-class TypesResourceWithRawResponse:
-    def __init__(self, types: TypesResource) -> None:
-        self._types = types
+class DefinitionsResourceWithRawResponse:
+    def __init__(self, definitions: DefinitionsResource) -> None:
+        self._definitions = definitions
 
         self.create = to_raw_response_wrapper(
-            types.create,
+            definitions.create,
         )
         self.retrieve = to_raw_response_wrapper(
-            types.retrieve,
+            definitions.retrieve,
         )
         self.update = to_raw_response_wrapper(
-            types.update,
+            definitions.update,
         )
         self.list = to_raw_response_wrapper(
-            types.list,
+            definitions.list,
         )
         self.delete = to_raw_response_wrapper(
-            types.delete,
+            definitions.delete,
         )
 
     @cached_property
     def limit_config(self) -> LimitConfigResourceWithRawResponse:
-        return LimitConfigResourceWithRawResponse(self._types.limit_config)
+        return LimitConfigResourceWithRawResponse(self._definitions.limit_config)
+
+    @cached_property
+    def version(self) -> VersionResourceWithRawResponse:
+        return VersionResourceWithRawResponse(self._definitions.version)
 
 
-class AsyncTypesResourceWithRawResponse:
-    def __init__(self, types: AsyncTypesResource) -> None:
-        self._types = types
+class AsyncDefinitionsResourceWithRawResponse:
+    def __init__(self, definitions: AsyncDefinitionsResource) -> None:
+        self._definitions = definitions
 
         self.create = async_to_raw_response_wrapper(
-            types.create,
+            definitions.create,
         )
         self.retrieve = async_to_raw_response_wrapper(
-            types.retrieve,
+            definitions.retrieve,
         )
         self.update = async_to_raw_response_wrapper(
-            types.update,
+            definitions.update,
         )
         self.list = async_to_raw_response_wrapper(
-            types.list,
+            definitions.list,
         )
         self.delete = async_to_raw_response_wrapper(
-            types.delete,
+            definitions.delete,
         )
 
     @cached_property
     def limit_config(self) -> AsyncLimitConfigResourceWithRawResponse:
-        return AsyncLimitConfigResourceWithRawResponse(self._types.limit_config)
+        return AsyncLimitConfigResourceWithRawResponse(self._definitions.limit_config)
+
+    @cached_property
+    def version(self) -> AsyncVersionResourceWithRawResponse:
+        return AsyncVersionResourceWithRawResponse(self._definitions.version)
 
 
-class TypesResourceWithStreamingResponse:
-    def __init__(self, types: TypesResource) -> None:
-        self._types = types
+class DefinitionsResourceWithStreamingResponse:
+    def __init__(self, definitions: DefinitionsResource) -> None:
+        self._definitions = definitions
 
         self.create = to_streamed_response_wrapper(
-            types.create,
+            definitions.create,
         )
         self.retrieve = to_streamed_response_wrapper(
-            types.retrieve,
+            definitions.retrieve,
         )
         self.update = to_streamed_response_wrapper(
-            types.update,
+            definitions.update,
         )
         self.list = to_streamed_response_wrapper(
-            types.list,
+            definitions.list,
         )
         self.delete = to_streamed_response_wrapper(
-            types.delete,
+            definitions.delete,
         )
 
     @cached_property
     def limit_config(self) -> LimitConfigResourceWithStreamingResponse:
-        return LimitConfigResourceWithStreamingResponse(self._types.limit_config)
+        return LimitConfigResourceWithStreamingResponse(self._definitions.limit_config)
+
+    @cached_property
+    def version(self) -> VersionResourceWithStreamingResponse:
+        return VersionResourceWithStreamingResponse(self._definitions.version)
 
 
-class AsyncTypesResourceWithStreamingResponse:
-    def __init__(self, types: AsyncTypesResource) -> None:
-        self._types = types
+class AsyncDefinitionsResourceWithStreamingResponse:
+    def __init__(self, definitions: AsyncDefinitionsResource) -> None:
+        self._definitions = definitions
 
         self.create = async_to_streamed_response_wrapper(
-            types.create,
+            definitions.create,
         )
         self.retrieve = async_to_streamed_response_wrapper(
-            types.retrieve,
+            definitions.retrieve,
         )
         self.update = async_to_streamed_response_wrapper(
-            types.update,
+            definitions.update,
         )
         self.list = async_to_streamed_response_wrapper(
-            types.list,
+            definitions.list,
         )
         self.delete = async_to_streamed_response_wrapper(
-            types.delete,
+            definitions.delete,
         )
 
     @cached_property
     def limit_config(self) -> AsyncLimitConfigResourceWithStreamingResponse:
-        return AsyncLimitConfigResourceWithStreamingResponse(self._types.limit_config)
+        return AsyncLimitConfigResourceWithStreamingResponse(self._definitions.limit_config)
+
+    @cached_property
+    def version(self) -> AsyncVersionResourceWithStreamingResponse:
+        return AsyncVersionResourceWithStreamingResponse(self._definitions.version)
