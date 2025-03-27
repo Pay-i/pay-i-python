@@ -21,8 +21,8 @@ from ...._response import (
     async_to_streamed_response_wrapper,
 )
 from ...._base_client import make_request_options
-from ....types.use_cases.types import limit_config_create_params
-from ....types.use_cases.use_case_type import UseCaseType
+from ....types.use_cases.definitions import limit_config_create_params
+from ....types.use_cases.use_case_definition import UseCaseDefinition
 
 __all__ = ["LimitConfigResource", "AsyncLimitConfigResource"]
 
@@ -61,7 +61,7 @@ class LimitConfigResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> UseCaseType:
+    ) -> UseCaseDefinition:
         """
         Create a new Use Case default limit configuration
 
@@ -77,7 +77,7 @@ class LimitConfigResource(SyncAPIResource):
         if not use_case_name:
             raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return self._post(
-            f"/api/v1/use_cases/types/{use_case_name}/limit_config",
+            f"/api/v1/use_cases/definitions/{use_case_name}/limit_config",
             body=maybe_transform(
                 {
                     "max": max,
@@ -90,7 +90,7 @@ class LimitConfigResource(SyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=UseCaseType,
+            cast_to=UseCaseDefinition,
         )
 
     def delete(
@@ -103,7 +103,7 @@ class LimitConfigResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> UseCaseType:
+    ) -> UseCaseDefinition:
         """
         Delete a Use Case default limit configuration
 
@@ -119,11 +119,11 @@ class LimitConfigResource(SyncAPIResource):
         if not use_case_name:
             raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return self._delete(
-            f"/api/v1/use_cases/types/{use_case_name}/limit_config",
+            f"/api/v1/use_cases/definitions/{use_case_name}/limit_config",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=UseCaseType,
+            cast_to=UseCaseDefinition,
         )
 
 
@@ -161,7 +161,7 @@ class AsyncLimitConfigResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> UseCaseType:
+    ) -> UseCaseDefinition:
         """
         Create a new Use Case default limit configuration
 
@@ -177,7 +177,7 @@ class AsyncLimitConfigResource(AsyncAPIResource):
         if not use_case_name:
             raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return await self._post(
-            f"/api/v1/use_cases/types/{use_case_name}/limit_config",
+            f"/api/v1/use_cases/definitions/{use_case_name}/limit_config",
             body=await async_maybe_transform(
                 {
                     "max": max,
@@ -190,7 +190,7 @@ class AsyncLimitConfigResource(AsyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=UseCaseType,
+            cast_to=UseCaseDefinition,
         )
 
     async def delete(
@@ -203,7 +203,7 @@ class AsyncLimitConfigResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> UseCaseType:
+    ) -> UseCaseDefinition:
         """
         Delete a Use Case default limit configuration
 
@@ -219,11 +219,11 @@ class AsyncLimitConfigResource(AsyncAPIResource):
         if not use_case_name:
             raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return await self._delete(
-            f"/api/v1/use_cases/types/{use_case_name}/limit_config",
+            f"/api/v1/use_cases/definitions/{use_case_name}/limit_config",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=UseCaseType,
+            cast_to=UseCaseDefinition,
         )
 
 
