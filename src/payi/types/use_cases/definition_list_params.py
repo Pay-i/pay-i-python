@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing_extensions import TypedDict
 
-__all__ = ["TypeListParams"]
+__all__ = ["DefinitionListParams"]
 
 
-class TypeListParams(TypedDict, total=False):
+class DefinitionListParams(TypedDict, total=False):
     use_case_name: str
     """Use Case name"""
