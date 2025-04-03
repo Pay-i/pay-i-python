@@ -25,9 +25,19 @@ class Context(TypedDict, total=False):
     proxy: bool
     experience_name: Optional[str]
     experience_id: Optional[str]
+    use_case_name: Optional[str]
+    use_case_id: Optional[str]
+    use_case_version: Optional[int]
     limit_ids: Optional['list[str]']
     request_tags: Optional['list[str]']
     user_id: Optional[str]
+
+class ParentState(TypedDict, total=False):
+    experience_name: Optional[str]
+    experience_id: Optional[str]
+    use_case_name: Optional[str]
+    use_case_id: Optional[str]
+    use_case_version: Optional[int]
 
 class IsStreaming(Enum):
     false = 0
@@ -221,40 +231,49 @@ class PayiInstrumentor:
 
     def _setup_call_func(
         self
-        ) -> 'tuple[Context, Optional[str], Optional[str]]':
+        ) -> 'tuple[Context, ParentState]':
         context: Context = {}
+        parentState: ParentState = {}
 
         if len(self._context_stack) > 0:
             # copy current context into the upcoming context
             context = self._context_stack[-1].copy()
             context.pop("proxy")
-            previous_experience_name = context.get("experience_name", None)
-            previous_experience_id = context.get("experience_id", None)
-        else:
-            previous_experience_name = None
-            previous_experience_id = None
-        return (context, previous_experience_name, previous_experience_id)
+            parentState["experience_name"] = context.get("experience_name", None)
+            parentState["experience_id"] = context.get("experience_id", None)
+            parentState["use_case_name"] = context.get("use_case_name", None)
+            parentState["use_case_id"] = context.get("use_case_id", None)
+            parentState["use_case_version"] = context.get("use_case_version", None)
+
+        return (context, parentState)
 
     def _init_context(
         self,
         context: Context,
-        previous_experience_name: Optional[str],
-        previous_experience_id: Optional[str],
+        parentState: ParentState,
         proxy: bool,
         limit_ids: Optional["list[str]"],
         request_tags: Optional["list[str]"],
         experience_name: Optional[str],
         experience_id: Optional[str],
+        use_case_name: Optional[str],
+        use_case_id: Optional[str],
+        use_case_version: Optional[int],                
         user_id: Optional[str],
         ) -> None:
         context["proxy"] = proxy
 
+        # TODO use case what if caller specified epxerience / use_case ID and no name?
+
         # Handle experience name and ID logic
         if not experience_name:
             # If no experience_name specified, use previous values
-            context["experience_name"] = previous_experience_name
-            context["experience_id"] = previous_experience_id
+            context["experience_name"] = parentState.get("experience_name", None)
+            context["experience_id"] = parentState.get("experience_id", None)
         else:
+            previous_experience_name = parentState.get("experience_name", None)
+            previous_experience_id = parentState.get("experience_id", None)
+
             # If experience_name is specified
             if experience_name == previous_experience_name:
                 # Same experience name, use previous ID unless new one specified
@@ -264,6 +283,29 @@ class PayiInstrumentor:
                 # Different experience name, use specified ID or generate one
                 context["experience_name"] = experience_name
                 context["experience_id"] = experience_id if experience_id else str(uuid.uuid4())
+
+        # Handle experience name and ID logic
+        if not use_case_name: # TODO use case
+            # If no experience_name specified, use previous values
+            context["use_case_name"] = parentState.get("use_case_name", None)
+            context["use_case_id"] = parentState.get("use_case_id", None)
+            context["use_case_version"] = parentState.get("use_case_version", None)
+        else:
+            previous_use_case_name = parentState.get("use_case_name", None)
+            previous_use_case_id = parentState.get("use_case_id", None)
+            previous_use_case_version = parentState.get("use_case_version", None)
+
+            # If experience_name is specified
+            if use_case_name == previous_use_case_name:
+                # Same experience name, use previous ID unless new one specified
+                context["use_case_name"] = use_case_name
+                context["use_case_id"] = use_case_id if use_case_id else previous_use_case_id
+                context["use_case_version"] = use_case_version if use_case_version else previous_use_case_version
+            else:
+                # Different experience name, use specified ID or generate one
+                context["use_case_name"] = use_case_name
+                context["use_case_id"] = use_case_id if use_case_id else str(uuid.uuid4())
+                context["use_case_version"] = use_case_version
 
         # set any values explicitly passed by the caller, otherwise use what is already in the context
         if limit_ids:
@@ -283,22 +325,27 @@ class PayiInstrumentor:
         request_tags: Optional["list[str]"],
         experience_name: Optional[str],
         experience_id: Optional[str],
+        use_case_name: Optional[str],
+        use_case_id: Optional[str],
+        use_case_version: Optional[int],        
         user_id: Optional[str],
         *args: Any,
         **kwargs: Any,
     ) -> Any:
-        context, previous_experience_name, previous_experience_id = self._setup_call_func()
+        context, parentState = self._setup_call_func()
 
         with self:
             self._init_context(
                 context,
-                previous_experience_name,
-                previous_experience_id,
+                parentState,
                 proxy, 
                 limit_ids, 
                 request_tags,
                 experience_name,
                 experience_id,
+                use_case_name,
+                use_case_id,
+                use_case_version,
                 user_id)
             return await func(*args, **kwargs)
 
@@ -310,22 +357,27 @@ class PayiInstrumentor:
         request_tags: Optional["list[str]"],
         experience_name: Optional[str],
         experience_id: Optional[str],
+        use_case_name: Optional[str],
+        use_case_id: Optional[str],
+        use_case_version: Optional[int],        
         user_id: Optional[str],
         *args: Any,
         **kwargs: Any,
     ) -> Any:
-        context, previous_experience_name, previous_experience_id = self._setup_call_func()
+        context, parentState = self._setup_call_func()
 
         with self:
             self._init_context(
                 context,
-                previous_experience_name,
-                previous_experience_id,
+                parentState,
                 proxy, 
                 limit_ids, 
                 request_tags,
                 experience_name,
                 experience_id,
+                use_case_name,
+                use_case_id,
+                use_case_version,
                 user_id)
             return func(*args, **kwargs)
 
@@ -348,7 +400,6 @@ class PayiInstrumentor:
         # Return the current top of the stack
         return self._context_stack[-1] if self._context_stack else None
 
-
     def _prepare_ingest(
         self,
         ingest: IngestUnitsParams,
@@ -359,6 +410,9 @@ class PayiInstrumentor:
         request_tags = ingest_extra_headers.pop(PayiHeaderNames.request_tags, None)
         experience_name = ingest_extra_headers.pop(PayiHeaderNames.experience_name, None)
         experience_id = ingest_extra_headers.pop(PayiHeaderNames.experience_id, None)
+        use_case_name = ingest_extra_headers.pop(PayiHeaderNames.use_case_name, None)
+        use_case_id = ingest_extra_headers.pop(PayiHeaderNames.use_case_id, None)
+        use_case_version = ingest_extra_headers.pop(PayiHeaderNames.use_case_version, None)
         user_id = ingest_extra_headers.pop(PayiHeaderNames.user_id, None)
 
         if limit_ids:
@@ -369,6 +423,12 @@ class PayiInstrumentor:
             ingest["experience_name"] = experience_name
         if experience_id:
             ingest["experience_id"] = experience_id
+        if use_case_name:
+            ingest["use_case_name"] = use_case_name
+        if use_case_id:
+            ingest["use_case_id"] = use_case_id
+        if use_case_version:
+            ingest["use_case_version"] = int(use_case_version)
         if user_id:
             ingest["user_id"] = user_id
 
@@ -656,6 +716,9 @@ class PayiInstrumentor:
         request_tags: Optional[list[str]] = context.get("request_tags")
         experience_name: Optional[str] = context.get("experience_name")
         experience_id: Optional[str] = context.get("experience_id")
+        use_case_name: Optional[str] = context.get("use_case_name")
+        use_case_id: Optional[str] = context.get("use_case_id")
+        use_case_version: Optional[int] = context.get("use_case_version")
         user_id: Optional[str] = context.get("user_id")
 
         # Merge limits from the decorator and extra headers
@@ -698,6 +761,31 @@ class PayiInstrumentor:
             # use the decorator experience name and the inner experience id
             if experience_name is not None:
                 extra_headers[PayiHeaderNames.experience_name] = experience_name
+        
+        else:
+            # use the inner experience name and id as-is
+            ...
+
+        # inner extra_headers experience_name and experience_id take precedence over outer decorator experience_name and experience_id
+        # if either inner value is specified, ignore outer decorator values
+        if PayiHeaderNames.use_case_name not in extra_headers and PayiHeaderNames.use_case_id not in extra_headers:
+
+            # use both decorator values
+            if use_case_name is not None:
+                extra_headers[PayiHeaderNames.use_case_name] = use_case_name
+            if use_case_id is not None:
+                extra_headers[PayiHeaderNames.use_case_id] = use_case_id
+            if use_case_version is not None:
+                extra_headers[PayiHeaderNames.use_case_version] = str(use_case_version)
+        
+        elif PayiHeaderNames.use_case_id in extra_headers and PayiHeaderNames.use_case_name not in extra_headers:
+            # use the decorator experience name and the inner experience id
+            if use_case_name is not None:
+                extra_headers[PayiHeaderNames.use_case_name] = use_case_name
+            
+            # use the decorator experience version and the inner experience id
+            if use_case_version is not None:
+                extra_headers[PayiHeaderNames.use_case_version] = str(use_case_version) # TODO use case 
         
         else:
             # use the inner experience name and id as-is
@@ -926,6 +1014,9 @@ def ingest(
     request_tags: Optional["list[str]"] = None,
     experience_name: Optional[str] = None,
     experience_id: Optional[str] = None,
+    use_case_name: Optional[str] = None,
+    use_case_id: Optional[str] = None,
+    use_case_version: Optional[int] = None,
     user_id: Optional[str] = None,
 ) -> Any:
     def _ingest(func: Any) -> Any:
@@ -942,6 +1033,9 @@ def ingest(
                     request_tags,
                     experience_name,
                     experience_id,
+                    use_case_name,
+                    use_case_id,
+                    use_case_version,
                     user_id,
                     *args,
                     **kwargs,
@@ -958,6 +1052,9 @@ def ingest(
                     request_tags,
                     experience_name,
                     experience_id,
+                    use_case_name,
+                    use_case_id,
+                    use_case_version,
                     user_id,
                     *args,
                     **kwargs,
@@ -970,6 +1067,9 @@ def proxy(
     request_tags: Optional["list[str]"] = None,
     experience_name: Optional[str] = None,
     experience_id: Optional[str] = None,
+    use_case_id: Optional[str] = None,
+    use_case_name: Optional[str] = None,
+    use_case_version: Optional[int] = None,
     user_id: Optional[str] = None,
 ) -> Any:
     def _proxy(func: Any) -> Any:
@@ -985,6 +1085,9 @@ def proxy(
                     request_tags,
                     experience_name,
                     experience_id,
+                    use_case_name,
+                    use_case_id,
+                    use_case_version,
                     user_id,
                     *args,
                     **kwargs
@@ -1002,6 +1105,9 @@ def proxy(
                     request_tags,
                     experience_name,
                     experience_id,
+                    use_case_name,
+                    use_case_id,
+                    use_case_version,
                     user_id,
                     *args,
                     **kwargs
