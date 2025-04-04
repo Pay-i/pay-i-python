@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.59 (2025-04-04)
+
+Full Changelog: [v0.1.0-alpha.58...v0.1.0-alpha.59](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.58...v0.1.0-alpha.59)
+
+### Chores
+
+* **internal:** remove trailing character ([#271](https://github.com/Pay-i/pay-i-python/issues/271)) ([ea4292f](https://github.com/Pay-i/pay-i-python/commit/ea4292f2513b35ac475d494351fe77e7db2c9f57))
+
 ## 0.1.0-alpha.58 (2025-03-27)
 
 Full Changelog: [v0.1.0-alpha.57...v0.1.0-alpha.58](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.57...v0.1.0-alpha.58)
