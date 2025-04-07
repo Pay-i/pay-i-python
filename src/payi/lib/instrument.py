@@ -1042,6 +1042,11 @@ def payi_instrument(
     )
 
     if len(global_context) > 0:
+        if  "use_case_name" in global_context and not "use_case_id" in global_context:
+            global_context["use_case_id"] = str(uuid.uuid4())
+        if "experience_name" in global_context and not "experience_id" in global_context:
+            global_context["experience_id"] = str(uuid.uuid4())
+
         _instrumentor._context_stack.append(global_context)
 
 def ingest(
