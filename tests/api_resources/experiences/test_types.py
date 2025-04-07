@@ -9,10 +9,8 @@ import pytest
 
 from payi import Payi, AsyncPayi
 from tests.utils import assert_matches_type
-from payi.types.experiences import (
-    ExperienceType,
-    TypeListResponse,
-)
+from payi.pagination import SyncCursorPage, AsyncCursorPage
+from payi.types.experiences import ExperienceType
 
 base_url = os.environ.get("TEST_API_BASE_URL", "http://127.0.0.1:4010")
 
@@ -157,14 +155,17 @@ class TestTypes:
     @parametrize
     def test_method_list(self, client: Payi) -> None:
         type = client.experiences.types.list()
-        assert_matches_type(TypeListResponse, type, path=["response"])
+        assert_matches_type(SyncCursorPage[ExperienceType], type, path=["response"])
 
     @parametrize
     def test_method_list_with_all_params(self, client: Payi) -> None:
         type = client.experiences.types.list(
+            cursor="cursor",
+            limit=0,
             name="name",
+            sort_ascending=True,
         )
-        assert_matches_type(TypeListResponse, type, path=["response"])
+        assert_matches_type(SyncCursorPage[ExperienceType], type, path=["response"])
 
     @parametrize
     def test_raw_response_list(self, client: Payi) -> None:
@@ -173,7 +174,7 @@ class TestTypes:
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
         type = response.parse()
-        assert_matches_type(TypeListResponse, type, path=["response"])
+        assert_matches_type(SyncCursorPage[ExperienceType], type, path=["response"])
 
     @parametrize
     def test_streaming_response_list(self, client: Payi) -> None:
@@ -182,7 +183,7 @@ class TestTypes:
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
             type = response.parse()
-            assert_matches_type(TypeListResponse, type, path=["response"])
+            assert_matches_type(SyncCursorPage[ExperienceType], type, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
@@ -365,14 +366,17 @@ class TestAsyncTypes:
     @parametrize
     async def test_method_list(self, async_client: AsyncPayi) -> None:
         type = await async_client.experiences.types.list()
-        assert_matches_type(TypeListResponse, type, path=["response"])
+        assert_matches_type(AsyncCursorPage[ExperienceType], type, path=["response"])
 
     @parametrize
     async def test_method_list_with_all_params(self, async_client: AsyncPayi) -> None:
         type = await async_client.experiences.types.list(
+            cursor="cursor",
+            limit=0,
             name="name",
+            sort_ascending=True,
         )
-        assert_matches_type(TypeListResponse, type, path=["response"])
+        assert_matches_type(AsyncCursorPage[ExperienceType], type, path=["response"])
 
     @parametrize
     async def test_raw_response_list(self, async_client: AsyncPayi) -> None:
@@ -381,7 +385,7 @@ class TestAsyncTypes:
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
         type = await response.parse()
-        assert_matches_type(TypeListResponse, type, path=["response"])
+        assert_matches_type(AsyncCursorPage[ExperienceType], type, path=["response"])
 
     @parametrize
     async def test_streaming_response_list(self, async_client: AsyncPayi) -> None:
@@ -390,7 +394,7 @@ class TestAsyncTypes:
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
             type = await response.parse()
-            assert_matches_type(TypeListResponse, type, path=["response"])
+            assert_matches_type(AsyncCursorPage[ExperienceType], type, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 

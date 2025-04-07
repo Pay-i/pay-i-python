@@ -27,10 +27,10 @@ from .limit_config import (
     LimitConfigResourceWithStreamingResponse,
     AsyncLimitConfigResourceWithStreamingResponse,
 )
-from ...._base_client import make_request_options
+from ....pagination import SyncCursorPage, AsyncCursorPage
+from ...._base_client import AsyncPaginator, make_request_options
 from ....types.experiences import type_list_params, type_create_params, type_update_params
 from ....types.experiences.experience_type import ExperienceType
-from ....types.experiences.type_list_response import TypeListResponse
 from ....types.shared_params.pay_i_common_models_budget_management_create_limit_base import (
     PayICommonModelsBudgetManagementCreateLimitBase,
 )
@@ -165,7 +165,7 @@ class TypesResource(SyncAPIResource):
         """
         if not experience_name:
             raise ValueError(f"Expected a non-empty value for `experience_name` but received {experience_name!r}")
-        return self._patch(
+        return self._put(
             f"/api/v1/experiences/types/{experience_name}",
             body=maybe_transform(
                 {
@@ -183,20 +183,21 @@ class TypesResource(SyncAPIResource):
     def list(
         self,
         *,
+        cursor: str | NotGiven = NOT_GIVEN,
+        limit: int | NotGiven = NOT_GIVEN,
         name: str | NotGiven = NOT_GIVEN,
+        sort_ascending: bool | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> TypeListResponse:
+    ) -> SyncCursorPage[ExperienceType]:
         """
         Get all Experience Types
 
         Args:
-          name: Experience Type Name
-
           extra_headers: Send extra headers
 
           extra_query: Add additional query parameters to the request
@@ -205,16 +206,25 @@ class TypesResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        return self._get(
+        return self._get_api_list(
             "/api/v1/experiences/types",
+            page=SyncCursorPage[ExperienceType],
             options=make_request_options(
                 extra_headers=extra_headers,
                 extra_query=extra_query,
                 extra_body=extra_body,
                 timeout=timeout,
-                query=maybe_transform({"name": name}, type_list_params.TypeListParams),
+                query=maybe_transform(
+                    {
+                        "cursor": cursor,
+                        "limit": limit,
+                        "name": name,
+                        "sort_ascending": sort_ascending,
+                    },
+                    type_list_params.TypeListParams,
+                ),
             ),
-            cast_to=TypeListResponse,
+            model=ExperienceType,
         )
 
     def delete(
@@ -378,7 +388,7 @@ class AsyncTypesResource(AsyncAPIResource):
         """
         if not experience_name:
             raise ValueError(f"Expected a non-empty value for `experience_name` but received {experience_name!r}")
-        return await self._patch(
+        return await self._put(
             f"/api/v1/experiences/types/{experience_name}",
             body=await async_maybe_transform(
                 {
@@ -393,23 +403,24 @@ class AsyncTypesResource(AsyncAPIResource):
             cast_to=ExperienceType,
         )
 
-    async def list(
+    def list(
         self,
         *,
+        cursor: str | NotGiven = NOT_GIVEN,
+        limit: int | NotGiven = NOT_GIVEN,
         name: str | NotGiven = NOT_GIVEN,
+        sort_ascending: bool | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> TypeListResponse:
+    ) -> AsyncPaginator[ExperienceType, AsyncCursorPage[ExperienceType]]:
         """
         Get all Experience Types
 
         Args:
-          name: Experience Type Name
-
           extra_headers: Send extra headers
 
           extra_query: Add additional query parameters to the request
@@ -418,16 +429,25 @@ class AsyncTypesResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        return await self._get(
+        return self._get_api_list(
             "/api/v1/experiences/types",
+            page=AsyncCursorPage[ExperienceType],
             options=make_request_options(
                 extra_headers=extra_headers,
                 extra_query=extra_query,
                 extra_body=extra_body,
                 timeout=timeout,
-                query=await async_maybe_transform({"name": name}, type_list_params.TypeListParams),
+                query=maybe_transform(
+                    {
+                        "cursor": cursor,
+                        "limit": limit,
+                        "name": name,
+                        "sort_ascending": sort_ascending,
+                    },
+                    type_list_params.TypeListParams,
+                ),
             ),
-            cast_to=TypeListResponse,
+            model=ExperienceType,
         )
 
     async def delete(
