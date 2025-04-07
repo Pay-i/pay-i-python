@@ -30,10 +30,11 @@ from ..._response import (
     async_to_raw_response_wrapper,
     async_to_streamed_response_wrapper,
 )
-from ..._base_client import make_request_options
+from ...pagination import SyncCursorPage, AsyncCursorPage
+from ..._base_client import AsyncPaginator, make_request_options
 from ...types.limit_response import LimitResponse
 from ...types.default_response import DefaultResponse
-from ...types.paged_limit_list import PagedLimitList
+from ...types.limit_list_response import LimitListResponse
 from ...types.limit_history_response import LimitHistoryResponse
 
 __all__ = ["LimitsResource", "AsyncLimitsResource"]
@@ -190,20 +191,17 @@ class LimitsResource(SyncAPIResource):
     def list(
         self,
         *,
+        cursor: str | NotGiven = NOT_GIVEN,
+        limit: int | NotGiven = NOT_GIVEN,
         limit_name: str | NotGiven = NOT_GIVEN,
-        page_number: int | NotGiven = NOT_GIVEN,
-        page_size: int | NotGiven = NOT_GIVEN,
         sort_ascending: bool | NotGiven = NOT_GIVEN,
-        sort_by: str | NotGiven = NOT_GIVEN,
-        tag_list: List[str] | NotGiven = NOT_GIVEN,
-        tags: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> PagedLimitList:
+    ) -> SyncCursorPage[LimitListResponse]:
         """
         Get all Limits
 
@@ -216,8 +214,9 @@ class LimitsResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        return self._get(
+        return self._get_api_list(
             "/api/v1/limits",
+            page=SyncCursorPage[LimitListResponse],
             options=make_request_options(
                 extra_headers=extra_headers,
                 extra_query=extra_query,
@@ -225,18 +224,15 @@ class LimitsResource(SyncAPIResource):
                 timeout=timeout,
                 query=maybe_transform(
                     {
+                        "cursor": cursor,
+                        "limit": limit,
                         "limit_name": limit_name,
-                        "page_number": page_number,
-                        "page_size": page_size,
                         "sort_ascending": sort_ascending,
-                        "sort_by": sort_by,
-                        "tag_list": tag_list,
-                        "tags": tags,
                     },
                     limit_list_params.LimitListParams,
                 ),
             ),
-            cast_to=PagedLimitList,
+            model=LimitListResponse,
         )
 
     def delete(
@@ -461,23 +457,20 @@ class AsyncLimitsResource(AsyncAPIResource):
             cast_to=LimitResponse,
         )
 
-    async def list(
+    def list(
         self,
         *,
+        cursor: str | NotGiven = NOT_GIVEN,
+        limit: int | NotGiven = NOT_GIVEN,
         limit_name: str | NotGiven = NOT_GIVEN,
-        page_number: int | NotGiven = NOT_GIVEN,
-        page_size: int | NotGiven = NOT_GIVEN,
         sort_ascending: bool | NotGiven = NOT_GIVEN,
-        sort_by: str | NotGiven = NOT_GIVEN,
-        tag_list: List[str] | NotGiven = NOT_GIVEN,
-        tags: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> PagedLimitList:
+    ) -> AsyncPaginator[LimitListResponse, AsyncCursorPage[LimitListResponse]]:
         """
         Get all Limits
 
@@ -490,27 +483,25 @@ class AsyncLimitsResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        return await self._get(
+        return self._get_api_list(
             "/api/v1/limits",
+            page=AsyncCursorPage[LimitListResponse],
             options=make_request_options(
                 extra_headers=extra_headers,
                 extra_query=extra_query,
                 extra_body=extra_body,
                 timeout=timeout,
-                query=await async_maybe_transform(
+                query=maybe_transform(
                     {
+                        "cursor": cursor,
+                        "limit": limit,
                         "limit_name": limit_name,
-                        "page_number": page_number,
-                        "page_size": page_size,
                         "sort_ascending": sort_ascending,
-                        "sort_by": sort_by,
-                        "tag_list": tag_list,
-                        "tags": tags,
                     },
                     limit_list_params.LimitListParams,
                 ),
             ),
-            cast_to=PagedLimitList,
+            model=LimitListResponse,
         )
 
     async def delete(

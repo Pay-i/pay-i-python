@@ -8,5 +8,10 @@ __all__ = ["TypeListParams"]
 
 
 class TypeListParams(TypedDict, total=False):
+    cursor: str
+
+    limit: int
+
     name: str
-    """Experience Type Name"""
+
+    sort_ascending: bool

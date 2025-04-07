@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-from typing_extensions import TypedDict
+from typing_extensions import Required, TypedDict
 
-__all__ = ["LimitListParams"]
+__all__ = ["ResourceListParams"]
 
 
-class LimitListParams(TypedDict, total=False):
+class ResourceListParams(TypedDict, total=False):
+    category: Required[str]
+
     cursor: str
 
     limit: int
-
-    limit_name: str
 
     sort_ascending: bool

@@ -9,9 +9,9 @@ import pytest
 
 from payi import Payi, AsyncPayi
 from tests.utils import assert_matches_type
+from payi.pagination import SyncCursorPage, AsyncCursorPage
 from payi.types.use_cases import (
     UseCaseDefinition,
-    DefinitionListResponse,
 )
 
 base_url = os.environ.get("TEST_API_BASE_URL", "http://127.0.0.1:4010")
@@ -157,14 +157,17 @@ class TestDefinitions:
     @parametrize
     def test_method_list(self, client: Payi) -> None:
         definition = client.use_cases.definitions.list()
-        assert_matches_type(DefinitionListResponse, definition, path=["response"])
+        assert_matches_type(SyncCursorPage[UseCaseDefinition], definition, path=["response"])
 
     @parametrize
     def test_method_list_with_all_params(self, client: Payi) -> None:
         definition = client.use_cases.definitions.list(
+            cursor="cursor",
+            limit=0,
+            sort_ascending=True,
             use_case_name="use_case_name",
         )
-        assert_matches_type(DefinitionListResponse, definition, path=["response"])
+        assert_matches_type(SyncCursorPage[UseCaseDefinition], definition, path=["response"])
 
     @parametrize
     def test_raw_response_list(self, client: Payi) -> None:
@@ -173,7 +176,7 @@ class TestDefinitions:
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
         definition = response.parse()
-        assert_matches_type(DefinitionListResponse, definition, path=["response"])
+        assert_matches_type(SyncCursorPage[UseCaseDefinition], definition, path=["response"])
 
     @parametrize
     def test_streaming_response_list(self, client: Payi) -> None:
@@ -182,7 +185,7 @@ class TestDefinitions:
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
             definition = response.parse()
-            assert_matches_type(DefinitionListResponse, definition, path=["response"])
+            assert_matches_type(SyncCursorPage[UseCaseDefinition], definition, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
@@ -365,14 +368,17 @@ class TestAsyncDefinitions:
     @parametrize
     async def test_method_list(self, async_client: AsyncPayi) -> None:
         definition = await async_client.use_cases.definitions.list()
-        assert_matches_type(DefinitionListResponse, definition, path=["response"])
+        assert_matches_type(AsyncCursorPage[UseCaseDefinition], definition, path=["response"])
 
     @parametrize
     async def test_method_list_with_all_params(self, async_client: AsyncPayi) -> None:
         definition = await async_client.use_cases.definitions.list(
+            cursor="cursor",
+            limit=0,
+            sort_ascending=True,
             use_case_name="use_case_name",
         )
-        assert_matches_type(DefinitionListResponse, definition, path=["response"])
+        assert_matches_type(AsyncCursorPage[UseCaseDefinition], definition, path=["response"])
 
     @parametrize
     async def test_raw_response_list(self, async_client: AsyncPayi) -> None:
@@ -381,7 +387,7 @@ class TestAsyncDefinitions:
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
         definition = await response.parse()
-        assert_matches_type(DefinitionListResponse, definition, path=["response"])
+        assert_matches_type(AsyncCursorPage[UseCaseDefinition], definition, path=["response"])
 
     @parametrize
     async def test_streaming_response_list(self, async_client: AsyncPayi) -> None:
@@ -390,7 +396,7 @@ class TestAsyncDefinitions:
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
             definition = await response.parse()
-            assert_matches_type(DefinitionListResponse, definition, path=["response"])
+            assert_matches_type(AsyncCursorPage[UseCaseDefinition], definition, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 

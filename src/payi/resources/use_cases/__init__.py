@@ -1,5 +1,13 @@
 # File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
+from .kpis import (
+    KpisResource,
+    AsyncKpisResource,
+    KpisResourceWithRawResponse,
+    AsyncKpisResourceWithRawResponse,
+    KpisResourceWithStreamingResponse,
+    AsyncKpisResourceWithStreamingResponse,
+)
 from .use_cases import (
     UseCasesResource,
     AsyncUseCasesResource,
@@ -26,6 +34,12 @@ from .definitions import (
 )
 
 __all__ = [
+    "KpisResource",
+    "AsyncKpisResource",
+    "KpisResourceWithRawResponse",
+    "AsyncKpisResourceWithRawResponse",
+    "KpisResourceWithStreamingResponse",
+    "AsyncKpisResourceWithStreamingResponse",
     "DefinitionsResource",
     "AsyncDefinitionsResource",
     "DefinitionsResourceWithRawResponse",
