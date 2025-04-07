@@ -1,3 +1,4 @@
+import os
 from typing import Dict, List, Union
 
 PAYI_BASE_URL = "https://api.pay-i.com"
@@ -69,22 +70,25 @@ def create_headers(
         headers.update({ PayiHeaderNames.use_case_version: str(use_case_version)})
     return headers
 
+def _resolve_payi_base_url(payi_base_url: Union[str, None]) -> str:
+    if payi_base_url:
+        return payi_base_url
+
+    payi_base_url = os.environ.get("PAYI_BASE_URL", None)
+
+    if payi_base_url:
+        return payi_base_url
+
+    return PAYI_BASE_URL
+
 def payi_anthropic_url(payi_base_url: Union[str, None] = None) -> str:
-    if payi_base_url is None:
-        payi_base_url = PAYI_BASE_URL
-    return payi_base_url + "/api/v1/proxy/anthropic"
+    return _resolve_payi_base_url(payi_base_url=payi_base_url) + "/api/v1/proxy/anthropic"
 
 def payi_openai_url(payi_base_url: Union[str, None] = None) -> str:
-    if payi_base_url is None:
-        payi_base_url = PAYI_BASE_URL
-    return payi_base_url +  "/api/v1/proxy/openai/v1"
+    return _resolve_payi_base_url(payi_base_url=payi_base_url) +  "/api/v1/proxy/openai/v1"
 
 def payi_azure_openai_url(payi_base_url: Union[str, None] = None) -> str:
-    if payi_base_url is None:
-        payi_base_url = PAYI_BASE_URL
-    return payi_base_url + "/api/v1/proxy/azure.openai"
+    return _resolve_payi_base_url(payi_base_url=payi_base_url) + "/api/v1/proxy/azure.openai"
 
 def payi_aws_bedrock_url(payi_base_url: Union[str, None] = None) -> str:
-    if payi_base_url is None:
-        payi_base_url = PAYI_BASE_URL
-    return payi_base_url + "/api/v1/proxy/aws.bedrock"
+    return _resolve_payi_base_url(payi_base_url=payi_base_url) + "/api/v1/proxy/aws.bedrock"

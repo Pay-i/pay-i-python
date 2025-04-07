@@ -9,7 +9,7 @@ from wrapt import wrap_function_wrapper  # type: ignore
 from payi.types import IngestUnitsParams
 from payi.types.ingest_units_params import Units
 
-from .instrument import IsStreaming, PayiInstrumentor
+from .instrument import _IsStreaming, _PayiInstrumentor
 
 
 class OpenAiInstrumentor:
@@ -20,7 +20,7 @@ class OpenAiInstrumentor:
         return isinstance(instance._client, (AsyncAzureOpenAI, AzureOpenAI))
 
     @staticmethod
-    def instrument(instrumentor: PayiInstrumentor) -> None:
+    def instrument(instrumentor: _PayiInstrumentor) -> None:
         try:
             from openai import OpenAI  # type: ignore #  noqa: F401  I001
             
@@ -53,9 +53,9 @@ class OpenAiInstrumentor:
             return
 
 
-@PayiInstrumentor.payi_wrapper
+@_PayiInstrumentor.payi_wrapper
 def embeddings_wrapper(
-    instrumentor: PayiInstrumentor,
+    instrumentor: _PayiInstrumentor,
     wrapped: Any,
     instance: Any,
     *args: Any,
@@ -66,16 +66,16 @@ def embeddings_wrapper(
         None, # process_chat_chunk,
         None, # process_chat_request,
         process_ebmeddings_synchronous_response,
-        IsStreaming.false,
+        _IsStreaming.false,
         wrapped,
         instance,
         args,
         kwargs,
     )
 
-@PayiInstrumentor.payi_wrapper
+@_PayiInstrumentor.payi_wrapper
 async def aembeddings_wrapper(
-    instrumentor: PayiInstrumentor,
+    instrumentor: _PayiInstrumentor,
     wrapped: Any,
     instance: Any,
     *args: Any,
@@ -86,16 +86,16 @@ async def aembeddings_wrapper(
         None, # process_chat_chunk,
         None, # process_chat_request,
         process_ebmeddings_synchronous_response,
-        IsStreaming.false,
+        _IsStreaming.false,
         wrapped,
         instance,
         args,
         kwargs,
     )
 
-@PayiInstrumentor.payi_wrapper
+@_PayiInstrumentor.payi_wrapper
 def chat_wrapper(
-    instrumentor: PayiInstrumentor,
+    instrumentor: _PayiInstrumentor,
     wrapped: Any,
     instance: Any,
     *args: Any,
@@ -106,16 +106,16 @@ def chat_wrapper(
         process_chat_chunk,
         process_chat_request,
         process_chat_synchronous_response,
-        IsStreaming.kwargs,
+        _IsStreaming.kwargs,
         wrapped,
         instance,
         args,
         kwargs,
     )
 
-@PayiInstrumentor.payi_awrapper
+@_PayiInstrumentor.payi_awrapper
 async def achat_wrapper(
-    instrumentor: PayiInstrumentor,
+    instrumentor: _PayiInstrumentor,
     wrapped: Any,
     instance: Any,
     *args: Any,
@@ -126,7 +126,7 @@ async def achat_wrapper(
         process_chat_chunk,
         process_chat_request,
         process_chat_synchronous_response,
-        IsStreaming.kwargs,
+        _IsStreaming.kwargs,
         wrapped,
         instance,
         args,
@@ -184,7 +184,7 @@ def add_usage_units(usage: "dict[str, Any]", units: "dict[str, Units]") -> None:
         if input_cache != 0:
             units["text_cache_read"] = Units(input=input_cache, output=0)
 
-    input = PayiInstrumentor.update_for_vision(input - input_cache, units)
+    input = _PayiInstrumentor.update_for_vision(input - input_cache, units)
 
     units["text"] = Units(input=input, output=output)
 
@@ -221,4 +221,4 @@ def process_chat_request(ingest: IngestUnitsParams, *args: Any, **kwargs: Any) -
     if not has_image or estimated_token_count == 0:
         return
 
-    ingest["units"][PayiInstrumentor.estimated_prompt_tokens] = Units(input=estimated_token_count, output=0)
+    ingest["units"][_PayiInstrumentor.estimated_prompt_tokens] = Units(input=estimated_token_count, output=0)
