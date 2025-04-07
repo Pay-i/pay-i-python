@@ -21,7 +21,18 @@ from .helpers import PayiCategories
 from .Stopwatch import Stopwatch
 
 
-class Context(TypedDict, total=False):
+class PayiInstrumentConfig(TypedDict, total=False):
+    proxy: bool
+    limit_ids: Optional["list[str]"]
+    request_tags: Optional["list[str]"]
+    experience_name: Optional[str]
+    experience_id: Optional[str]
+    use_case_name: Optional[str]
+    use_case_id: Optional[str]
+    use_case_version: Optional[int]
+    user_id: Optional[str]
+
+class _Context(TypedDict, total=False):
     proxy: bool
     experience_name: Optional[str]
     experience_id: Optional[str]
@@ -32,7 +43,7 @@ class Context(TypedDict, total=False):
     request_tags: Optional['list[str]']
     user_id: Optional[str]
 
-class ParentState(TypedDict, total=False):
+class _ParentState(TypedDict, total=False):
     experience_name: Optional[str]
     experience_id: Optional[str]
     use_case_name: Optional[str]
@@ -41,12 +52,12 @@ class ParentState(TypedDict, total=False):
     limit_ids: Optional['list[str]']
     request_tags: Optional['list[str]']
 
-class IsStreaming(Enum):
+class _IsStreaming(Enum):
     false = 0
     true = 1 
     kwargs = 2
 
-class PayiInstrumentor:
+class _PayiInstrumentor:
     estimated_prompt_tokens: str = "estimated_prompt_tokens"
 
     def __init__(
@@ -61,7 +72,12 @@ class PayiInstrumentor:
     ):
         self._payi: Optional[Payi] = payi
         self._apayi: Optional[AsyncPayi] = apayi
-        self._context_stack: list[Context] = []  # Stack of context dictionaries
+
+        if not self._payi and not self._apayi:
+            self._payi = Payi()
+            self._apayi = AsyncPayi()
+
+        self._context_stack: list[_Context] = []  # Stack of context dictionaries
         self._log_prompt_and_response: bool = log_prompt_and_response
         self._prompt_and_response_logger: Optional[Callable[[str, dict[str, str]], None]] = prompt_and_response_logger
 
@@ -233,9 +249,9 @@ class PayiInstrumentor:
 
     def _setup_call_func(
         self
-        ) -> 'tuple[Context, ParentState]':
-        context: Context = {}
-        parentState: ParentState = {}
+        ) -> 'tuple[_Context, _ParentState]':
+        context: _Context = {}
+        parentState: _ParentState = {}
 
         if len(self._context_stack) > 0:
             # copy current context into the upcoming context
@@ -253,8 +269,8 @@ class PayiInstrumentor:
 
     def _init_context(
         self,
-        context: Context,
-        parentState: ParentState,
+        context: _Context,
+        parentState: _ParentState,
         proxy: bool,
         limit_ids: Optional["list[str]"],
         request_tags: Optional["list[str]"],
@@ -395,12 +411,12 @@ class PayiInstrumentor:
         if self._context_stack:
             self._context_stack.pop()
 
-    def set_context(self, context: Context) -> None:
+    def set_context(self, context: _Context) -> None:
         # Update the current top of the stack with the provided context
         if self._context_stack:
             self._context_stack[-1].update(context)
 
-    def get_context(self) -> Optional[Context]:
+    def get_context(self) -> Optional[_Context]:
         # Return the current top of the stack
         return self._context_stack[-1] if self._context_stack else None
 
@@ -461,7 +477,7 @@ class PayiInstrumentor:
         process_chunk: Optional[Callable[[Any, IngestUnitsParams], None]],
         process_request: Optional[Callable[[IngestUnitsParams, Any, Any], None]],
         process_synchronous_response: Any,
-        is_streaming: IsStreaming,
+        is_streaming: _IsStreaming,
         wrapped: Any,
         instance: Any,
         args: Any,
@@ -523,9 +539,9 @@ class PayiInstrumentor:
         sw = Stopwatch()
         stream: bool = False
         
-        if is_streaming == IsStreaming.kwargs:
+        if is_streaming == _IsStreaming.kwargs:
             stream = kwargs.get("stream", False)
-        elif is_streaming == IsStreaming.true:
+        elif is_streaming == _IsStreaming.true:
             stream = True
         else:
             stream = False
@@ -581,7 +597,7 @@ class PayiInstrumentor:
         process_chunk: Optional[Callable[[Any, IngestUnitsParams], None]],
         process_request: Optional[Callable[[IngestUnitsParams, Any, Any], None]],
         process_synchronous_response: Any,
-        is_streaming: IsStreaming,
+        is_streaming: _IsStreaming,
         wrapped: Any,
         instance: Any,
         args: Any,
@@ -652,9 +668,9 @@ class PayiInstrumentor:
         sw = Stopwatch()
         stream: bool = False
         
-        if is_streaming == IsStreaming.kwargs:
+        if is_streaming == _IsStreaming.kwargs:
             stream = kwargs.get("stream", False)
-        elif is_streaming == IsStreaming.true:
+        elif is_streaming == _IsStreaming.true:
             stream = True
         else:
             stream = False
@@ -713,7 +729,7 @@ class PayiInstrumentor:
 
     @staticmethod
     def _update_headers(
-        context: Context,
+        context: _Context,
         extra_headers: "dict[str, str]",
     ) -> None:
         limit_ids: Optional[list[str]] = context.get("limit_ids")
@@ -797,8 +813,8 @@ class PayiInstrumentor:
 
     @staticmethod
     def update_for_vision(input: int, units: 'dict[str, Units]') -> int:
-        if PayiInstrumentor.estimated_prompt_tokens in units:
-            prompt_token_estimate: int = units.pop(PayiInstrumentor.estimated_prompt_tokens)["input"] # type: ignore
+        if _PayiInstrumentor.estimated_prompt_tokens in units:
+            prompt_token_estimate: int = units.pop(_PayiInstrumentor.estimated_prompt_tokens)["input"] # type: ignore
             vision = input - prompt_token_estimate
             if (vision > 0):
                 units["vision"] = Units(input=vision, output=0)
@@ -843,7 +859,7 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
         self,
         response: Any,
         instance: Any,
-        instrumentor: PayiInstrumentor,
+        instrumentor: _PayiInstrumentor,
         ingest: IngestUnitsParams,
         stopwatch: Stopwatch,
         process_chunk: Optional[Callable[[Any, IngestUnitsParams], None]] = None,
@@ -977,13 +993,14 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
             return json.dumps(chunk)
 
 global _instrumentor
-_instrumentor: Optional[PayiInstrumentor] = None
+_instrumentor: Optional[_PayiInstrumentor] = None
 
 def payi_instrument(
     payi: Optional[Union[Payi, AsyncPayi, 'list[Union[Payi, AsyncPayi]]']] = None,
     instruments: Optional[Set[str]] = None,
     log_prompt_and_response: bool = True,
     prompt_and_response_logger: Optional[Callable[[str, "dict[str, str]"], None]] = None,
+    config: Optional[PayiInstrumentConfig] = None,
 ) -> None:
     global _instrumentor
     if _instrumentor:
@@ -1002,16 +1019,30 @@ def payi_instrument(
                 payi_param = p
             elif isinstance(p, AsyncPayi): # type: ignore
                 apayi_param = p
-
-    # allow for both payi and apayi to be None for the @proxy case
     
-    _instrumentor = PayiInstrumentor(
+    global_context: _Context = {}
+
+    if config and len(config) > 0:
+        if "proxy" not in config:
+            config["proxy"] = False
+        global_context = {**config}
+
+    # create the clients on their behalf if not provided for global ingest instrumentation
+    if not payi_param and not apayi_param and len(global_context) > 0 and global_context.get("proxy", False):
+        payi_param = Payi()
+        apayi_param = AsyncPayi()
+    
+    # allow for both payi and apayi to be None for the @proxy case
+    _instrumentor = _PayiInstrumentor(
         payi=payi_param,
         apayi=apayi_param,
         instruments=instruments,
         log_prompt_and_response=log_prompt_and_response,
         prompt_and_response_logger=prompt_and_response_logger,
     )
+
+    if len(global_context) > 0:
+        _instrumentor._context_stack.append(global_context)
 
 def ingest(
     limit_ids: Optional["list[str]"] = None,

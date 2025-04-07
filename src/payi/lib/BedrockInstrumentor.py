@@ -8,12 +8,12 @@ from wrapt import ObjectProxy, wrap_function_wrapper  # type: ignore
 from payi.types.ingest_units_params import Units, IngestUnitsParams
 from payi.types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
-from .instrument import IsStreaming, PayiInstrumentor
+from .instrument import _IsStreaming, _PayiInstrumentor
 
 
 class BedrockInstrumentor:
     @staticmethod
-    def instrument(instrumentor: PayiInstrumentor) -> None:
+    def instrument(instrumentor: _PayiInstrumentor) -> None:
         try:
             import boto3  # type: ignore #  noqa: F401  I001
 
@@ -33,8 +33,8 @@ class BedrockInstrumentor:
             logging.debug(f"Error instrumenting bedrock: {e}")
             return
 
-@PayiInstrumentor.payi_wrapper
-def create_client_wrapper(instrumentor: PayiInstrumentor, wrapped: Any, instance: Any, *args: Any, **kwargs: Any) -> Any: #  noqa: ARG001
+@_PayiInstrumentor.payi_wrapper
+def create_client_wrapper(instrumentor: _PayiInstrumentor, wrapped: Any, instance: Any, *args: Any, **kwargs: Any) -> Any: #  noqa: ARG001
     if kwargs.get("service_name") != "bedrock-runtime":
         return wrapped(*args, **kwargs)
 
@@ -55,7 +55,7 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
     def __init__(
         self,
         response: Any,
-        instrumentor: PayiInstrumentor,
+        instrumentor: _PayiInstrumentor,
         ingest: IngestUnitsParams,
         log_prompt_and_response: bool
         ) -> None:
@@ -95,7 +95,7 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
 
         return data
 
-def wrap_invoke(instrumentor: PayiInstrumentor, wrapped: Any) -> Any:
+def wrap_invoke(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
     @wraps(wrapped)
     def invoke_wrapper(*args: Any, **kwargs: 'dict[str, Any]') -> Any:
         modelId:str = kwargs.get("modelId", "") # type: ignore
@@ -106,7 +106,7 @@ def wrap_invoke(instrumentor: PayiInstrumentor, wrapped: Any) -> Any:
                 None,
                 process_invoke_request,  
                 process_synchronous_invoke_response,  
-                IsStreaming.false,
+                _IsStreaming.false,
                 wrapped,
                 None,
                 args,
@@ -116,7 +116,7 @@ def wrap_invoke(instrumentor: PayiInstrumentor, wrapped: Any) -> Any:
     
     return invoke_wrapper
 
-def wrap_invoke_stream(instrumentor: PayiInstrumentor, wrapped: Any) -> Any:
+def wrap_invoke_stream(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
     @wraps(wrapped)
     def invoke_wrapper(*args: Any, **kwargs: Any) -> Any:
         modelId:str = kwargs.get("modelId", "") # type: ignore
@@ -127,7 +127,7 @@ def wrap_invoke_stream(instrumentor: PayiInstrumentor, wrapped: Any) -> Any:
                 process_invoke_streaming_anthropic_chunk if modelId.startswith("anthropic.") else process_invoke_streaming_llama_chunk,
                 process_invoke_request, 
                 None,  
-                IsStreaming.true,
+                _IsStreaming.true,
                 wrapped,
                 None,
                 args,
@@ -137,7 +137,7 @@ def wrap_invoke_stream(instrumentor: PayiInstrumentor, wrapped: Any) -> Any:
 
     return invoke_wrapper
 
-def wrap_converse(instrumentor: PayiInstrumentor, wrapped: Any) -> Any:
+def wrap_converse(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
     @wraps(wrapped)
     def invoke_wrapper(*args: Any, **kwargs: 'dict[str, Any]') -> Any:
         modelId:str = kwargs.get("modelId", "") # type: ignore
@@ -148,7 +148,7 @@ def wrap_converse(instrumentor: PayiInstrumentor, wrapped: Any) -> Any:
                 None,
                 process_converse_request,  
                 process_synchronous_converse_response,  
-                IsStreaming.false,
+                _IsStreaming.false,
                 wrapped,
                 None,
                 args,
@@ -158,7 +158,7 @@ def wrap_converse(instrumentor: PayiInstrumentor, wrapped: Any) -> Any:
     
     return invoke_wrapper
 
-def wrap_converse_stream(instrumentor: PayiInstrumentor, wrapped: Any) -> Any:
+def wrap_converse_stream(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
     @wraps(wrapped)
     def invoke_wrapper(*args: Any, **kwargs: Any) -> Any:
         modelId:str = kwargs.get("modelId", "") # type: ignore
@@ -169,7 +169,7 @@ def wrap_converse_stream(instrumentor: PayiInstrumentor, wrapped: Any) -> Any:
                 process_converse_streaming_chunk,
                 process_converse_request, 
                 None,  
-                IsStreaming.true,
+                _IsStreaming.true,
                 wrapped,
                 None,
                 args,
@@ -187,7 +187,7 @@ def process_invoke_streaming_anthropic_chunk(chunk: str, ingest: IngestUnitsPara
         usage = chunk_dict['message']['usage']
         units = ingest["units"]
 
-        input = PayiInstrumentor.update_for_vision(usage['input_tokens'], units)
+        input = _PayiInstrumentor.update_for_vision(usage['input_tokens'], units)
 
         units["text"] = Units(input=input, output=0)
 
@@ -215,7 +215,7 @@ def process_synchronous_invoke_response(
         response: Any,
         ingest: IngestUnitsParams,
         log_prompt_and_response: bool,
-        instrumentor: PayiInstrumentor,
+        instrumentor: _PayiInstrumentor,
         **kargs: Any) -> Any: #  noqa: ARG001
 
     metadata = response.get("ResponseMetadata", {})

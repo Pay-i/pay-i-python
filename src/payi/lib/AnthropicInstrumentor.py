@@ -7,12 +7,12 @@ from wrapt import wrap_function_wrapper  # type: ignore
 from payi.types import IngestUnitsParams
 from payi.types.ingest_units_params import Units
 
-from .instrument import IsStreaming, PayiInstrumentor
+from .instrument import _IsStreaming, _PayiInstrumentor
 
 
 class AnthropicIntrumentor:
     @staticmethod
-    def instrument(instrumentor: PayiInstrumentor) -> None:
+    def instrument(instrumentor: _PayiInstrumentor) -> None:
         try:
             import anthropic  # type: ignore #  noqa: F401  I001
 
@@ -45,9 +45,9 @@ class AnthropicIntrumentor:
             return
 
 
-@PayiInstrumentor.payi_wrapper
+@_PayiInstrumentor.payi_wrapper
 def chat_wrapper(
-    instrumentor: PayiInstrumentor,
+    instrumentor: _PayiInstrumentor,
     wrapped: Any,
     instance: Any,
     *args: Any,
@@ -58,16 +58,16 @@ def chat_wrapper(
         process_chunk,
         process_request,
         process_synchronous_response,
-        IsStreaming.kwargs,
+        _IsStreaming.kwargs,
         wrapped,
         instance,
         args,
         kwargs,
     )
 
-@PayiInstrumentor.payi_awrapper
+@_PayiInstrumentor.payi_awrapper
 async def achat_wrapper(
-    instrumentor: PayiInstrumentor,
+    instrumentor: _PayiInstrumentor,
     wrapped: Any,
     instance: Any,
     *args: Any,
@@ -78,7 +78,7 @@ async def achat_wrapper(
         process_chunk,
         process_request,
         process_synchronous_response,
-        IsStreaming.kwargs,
+        _IsStreaming.kwargs,
         wrapped,
         instance,
         args,
@@ -93,7 +93,7 @@ def process_chunk(chunk: Any, ingest: IngestUnitsParams) -> None:
         usage = chunk.message.usage
         units = ingest["units"]
 
-        input = PayiInstrumentor.update_for_vision(usage.input_tokens, units)
+        input = _PayiInstrumentor.update_for_vision(usage.input_tokens, units)
 
         units["text"] = Units(input=input, output=0)
 
@@ -124,7 +124,7 @@ def process_synchronous_response(response: Any, ingest: IngestUnitsParams, log_p
         text_cache_read = usage.cache_read_input_tokens
         units["text_cache_read"] = Units(input=text_cache_read, output=0)
 
-    input = PayiInstrumentor.update_for_vision(input, units)
+    input = _PayiInstrumentor.update_for_vision(input, units)
 
     units["text"] = Units(input=input, output=output)
 
@@ -165,4 +165,4 @@ def process_request(ingest: IngestUnitsParams, *args: Any, **kwargs: Any) -> Non
     if not has_image or estimated_token_count == 0:
         return
 
-    ingest["units"][PayiInstrumentor.estimated_prompt_tokens] = Units(input=estimated_token_count, output=0)
+    ingest["units"][_PayiInstrumentor.estimated_prompt_tokens] = Units(input=estimated_token_count, output=0)
