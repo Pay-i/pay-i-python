@@ -2,5 +2,5 @@
 
 from __future__ import annotations
 
+from .resource_list_params import ResourceListParams as ResourceListParams
 from .resource_create_params import ResourceCreateParams as ResourceCreateParams
-from .resource_list_response import ResourceListResponse as ResourceListResponse

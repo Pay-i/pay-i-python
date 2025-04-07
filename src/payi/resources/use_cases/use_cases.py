@@ -4,6 +4,14 @@ from __future__ import annotations
 
 import httpx
 
+from .kpis import (
+    KpisResource,
+    AsyncKpisResource,
+    KpisResourceWithRawResponse,
+    AsyncKpisResourceWithRawResponse,
+    KpisResourceWithStreamingResponse,
+    AsyncKpisResourceWithStreamingResponse,
+)
 from ..._types import NOT_GIVEN, Body, Query, Headers, NotGiven
 from ..._compat import cached_property
 from .properties import (
@@ -36,6 +44,10 @@ __all__ = ["UseCasesResource", "AsyncUseCasesResource"]
 
 
 class UseCasesResource(SyncAPIResource):
+    @cached_property
+    def kpis(self) -> KpisResource:
+        return KpisResource(self._client)
+
     @cached_property
     def definitions(self) -> DefinitionsResource:
         return DefinitionsResource(self._client)
@@ -164,6 +176,10 @@ class UseCasesResource(SyncAPIResource):
 
 
 class AsyncUseCasesResource(AsyncAPIResource):
+    @cached_property
+    def kpis(self) -> AsyncKpisResource:
+        return AsyncKpisResource(self._client)
+
     @cached_property
     def definitions(self) -> AsyncDefinitionsResource:
         return AsyncDefinitionsResource(self._client)
@@ -306,6 +322,10 @@ class UseCasesResourceWithRawResponse:
         )
 
     @cached_property
+    def kpis(self) -> KpisResourceWithRawResponse:
+        return KpisResourceWithRawResponse(self._use_cases.kpis)
+
+    @cached_property
     def definitions(self) -> DefinitionsResourceWithRawResponse:
         return DefinitionsResourceWithRawResponse(self._use_cases.definitions)
 
@@ -327,6 +347,10 @@ class AsyncUseCasesResourceWithRawResponse:
         self.delete = async_to_raw_response_wrapper(
             use_cases.delete,
         )
+
+    @cached_property
+    def kpis(self) -> AsyncKpisResourceWithRawResponse:
+        return AsyncKpisResourceWithRawResponse(self._use_cases.kpis)
 
     @cached_property
     def definitions(self) -> AsyncDefinitionsResourceWithRawResponse:
@@ -352,6 +376,10 @@ class UseCasesResourceWithStreamingResponse:
         )
 
     @cached_property
+    def kpis(self) -> KpisResourceWithStreamingResponse:
+        return KpisResourceWithStreamingResponse(self._use_cases.kpis)
+
+    @cached_property
     def definitions(self) -> DefinitionsResourceWithStreamingResponse:
         return DefinitionsResourceWithStreamingResponse(self._use_cases.definitions)
 
@@ -373,6 +401,10 @@ class AsyncUseCasesResourceWithStreamingResponse:
         self.delete = async_to_streamed_response_wrapper(
             use_cases.delete,
         )
+
+    @cached_property
+    def kpis(self) -> AsyncKpisResourceWithStreamingResponse:
+        return AsyncKpisResourceWithStreamingResponse(self._use_cases.kpis)
 
     @cached_property
     def definitions(self) -> AsyncDefinitionsResourceWithStreamingResponse:

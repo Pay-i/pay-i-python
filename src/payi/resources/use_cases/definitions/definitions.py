@@ -6,6 +6,14 @@ from typing import Optional
 
 import httpx
 
+from .kpis import (
+    KpisResource,
+    AsyncKpisResource,
+    KpisResourceWithRawResponse,
+    AsyncKpisResourceWithRawResponse,
+    KpisResourceWithStreamingResponse,
+    AsyncKpisResourceWithStreamingResponse,
+)
 from .version import (
     VersionResource,
     AsyncVersionResource,
@@ -35,10 +43,10 @@ from .limit_config import (
     LimitConfigResourceWithStreamingResponse,
     AsyncLimitConfigResourceWithStreamingResponse,
 )
-from ...._base_client import make_request_options
+from ....pagination import SyncCursorPage, AsyncCursorPage
+from ...._base_client import AsyncPaginator, make_request_options
 from ....types.use_cases import definition_list_params, definition_create_params, definition_update_params
 from ....types.use_cases.use_case_definition import UseCaseDefinition
-from ....types.use_cases.definition_list_response import DefinitionListResponse
 from ....types.shared_params.pay_i_common_models_budget_management_create_limit_base import (
     PayICommonModelsBudgetManagementCreateLimitBase,
 )
@@ -47,6 +55,10 @@ __all__ = ["DefinitionsResource", "AsyncDefinitionsResource"]
 
 
 class DefinitionsResource(SyncAPIResource):
+    @cached_property
+    def kpis(self) -> KpisResource:
+        return KpisResource(self._client)
+
     @cached_property
     def limit_config(self) -> LimitConfigResource:
         return LimitConfigResource(self._client)
@@ -177,7 +189,7 @@ class DefinitionsResource(SyncAPIResource):
         """
         if not use_case_name:
             raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
-        return self._patch(
+        return self._put(
             f"/api/v1/use_cases/definitions/{use_case_name}",
             body=maybe_transform(
                 {
@@ -195,6 +207,9 @@ class DefinitionsResource(SyncAPIResource):
     def list(
         self,
         *,
+        cursor: str | NotGiven = NOT_GIVEN,
+        limit: int | NotGiven = NOT_GIVEN,
+        sort_ascending: bool | NotGiven = NOT_GIVEN,
         use_case_name: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -202,13 +217,11 @@ class DefinitionsResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> DefinitionListResponse:
+    ) -> SyncCursorPage[UseCaseDefinition]:
         """
         Get all Use Cases
 
         Args:
-          use_case_name: Use Case name
-
           extra_headers: Send extra headers
 
           extra_query: Add additional query parameters to the request
@@ -217,16 +230,25 @@ class DefinitionsResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        return self._get(
+        return self._get_api_list(
             "/api/v1/use_cases/definitions",
+            page=SyncCursorPage[UseCaseDefinition],
             options=make_request_options(
                 extra_headers=extra_headers,
                 extra_query=extra_query,
                 extra_body=extra_body,
                 timeout=timeout,
-                query=maybe_transform({"use_case_name": use_case_name}, definition_list_params.DefinitionListParams),
+                query=maybe_transform(
+                    {
+                        "cursor": cursor,
+                        "limit": limit,
+                        "sort_ascending": sort_ascending,
+                        "use_case_name": use_case_name,
+                    },
+                    definition_list_params.DefinitionListParams,
+                ),
             ),
-            cast_to=DefinitionListResponse,
+            model=UseCaseDefinition,
         )
 
     def delete(
@@ -264,6 +286,10 @@ class DefinitionsResource(SyncAPIResource):
 
 
 class AsyncDefinitionsResource(AsyncAPIResource):
+    @cached_property
+    def kpis(self) -> AsyncKpisResource:
+        return AsyncKpisResource(self._client)
+
     @cached_property
     def limit_config(self) -> AsyncLimitConfigResource:
         return AsyncLimitConfigResource(self._client)
@@ -394,7 +420,7 @@ class AsyncDefinitionsResource(AsyncAPIResource):
         """
         if not use_case_name:
             raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
-        return await self._patch(
+        return await self._put(
             f"/api/v1/use_cases/definitions/{use_case_name}",
             body=await async_maybe_transform(
                 {
@@ -409,9 +435,12 @@ class AsyncDefinitionsResource(AsyncAPIResource):
             cast_to=UseCaseDefinition,
         )
 
-    async def list(
+    def list(
         self,
         *,
+        cursor: str | NotGiven = NOT_GIVEN,
+        limit: int | NotGiven = NOT_GIVEN,
+        sort_ascending: bool | NotGiven = NOT_GIVEN,
         use_case_name: str | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -419,13 +448,11 @@ class AsyncDefinitionsResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> DefinitionListResponse:
+    ) -> AsyncPaginator[UseCaseDefinition, AsyncCursorPage[UseCaseDefinition]]:
         """
         Get all Use Cases
 
         Args:
-          use_case_name: Use Case name
-
           extra_headers: Send extra headers
 
           extra_query: Add additional query parameters to the request
@@ -434,18 +461,25 @@ class AsyncDefinitionsResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        return await self._get(
+        return self._get_api_list(
             "/api/v1/use_cases/definitions",
+            page=AsyncCursorPage[UseCaseDefinition],
             options=make_request_options(
                 extra_headers=extra_headers,
                 extra_query=extra_query,
                 extra_body=extra_body,
                 timeout=timeout,
-                query=await async_maybe_transform(
-                    {"use_case_name": use_case_name}, definition_list_params.DefinitionListParams
+                query=maybe_transform(
+                    {
+                        "cursor": cursor,
+                        "limit": limit,
+                        "sort_ascending": sort_ascending,
+                        "use_case_name": use_case_name,
+                    },
+                    definition_list_params.DefinitionListParams,
                 ),
             ),
-            cast_to=DefinitionListResponse,
+            model=UseCaseDefinition,
         )
 
     async def delete(
@@ -503,6 +537,10 @@ class DefinitionsResourceWithRawResponse:
         )
 
     @cached_property
+    def kpis(self) -> KpisResourceWithRawResponse:
+        return KpisResourceWithRawResponse(self._definitions.kpis)
+
+    @cached_property
     def limit_config(self) -> LimitConfigResourceWithRawResponse:
         return LimitConfigResourceWithRawResponse(self._definitions.limit_config)
 
@@ -530,6 +568,10 @@ class AsyncDefinitionsResourceWithRawResponse:
         self.delete = async_to_raw_response_wrapper(
             definitions.delete,
         )
+
+    @cached_property
+    def kpis(self) -> AsyncKpisResourceWithRawResponse:
+        return AsyncKpisResourceWithRawResponse(self._definitions.kpis)
 
     @cached_property
     def limit_config(self) -> AsyncLimitConfigResourceWithRawResponse:
@@ -561,6 +603,10 @@ class DefinitionsResourceWithStreamingResponse:
         )
 
     @cached_property
+    def kpis(self) -> KpisResourceWithStreamingResponse:
+        return KpisResourceWithStreamingResponse(self._definitions.kpis)
+
+    @cached_property
     def limit_config(self) -> LimitConfigResourceWithStreamingResponse:
         return LimitConfigResourceWithStreamingResponse(self._definitions.limit_config)
 
@@ -588,6 +634,10 @@ class AsyncDefinitionsResourceWithStreamingResponse:
         self.delete = async_to_streamed_response_wrapper(
             definitions.delete,
         )
+
+    @cached_property
+    def kpis(self) -> AsyncKpisResourceWithStreamingResponse:
+        return AsyncKpisResourceWithStreamingResponse(self._definitions.kpis)
 
     @cached_property
     def limit_config(self) -> AsyncLimitConfigResourceWithStreamingResponse:
