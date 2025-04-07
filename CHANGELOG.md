@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.62 (2025-04-07)
+
+Full Changelog: [v0.1.0-alpha.61...v0.1.0-alpha.62](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.61...v0.1.0-alpha.62)
+
+### Features
+
+* feat: auto generate use case id ([b50f807](https://github.com/Pay-i/pay-i-python/commit/b50f807b571c917d39f37a1879bf2ea7e7f5d29d))
+
 ## 0.1.0-alpha.61 (2025-04-07)
 
 Full Changelog: [v0.1.0-alpha.60...v0.1.0-alpha.61](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.60...v0.1.0-alpha.61)
