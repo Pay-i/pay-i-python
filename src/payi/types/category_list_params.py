@@ -4,14 +4,12 @@ from __future__ import annotations
 
 from typing_extensions import TypedDict
 
-__all__ = ["LimitListParams"]
+__all__ = ["CategoryListParams"]
 
 
-class LimitListParams(TypedDict, total=False):
+class CategoryListParams(TypedDict, total=False):
     cursor: str
 
     limit: int
-
-    limit_name: str
 
     sort_ascending: bool

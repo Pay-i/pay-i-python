@@ -2,71 +2,73 @@
 
 from __future__ import annotations
 
-from typing import Dict, Union, Optional
-from datetime import datetime
+from typing import Optional
+from typing_extensions import Literal
 
 import httpx
 
-from ..._types import NOT_GIVEN, Body, Query, Headers, NotGiven
-from ..._utils import (
+from ...._types import NOT_GIVEN, Body, Query, Headers, NotGiven
+from ...._utils import (
     maybe_transform,
     async_maybe_transform,
 )
-from ..._compat import cached_property
-from ..._resource import SyncAPIResource, AsyncAPIResource
-from ..._response import (
+from ...._compat import cached_property
+from ...._resource import SyncAPIResource, AsyncAPIResource
+from ...._response import (
     to_raw_response_wrapper,
     to_streamed_response_wrapper,
     async_to_raw_response_wrapper,
     async_to_streamed_response_wrapper,
 )
-from ...pagination import SyncCursorPage, AsyncCursorPage
-from ..._base_client import AsyncPaginator, make_request_options
-from ...types.categories import resource_list_params, resource_create_params
-from ...types.category_resource_response import CategoryResourceResponse
+from ....pagination import SyncCursorPage, AsyncCursorPage
+from ...._base_client import AsyncPaginator, make_request_options
+from ....types.use_cases.definitions import kpi_list_params, kpi_create_params, kpi_update_params
+from ....types.use_cases.definitions.kpi_list_response import KpiListResponse
+from ....types.use_cases.definitions.kpi_create_response import KpiCreateResponse
+from ....types.use_cases.definitions.kpi_delete_response import KpiDeleteResponse
+from ....types.use_cases.definitions.kpi_update_response import KpiUpdateResponse
+from ....types.use_cases.definitions.kpi_retrieve_response import KpiRetrieveResponse
 
-__all__ = ["ResourcesResource", "AsyncResourcesResource"]
+__all__ = ["KpisResource", "AsyncKpisResource"]
 
 
-class ResourcesResource(SyncAPIResource):
+class KpisResource(SyncAPIResource):
     @cached_property
-    def with_raw_response(self) -> ResourcesResourceWithRawResponse:
+    def with_raw_response(self) -> KpisResourceWithRawResponse:
         """
         This property can be used as a prefix for any HTTP method call to return
         the raw response object instead of the parsed content.
 
         For more information, see https://www.github.com/Pay-i/pay-i-python#accessing-raw-response-data-eg-headers
         """
-        return ResourcesResourceWithRawResponse(self)
+        return KpisResourceWithRawResponse(self)
 
     @cached_property
-    def with_streaming_response(self) -> ResourcesResourceWithStreamingResponse:
+    def with_streaming_response(self) -> KpisResourceWithStreamingResponse:
         """
         An alternative to `.with_raw_response` that doesn't eagerly read the response body.
 
         For more information, see https://www.github.com/Pay-i/pay-i-python#with_streaming_response
         """
-        return ResourcesResourceWithStreamingResponse(self)
+        return KpisResourceWithStreamingResponse(self)
 
     def create(
         self,
-        resource: str,
+        use_case_name: str,
         *,
-        category: str,
-        units: Dict[str, resource_create_params.Units],
-        max_input_units: Optional[int] | NotGiven = NOT_GIVEN,
-        max_output_units: Optional[int] | NotGiven = NOT_GIVEN,
-        max_total_units: Optional[int] | NotGiven = NOT_GIVEN,
-        start_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
+        description: str,
+        name: str,
+        goal: float | NotGiven = NOT_GIVEN,
+        kpi_type: Literal["boolean", "number", "percentage", "likert5", "likert7", "likert10"] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> CategoryResourceResponse:
+    ) -> KpiCreateResponse:
         """
-        Create a Resource
+        Create a new Use Case KPI definition
 
         Args:
           extra_headers: Send extra headers
@@ -77,43 +79,39 @@ class ResourcesResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not category:
-            raise ValueError(f"Expected a non-empty value for `category` but received {category!r}")
-        if not resource:
-            raise ValueError(f"Expected a non-empty value for `resource` but received {resource!r}")
+        if not use_case_name:
+            raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return self._post(
-            f"/api/v1/categories/{category}/resources/{resource}",
+            f"/api/v1/use_cases/definitions/{use_case_name}/kpis",
             body=maybe_transform(
                 {
-                    "units": units,
-                    "max_input_units": max_input_units,
-                    "max_output_units": max_output_units,
-                    "max_total_units": max_total_units,
-                    "start_timestamp": start_timestamp,
+                    "description": description,
+                    "name": name,
+                    "goal": goal,
+                    "kpi_type": kpi_type,
                 },
-                resource_create_params.ResourceCreateParams,
+                kpi_create_params.KpiCreateParams,
             ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=CategoryResourceResponse,
+            cast_to=KpiCreateResponse,
         )
 
     def retrieve(
         self,
-        resource_id: str,
+        kpi_name: str,
         *,
-        category: str,
-        resource: str,
+        use_case_name: str,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> CategoryResourceResponse:
+    ) -> KpiRetrieveResponse:
         """
-        Get a Resource version details
+        Get a KPI definition for a Use Case
 
         Args:
           extra_headers: Send extra headers
@@ -124,26 +122,69 @@ class ResourcesResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not category:
-            raise ValueError(f"Expected a non-empty value for `category` but received {category!r}")
-        if not resource:
-            raise ValueError(f"Expected a non-empty value for `resource` but received {resource!r}")
-        if not resource_id:
-            raise ValueError(f"Expected a non-empty value for `resource_id` but received {resource_id!r}")
+        if not use_case_name:
+            raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
+        if not kpi_name:
+            raise ValueError(f"Expected a non-empty value for `kpi_name` but received {kpi_name!r}")
         return self._get(
-            f"/api/v1/categories/{category}/resources/{resource}/{resource_id}",
+            f"/api/v1/use_cases/definitions/{use_case_name}/kpis/{kpi_name}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=CategoryResourceResponse,
+            cast_to=KpiRetrieveResponse,
+        )
+
+    def update(
+        self,
+        kpi_name: str,
+        *,
+        use_case_name: str,
+        description: Optional[str] | NotGiven = NOT_GIVEN,
+        goal: Optional[float] | NotGiven = NOT_GIVEN,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+    ) -> KpiUpdateResponse:
+        """
+        Update a Use Case KPI definition
+
+        Args:
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        if not use_case_name:
+            raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
+        if not kpi_name:
+            raise ValueError(f"Expected a non-empty value for `kpi_name` but received {kpi_name!r}")
+        return self._put(
+            f"/api/v1/use_cases/definitions/{use_case_name}/kpis/{kpi_name}",
+            body=maybe_transform(
+                {
+                    "description": description,
+                    "goal": goal,
+                },
+                kpi_update_params.KpiUpdateParams,
+            ),
+            options=make_request_options(
+                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+            ),
+            cast_to=KpiUpdateResponse,
         )
 
     def list(
         self,
-        resource: str,
+        use_case_name: str,
         *,
-        category: str,
         cursor: str | NotGiven = NOT_GIVEN,
+        kpi_name: str | NotGiven = NOT_GIVEN,
         limit: int | NotGiven = NOT_GIVEN,
         sort_ascending: bool | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
@@ -152,9 +193,9 @@ class ResourcesResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> SyncCursorPage[CategoryResourceResponse]:
+    ) -> SyncCursorPage[KpiListResponse]:
         """
-        Get a list of versions of a Resource
+        Get all KPIs for a Use Case
 
         Args:
           extra_headers: Send extra headers
@@ -165,13 +206,11 @@ class ResourcesResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not category:
-            raise ValueError(f"Expected a non-empty value for `category` but received {category!r}")
-        if not resource:
-            raise ValueError(f"Expected a non-empty value for `resource` but received {resource!r}")
+        if not use_case_name:
+            raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return self._get_api_list(
-            f"/api/v1/categories/{category}/resources/{resource}",
-            page=SyncCursorPage[CategoryResourceResponse],
+            f"/api/v1/use_cases/definitions/{use_case_name}/kpis",
+            page=SyncCursorPage[KpiListResponse],
             options=make_request_options(
                 extra_headers=extra_headers,
                 extra_query=extra_query,
@@ -180,30 +219,30 @@ class ResourcesResource(SyncAPIResource):
                 query=maybe_transform(
                     {
                         "cursor": cursor,
+                        "kpi_name": kpi_name,
                         "limit": limit,
                         "sort_ascending": sort_ascending,
                     },
-                    resource_list_params.ResourceListParams,
+                    kpi_list_params.KpiListParams,
                 ),
             ),
-            model=CategoryResourceResponse,
+            model=KpiListResponse,
         )
 
     def delete(
         self,
-        resource_id: str,
+        kpi_name: str,
         *,
-        category: str,
-        resource: str,
+        use_case_name: str,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> CategoryResourceResponse:
+    ) -> KpiDeleteResponse:
         """
-        Delete a version of the Resource
+        Delete a Use Case KPI definition
 
         Args:
           extra_headers: Send extra headers
@@ -214,60 +253,56 @@ class ResourcesResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not category:
-            raise ValueError(f"Expected a non-empty value for `category` but received {category!r}")
-        if not resource:
-            raise ValueError(f"Expected a non-empty value for `resource` but received {resource!r}")
-        if not resource_id:
-            raise ValueError(f"Expected a non-empty value for `resource_id` but received {resource_id!r}")
+        if not use_case_name:
+            raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
+        if not kpi_name:
+            raise ValueError(f"Expected a non-empty value for `kpi_name` but received {kpi_name!r}")
         return self._delete(
-            f"/api/v1/categories/{category}/resources/{resource}/{resource_id}",
+            f"/api/v1/use_cases/definitions/{use_case_name}/kpis/{kpi_name}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=CategoryResourceResponse,
+            cast_to=KpiDeleteResponse,
         )
 
 
-class AsyncResourcesResource(AsyncAPIResource):
+class AsyncKpisResource(AsyncAPIResource):
     @cached_property
-    def with_raw_response(self) -> AsyncResourcesResourceWithRawResponse:
+    def with_raw_response(self) -> AsyncKpisResourceWithRawResponse:
         """
         This property can be used as a prefix for any HTTP method call to return
         the raw response object instead of the parsed content.
 
         For more information, see https://www.github.com/Pay-i/pay-i-python#accessing-raw-response-data-eg-headers
         """
-        return AsyncResourcesResourceWithRawResponse(self)
+        return AsyncKpisResourceWithRawResponse(self)
 
     @cached_property
-    def with_streaming_response(self) -> AsyncResourcesResourceWithStreamingResponse:
+    def with_streaming_response(self) -> AsyncKpisResourceWithStreamingResponse:
         """
         An alternative to `.with_raw_response` that doesn't eagerly read the response body.
 
         For more information, see https://www.github.com/Pay-i/pay-i-python#with_streaming_response
         """
-        return AsyncResourcesResourceWithStreamingResponse(self)
+        return AsyncKpisResourceWithStreamingResponse(self)
 
     async def create(
         self,
-        resource: str,
+        use_case_name: str,
         *,
-        category: str,
-        units: Dict[str, resource_create_params.Units],
-        max_input_units: Optional[int] | NotGiven = NOT_GIVEN,
-        max_output_units: Optional[int] | NotGiven = NOT_GIVEN,
-        max_total_units: Optional[int] | NotGiven = NOT_GIVEN,
-        start_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
+        description: str,
+        name: str,
+        goal: float | NotGiven = NOT_GIVEN,
+        kpi_type: Literal["boolean", "number", "percentage", "likert5", "likert7", "likert10"] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> CategoryResourceResponse:
+    ) -> KpiCreateResponse:
         """
-        Create a Resource
+        Create a new Use Case KPI definition
 
         Args:
           extra_headers: Send extra headers
@@ -278,43 +313,39 @@ class AsyncResourcesResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not category:
-            raise ValueError(f"Expected a non-empty value for `category` but received {category!r}")
-        if not resource:
-            raise ValueError(f"Expected a non-empty value for `resource` but received {resource!r}")
+        if not use_case_name:
+            raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return await self._post(
-            f"/api/v1/categories/{category}/resources/{resource}",
+            f"/api/v1/use_cases/definitions/{use_case_name}/kpis",
             body=await async_maybe_transform(
                 {
-                    "units": units,
-                    "max_input_units": max_input_units,
-                    "max_output_units": max_output_units,
-                    "max_total_units": max_total_units,
-                    "start_timestamp": start_timestamp,
+                    "description": description,
+                    "name": name,
+                    "goal": goal,
+                    "kpi_type": kpi_type,
                 },
-                resource_create_params.ResourceCreateParams,
+                kpi_create_params.KpiCreateParams,
             ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=CategoryResourceResponse,
+            cast_to=KpiCreateResponse,
         )
 
     async def retrieve(
         self,
-        resource_id: str,
+        kpi_name: str,
         *,
-        category: str,
-        resource: str,
+        use_case_name: str,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> CategoryResourceResponse:
+    ) -> KpiRetrieveResponse:
         """
-        Get a Resource version details
+        Get a KPI definition for a Use Case
 
         Args:
           extra_headers: Send extra headers
@@ -325,26 +356,69 @@ class AsyncResourcesResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not category:
-            raise ValueError(f"Expected a non-empty value for `category` but received {category!r}")
-        if not resource:
-            raise ValueError(f"Expected a non-empty value for `resource` but received {resource!r}")
-        if not resource_id:
-            raise ValueError(f"Expected a non-empty value for `resource_id` but received {resource_id!r}")
+        if not use_case_name:
+            raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
+        if not kpi_name:
+            raise ValueError(f"Expected a non-empty value for `kpi_name` but received {kpi_name!r}")
         return await self._get(
-            f"/api/v1/categories/{category}/resources/{resource}/{resource_id}",
+            f"/api/v1/use_cases/definitions/{use_case_name}/kpis/{kpi_name}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=CategoryResourceResponse,
+            cast_to=KpiRetrieveResponse,
+        )
+
+    async def update(
+        self,
+        kpi_name: str,
+        *,
+        use_case_name: str,
+        description: Optional[str] | NotGiven = NOT_GIVEN,
+        goal: Optional[float] | NotGiven = NOT_GIVEN,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+    ) -> KpiUpdateResponse:
+        """
+        Update a Use Case KPI definition
+
+        Args:
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        if not use_case_name:
+            raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
+        if not kpi_name:
+            raise ValueError(f"Expected a non-empty value for `kpi_name` but received {kpi_name!r}")
+        return await self._put(
+            f"/api/v1/use_cases/definitions/{use_case_name}/kpis/{kpi_name}",
+            body=await async_maybe_transform(
+                {
+                    "description": description,
+                    "goal": goal,
+                },
+                kpi_update_params.KpiUpdateParams,
+            ),
+            options=make_request_options(
+                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+            ),
+            cast_to=KpiUpdateResponse,
         )
 
     def list(
         self,
-        resource: str,
+        use_case_name: str,
         *,
-        category: str,
         cursor: str | NotGiven = NOT_GIVEN,
+        kpi_name: str | NotGiven = NOT_GIVEN,
         limit: int | NotGiven = NOT_GIVEN,
         sort_ascending: bool | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
@@ -353,9 +427,9 @@ class AsyncResourcesResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> AsyncPaginator[CategoryResourceResponse, AsyncCursorPage[CategoryResourceResponse]]:
+    ) -> AsyncPaginator[KpiListResponse, AsyncCursorPage[KpiListResponse]]:
         """
-        Get a list of versions of a Resource
+        Get all KPIs for a Use Case
 
         Args:
           extra_headers: Send extra headers
@@ -366,13 +440,11 @@ class AsyncResourcesResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not category:
-            raise ValueError(f"Expected a non-empty value for `category` but received {category!r}")
-        if not resource:
-            raise ValueError(f"Expected a non-empty value for `resource` but received {resource!r}")
+        if not use_case_name:
+            raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return self._get_api_list(
-            f"/api/v1/categories/{category}/resources/{resource}",
-            page=AsyncCursorPage[CategoryResourceResponse],
+            f"/api/v1/use_cases/definitions/{use_case_name}/kpis",
+            page=AsyncCursorPage[KpiListResponse],
             options=make_request_options(
                 extra_headers=extra_headers,
                 extra_query=extra_query,
@@ -381,30 +453,30 @@ class AsyncResourcesResource(AsyncAPIResource):
                 query=maybe_transform(
                     {
                         "cursor": cursor,
+                        "kpi_name": kpi_name,
                         "limit": limit,
                         "sort_ascending": sort_ascending,
                     },
-                    resource_list_params.ResourceListParams,
+                    kpi_list_params.KpiListParams,
                 ),
             ),
-            model=CategoryResourceResponse,
+            model=KpiListResponse,
         )
 
     async def delete(
         self,
-        resource_id: str,
+        kpi_name: str,
         *,
-        category: str,
-        resource: str,
+        use_case_name: str,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> CategoryResourceResponse:
+    ) -> KpiDeleteResponse:
         """
-        Delete a version of the Resource
+        Delete a Use Case KPI definition
 
         Args:
           extra_headers: Send extra headers
@@ -415,88 +487,98 @@ class AsyncResourcesResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not category:
-            raise ValueError(f"Expected a non-empty value for `category` but received {category!r}")
-        if not resource:
-            raise ValueError(f"Expected a non-empty value for `resource` but received {resource!r}")
-        if not resource_id:
-            raise ValueError(f"Expected a non-empty value for `resource_id` but received {resource_id!r}")
+        if not use_case_name:
+            raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
+        if not kpi_name:
+            raise ValueError(f"Expected a non-empty value for `kpi_name` but received {kpi_name!r}")
         return await self._delete(
-            f"/api/v1/categories/{category}/resources/{resource}/{resource_id}",
+            f"/api/v1/use_cases/definitions/{use_case_name}/kpis/{kpi_name}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=CategoryResourceResponse,
+            cast_to=KpiDeleteResponse,
         )
 
 
-class ResourcesResourceWithRawResponse:
-    def __init__(self, resources: ResourcesResource) -> None:
-        self._resources = resources
+class KpisResourceWithRawResponse:
+    def __init__(self, kpis: KpisResource) -> None:
+        self._kpis = kpis
 
         self.create = to_raw_response_wrapper(
-            resources.create,
+            kpis.create,
         )
         self.retrieve = to_raw_response_wrapper(
-            resources.retrieve,
+            kpis.retrieve,
+        )
+        self.update = to_raw_response_wrapper(
+            kpis.update,
         )
         self.list = to_raw_response_wrapper(
-            resources.list,
+            kpis.list,
         )
         self.delete = to_raw_response_wrapper(
-            resources.delete,
+            kpis.delete,
         )
 
 
-class AsyncResourcesResourceWithRawResponse:
-    def __init__(self, resources: AsyncResourcesResource) -> None:
-        self._resources = resources
+class AsyncKpisResourceWithRawResponse:
+    def __init__(self, kpis: AsyncKpisResource) -> None:
+        self._kpis = kpis
 
         self.create = async_to_raw_response_wrapper(
-            resources.create,
+            kpis.create,
         )
         self.retrieve = async_to_raw_response_wrapper(
-            resources.retrieve,
+            kpis.retrieve,
+        )
+        self.update = async_to_raw_response_wrapper(
+            kpis.update,
         )
         self.list = async_to_raw_response_wrapper(
-            resources.list,
+            kpis.list,
         )
         self.delete = async_to_raw_response_wrapper(
-            resources.delete,
+            kpis.delete,
         )
 
 
-class ResourcesResourceWithStreamingResponse:
-    def __init__(self, resources: ResourcesResource) -> None:
-        self._resources = resources
+class KpisResourceWithStreamingResponse:
+    def __init__(self, kpis: KpisResource) -> None:
+        self._kpis = kpis
 
         self.create = to_streamed_response_wrapper(
-            resources.create,
+            kpis.create,
         )
         self.retrieve = to_streamed_response_wrapper(
-            resources.retrieve,
+            kpis.retrieve,
+        )
+        self.update = to_streamed_response_wrapper(
+            kpis.update,
         )
         self.list = to_streamed_response_wrapper(
-            resources.list,
+            kpis.list,
         )
         self.delete = to_streamed_response_wrapper(
-            resources.delete,
+            kpis.delete,
         )
 
 
-class AsyncResourcesResourceWithStreamingResponse:
-    def __init__(self, resources: AsyncResourcesResource) -> None:
-        self._resources = resources
+class AsyncKpisResourceWithStreamingResponse:
+    def __init__(self, kpis: AsyncKpisResource) -> None:
+        self._kpis = kpis
 
         self.create = async_to_streamed_response_wrapper(
-            resources.create,
+            kpis.create,
         )
         self.retrieve = async_to_streamed_response_wrapper(
-            resources.retrieve,
+            kpis.retrieve,
+        )
+        self.update = async_to_streamed_response_wrapper(
+            kpis.update,
         )
         self.list = async_to_streamed_response_wrapper(
-            resources.list,
+            kpis.list,
         )
         self.delete = async_to_streamed_response_wrapper(
-            resources.delete,
+            kpis.delete,
         )
