@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.61 (2025-04-07)
+
+Full Changelog: [v0.1.0-alpha.60...v0.1.0-alpha.61](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.60...v0.1.0-alpha.61)
+
+### Features
+
+* feat(api): global instrumentation ([6977d0c](https://github.com/Pay-i/pay-i-python/commit/6977d0c78ffaa12bb43a439827b0fba08b258e55))
+
 ## 0.1.0-alpha.60 (2025-04-07)
 
 Full Changelog: [v0.1.0-alpha.59...v0.1.0-alpha.60](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.59...v0.1.0-alpha.60)
