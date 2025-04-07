@@ -38,6 +38,8 @@ class ParentState(TypedDict, total=False):
     use_case_name: Optional[str]
     use_case_id: Optional[str]
     use_case_version: Optional[int]
+    limit_ids: Optional['list[str]']
+    request_tags: Optional['list[str]']
 
 class IsStreaming(Enum):
     false = 0
@@ -244,6 +246,8 @@ class PayiInstrumentor:
             parentState["use_case_name"] = context.get("use_case_name", None)
             parentState["use_case_id"] = context.get("use_case_id", None)
             parentState["use_case_version"] = context.get("use_case_version", None)
+            parentState["limit_ids"] = context.get("limit_ids", None)
+            parentState["request_tags"] = context.get("request_tags", None)
 
         return (context, parentState)
 
@@ -284,9 +288,9 @@ class PayiInstrumentor:
                 context["experience_name"] = experience_name
                 context["experience_id"] = experience_id if experience_id else str(uuid.uuid4())
 
-        # Handle experience name and ID logic
+        # Handle use case name and ID logic
         if not use_case_name: # TODO use case
-            # If no experience_name specified, use previous values
+            # If no use_case_name specified, use previous values
             context["use_case_name"] = parentState.get("use_case_name", None)
             context["use_case_id"] = parentState.get("use_case_id", None)
             context["use_case_version"] = parentState.get("use_case_version", None)
@@ -295,9 +299,9 @@ class PayiInstrumentor:
             previous_use_case_id = parentState.get("use_case_id", None)
             previous_use_case_version = parentState.get("use_case_version", None)
 
-            # If experience_name is specified
+            # If use_case_name is specified
             if use_case_name == previous_use_case_name:
-                # Same experience name, use previous ID unless new one specified
+                # Same use case name, use previous ID unless new one specified
                 context["use_case_name"] = use_case_name
                 context["use_case_id"] = use_case_id if use_case_id else previous_use_case_id
                 context["use_case_version"] = use_case_version if use_case_version else previous_use_case_version
@@ -766,11 +770,11 @@ class PayiInstrumentor:
             # use the inner experience name and id as-is
             ...
 
-        # inner extra_headers experience_name and experience_id take precedence over outer decorator experience_name and experience_id
+        # inner extra_headers use_casee_name and use_case_id take precedence over outer decorator use_case_name and use_case_id
         # if either inner value is specified, ignore outer decorator values
         if PayiHeaderNames.use_case_name not in extra_headers and PayiHeaderNames.use_case_id not in extra_headers:
 
-            # use both decorator values
+            # use decorator values
             if use_case_name is not None:
                 extra_headers[PayiHeaderNames.use_case_name] = use_case_name
             if use_case_id is not None:
