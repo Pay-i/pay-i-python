@@ -23,8 +23,8 @@ from .Stopwatch import Stopwatch
 
 class PayiInstrumentConfig(TypedDict, total=False):
     proxy: bool
+    global_instrumentation_enabled: bool
     limit_ids: Optional["list[str]"]
-    request_tags: Optional["list[str]"]
     experience_name: Optional[str]
     experience_id: Optional[str]
     use_case_name: Optional[str]
@@ -40,17 +40,7 @@ class _Context(TypedDict, total=False):
     use_case_id: Optional[str]
     use_case_version: Optional[int]
     limit_ids: Optional['list[str]']
-    request_tags: Optional['list[str]']
     user_id: Optional[str]
-
-class _ParentState(TypedDict, total=False):
-    experience_name: Optional[str]
-    experience_id: Optional[str]
-    use_case_name: Optional[str]
-    use_case_id: Optional[str]
-    use_case_version: Optional[int]
-    limit_ids: Optional['list[str]']
-    request_tags: Optional['list[str]']
 
 class _IsStreaming(Enum):
     false = 0
@@ -87,10 +77,13 @@ class _PayiInstrumentor:
             self._instrument_specific(instruments)
 
         if global_config and len(global_config) > 0:
-            context: _Context = {}
-            self._context_stack.append(context)            
-            # init_context will update the currrent context stack location
-            self._init_context(context=context, parentState={}, **global_config)
+            enabled = global_config.pop("global_instrumentation_enabled", True)
+
+            if enabled:
+                context: _Context = {}
+                self._context_stack.append(context)            
+                # init_context will update the currrent context stack location
+                self._init_context(context=context, parentContext={}, **global_config) # type: ignore
 
     def _instrument_all(self) -> None:
         self._instrument_openai()
@@ -252,31 +245,24 @@ class _PayiInstrumentor:
 
     def _setup_call_func(
         self
-        ) -> 'tuple[_Context, _ParentState]':
+        ) -> 'tuple[_Context, _Context]':
         context: _Context = {}
-        parentState: _ParentState = {}
+        parentContext: _Context = {}
 
         if len(self._context_stack) > 0:
             # copy current context into the upcoming context
             context = self._context_stack[-1].copy()
             context.pop("proxy")
-            parentState["experience_name"] = context.get("experience_name", None)
-            parentState["experience_id"] = context.get("experience_id", None)
-            parentState["use_case_name"] = context.get("use_case_name", None)
-            parentState["use_case_id"] = context.get("use_case_id", None)
-            parentState["use_case_version"] = context.get("use_case_version", None)
-            parentState["limit_ids"] = context.get("limit_ids", None)
-            parentState["request_tags"] = context.get("request_tags", None)
+            parentContext = {**context}
 
-        return (context, parentState)
+        return (context, parentContext)
 
     def _init_context(
         self,
         context: _Context,
-        parentState: _ParentState,
+        parentContext: _Context,
         proxy: bool,
         limit_ids: Optional["list[str]"] = None,
-        request_tags: Optional["list[str]"] = None,
         experience_name: Optional[str] = None,
         experience_id: Optional[str] = None,
         use_case_name: Optional[str]= None,
@@ -286,18 +272,19 @@ class _PayiInstrumentor:
         ) -> None:
         context["proxy"] = proxy
 
-        # TODO use case what if caller specified epxerience / use_case ID and no name?
+        previous_experience_name = parentContext.get("experience_name", None)
+        previous_experience_id = parentContext.get("experience_id", None)
 
-        # Handle experience name and ID logic
-        if not experience_name:
+        if experience_name is None:
             # If no experience_name specified, use previous values
-            context["experience_name"] = parentState.get("experience_name", None)
-            context["experience_id"] = parentState.get("experience_id", None)
+            context["experience_name"] = previous_experience_name
+            context["experience_id"] = previous_experience_id
+        elif len(experience_name) == 0:
+            # Empty string explicitly blocks inheriting from the parent state
+            context["experience_name"] = None
+            context["experience_id"] = None
         else:
-            previous_experience_name = parentState.get("experience_name", None)
-            previous_experience_id = parentState.get("experience_id", None)
-
-            # If experience_name is specified
+            # Check if experience_name is the same as the previous one
             if experience_name == previous_experience_name:
                 # Same experience name, use previous ID unless new one specified
                 context["experience_name"] = experience_name
@@ -307,35 +294,50 @@ class _PayiInstrumentor:
                 context["experience_name"] = experience_name
                 context["experience_id"] = experience_id if experience_id else str(uuid.uuid4())
 
-        # Handle use case name and ID logic
-        if not use_case_name: # TODO use case
-            # If no use_case_name specified, use previous values
-            context["use_case_name"] = parentState.get("use_case_name", None)
-            context["use_case_id"] = parentState.get("use_case_id", None)
-            context["use_case_version"] = parentState.get("use_case_version", None)
-        else:
-            previous_use_case_name = parentState.get("use_case_name", None)
-            previous_use_case_id = parentState.get("use_case_id", None)
-            previous_use_case_version = parentState.get("use_case_version", None)
+        previous_use_case_name = parentContext.get("use_case_name", None)
+        previous_use_case_id = parentContext.get("use_case_id", None)
+        previous_use_case_version = parentContext.get("use_case_version", None)
 
-            # If use_case_name is specified
+        if use_case_name is None:
+            # If no use_case_name specified, use previous values
+            context["use_case_name"] = previous_use_case_name
+            context["use_case_id"] = previous_use_case_id
+            context["use_case_version"] = previous_use_case_version
+        elif len(use_case_name) == 0:
+            # Empty string explicitly blocks inheriting from the parent state
+            context["use_case_name"] = None
+            context["use_case_id"] = None
+            context["use_case_version"] = None
+        else:
             if use_case_name == previous_use_case_name:
                 # Same use case name, use previous ID unless new one specified
                 context["use_case_name"] = use_case_name
                 context["use_case_id"] = use_case_id if use_case_id else previous_use_case_id
                 context["use_case_version"] = use_case_version if use_case_version else previous_use_case_version
             else:
-                # Different experience name, use specified ID or generate one
+                # Different use case name, use specified ID or generate one
                 context["use_case_name"] = use_case_name
                 context["use_case_id"] = use_case_id if use_case_id else str(uuid.uuid4())
-                context["use_case_version"] = use_case_version
+                context["use_case_version"] = use_case_version if use_case_version else None
 
-        # set any values explicitly passed by the caller, otherwise use what is already in the context
-        if limit_ids:
-            context["limit_ids"] = limit_ids
-        if request_tags:
-            context["request_tags"] = request_tags
-        if user_id:
+        prevous_limit_ids = parentContext.get("limit_ids", None)
+        if limit_ids is None:
+            # use the parent limit_ids if it exists
+            context["limit_ids"] = prevous_limit_ids
+        elif len(limit_ids) == 0:
+            # caller passing an empty array explicitly blocks inheriting from the parent state
+            context["limit_ids"] = None
+        else:
+            # union of new and parent lists if the parent context contains limit ids
+            context["limit_ids"] = list(set(limit_ids) | set(prevous_limit_ids)) if prevous_limit_ids else limit_ids
+
+        if user_id is None:
+            # use the parent user_id if it exists
+            context["user_id"] = parentContext.get("user_id", None)
+        elif len(user_id) == 0:
+            # caller passing an empty string explicitly blocks inheriting from the parent state
+            context["user_id"] = None
+        else:
             context["user_id"] = user_id
 
         self.set_context(context)
@@ -345,7 +347,6 @@ class _PayiInstrumentor:
         func: Any,
         proxy: bool,
         limit_ids: Optional["list[str]"],
-        request_tags: Optional["list[str]"],
         experience_name: Optional[str],
         experience_id: Optional[str],
         use_case_name: Optional[str],
@@ -355,15 +356,14 @@ class _PayiInstrumentor:
         *args: Any,
         **kwargs: Any,
     ) -> Any:
-        context, parentState = self._setup_call_func()
+        context, parentContext = self._setup_call_func()
 
         with self:
             self._init_context(
                 context,
-                parentState,
+                parentContext,
                 proxy, 
                 limit_ids, 
-                request_tags,
                 experience_name,
                 experience_id,
                 use_case_name,
@@ -377,7 +377,6 @@ class _PayiInstrumentor:
         func: Any,
         proxy: bool,
         limit_ids: Optional["list[str]"],
-        request_tags: Optional["list[str]"],
         experience_name: Optional[str],
         experience_id: Optional[str],
         use_case_name: Optional[str],
@@ -387,15 +386,14 @@ class _PayiInstrumentor:
         *args: Any,
         **kwargs: Any,
     ) -> Any:
-        context, parentState = self._setup_call_func()
+        context, parentContext = self._setup_call_func()
 
         with self:
             self._init_context(
                 context,
-                parentState,
+                parentContext,
                 proxy, 
                 limit_ids, 
-                request_tags,
                 experience_name,
                 experience_id,
                 use_case_name,
@@ -735,84 +733,70 @@ class _PayiInstrumentor:
         context: _Context,
         extra_headers: "dict[str, str]",
     ) -> None:
-        limit_ids: Optional[list[str]] = context.get("limit_ids")
-        request_tags: Optional[list[str]] = context.get("request_tags")
-        experience_name: Optional[str] = context.get("experience_name")
-        experience_id: Optional[str] = context.get("experience_id")
-        use_case_name: Optional[str] = context.get("use_case_name")
-        use_case_id: Optional[str] = context.get("use_case_id")
-        use_case_version: Optional[int] = context.get("use_case_version")
-        user_id: Optional[str] = context.get("user_id")
+        context_limit_ids: Optional[list[str]] = context.get("limit_ids")
+        context_experience_name: Optional[str] = context.get("experience_name")
+        context_experience_id: Optional[str] = context.get("experience_id")
+        context_use_case_name: Optional[str] = context.get("use_case_name")
+        context_use_case_id: Optional[str] = context.get("use_case_id")
+        context_use_case_version: Optional[int] = context.get("use_case_version")
+        context_user_id: Optional[str] = context.get("user_id")
 
-        # Merge limits from the decorator and extra headers
-        if limit_ids is not None:
-            existing_limit_ids = extra_headers.get(PayiHeaderNames.limit_ids, None)
-            
-            if not existing_limit_ids:
-                extra_headers[PayiHeaderNames.limit_ids] = ",".join(limit_ids)
+        # headers_limit_ids = extra_headers.get(PayiHeaderNames.limit_ids, None)
+    
+        # If the caller specifies limit_ids in extra_headers, it takes precedence over the decorator
+        if PayiHeaderNames.limit_ids in extra_headers:
+            headers_limit_ids = extra_headers.get(PayiHeaderNames.limit_ids)
+
+            if headers_limit_ids is None or len(headers_limit_ids) == 0:
+                # headers_limit_ids is empty, remove it from extra_headers
+                extra_headers.pop(PayiHeaderNames.limit_ids, None)
+            else:   
+                # leave the value in extra_headers
+                ...
+        elif context_limit_ids:
+            extra_headers[PayiHeaderNames.limit_ids] = ",".join(context_limit_ids)
+
+        if PayiHeaderNames.use_case_id in extra_headers:
+            headers_user_id = extra_headers.get(PayiHeaderNames.user_id, None)
+            if headers_user_id is None or len(headers_user_id) == 0:
+                # headers_user_id is empty, remove it from extra_headers
+                extra_headers.pop(PayiHeaderNames.user_id, None)
             else:
-                existing_ids = existing_limit_ids.split(',')
-                combined_ids = list(set(existing_ids + limit_ids))
-                extra_headers[PayiHeaderNames.limit_ids] = ",".join(combined_ids)
+                # leave the value in extra_headers
+                ...
+        elif context_user_id:
+            extra_headers[PayiHeaderNames.user_id] = context_user_id
 
-        # Merge request from the decorator and extra headers
-        if request_tags is not None:
-            existing_request_tags = extra_headers.get(PayiHeaderNames.request_tags, None)
-
-            if not existing_request_tags:
-                extra_headers[PayiHeaderNames.request_tags] = ",".join(request_tags)
+        if PayiHeaderNames.use_case_name in extra_headers:
+            headers_use_case_name = extra_headers.get(PayiHeaderNames.use_case_name, None)
+            if headers_use_case_name is None or len(headers_use_case_name) == 0:
+                # headers_use_case_name is empty, remove all use case related headers
+                extra_headers.pop(PayiHeaderNames.use_case_name, None)
+                extra_headers.pop(PayiHeaderNames.use_case_id, None)
+                extra_headers.pop(PayiHeaderNames.use_case_version, None)
             else:
-                existing_tags = existing_request_tags.split(',')
-                combined_tags = list(set(existing_tags + request_tags))
-                extra_headers[PayiHeaderNames.request_tags] = ",".join(combined_tags)
+                # leave the value in extra_headers
+                ...
+        elif context_use_case_name:
+            extra_headers[PayiHeaderNames.use_case_name] = context_use_case_name
+            if context_use_case_id is not None:
+                extra_headers[PayiHeaderNames.use_case_id] = context_use_case_id
+            if context_use_case_version is not None:
+                extra_headers[PayiHeaderNames.use_case_version] = str(context_use_case_version)
 
-        # inner extra_headers user_id takes precedence over outer decorator user_id
-        if user_id is not None and extra_headers.get(PayiHeaderNames.user_id, None) is None:
-            extra_headers[PayiHeaderNames.user_id] = user_id   
-
-        # inner extra_headers experience_name and experience_id take precedence over outer decorator experience_name and experience_id
-        # if either inner value is specified, ignore outer decorator values
-        if PayiHeaderNames.experience_name not in extra_headers and PayiHeaderNames.experience_id not in extra_headers:
-
-            # use both decorator values
-            if experience_name is not None:
-                extra_headers[PayiHeaderNames.experience_name] = experience_name
-            if experience_id is not None:
-                extra_headers[PayiHeaderNames.experience_id] = experience_id
-        
-        elif PayiHeaderNames.experience_id in extra_headers and PayiHeaderNames.experience_name not in extra_headers:
-            # use the decorator experience name and the inner experience id
-            if experience_name is not None:
-                extra_headers[PayiHeaderNames.experience_name] = experience_name
-        
-        else:
-            # use the inner experience name and id as-is
-            ...
-
-        # inner extra_headers use_casee_name and use_case_id take precedence over outer decorator use_case_name and use_case_id
-        # if either inner value is specified, ignore outer decorator values
-        if PayiHeaderNames.use_case_name not in extra_headers and PayiHeaderNames.use_case_id not in extra_headers:
-
-            # use decorator values
-            if use_case_name is not None:
-                extra_headers[PayiHeaderNames.use_case_name] = use_case_name
-            if use_case_id is not None:
-                extra_headers[PayiHeaderNames.use_case_id] = use_case_id
-            if use_case_version is not None:
-                extra_headers[PayiHeaderNames.use_case_version] = str(use_case_version)
-        
-        elif PayiHeaderNames.use_case_id in extra_headers and PayiHeaderNames.use_case_name not in extra_headers:
-            # use the decorator experience name and the inner experience id
-            if use_case_name is not None:
-                extra_headers[PayiHeaderNames.use_case_name] = use_case_name
-            
-            # use the decorator experience version and the inner experience id
-            if use_case_version is not None:
-                extra_headers[PayiHeaderNames.use_case_version] = str(use_case_version) # TODO use case 
-        
-        else:
-            # use the inner experience name and id as-is
-            ...
+        if PayiHeaderNames.experience_name in extra_headers:
+            headers_experience_name = extra_headers.get(PayiHeaderNames.experience_name, None)
+            if headers_experience_name is None or len(headers_experience_name) == 0:
+                # headers_experience_name is empty, remove all experience related headers
+                extra_headers.pop(PayiHeaderNames.experience_name, None)
+                extra_headers.pop(PayiHeaderNames.experience_id, None)
+            else:
+                # leave the value in extra_headers
+                ...
+        elif context_experience_name is not None:
+            extra_headers[PayiHeaderNames.experience_name] = context_experience_name
+            if context_experience_id is not None:
+                extra_headers[PayiHeaderNames.experience_id] = context_experience_id
 
     @staticmethod
     def update_for_vision(input: int, units: 'dict[str, Units]') -> int:
@@ -1047,7 +1031,6 @@ def payi_instrument(
 
 def ingest(
     limit_ids: Optional["list[str]"] = None,
-    request_tags: Optional["list[str]"] = None,
     experience_name: Optional[str] = None,
     experience_id: Optional[str] = None,
     use_case_name: Optional[str] = None,
@@ -1066,7 +1049,6 @@ def ingest(
                     func,
                     False,
                     limit_ids,
-                    request_tags,
                     experience_name,
                     experience_id,
                     use_case_name,
@@ -1085,7 +1067,6 @@ def ingest(
                     func,
                     False,
                     limit_ids,
-                    request_tags,
                     experience_name,
                     experience_id,
                     use_case_name,
@@ -1100,7 +1081,6 @@ def ingest(
 
 def proxy(
     limit_ids: Optional["list[str]"] = None,
-    request_tags: Optional["list[str]"] = None,
     experience_name: Optional[str] = None,
     experience_id: Optional[str] = None,
     use_case_id: Optional[str] = None,
@@ -1118,7 +1098,6 @@ def proxy(
                     func,
                     True,
                     limit_ids,
-                    request_tags,
                     experience_name,
                     experience_id,
                     use_case_name,
@@ -1138,7 +1117,6 @@ def proxy(
                     func,
                     True,
                     limit_ids,
-                    request_tags,
                     experience_name,
                     experience_id,
                     use_case_name,
