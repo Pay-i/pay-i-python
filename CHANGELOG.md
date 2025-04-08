@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.63 (2025-04-08)
+
+Full Changelog: [v0.1.0-alpha.62...v0.1.0-alpha.63](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.62...v0.1.0-alpha.63)
+
+### Features
+
+* feat: simplify global instrumentation init ([a3f7f4f](https://github.com/Pay-i/pay-i-python/commit/a3f7f4f22eacb694b648a2da935fd9412c40740e))
+
 ## 0.1.0-alpha.62 (2025-04-07)
 
 Full Changelog: [v0.1.0-alpha.61...v0.1.0-alpha.62](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.61...v0.1.0-alpha.62)
