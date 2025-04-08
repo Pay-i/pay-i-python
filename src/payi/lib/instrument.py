@@ -69,13 +69,10 @@ class _PayiInstrumentor:
         prompt_and_response_logger: Optional[
             Callable[[str, "dict[str, str]"], None]
         ] = None,  # (request id, dict of data to store) -> None
+        global_config: Optional[PayiInstrumentConfig] = None,
     ):
         self._payi: Optional[Payi] = payi
         self._apayi: Optional[AsyncPayi] = apayi
-
-        if not self._payi and not self._apayi:
-            self._payi = Payi()
-            self._apayi = AsyncPayi()
 
         self._context_stack: list[_Context] = []  # Stack of context dictionaries
         self._log_prompt_and_response: bool = log_prompt_and_response
@@ -88,6 +85,12 @@ class _PayiInstrumentor:
             self._instrument_all()
         else:
             self._instrument_specific(instruments)
+
+        if global_config and len(global_config) > 0:
+            context: _Context = {}
+            self._context_stack.append(context)            
+            # init_context will update the currrent context stack location
+            self._init_context(context=context, parentState={}, **global_config)
 
     def _instrument_all(self) -> None:
         self._instrument_openai()
@@ -272,14 +275,14 @@ class _PayiInstrumentor:
         context: _Context,
         parentState: _ParentState,
         proxy: bool,
-        limit_ids: Optional["list[str]"],
-        request_tags: Optional["list[str]"],
-        experience_name: Optional[str],
-        experience_id: Optional[str],
-        use_case_name: Optional[str],
-        use_case_id: Optional[str],
-        use_case_version: Optional[int],                
-        user_id: Optional[str],
+        limit_ids: Optional["list[str]"] = None,
+        request_tags: Optional["list[str]"] = None,
+        experience_name: Optional[str] = None,
+        experience_id: Optional[str] = None,
+        use_case_name: Optional[str]= None,
+        use_case_id: Optional[str]= None,
+        use_case_version: Optional[int]= None,                
+        user_id: Optional[str]= None,
         ) -> None:
         context["proxy"] = proxy
 
@@ -1020,15 +1023,15 @@ def payi_instrument(
             elif isinstance(p, AsyncPayi): # type: ignore
                 apayi_param = p
     
-    global_context: _Context = {}
+    global_context_ingest: Optional[bool] = None
 
-    if config and len(config) > 0:
+    if config is not None:
         if "proxy" not in config:
             config["proxy"] = False
-        global_context = {**config}
+        global_context_ingest = config.get("proxy") == False
 
-    # create the clients on their behalf if not provided for global ingest instrumentation
-    if not payi_param and not apayi_param and len(global_context) > 0 and global_context.get("proxy", False):
+    # Use default clients if not provided for global ingest instrumentation
+    if not payi_param and not apayi_param and global_context_ingest:
         payi_param = Payi()
         apayi_param = AsyncPayi()
     
@@ -1039,15 +1042,8 @@ def payi_instrument(
         instruments=instruments,
         log_prompt_and_response=log_prompt_and_response,
         prompt_and_response_logger=prompt_and_response_logger,
+        global_config=config,
     )
-
-    if len(global_context) > 0:
-        if  "use_case_name" in global_context and not "use_case_id" in global_context:
-            global_context["use_case_id"] = str(uuid.uuid4())
-        if "experience_name" in global_context and not "experience_id" in global_context:
-            global_context["experience_id"] = str(uuid.uuid4())
-
-        _instrumentor._context_stack.append(global_context)
 
 def ingest(
     limit_ids: Optional["list[str]"] = None,
