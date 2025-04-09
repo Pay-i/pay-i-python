@@ -76,14 +76,23 @@ class _PayiInstrumentor:
         else:
             self._instrument_specific(instruments)
 
-        if global_config and len(global_config) > 0:
-            enabled = global_config.pop("global_instrumentation_enabled", True)
+        global_instrumentation_enabled = global_config.pop("global_instrumentation_enabled", True) if global_config else True
 
-            if enabled:
-                context: _Context = {}
-                self._context_stack.append(context)            
-                # init_context will update the currrent context stack location
-                self._init_context(context=context, parentContext={}, **global_config) # type: ignore
+        if global_instrumentation_enabled:
+            if global_config is None:
+                global_config = {}
+            if "proxy" not in global_config:
+                global_config["proxy"] = False
+
+            # Use default clients if not provided for global ingest instrumentation
+            if not self._payi and not self._apayi and global_config.get("proxy") == False:
+                self._payi = Payi()
+                self._apayi = AsyncPayi()
+
+            context: _Context = {}
+            self._context_stack.append(context)            
+            # init_context will update the currrent context stack location
+            self._init_context(context=context, parentContext={}, **global_config) # type: ignore
 
     def _instrument_all(self) -> None:
         self._instrument_openai()
@@ -272,64 +281,64 @@ class _PayiInstrumentor:
         ) -> None:
         context["proxy"] = proxy
 
-        previous_experience_name = parentContext.get("experience_name", None)
-        previous_experience_id = parentContext.get("experience_id", None)
+        parent_experience_name = parentContext.get("experience_name", None)
+        parent_experience_id = parentContext.get("experience_id", None)
 
         if experience_name is None:
             # If no experience_name specified, use previous values
-            context["experience_name"] = previous_experience_name
-            context["experience_id"] = previous_experience_id
+            context["experience_name"] = parent_experience_name
+            context["experience_id"] = parent_experience_id
         elif len(experience_name) == 0:
             # Empty string explicitly blocks inheriting from the parent state
             context["experience_name"] = None
             context["experience_id"] = None
         else:
             # Check if experience_name is the same as the previous one
-            if experience_name == previous_experience_name:
+            if experience_name == parent_experience_name:
                 # Same experience name, use previous ID unless new one specified
                 context["experience_name"] = experience_name
-                context["experience_id"] = experience_id if experience_id else previous_experience_id
+                context["experience_id"] = experience_id if experience_id else parent_experience_id
             else:
                 # Different experience name, use specified ID or generate one
                 context["experience_name"] = experience_name
                 context["experience_id"] = experience_id if experience_id else str(uuid.uuid4())
 
-        previous_use_case_name = parentContext.get("use_case_name", None)
-        previous_use_case_id = parentContext.get("use_case_id", None)
-        previous_use_case_version = parentContext.get("use_case_version", None)
+        parent_use_case_name = parentContext.get("use_case_name", None)
+        parent_use_case_id = parentContext.get("use_case_id", None)
+        parent_use_case_version = parentContext.get("use_case_version", None)
 
         if use_case_name is None:
             # If no use_case_name specified, use previous values
-            context["use_case_name"] = previous_use_case_name
-            context["use_case_id"] = previous_use_case_id
-            context["use_case_version"] = previous_use_case_version
+            context["use_case_name"] = parent_use_case_name
+            context["use_case_id"] = parent_use_case_id
+            context["use_case_version"] = parent_use_case_version
         elif len(use_case_name) == 0:
             # Empty string explicitly blocks inheriting from the parent state
             context["use_case_name"] = None
             context["use_case_id"] = None
             context["use_case_version"] = None
         else:
-            if use_case_name == previous_use_case_name:
+            if use_case_name == parent_use_case_name:
                 # Same use case name, use previous ID unless new one specified
                 context["use_case_name"] = use_case_name
-                context["use_case_id"] = use_case_id if use_case_id else previous_use_case_id
-                context["use_case_version"] = use_case_version if use_case_version else previous_use_case_version
+                context["use_case_id"] = use_case_id if use_case_id else parent_use_case_id
+                context["use_case_version"] = use_case_version if use_case_version else parent_use_case_version
             else:
                 # Different use case name, use specified ID or generate one
                 context["use_case_name"] = use_case_name
                 context["use_case_id"] = use_case_id if use_case_id else str(uuid.uuid4())
                 context["use_case_version"] = use_case_version if use_case_version else None
 
-        prevous_limit_ids = parentContext.get("limit_ids", None)
+        parent_limit_ids = parentContext.get("limit_ids", None)
         if limit_ids is None:
             # use the parent limit_ids if it exists
-            context["limit_ids"] = prevous_limit_ids
+            context["limit_ids"] = parent_limit_ids
         elif len(limit_ids) == 0:
             # caller passing an empty array explicitly blocks inheriting from the parent state
             context["limit_ids"] = None
         else:
             # union of new and parent lists if the parent context contains limit ids
-            context["limit_ids"] = list(set(limit_ids) | set(prevous_limit_ids)) if prevous_limit_ids else limit_ids
+            context["limit_ids"] = list(set(limit_ids) | set(parent_limit_ids)) if parent_limit_ids else limit_ids
 
         if user_id is None:
             # use the parent user_id if it exists
@@ -494,7 +503,7 @@ class _PayiInstrumentor:
 
         # after _udpate_headers, all metadata to add to ingest is in extra_headers, keyed by the xproxy-xxx header name
         extra_headers = kwargs.get("extra_headers", {})
-        self._update_headers(context, extra_headers)
+        self._update_extra_headers(context, extra_headers)
 
         if context.get("proxy", True):
             if "extra_headers" not in kwargs:
@@ -618,7 +627,7 @@ class _PayiInstrumentor:
 
         # after _udpate_headers, all metadata to add to ingest is in extra_headers, keyed by the xproxy-xxx header name
         extra_headers = kwargs.get("extra_headers", {})
-        self._update_headers(context, extra_headers)
+        self._update_extra_headers(context, extra_headers)
 
         if context.get("proxy", True):
             if "extra_headers" not in kwargs:
@@ -729,7 +738,7 @@ class _PayiInstrumentor:
         return response
 
     @staticmethod
-    def _update_headers(
+    def _update_extra_headers(
         context: _Context,
         extra_headers: "dict[str, str]",
     ) -> None:
@@ -756,7 +765,7 @@ class _PayiInstrumentor:
         elif context_limit_ids:
             extra_headers[PayiHeaderNames.limit_ids] = ",".join(context_limit_ids)
 
-        if PayiHeaderNames.use_case_id in extra_headers:
+        if PayiHeaderNames.user_id in extra_headers:
             headers_user_id = extra_headers.get(PayiHeaderNames.user_id, None)
             if headers_user_id is None or len(headers_user_id) == 0:
                 # headers_user_id is empty, remove it from extra_headers
@@ -1006,18 +1015,6 @@ def payi_instrument(
                 payi_param = p
             elif isinstance(p, AsyncPayi): # type: ignore
                 apayi_param = p
-    
-    global_context_ingest: Optional[bool] = None
-
-    if config is not None:
-        if "proxy" not in config:
-            config["proxy"] = False
-        global_context_ingest = config.get("proxy") == False
-
-    # Use default clients if not provided for global ingest instrumentation
-    if not payi_param and not apayi_param and global_context_ingest:
-        payi_param = Payi()
-        apayi_param = AsyncPayi()
     
     # allow for both payi and apayi to be None for the @proxy case
     _instrumentor = _PayiInstrumentor(
