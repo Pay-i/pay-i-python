@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.64 (2025-04-09)
+
+Full Changelog: [v0.1.0-alpha.63...v0.1.0-alpha.64](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.63...v0.1.0-alpha.64)
+
+### Chores
+
+* **internal:** slight transform perf improvement ([#283](https://github.com/Pay-i/pay-i-python/issues/283)) ([4b3f9e6](https://github.com/Pay-i/pay-i-python/commit/4b3f9e60fbecf99f8ddffed5903f916f3d5445c5))
+
 ## 0.1.0-alpha.63 (2025-04-08)
 
 Full Changelog: [v0.1.0-alpha.62...v0.1.0-alpha.63](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.62...v0.1.0-alpha.63)
