@@ -50,6 +50,7 @@ def create_headers(
     use_case_name: Union[str, None] = None,
     use_case_version: Union[int, None] = None,
     route_as_resource: Union[str, None] = None,
+    resource_scope: Union[str, None] = None,
 ) -> Dict[str, str]:
     headers: Dict[str, str] = {}
 
@@ -71,6 +72,8 @@ def create_headers(
         headers.update({ PayiHeaderNames.use_case_version: str(use_case_version)})
     if route_as_resource:
         headers.update({ PayiHeaderNames.route_as_resource: route_as_resource})
+    if resource_scope:
+        headers.update({ PayiHeaderNames.resource_scope: resource_scope })
     return headers
 
 def _resolve_payi_base_url(payi_base_url: Union[str, None]) -> str:
