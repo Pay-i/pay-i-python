@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.65 (2025-04-10)
+
+Full Changelog: [v0.1.0-alpha.64...v0.1.0-alpha.65](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.64...v0.1.0-alpha.65)
+
+### Features
+
+* feat: simplify OpenAI streaming setup ([7b50eb2](https://github.com/Pay-i/pay-i-python/commit/7b50eb276c6bb464cb94d6551e342e32b0b76181))
+
 ## 0.1.0-alpha.64 (2025-04-09)
 
 Full Changelog: [v0.1.0-alpha.63...v0.1.0-alpha.64](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.63...v0.1.0-alpha.64)
