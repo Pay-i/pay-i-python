@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-alpha.67 (2025-04-10)
+
+Full Changelog: [v0.1.0-alpha.66...v0.1.0-alpha.67](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.66...v0.1.0-alpha.67)
+
+### Chores
+
+* **internal:** expand CI branch coverage ([59b85dd](https://github.com/Pay-i/pay-i-python/commit/59b85dd730b834ba2aeab0b3b40bcd01fdfb04d2))
+* **internal:** reduce CI branch coverage ([a24f3a3](https://github.com/Pay-i/pay-i-python/commit/a24f3a3f600f91e798976bc4a3c79341ed84a3e3))
+
 ## 0.1.0-alpha.66 (2025-04-10)
 
 Full Changelog: [v0.1.0-alpha.65...v0.1.0-alpha.66](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.65...v0.1.0-alpha.66)
