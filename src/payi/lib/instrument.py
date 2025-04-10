@@ -6,6 +6,7 @@ import logging
 import traceback
 from enum import Enum
 from typing import Any, Set, Union, Callable, Optional, TypedDict
+from datetime import datetime, timezone
 
 import nest_asyncio  # type: ignore
 from wrapt import ObjectProxy  # type: ignore
@@ -38,7 +39,7 @@ class _ProviderRequest:
 
 class PayiInstrumentConfig(TypedDict, total=False):
     proxy: bool
-    global_instrumentation_enabled: bool
+    global_instrumentation: bool
     limit_ids: Optional["list[str]"]
     experience_name: Optional[str]
     experience_id: Optional[str]
@@ -89,9 +90,9 @@ class _PayiInstrumentor:
         else:
             self._instrument_specific(instruments)
 
-        global_instrumentation_enabled = global_config.pop("global_instrumentation_enabled", True) if global_config else True
+        global_instrumentation = global_config.pop("global_instrumentation", True) if global_config else True
 
-        if global_instrumentation_enabled:
+        if global_instrumentation:
             if global_config is None:
                 global_config = {}
             if "proxy" not in global_config:
@@ -447,7 +448,7 @@ class _PayiInstrumentor:
         self,
         ingest: IngestUnitsParams,
         ingest_extra_headers: "dict[str, str]", # do not coflict potential kwargs["extra_headers"]
-        **kwargs: Any,
+        kwargs: Any,
     ) -> None:
         limit_ids = ingest_extra_headers.pop(PayiHeaderNames.limit_ids, None)
         request_tags = ingest_extra_headers.pop(PayiHeaderNames.request_tags, None)
@@ -494,6 +495,8 @@ class _PayiInstrumentor:
         if self._log_prompt_and_response:
             ingest["provider_request_json"] = json.dumps(provider_prompt)
 
+        ingest["event_timestamp"] = datetime.now(timezone.utc)
+        
     async def achat_wrapper(
         self,
         category: str,
@@ -567,7 +570,7 @@ class _PayiInstrumentor:
             stream = False
 
         try:
-            self._prepare_ingest(provider._ingest, extra_headers, **kwargs)
+            self._prepare_ingest(provider._ingest, extra_headers, kwargs)
             sw.start()
             response = await wrapped(*args, **kwargs)
 
@@ -691,7 +694,7 @@ class _PayiInstrumentor:
             stream = False
 
         try:
-            self._prepare_ingest(provider._ingest, extra_headers, **kwargs)
+            self._prepare_ingest(provider._ingest, extra_headers, kwargs)
             sw.start()
             response = wrapped(*args, **kwargs)
 
