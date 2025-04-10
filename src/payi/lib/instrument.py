@@ -21,6 +21,21 @@ from .helpers import PayiCategories
 from .Stopwatch import Stopwatch
 
 
+class _ProviderRequest:
+    def __init__(self, instrumentor: '_PayiInstrumentor'):
+        self._instrumentor: '_PayiInstrumentor' = instrumentor
+        self._estimated_prompt_tokens: Optional[int] = None
+        self._ingest: IngestUnitsParams
+
+    def process_request(self, _kwargs: Any) -> None:
+        return
+
+    def process_chunk(self, _chunk: Any) -> bool:
+        return True
+
+    def process_synchronous_response(self, response: Any, log_prompt_and_response: bool, kwargs: Any) -> Optional[object]:  # noqa: ARG002
+        return None
+
 class PayiInstrumentConfig(TypedDict, total=False):
     proxy: bool
     global_instrumentation_enabled: bool
@@ -48,8 +63,6 @@ class _IsStreaming(Enum):
     kwargs = 2
 
 class _PayiInstrumentor:
-    estimated_prompt_tokens: str = "estimated_prompt_tokens"
-
     def __init__(
         self,
         payi: Optional[Payi],
@@ -484,9 +497,7 @@ class _PayiInstrumentor:
     async def achat_wrapper(
         self,
         category: str,
-        process_chunk: Optional[Callable[[Any, IngestUnitsParams], None]],
-        process_request: Optional[Callable[[IngestUnitsParams, Any, Any], None]],
-        process_synchronous_response: Any,
+        provider: _ProviderRequest,
         is_streaming: _IsStreaming,
         wrapped: Any,
         instance: Any,
@@ -511,8 +522,8 @@ class _PayiInstrumentor:
 
             return await wrapped(*args, **kwargs)
 
-        ingest: IngestUnitsParams = {"category": category, "units": {}} # type: ignore
-        ingest["resource"] = kwargs.get("model", "")
+        provider._ingest = {"category": category, "units": {}} # type: ignore
+        provider._ingest["resource"] = kwargs.get("model", "")
 
         if category == PayiCategories.openai and instance and hasattr(instance, "_client"):
             from .OpenAIInstrumentor import OpenAiInstrumentor # noqa: I001
@@ -530,21 +541,20 @@ class _PayiInstrumentor:
                         logging.error("Azure OpenAI invalid resource scope, not ingesting")
                         return wrapped(*args, **kwargs)
 
-                    ingest["resource_scope"] = resource_scope
+                    provider._ingest["resource_scope"] = resource_scope
 
                 category = PayiCategories.azure_openai
 
-                ingest["category"] = category
-                ingest["resource"] = route_as_resource
+                provider._ingest["category"] = category
+                provider._ingest["resource"] = route_as_resource
 
         current_frame = inspect.currentframe()
         # f_back excludes the current frame, strip() cleans up whitespace and newlines
         stack = [frame.strip() for frame in traceback.format_stack(current_frame.f_back)]  # type: ignore
 
-        ingest['properties'] = { 'system.stack_trace': json.dumps(stack) }
+        provider._ingest['properties'] = { 'system.stack_trace': json.dumps(stack) }
 
-        if process_request:
-            process_request(ingest, (), instance)
+        provider.process_request(kwargs)
 
         sw = Stopwatch()
         stream: bool = False
@@ -557,7 +567,7 @@ class _PayiInstrumentor:
             stream = False
 
         try:
-            self._prepare_ingest(ingest, extra_headers, **kwargs)
+            self._prepare_ingest(provider._ingest, extra_headers, **kwargs)
             sw.start()
             response = await wrapped(*args, **kwargs)
 
@@ -575,9 +585,8 @@ class _PayiInstrumentor:
                 instance=instance,
                 instrumentor=self,
                 log_prompt_and_response=self._log_prompt_and_response,
-                ingest=ingest,
                 stopwatch=sw,
-                process_chunk=process_chunk,
+                provider=provider,
                 is_bedrock=False,
             )
 
@@ -585,28 +594,25 @@ class _PayiInstrumentor:
 
         sw.stop()
         duration = sw.elapsed_ms_int()
-        ingest["end_to_end_latency_ms"] = duration
-        ingest["http_status_code"] = 200
+        provider._ingest["end_to_end_latency_ms"] = duration
+        provider._ingest["http_status_code"] = 200
 
-        if process_synchronous_response:
-            return_result: Any = process_synchronous_response(
-                response=response,
-                ingest=ingest,
-                log_prompt_and_response=self._log_prompt_and_response,
-                instrumentor=self)
-            if return_result:
-                return return_result
+        return_result: Any = provider.process_synchronous_response(
+            response=response,
+            log_prompt_and_response=self._log_prompt_and_response,
+            kwargs=kwargs)
 
-        await self._aingest_units(ingest)
+        if return_result:
+            return return_result
+
+        await self._aingest_units(provider._ingest)
 
         return response
 
     def chat_wrapper(
         self,
         category: str,
-        process_chunk: Optional[Callable[[Any, IngestUnitsParams], None]],
-        process_request: Optional[Callable[[IngestUnitsParams, Any, Any], None]],
-        process_synchronous_response: Any,
+        provider: _ProviderRequest,
         is_streaming: _IsStreaming,
         wrapped: Any,
         instance: Any,
@@ -635,13 +641,13 @@ class _PayiInstrumentor:
 
             return wrapped(*args, **kwargs)
         
-        ingest: IngestUnitsParams = {"category": category, "units": {}} # type: ignore
+        provider._ingest = {"category": category, "units": {}} # type: ignore
         if is_bedrock:
             # boto3 doesn't allow extra_headers
             kwargs.pop("extra_headers", None)
-            ingest["resource"] = kwargs.get("modelId", "")
+            provider._ingest["resource"] = kwargs.get("modelId", "")
         else:
-            ingest["resource"] = kwargs.get("model", "")
+            provider._ingest["resource"] = kwargs.get("model", "")
 
         if category == PayiCategories.openai and instance and hasattr(instance, "_client"):
             from .OpenAIInstrumentor import OpenAiInstrumentor # noqa: I001
@@ -659,21 +665,20 @@ class _PayiInstrumentor:
                         logging.error("Azure OpenAI invalid resource scope, not ingesting")
                         return wrapped(*args, **kwargs)
 
-                    ingest["resource_scope"] = resource_scope
+                    provider._ingest["resource_scope"] = resource_scope
 
                 category = PayiCategories.azure_openai
 
-                ingest["category"] = category
-                ingest["resource"] = route_as_resource
+                provider._ingest["category"] = category
+                provider._ingest["resource"] = route_as_resource
 
         current_frame = inspect.currentframe()
         # f_back excludes the current frame, strip() cleans up whitespace and newlines
         stack = [frame.strip() for frame in traceback.format_stack(current_frame.f_back)]  # type: ignore
 
-        ingest['properties'] = { 'system.stack_trace': json.dumps(stack) }
+        provider._ingest['properties'] = { 'system.stack_trace': json.dumps(stack) }
 
-        if process_request:
-            process_request(ingest, (), kwargs)
+        provider.process_request(kwargs)
 
         sw = Stopwatch()
         stream: bool = False
@@ -686,7 +691,7 @@ class _PayiInstrumentor:
             stream = False
 
         try:
-            self._prepare_ingest(ingest, extra_headers, **kwargs)
+            self._prepare_ingest(provider._ingest, extra_headers, **kwargs)
             sw.start()
             response = wrapped(*args, **kwargs)
 
@@ -704,9 +709,8 @@ class _PayiInstrumentor:
                 instance=instance,
                 instrumentor=self,
                 log_prompt_and_response=self._log_prompt_and_response,
-                ingest=ingest,
                 stopwatch=sw,
-                process_chunk=process_chunk,
+                provider=provider,
                 is_bedrock=is_bedrock,
             )
 
@@ -721,19 +725,17 @@ class _PayiInstrumentor:
 
         sw.stop()
         duration = sw.elapsed_ms_int()
-        ingest["end_to_end_latency_ms"] = duration
-        ingest["http_status_code"] = 200
+        provider._ingest["end_to_end_latency_ms"] = duration
+        provider._ingest["http_status_code"] = 200
 
-        if process_synchronous_response:
-            return_result: Any = process_synchronous_response(
-                response=response,
-                ingest=ingest,
-                log_prompt_and_response=self._log_prompt_and_response,
-                instrumentor=self)
-            if return_result:
-                return return_result
+        return_result: Any = provider.process_synchronous_response(
+            response=response,
+            log_prompt_and_response=self._log_prompt_and_response,
+            kwargs=kwargs)
+        if return_result:
+            return return_result
 
-        self._ingest_units(ingest)
+        self._ingest_units(provider._ingest)
 
         return response
 
@@ -808,13 +810,12 @@ class _PayiInstrumentor:
                 extra_headers[PayiHeaderNames.experience_id] = context_experience_id
 
     @staticmethod
-    def update_for_vision(input: int, units: 'dict[str, Units]') -> int:
-        if _PayiInstrumentor.estimated_prompt_tokens in units:
-            prompt_token_estimate: int = units.pop(_PayiInstrumentor.estimated_prompt_tokens)["input"] # type: ignore
-            vision = input - prompt_token_estimate
+    def update_for_vision(input: int, units: 'dict[str, Units]', estimated_prompt_tokens: Optional[int]) -> int:
+        if estimated_prompt_tokens:
+            vision = input - estimated_prompt_tokens
             if (vision > 0):
                 units["vision"] = Units(input=vision, output=0)
-                input = prompt_token_estimate
+                input = estimated_prompt_tokens
         
         return input
 
@@ -856,16 +857,15 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
         response: Any,
         instance: Any,
         instrumentor: _PayiInstrumentor,
-        ingest: IngestUnitsParams,
         stopwatch: Stopwatch,
-        process_chunk: Optional[Callable[[Any, IngestUnitsParams], None]] = None,
+        provider: _ProviderRequest,
         log_prompt_and_response: bool = True,
         is_bedrock: bool = False,
     ) -> None:
 
         bedrock_from_stream: bool = False
         if is_bedrock:
-            ingest["provider_response_id"] = response["ResponseMetadata"]["RequestId"]
+            provider._ingest["provider_response_id"] = response["ResponseMetadata"]["RequestId"]
             stream = response.get("stream", None)
 
             if stream:
@@ -882,11 +882,10 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
 
         self._instrumentor = instrumentor
         self._stopwatch: Stopwatch = stopwatch
-        self._ingest: IngestUnitsParams = ingest
         self._log_prompt_and_response: bool = log_prompt_and_response
         self._responses: list[str] = []
 
-        self._process_chunk: Optional[Callable[[Any, IngestUnitsParams], None]] = process_chunk
+        self._provider: _ProviderRequest = provider
 
         self._first_token: bool = True
         self._is_bedrock: bool = is_bedrock
@@ -906,7 +905,7 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
 
     def __iter__(self) -> Any:  
         if self._is_bedrock:
-            # MUST be reside in a separate function so that the yield statement doesn't implicitly return its own iterator and overriding self
+            # MUST reside in a separate function so that the yield statement (e.g. the generator) doesn't implicitly return its own iterator and overriding self
             return self._iter_bedrock()
         return self
 
@@ -935,7 +934,9 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
                 self._stop_iteration()
             raise e
         else:
-            self._evaluate_chunk(chunk)
+            if self._evaluate_chunk(chunk) == False:
+                return self.__next__()
+            
             return chunk
 
     async def __anext__(self) -> Any:
@@ -946,35 +947,35 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
                 await self._astop_iteration()
             raise e
         else:
-            self._evaluate_chunk(chunk)
+            if self._evaluate_chunk(chunk) == False:
+                return await self.__anext__()
             return chunk
 
-    def _evaluate_chunk(self, chunk: Any) -> None:
+    def _evaluate_chunk(self, chunk: Any) -> bool:
         if self._first_token:
-            self._ingest["time_to_first_token_ms"] = self._stopwatch.elapsed_ms_int()
+            self._provider._ingest["time_to_first_token_ms"] = self._stopwatch.elapsed_ms_int()
             self._first_token = False
 
         if self._log_prompt_and_response:
             self._responses.append(self.chunk_to_json(chunk))
 
-        if self._process_chunk:
-            self._process_chunk(chunk, self._ingest)
+        return self._provider.process_chunk(chunk)
 
     def _process_stop_iteration(self) -> None:
         self._stopwatch.stop()
-        self._ingest["end_to_end_latency_ms"] = self._stopwatch.elapsed_ms_int()
-        self._ingest["http_status_code"] = 200
+        self._provider._ingest["end_to_end_latency_ms"] = self._stopwatch.elapsed_ms_int()
+        self._provider._ingest["http_status_code"] = 200
 
         if self._log_prompt_and_response:
-            self._ingest["provider_response_json"] = self._responses
+            self._provider._ingest["provider_response_json"] = self._responses
 
     async def _astop_iteration(self) -> None:
         self._process_stop_iteration()
-        await self._instrumentor._aingest_units(self._ingest)
+        await self._instrumentor._aingest_units(self._provider._ingest)
 
     def _stop_iteration(self) -> None:
         self._process_stop_iteration()
-        self._instrumentor._ingest_units(self._ingest)
+        self._instrumentor._ingest_units(self._provider._ingest)
 
     @staticmethod
     def chunk_to_json(chunk: Any) -> str:

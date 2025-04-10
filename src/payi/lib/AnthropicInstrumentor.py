@@ -1,13 +1,13 @@
 import logging
 from typing import Any, Union
+from typing_extensions import override
 
 import tiktoken
 from wrapt import wrap_function_wrapper  # type: ignore
 
-from payi.types import IngestUnitsParams
 from payi.types.ingest_units_params import Units
 
-from .instrument import _IsStreaming, _PayiInstrumentor
+from .instrument import _IsStreaming, _ProviderRequest, _PayiInstrumentor
 
 
 class AnthropicIntrumentor:
@@ -55,9 +55,7 @@ def chat_wrapper(
 ) -> Any:
     return instrumentor.chat_wrapper(
         "system.anthropic",
-        process_chunk,
-        process_request,
-        process_synchronous_response,
+        _AnthropicProviderRequest(instrumentor),
         _IsStreaming.kwargs,
         wrapped,
         instance,
@@ -75,9 +73,7 @@ async def achat_wrapper(
 ) -> Any:
     return await instrumentor.achat_wrapper(
         "system.anthropic",
-        process_chunk,
-        process_request,
-        process_synchronous_response,
+        _AnthropicProviderRequest(instrumentor),
         _IsStreaming.kwargs,
         wrapped,
         instance,
@@ -85,17 +81,39 @@ async def achat_wrapper(
         kwargs,
     )
 
+class _AnthropicProviderRequest(_ProviderRequest):
+    @override
+    def process_chunk(self, chunk: Any) -> bool:
+        if chunk.type == "message_start":
+            self._ingest["provider_response_id"] = chunk.message.id
 
-def process_chunk(chunk: Any, ingest: IngestUnitsParams) -> None:
-    if chunk.type == "message_start":
-        ingest["provider_response_id"] = chunk.message.id
+            usage = chunk.message.usage
+            units = self._ingest["units"]
 
-        usage = chunk.message.usage
-        units = ingest["units"]
+            input = _PayiInstrumentor.update_for_vision(usage.input_tokens, units, self._estimated_prompt_tokens)
 
-        input = _PayiInstrumentor.update_for_vision(usage.input_tokens, units)
+            units["text"] = Units(input=input, output=0)
 
-        units["text"] = Units(input=input, output=0)
+            if hasattr(usage, "cache_creation_input_tokens") and usage.cache_creation_input_tokens > 0:
+                text_cache_write = usage.cache_creation_input_tokens
+                units["text_cache_write"] = Units(input=text_cache_write, output=0)
+
+            if hasattr(usage, "cache_read_input_tokens") and usage.cache_read_input_tokens > 0:
+                text_cache_read = usage.cache_read_input_tokens
+                units["text_cache_read"] = Units(input=text_cache_read, output=0)
+
+        elif chunk.type == "message_delta":
+            usage = chunk.usage
+            self._ingest["units"]["text"]["output"] = usage.output_tokens
+        
+        return True
+
+    @override
+    def process_synchronous_response(self, response: Any, log_prompt_and_response: bool, kwargs: Any) -> Any:
+        usage = response.usage
+        input = usage.input_tokens
+        output = usage.output_tokens
+        units: dict[str, Units] = self._ingest["units"]
 
         if hasattr(usage, "cache_creation_input_tokens") and usage.cache_creation_input_tokens > 0:
             text_cache_write = usage.cache_creation_input_tokens
@@ -105,35 +123,37 @@ def process_chunk(chunk: Any, ingest: IngestUnitsParams) -> None:
             text_cache_read = usage.cache_read_input_tokens
             units["text_cache_read"] = Units(input=text_cache_read, output=0)
 
-    elif chunk.type == "message_delta":
-        usage = chunk.usage
-        ingest["units"]["text"]["output"] = usage.output_tokens
+        input = _PayiInstrumentor.update_for_vision(input, units, self._estimated_prompt_tokens)
 
+        units["text"] = Units(input=input, output=output)
 
-def process_synchronous_response(response: Any, ingest: IngestUnitsParams, log_prompt_and_response: bool, *args: Any, **kwargs: 'dict[str, Any]') -> Any: # noqa: ARG001
-    usage = response.usage
-    input = usage.input_tokens
-    output = usage.output_tokens
-    units: dict[str, Units] = ingest["units"]
+        if log_prompt_and_response:
+            self._ingest["provider_response_json"] = response.to_json()
+        
+        self._ingest["provider_response_id"] = response.id
+        
+        return None
 
-    if hasattr(usage, "cache_creation_input_tokens") and usage.cache_creation_input_tokens > 0:
-        text_cache_write = usage.cache_creation_input_tokens
-        units["text_cache_write"] = Units(input=text_cache_write, output=0)
+    @override
+    def process_request(self, kwargs: Any) -> None:
+        messages = kwargs.get("messages")
+        if not messages or len(messages) == 0:
+            return
+        
+        estimated_token_count = 0 
+        has_image = False
 
-    if hasattr(usage, "cache_read_input_tokens") and usage.cache_read_input_tokens > 0:
-        text_cache_read = usage.cache_read_input_tokens
-        units["text_cache_read"] = Units(input=text_cache_read, output=0)
-
-    input = _PayiInstrumentor.update_for_vision(input, units)
-
-    units["text"] = Units(input=input, output=output)
-
-    if log_prompt_and_response:
-        ingest["provider_response_json"] = response.to_json()
-    
-    ingest["provider_response_id"] = response.id
-    
-    return None
+        enc = tiktoken.get_encoding("cl100k_base")
+        
+        for message in messages:
+            msg_has_image, msg_prompt_tokens = has_image_and_get_texts(enc, message.get('content', ''))
+            if msg_has_image:
+                has_image = True
+                estimated_token_count += msg_prompt_tokens
+        
+        if not has_image or estimated_token_count == 0:
+            return
+        self._estimated_prompt_tokens = estimated_token_count
 
 def has_image_and_get_texts(encoding: tiktoken.Encoding, content: Union[str, 'list[Any]']) -> 'tuple[bool, int]':
     if isinstance(content, str):
@@ -146,23 +166,3 @@ def has_image_and_get_texts(encoding: tiktoken.Encoding, content: Union[str, 'li
         token_count = sum(len(encoding.encode(item.get("text", ""))) for item in content if item.get("type") == "text")
         return has_image, token_count
 
-def process_request(ingest: IngestUnitsParams, *args: Any, **kwargs: Any) -> None: # noqa: ARG001
-    messages = kwargs.get("messages")
-    if not messages or len(messages) == 0:
-        return
-    
-    estimated_token_count = 0 
-    has_image = False
-
-    enc = tiktoken.get_encoding("cl100k_base")
-    
-    for message in messages:
-        msg_has_image, msg_prompt_tokens = has_image_and_get_texts(enc, message.get('content', ''))
-        if msg_has_image:
-            has_image = True
-            estimated_token_count += msg_prompt_tokens
-    
-    if not has_image or estimated_token_count == 0:
-        return
-
-    ingest["units"][_PayiInstrumentor.estimated_prompt_tokens] = Units(input=estimated_token_count, output=0)
