@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.0-alpha.66 (2025-04-10)
+
+Full Changelog: [v0.1.0-alpha.65...v0.1.0-alpha.66](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.65...v0.1.0-alpha.66)
+
+### Features
+
+* feat: log inference call timestamp ([e58f9ac](https://github.com/Pay-i/pay-i-python/commit/e58f9ac4866fe6f1244c917eec050721ad220930))
+
+
+### Chores
+
+* **internal:** expand CI branch coverage ([f2c43ed](https://github.com/Pay-i/pay-i-python/commit/f2c43edd3033fea6976f2385dd621986b0015b7c))
+* **internal:** reduce CI branch coverage ([f2e1fa8](https://github.com/Pay-i/pay-i-python/commit/f2e1fa82c4a62c9da75061c573a599b42854dd88))
+
 ## 0.1.0-alpha.65 (2025-04-10)
 
 Full Changelog: [v0.1.0-alpha.64...v0.1.0-alpha.65](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.64...v0.1.0-alpha.65)
