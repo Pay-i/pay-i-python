@@ -620,8 +620,6 @@ class _PayiInstrumentor:
 
             return wrapped(*args, **kwargs)
         
-        request._ingest = {"category": category, "units": {}} # type: ignore
-
         current_frame = inspect.currentframe()
         # f_back excludes the current frame, strip() cleans up whitespace and newlines
         stack = [frame.strip() for frame in traceback.format_stack(current_frame.f_back)]  # type: ignore
