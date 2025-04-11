@@ -11,6 +11,7 @@ from payi.types.pay_i_common_models_api_router_header_info_param import PayIComm
 
 from .instrument import _IsStreaming, _ProviderRequest, _PayiInstrumentor
 
+_supported_model_prefixes = ["meta.llama3", "anthropic.", "amazon.nova-pro", "amazon.nova-lite", "amazon.nova-micro"]
 
 class BedrockInstrumentor:
     @staticmethod
@@ -96,21 +97,23 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
 
         return data
 
+def _is_supported_model(modelId: str) -> bool:
+    return any(prefix in modelId for prefix in _supported_model_prefixes)
+
 def wrap_invoke(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
     @wraps(wrapped)
     def invoke_wrapper(*args: Any, **kwargs: 'dict[str, Any]') -> Any:
         modelId:str = kwargs.get("modelId", "") # type: ignore
 
-        if modelId.startswith("meta.llama3") or modelId.startswith("anthropic."):
+        if _is_supported_model(modelId):
             return instrumentor.chat_wrapper(
-                "system.aws.bedrock",
-                _BedrockInvokeSynchronousProviderRequest(instrumentor),
+                _BedrockInvokeSynchronousProviderRequest(instrumentor=instrumentor),
                 _IsStreaming.false,
                 wrapped,
                 None,
                 args,
                 kwargs,
-        )
+            )   
         return wrapped(*args, **kwargs)
     
     return invoke_wrapper
@@ -118,12 +121,11 @@ def wrap_invoke(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
 def wrap_invoke_stream(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
     @wraps(wrapped)
     def invoke_wrapper(*args: Any, **kwargs: Any) -> Any:
-        model_id: str = kwargs.get("modelId", "") # type: ignore
+        modelId: str = kwargs.get("modelId", "") # type: ignore
 
-        if model_id.startswith("meta.llama3") or model_id.startswith("anthropic."):
+        if _is_supported_model(modelId):
             return instrumentor.chat_wrapper(
-                "system.aws.bedrock",
-                _BedrockInvokeStreamingProviderRequest(instrumentor, model_id),
+                _BedrockInvokeStreamingProviderRequest(instrumentor=instrumentor, model_id=modelId),
                 _IsStreaming.true,
                 wrapped,
                 None,
@@ -139,10 +141,9 @@ def wrap_converse(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
     def invoke_wrapper(*args: Any, **kwargs: 'dict[str, Any]') -> Any:
         modelId:str = kwargs.get("modelId", "") # type: ignore
 
-        if modelId.startswith("meta.llama3") or modelId.startswith("anthropic."):
+        if _is_supported_model(modelId):
             return instrumentor.chat_wrapper(
-                "system.aws.bedrock",
-                _BedrockConverseSynchronousProviderRequest(instrumentor),
+                _BedrockConverseSynchronousProviderRequest(instrumentor=instrumentor),
                 _IsStreaming.false,
                 wrapped,
                 None,
@@ -156,12 +157,11 @@ def wrap_converse(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
 def wrap_converse_stream(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
     @wraps(wrapped)
     def invoke_wrapper(*args: Any, **kwargs: Any) -> Any:
-        model_id: str = kwargs.get("modelId", "") # type: ignore
+        modelId: str = kwargs.get("modelId", "") # type: ignore
 
-        if model_id.startswith("meta.llama3") or model_id.startswith("anthropic."):
+        if _is_supported_model(modelId):
             return instrumentor.chat_wrapper(
-                "system.aws.bedrock",
-                _BedrockConverseStreamingProviderRequest(instrumentor),
+                _BedrockConverseStreamingProviderRequest(instrumentor=instrumentor),
                 _IsStreaming.true,
                 wrapped,
                 None,
@@ -172,9 +172,20 @@ def wrap_converse_stream(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
 
     return invoke_wrapper
 
-class _BedrockInvokeStreamingProviderRequest(_ProviderRequest):
+class _BedrockProviderRequest(_ProviderRequest):
+    def __init__(self, instrumentor: _PayiInstrumentor):
+        super().__init__(instrumentor=instrumentor, category="system.aws.bedrock")
+
+    @override
+    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', kwargs: Any) -> bool:
+        # boto3 doesn't allow extra_headers
+        kwargs.pop("extra_headers", None)
+        self._ingest["resource"] = kwargs.get("modelId", "")
+        return True
+
+class _BedrockInvokeStreamingProviderRequest(_BedrockProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, model_id: str):
-        super().__init__(instrumentor)
+        super().__init__(instrumentor=instrumentor)
         self._is_anthropic: bool = model_id.startswith("anthropic.")
 
     @override
@@ -220,7 +231,7 @@ class _BedrockInvokeStreamingProviderRequest(_ProviderRequest):
 
         return True
 
-class _BedrockInvokeSynchronousProviderRequest(_ProviderRequest):
+class _BedrockInvokeSynchronousProviderRequest(_BedrockProviderRequest):
     @override
     def process_synchronous_response(
         self,
@@ -246,7 +257,7 @@ class _BedrockInvokeSynchronousProviderRequest(_ProviderRequest):
 
         return response
 
-class _BedrockConverseSynchronousProviderRequest(_ProviderRequest):
+class _BedrockConverseSynchronousProviderRequest(_BedrockProviderRequest):
     @override
     def process_synchronous_response(
         self,
@@ -278,7 +289,7 @@ class _BedrockConverseSynchronousProviderRequest(_ProviderRequest):
 
         return None    
 
-class _BedrockConverseStreamingProviderRequest(_ProviderRequest):
+class _BedrockConverseStreamingProviderRequest(_BedrockProviderRequest):
     @override
     def process_chunk(self, chunk: 'dict[str, Any]') -> bool:
         metadata = chunk.get("metadata", {})

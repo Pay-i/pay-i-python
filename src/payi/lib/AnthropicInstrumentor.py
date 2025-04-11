@@ -54,7 +54,6 @@ def chat_wrapper(
     **kwargs: Any,
 ) -> Any:
     return instrumentor.chat_wrapper(
-        "system.anthropic",
         _AnthropicProviderRequest(instrumentor),
         _IsStreaming.kwargs,
         wrapped,
@@ -72,7 +71,6 @@ async def achat_wrapper(
     **kwargs: Any,
 ) -> Any:
     return await instrumentor.achat_wrapper(
-        "system.anthropic",
         _AnthropicProviderRequest(instrumentor),
         _IsStreaming.kwargs,
         wrapped,
@@ -82,6 +80,9 @@ async def achat_wrapper(
     )
 
 class _AnthropicProviderRequest(_ProviderRequest):
+    def __init__(self, instrumentor: _PayiInstrumentor):
+        super().__init__(instrumentor=instrumentor, category="system.anthropic")
+
     @override
     def process_chunk(self, chunk: Any) -> bool:
         if chunk.type == "message_start":
@@ -135,25 +136,24 @@ class _AnthropicProviderRequest(_ProviderRequest):
         return None
 
     @override
-    def process_request(self, kwargs: Any) -> None:
+    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', kwargs: Any) -> bool:
+        self._ingest["resource"] = kwargs.get("model", "")
         messages = kwargs.get("messages")
-        if not messages or len(messages) == 0:
-            return
-        
-        estimated_token_count = 0 
-        has_image = False
+        if messages:
+            estimated_token_count = 0 
+            has_image = False
 
-        enc = tiktoken.get_encoding("cl100k_base")
-        
-        for message in messages:
-            msg_has_image, msg_prompt_tokens = has_image_and_get_texts(enc, message.get('content', ''))
-            if msg_has_image:
-                has_image = True
-                estimated_token_count += msg_prompt_tokens
-        
-        if not has_image or estimated_token_count == 0:
-            return
-        self._estimated_prompt_tokens = estimated_token_count
+            enc = tiktoken.get_encoding("cl100k_base")
+            
+            for message in messages:
+                msg_has_image, msg_prompt_tokens = has_image_and_get_texts(enc, message.get('content', ''))
+                if msg_has_image:
+                    has_image = True
+                    estimated_token_count += msg_prompt_tokens
+            
+            if has_image and estimated_token_count > 0:
+                self._estimated_prompt_tokens = estimated_token_count
+        return True
 
 def has_image_and_get_texts(encoding: tiktoken.Encoding, content: Union[str, 'list[Any]']) -> 'tuple[bool, int]':
     if isinstance(content, str):

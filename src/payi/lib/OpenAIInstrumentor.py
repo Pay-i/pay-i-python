@@ -8,6 +8,7 @@ import tiktoken  # type: ignore
 from wrapt import wrap_function_wrapper  # type: ignore
 
 from payi.types import IngestUnitsParams
+from payi.lib.helpers import PayiCategories, PayiHeaderNames
 from payi.types.ingest_units_params import Units
 
 from .instrument import _IsStreaming, _ProviderRequest, _PayiInstrumentor
@@ -63,7 +64,6 @@ def embeddings_wrapper(
     **kwargs: Any,
 ) -> Any:
     return instrumentor.chat_wrapper(
-        "system.openai",
         _OpenAiEmbeddingsProviderRequest(instrumentor),
         _IsStreaming.false,
         wrapped,
@@ -81,7 +81,6 @@ async def aembeddings_wrapper(
     **kwargs: Any,
 ) -> Any:
     return await instrumentor.achat_wrapper(
-        "system.openai",
         _OpenAiEmbeddingsProviderRequest(instrumentor),
         _IsStreaming.false,
         wrapped,
@@ -99,7 +98,6 @@ def chat_wrapper(
     **kwargs: Any,
 ) -> Any:
     return instrumentor.chat_wrapper(
-        "system.openai",
         _OpenAiChatProviderRequest(instrumentor),
         _IsStreaming.kwargs,
         wrapped,
@@ -117,7 +115,6 @@ async def achat_wrapper(
     **kwargs: Any,
 ) -> Any:
     return await instrumentor.achat_wrapper(
-        "system.openai",
         _OpenAiChatProviderRequest(instrumentor),
         _IsStreaming.kwargs,
         wrapped,
@@ -126,7 +123,42 @@ async def achat_wrapper(
         kwargs,
     )
 
-class _OpenAiEmbeddingsProviderRequest(_ProviderRequest):
+class _OpenAiProviderRequest(_ProviderRequest):
+    def __init__(self, instrumentor: _PayiInstrumentor):
+        super().__init__(instrumentor=instrumentor, category="system.openai")
+
+    @override
+    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', kwargs: Any) -> bool:
+        self._ingest["resource"] = kwargs.get("model", "")
+
+        if not (instance and hasattr(instance, "_client")) or OpenAiInstrumentor.is_azure(instance) is False:
+            return True
+
+        route_as_resource = extra_headers.pop(PayiHeaderNames.route_as_resource, None)
+        resource_scope = extra_headers.pop(PayiHeaderNames.resource_scope, None)
+
+        if not route_as_resource:
+            logging.error("Azure OpenAI route as resource not found, not ingesting")
+            return False
+
+        if resource_scope:
+            if not(resource_scope in ["global", "datazone"] or resource_scope.startswith("region")):
+                logging.error("Azure OpenAI invalid resource scope, not ingesting")
+                return False
+
+            self._ingest["resource_scope"] = resource_scope
+
+        self._category = PayiCategories.azure_openai
+
+        self._ingest["category"] = self._category
+        self._ingest["resource"] = route_as_resource
+ 
+        return True
+
+class _OpenAiEmbeddingsProviderRequest(_OpenAiProviderRequest):
+    def __init__(self, instrumentor: _PayiInstrumentor):
+        super().__init__(instrumentor=instrumentor)
+
     @override
     def process_synchronous_response(
         self,
@@ -135,9 +167,9 @@ class _OpenAiEmbeddingsProviderRequest(_ProviderRequest):
         kwargs: Any) -> Any:
         return process_chat_synchronous_response(response, self._ingest, log_prompt_and_response, self._estimated_prompt_tokens)
 
-class _OpenAiChatProviderRequest(_ProviderRequest):
+class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor):
-        super().__init__(instrumentor)
+        super().__init__(instrumentor=instrumentor)
         self._include_usage_added = False
 
     @override
@@ -163,39 +195,42 @@ class _OpenAiChatProviderRequest(_ProviderRequest):
         return send_chunk_to_client
 
     @override
-    def process_request(self, kwargs: Any) -> None: # noqa: ARG001
+    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', kwargs: Any) -> bool:
+        result = super().process_request(instance, extra_headers, kwargs)
+        if result is False:
+            return result
+        
         messages = kwargs.get("messages", None)
-        if not messages or len(messages) == 0:
-            return
-        
-        estimated_token_count = 0 
-        has_image = False
+        if messages:
+            estimated_token_count = 0 
+            has_image = False
 
-        try: 
-            enc = tiktoken.encoding_for_model(kwargs.get("model")) # type: ignore
-        except KeyError:
-            enc = tiktoken.get_encoding("o200k_base") # type: ignore
-        
-        for message in messages:
-            msg_has_image, msg_prompt_tokens = has_image_and_get_texts(enc, message.get('content', ''))
-            if msg_has_image:
-                has_image = True
-                estimated_token_count += msg_prompt_tokens
-        
-        if has_image and estimated_token_count > 0:
-            self._estimated_prompt_tokens = estimated_token_count
+            try: 
+                enc = tiktoken.encoding_for_model(kwargs.get("model")) # type: ignore
+            except KeyError:
+                enc = tiktoken.get_encoding("o200k_base") # type: ignore
+            
+            for message in messages:
+                msg_has_image, msg_prompt_tokens = has_image_and_get_texts(enc, message.get('content', ''))
+                if msg_has_image:
+                    has_image = True
+                    estimated_token_count += msg_prompt_tokens
+            
+            if has_image and estimated_token_count > 0:
+                self._estimated_prompt_tokens = estimated_token_count
 
-        stream: bool = kwargs.get("stream", False)
-        if stream:
-            add_include_usage = True
+            stream: bool = kwargs.get("stream", False)
+            if stream:
+                add_include_usage = True
 
-            stream_options: dict[str, Any] = kwargs.get("stream_options", None)
-            if stream_options and "include_usage" in stream_options:
-                add_include_usage = stream_options["include_usage"] == False
+                stream_options: dict[str, Any] = kwargs.get("stream_options", None)
+                if stream_options and "include_usage" in stream_options:
+                    add_include_usage = stream_options["include_usage"] == False
 
-            if add_include_usage:
-                kwargs['stream_options'] = {"include_usage": True}
-                self._include_usage_added = True
+                if add_include_usage:
+                    kwargs['stream_options'] = {"include_usage": True}
+                    self._include_usage_added = True
+        return True
 
     @override
     def process_synchronous_response(
