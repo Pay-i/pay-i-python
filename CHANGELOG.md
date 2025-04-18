@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.1.0-alpha.68 (2025-04-17)
+
+Full Changelog: [v0.1.0-alpha.67...v0.1.0-alpha.68](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.67...v0.1.0-alpha.68)
+
+### Bug Fixes
+
+* **perf:** optimize some hot paths ([6645b5f](https://github.com/Pay-i/pay-i-python/commit/6645b5f63da0001cb72da48c7334955fc0f3eb92))
+* **perf:** skip traversing types for NotGiven values ([6ec70e7](https://github.com/Pay-i/pay-i-python/commit/6ec70e705495c4cebbabc423158e7bcab469c07e))
+
+
+### Chores
+
+* **client:** minor internal fixes ([f453479](https://github.com/Pay-i/pay-i-python/commit/f453479d5e5eb837fb5222f86aed85a4aeb476ba))
+* **internal:** base client updates ([2464002](https://github.com/Pay-i/pay-i-python/commit/2464002241968d08518cfdbd8368a7ca07c2a06f))
+* **internal:** bump pyright version ([7ac7381](https://github.com/Pay-i/pay-i-python/commit/7ac7381dbd447f2936c02a80f88caf9cd933af16))
+* **internal:** expand CI branch coverage ([eba83f0](https://github.com/Pay-i/pay-i-python/commit/eba83f005cd28c49d0f354be57d55b5455506a99))
+* **internal:** reduce CI branch coverage ([119ee53](https://github.com/Pay-i/pay-i-python/commit/119ee5362d995977412b791f6c7b0b3007e1d9ab))
+* **internal:** update pyright settings ([1bf3b42](https://github.com/Pay-i/pay-i-python/commit/1bf3b42fb7956cec7db654b5065df438cd8c047f))
+
 ## 0.1.0-alpha.67 (2025-04-10)
 
 Full Changelog: [v0.1.0-alpha.66...v0.1.0-alpha.67](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.66...v0.1.0-alpha.67)
