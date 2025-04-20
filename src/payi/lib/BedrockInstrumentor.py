@@ -68,10 +68,10 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
         self._ingest = ingest
         self._log_prompt_and_response = log_prompt_and_response
 
-    def read(self, amt: Any =None): # type: ignore
+    def read(self, amt: Any =None) -> Any: # type: ignore
         # data is array of bytes
-        data: Any = self.__wrapped__.read(amt) # type: ignore
-        response = json.loads(data)
+        data: bytes = self.__wrapped__.read(amt) # type: ignore
+        response = json.loads(data) # type: ignore
 
         resource = self._ingest["resource"]
         if not resource:
@@ -91,11 +91,11 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
         units["text"] = Units(input=input, output=output)
 
         if self._log_prompt_and_response:
-            self._ingest["provider_response_json"] = data.decode('utf-8')
+            self._ingest["provider_response_json"] = data.decode('utf-8') # type: ignore
             
         self._instrumentor._ingest_units(self._ingest)
 
-        return data
+        return data # type: ignore
 
 def _is_supported_model(modelId: str) -> bool:
     return any(prefix in modelId for prefix in _supported_model_prefixes)

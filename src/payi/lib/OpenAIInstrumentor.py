@@ -134,9 +134,15 @@ class _OpenAiProviderRequest(_ProviderRequest):
         if not (instance and hasattr(instance, "_client")) or OpenAiInstrumentor.is_azure(instance) is False:
             return True
 
-        route_as_resource = extra_headers.pop(PayiHeaderNames.route_as_resource, None)
-        resource_scope = extra_headers.pop(PayiHeaderNames.resource_scope, None)
+        context = self._instrumentor.get_context_safe()
+        route_as_resource = extra_headers.get(PayiHeaderNames.route_as_resource) or context.get("route_as_resource")
+        resource_scope = extra_headers.get(PayiHeaderNames.resource_scope) or context.get("resource_scope")
 
+        if PayiHeaderNames.route_as_resource in extra_headers:
+            del extra_headers[PayiHeaderNames.route_as_resource]
+        if PayiHeaderNames.resource_scope in extra_headers:
+            del extra_headers[PayiHeaderNames.resource_scope]
+            
         if not route_as_resource:
             logging.error("Azure OpenAI route as resource not found, not ingesting")
             return False

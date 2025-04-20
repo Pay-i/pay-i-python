@@ -64,6 +64,9 @@ class _Context(TypedDict, total=False):
     use_case_version: Optional[int]
     limit_ids: Optional['list[str]']
     user_id: Optional[str]
+    request_tags: Optional["list[str]"]
+    route_as_resource: Optional[str]
+    resource_scope: Optional[str]
 
 class _IsStreaming(Enum):
     false = 0
@@ -82,7 +85,7 @@ class TrackContext:
             return self
         
         _instrumentor.__enter__()
-        _instrumentor._init_and_set_context(**self._context)
+        _instrumentor._init_current_context(**self._context)
         return self
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
@@ -142,7 +145,7 @@ class _PayiInstrumentor:
 
             self.__enter__()
             # _init_and_set_context will update the currrent context stack location
-            self._init_and_set_context(**global_config) # type: ignore
+            self._init_current_context(**global_config) # type: ignore
 
     def _instrument_all(self) -> None:
         self._instrument_openai()
@@ -331,7 +334,7 @@ class _PayiInstrumentor:
 
         return {}
 
-    def _init_and_set_context(
+    def _init_current_context(
         self,
         proxy: Optional[bool] = None,
         limit_ids: Optional["list[str]"] = None,
@@ -341,20 +344,24 @@ class _PayiInstrumentor:
         use_case_id: Optional[str]= None,
         use_case_version: Optional[int]= None,                
         user_id: Optional[str]= None,
+        request_tags: Optional["list[str]"] = None,
+        route_as_resource: Optional[str] = None,
+        resource_scope: Optional[str] = None,
         ) -> None:
 
-        context: _Context = {}
-        parentContext: _Context = self._context_stack[-1] if len(self._context_stack) > 0 else {}
+        # there will always be a current context
+        context: _Context = self.get_context() # type: ignore
+        parent_context: _Context = self._context_stack[-2] if len(self._context_stack) > 1 else {}
 
-        parent_proxy = parentContext.get("proxy", False)
+        parent_proxy = parent_context.get("proxy", False)
         if proxy is None:
             # If no proxy specified, use previous value
             context["proxy"] = parent_proxy
         else:
             context["proxy"] = proxy
 
-        parent_experience_name = parentContext.get("experience_name", None)
-        parent_experience_id = parentContext.get("experience_id", None)
+        parent_experience_name = parent_context.get("experience_name", None)
+        parent_experience_id = parent_context.get("experience_id", None)
 
         if experience_name is None:
             # If no experience_name specified, use previous values
@@ -375,9 +382,9 @@ class _PayiInstrumentor:
                 context["experience_name"] = experience_name
                 context["experience_id"] = experience_id if experience_id else str(uuid.uuid4())
 
-        parent_use_case_name = parentContext.get("use_case_name", None)
-        parent_use_case_id = parentContext.get("use_case_id", None)
-        parent_use_case_version = parentContext.get("use_case_version", None)
+        parent_use_case_name = parent_context.get("use_case_name", None)
+        parent_use_case_id = parent_context.get("use_case_id", None)
+        parent_use_case_version = parent_context.get("use_case_version", None)
 
         if use_case_name is None:
             # If no use_case_name specified, use previous values
@@ -401,7 +408,7 @@ class _PayiInstrumentor:
                 context["use_case_id"] = use_case_id if use_case_id else str(uuid.uuid4())
                 context["use_case_version"] = use_case_version if use_case_version else None
 
-        parent_limit_ids = parentContext.get("limit_ids", None)
+        parent_limit_ids = parent_context.get("limit_ids", None)
         if limit_ids is None:
             # use the parent limit_ids if it exists
             context["limit_ids"] = parent_limit_ids
@@ -412,7 +419,7 @@ class _PayiInstrumentor:
             # union of new and parent lists if the parent context contains limit ids
             context["limit_ids"] = list(set(limit_ids) | set(parent_limit_ids)) if parent_limit_ids else limit_ids
 
-        parent_user_id = parentContext.get("user_id", None)
+        parent_user_id = parent_context.get("user_id", None)
         if user_id is None:
             # use the parent user_id if it exists
             context["user_id"] = parent_user_id
@@ -422,6 +429,13 @@ class _PayiInstrumentor:
         else:
             context["user_id"] = user_id
 
+        if request_tags:
+            context["request_tags"] = request_tags
+        if route_as_resource:
+            context["route_as_resource"] = route_as_resource
+        if resource_scope:
+            context["resource_scope"] = resource_scope
+        
         self.set_context(context)
         
     async def _acall_func(
@@ -439,7 +453,7 @@ class _PayiInstrumentor:
         **kwargs: Any,
     ) -> Any:
         with self:
-            self._init_and_set_context(
+            self._init_current_context(
                 proxy, 
                 limit_ids, 
                 experience_name,
@@ -465,7 +479,7 @@ class _PayiInstrumentor:
         **kwargs: Any,
     ) -> Any:
         with self:
-            self._init_and_set_context(
+            self._init_current_context(
                 proxy, 
                 limit_ids, 
                 experience_name,
@@ -494,6 +508,10 @@ class _PayiInstrumentor:
     def get_context(self) -> Optional[_Context]:
         # Return the current top of the stack
         return self._context_stack[-1] if self._context_stack else None
+
+    def get_context_safe(self) -> _Context:
+        # Return the current top of the stack
+        return self.get_context() or {}
 
     def _prepare_ingest(
         self,
@@ -569,8 +587,8 @@ class _PayiInstrumentor:
         extra_headers = kwargs.get("extra_headers", {})
         self._update_extra_headers(context, extra_headers)
 
-        if context.get("proxy", True):
-            if "extra_headers" not in kwargs:
+        if context.get("proxy", False):
+            if "extra_headers" not in kwargs and extra_headers:
                 kwargs["extra_headers"] = extra_headers
 
             return await wrapped(*args, **kwargs)
@@ -659,8 +677,8 @@ class _PayiInstrumentor:
         extra_headers = kwargs.get("extra_headers", {})
         self._update_extra_headers(context, extra_headers)
 
-        if context.get("proxy", True):
-            if "extra_headers" not in kwargs:
+        if context.get("proxy", False):
+            if "extra_headers" not in kwargs and extra_headers:
                 kwargs["extra_headers"] = extra_headers
 
             return wrapped(*args, **kwargs)
@@ -744,6 +762,9 @@ class _PayiInstrumentor:
         context_use_case_id: Optional[str] = context.get("use_case_id")
         context_use_case_version: Optional[int] = context.get("use_case_version")
         context_user_id: Optional[str] = context.get("user_id")
+        context_request_tags: Optional[list[str]] = context.get("request_tags")
+        context_route_as_resource: Optional[str] = context.get("route_as_resource")
+        context_resource_scope: Optional[str] = context.get("resource_scope")
 
         # headers_limit_ids = extra_headers.get(PayiHeaderNames.limit_ids, None)
     
@@ -801,6 +822,15 @@ class _PayiInstrumentor:
             extra_headers[PayiHeaderNames.experience_name] = context_experience_name
             if context_experience_id is not None:
                 extra_headers[PayiHeaderNames.experience_id] = context_experience_id
+
+        if PayiHeaderNames.request_tags not in extra_headers and context_request_tags:
+            extra_headers[PayiHeaderNames.request_tags] = ",".join(context_request_tags)
+
+        if PayiHeaderNames.route_as_resource not in extra_headers and context_route_as_resource:
+            extra_headers[PayiHeaderNames.route_as_resource] = context_route_as_resource
+
+        if PayiHeaderNames.resource_scope not in extra_headers and context_resource_scope:
+            extra_headers[PayiHeaderNames.resource_scope] = context_resource_scope
 
     @staticmethod
     def update_for_vision(input: int, units: 'dict[str, Units]', estimated_prompt_tokens: Optional[int]) -> int:
@@ -918,9 +948,9 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
     def __aiter__(self) -> Any:
         return self
 
-    def __next__(self) -> Any:
+    def __next__(self) -> object:
         try:
-            chunk: Any = self.__wrapped__.__next__()  # type: ignore
+            chunk: object = self.__wrapped__.__next__()  # type: ignore
         except Exception as e:
             if isinstance(e, StopIteration):
                 self._stop_iteration()
@@ -929,11 +959,11 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
             if self._evaluate_chunk(chunk) == False:
                 return self.__next__()
             
-            return chunk
+            return chunk # type: ignore
 
-    async def __anext__(self) -> Any:
+    async def __anext__(self) -> object:
         try:
-            chunk: Any = await self.__wrapped__.__anext__()  # type: ignore
+            chunk: object = await self.__wrapped__.__anext__()  # type: ignore
         except Exception as e:
             if isinstance(e, StopAsyncIteration):
                 await self._astop_iteration()
@@ -941,7 +971,8 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
         else:
             if self._evaluate_chunk(chunk) == False:
                 return await self.__anext__()
-            return chunk
+
+            return chunk # type: ignore
 
     def _evaluate_chunk(self, chunk: Any) -> bool:
         if self._first_token:
@@ -1033,8 +1064,6 @@ def track(
     proxy: Optional[bool] = None,
 ) -> Any:
 
-    proxy = proxy if proxy is not None else False
-
     def _track(func: Any) -> Any:
         import asyncio
         if asyncio.iscoroutinefunction(func):
@@ -1084,27 +1113,29 @@ def track_context(
     use_case_id: Optional[str] = None,
     use_case_version: Optional[int] = None,
     user_id: Optional[str] = None,
+    request_tags: Optional["list[str]"] = None,
+    route_as_resource: Optional[str] = None,
+    resource_scope: Optional[str] = None,
     proxy: Optional[bool] = None,
 ) -> TrackContext:
     if not _instrumentor:
         raise RuntimeError("Pay-i instrumentor not initialized. Use payi_instrument() to initialize.")
 
-    context = _instrumentor.get_context()
-    if context is None:
-        raise RuntimeError("No context available. Use the @track decorator to create a context.")
-
     # Create a new context for tracking
-    new_context = context.copy()
-    new_context["limit_ids"] = limit_ids
-    new_context["experience_name"] = experience_name
-    new_context["experience_id"] = experience_id
-    new_context["use_case_name"] = use_case_name
-    new_context["use_case_id"] = use_case_id
-    new_context["use_case_version"] = use_case_version
-    new_context["user_id"] = user_id
-    new_context["proxy"] = proxy if proxy is not None else False
+    context: _Context = {}
+    context["limit_ids"] = limit_ids
+    context["experience_name"] = experience_name
+    context["experience_id"] = experience_id
+    context["use_case_name"] = use_case_name
+    context["use_case_id"] = use_case_id
+    context["use_case_version"] = use_case_version
+    context["user_id"] = user_id
+    context["request_tags"] = request_tags
+    context["route_as_resource"] = route_as_resource
+    context["resource_scope"] = resource_scope
+    context["proxy"] = proxy
 
-    return TrackContext(new_context)
+    return TrackContext(context)
 
 def ingest(
     limit_ids: Optional["list[str]"] = None,
