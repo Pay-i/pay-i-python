@@ -1,3 +1,4 @@
+import os
 import json
 import uuid
 import asyncio
@@ -55,7 +56,7 @@ class PayiInstrumentConfig(TypedDict, total=False):
     user_id: Optional[str]
 
 class _Context(TypedDict, total=False):
-    proxy: bool
+    proxy: Optional[bool]
     experience_name: Optional[str]
     experience_id: Optional[str]
     use_case_name: Optional[str]
@@ -69,6 +70,25 @@ class _IsStreaming(Enum):
     true = 1 
     kwargs = 2
 
+class TrackContext:
+    def __init__(
+        self,
+        context: _Context,
+    ) -> None:
+        self._context = context
+
+    def __enter__(self) -> Any:
+        if not _instrumentor:
+            return self
+        
+        _instrumentor.__enter__()
+        _instrumentor._init_and_set_context(**self._context)
+        return self
+
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        if _instrumentor:
+            _instrumentor.__exit__(exc_type, exc_val, exc_tb)
+
 class _PayiInstrumentor:
     def __init__(
         self,
@@ -80,6 +100,7 @@ class _PayiInstrumentor:
             Callable[[str, "dict[str, str]"], None]
         ] = None,  # (request id, dict of data to store) -> None
         global_config: Optional[PayiInstrumentConfig] = None,
+        caller_filename: str = ""
     ):
         self._payi: Optional[Payi] = payi
         self._apayi: Optional[AsyncPayi] = apayi
@@ -109,10 +130,19 @@ class _PayiInstrumentor:
                 self._payi = Payi()
                 self._apayi = AsyncPayi()
 
-            context: _Context = {}
-            self._context_stack.append(context)            
-            # init_context will update the currrent context stack location
-            self._init_context(context=context, parentContext={}, **global_config) # type: ignore
+            if "use_case_name" not in global_config and caller_filename:
+                try:
+                    if self._payi:
+                        self._payi.use_cases.definitions.create(name=caller_filename, description='')
+                    elif self._apayi:
+                        self._call_async_use_case_definition_create(use_case_name=caller_filename)
+                    global_config["use_case_name"] = caller_filename
+                except Exception as e:
+                    logging.error(f"Error creating default use case definition based on file name {caller_filename}: {e}")
+
+            self.__enter__()
+            # _init_and_set_context will update the currrent context stack location
+            self._init_and_set_context(**global_config) # type: ignore
 
     def _instrument_all(self) -> None:
         self._instrument_openai()
@@ -225,6 +255,25 @@ class _PayiInstrumentor:
     
         return None         
     
+    def _call_async_use_case_definition_create(self, use_case_name: str) -> None:
+        if not self._apayi:
+            return
+
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+        
+        try:
+            if loop and loop.is_running():
+                nest_asyncio.apply(loop) # type: ignore
+                asyncio.run(self._apayi.use_cases.definitions.create(name=use_case_name, description=""))                
+            else:
+                # When there's no running loop, create a new one
+                asyncio.run(self._apayi.use_cases.definitions.create(name=use_case_name, description=""))
+        except Exception as e:
+            logging.error(f"Error calling async use_cases.definitions.create synchronously: {e}")
+
     def _call_aingest_sync(self, ingest_units: IngestUnitsParams) -> Optional[IngestResponse]:
         try:
             loop = asyncio.get_running_loop()
@@ -274,23 +323,17 @@ class _PayiInstrumentor:
 
     def _setup_call_func(
         self
-        ) -> 'tuple[_Context, _Context]':
-        context: _Context = {}
-        parentContext: _Context = {}
+        ) -> _Context:
 
         if len(self._context_stack) > 0:
             # copy current context into the upcoming context
-            context = self._context_stack[-1].copy()
-            context.pop("proxy")
-            parentContext = {**context}
+            return self._context_stack[-1].copy()
 
-        return (context, parentContext)
+        return {}
 
-    def _init_context(
+    def _init_and_set_context(
         self,
-        context: _Context,
-        parentContext: _Context,
-        proxy: bool,
+        proxy: Optional[bool] = None,
         limit_ids: Optional["list[str]"] = None,
         experience_name: Optional[str] = None,
         experience_id: Optional[str] = None,
@@ -299,7 +342,16 @@ class _PayiInstrumentor:
         use_case_version: Optional[int]= None,                
         user_id: Optional[str]= None,
         ) -> None:
-        context["proxy"] = proxy
+
+        context: _Context = {}
+        parentContext: _Context = self._context_stack[-1] if len(self._context_stack) > 0 else {}
+
+        parent_proxy = parentContext.get("proxy", False)
+        if proxy is None:
+            # If no proxy specified, use previous value
+            context["proxy"] = parent_proxy
+        else:
+            context["proxy"] = proxy
 
         parent_experience_name = parentContext.get("experience_name", None)
         parent_experience_id = parentContext.get("experience_id", None)
@@ -360,9 +412,10 @@ class _PayiInstrumentor:
             # union of new and parent lists if the parent context contains limit ids
             context["limit_ids"] = list(set(limit_ids) | set(parent_limit_ids)) if parent_limit_ids else limit_ids
 
+        parent_user_id = parentContext.get("user_id", None)
         if user_id is None:
             # use the parent user_id if it exists
-            context["user_id"] = parentContext.get("user_id", None)
+            context["user_id"] = parent_user_id
         elif len(user_id) == 0:
             # caller passing an empty string explicitly blocks inheriting from the parent state
             context["user_id"] = None
@@ -374,7 +427,7 @@ class _PayiInstrumentor:
     async def _acall_func(
         self,
         func: Any,
-        proxy: bool,
+        proxy: Optional[bool],
         limit_ids: Optional["list[str]"],
         experience_name: Optional[str],
         experience_id: Optional[str],
@@ -385,12 +438,8 @@ class _PayiInstrumentor:
         *args: Any,
         **kwargs: Any,
     ) -> Any:
-        context, parentContext = self._setup_call_func()
-
         with self:
-            self._init_context(
-                context,
-                parentContext,
+            self._init_and_set_context(
                 proxy, 
                 limit_ids, 
                 experience_name,
@@ -404,7 +453,7 @@ class _PayiInstrumentor:
     def _call_func(
         self,
         func: Any,
-        proxy: bool,
+        proxy: Optional[bool],
         limit_ids: Optional["list[str]"],
         experience_name: Optional[str],
         experience_id: Optional[str],
@@ -415,12 +464,8 @@ class _PayiInstrumentor:
         *args: Any,
         **kwargs: Any,
     ) -> Any:
-        context, parentContext = self._setup_call_func()
-
         with self:
-            self._init_context(
-                context,
-                parentContext,
+            self._init_and_set_context(
                 proxy, 
                 limit_ids, 
                 experience_name,
@@ -963,7 +1008,11 @@ def payi_instrument(
                 payi_param = p
             elif isinstance(p, AsyncPayi): # type: ignore
                 apayi_param = p
-    
+    frameinfo = inspect.stack()[1]
+    caller_filename = os.path.basename(frameinfo.filename).replace(' ', '_')
+    if caller_filename.lower().endswith('.py'):
+        caller_filename = caller_filename[:-3]
+
     # allow for both payi and apayi to be None for the @proxy case
     _instrumentor = _PayiInstrumentor(
         payi=payi_param,
@@ -972,7 +1021,90 @@ def payi_instrument(
         log_prompt_and_response=log_prompt_and_response,
         prompt_and_response_logger=prompt_and_response_logger,
         global_config=config,
+        caller_filename=caller_filename
     )
+
+def track(
+    limit_ids: Optional["list[str]"] = None,
+    use_case_name: Optional[str] = None,
+    use_case_id: Optional[str] = None,
+    use_case_version: Optional[int] = None,
+    user_id: Optional[str] = None,
+    proxy: Optional[bool] = None,
+) -> Any:
+
+    proxy = proxy if proxy is not None else False
+
+    def _track(func: Any) -> Any:
+        import asyncio
+        if asyncio.iscoroutinefunction(func):
+            async def awrapper(*args: Any, **kwargs: Any) -> Any:
+                if not _instrumentor:
+                    return await func(*args, **kwargs)
+                # Call the instrumentor's _call_func for async functions
+                return await _instrumentor._acall_func(
+                    func,
+                    proxy,
+                    limit_ids,
+                    None, # experience_name,
+                    None, #experience_id,
+                    use_case_name,
+                    use_case_id,
+                    use_case_version,
+                    user_id,
+                    *args,
+                    **kwargs,
+                )
+            return awrapper
+        else:
+            def wrapper(*args: Any, **kwargs: Any) -> Any:
+                if not _instrumentor:
+                    return func(*args, **kwargs)
+                return _instrumentor._call_func(
+                    func,
+                    proxy,
+                    limit_ids,
+                    None, # experience_name,
+                    None, # experience_id,
+                    use_case_name,
+                    use_case_id,
+                    use_case_version,
+                    user_id,
+                    *args,
+                    **kwargs,
+                )
+            return wrapper
+    return _track
+
+def track_context(
+    limit_ids: Optional["list[str]"] = None,
+    experience_name: Optional[str] = None,
+    experience_id: Optional[str] = None,
+    use_case_name: Optional[str] = None,
+    use_case_id: Optional[str] = None,
+    use_case_version: Optional[int] = None,
+    user_id: Optional[str] = None,
+    proxy: Optional[bool] = None,
+) -> TrackContext:
+    if not _instrumentor:
+        raise RuntimeError("Pay-i instrumentor not initialized. Use payi_instrument() to initialize.")
+
+    context = _instrumentor.get_context()
+    if context is None:
+        raise RuntimeError("No context available. Use the @track decorator to create a context.")
+
+    # Create a new context for tracking
+    new_context = context.copy()
+    new_context["limit_ids"] = limit_ids
+    new_context["experience_name"] = experience_name
+    new_context["experience_id"] = experience_id
+    new_context["use_case_name"] = use_case_name
+    new_context["use_case_id"] = use_case_id
+    new_context["use_case_version"] = use_case_version
+    new_context["user_id"] = user_id
+    new_context["proxy"] = proxy if proxy is not None else False
+
+    return TrackContext(new_context)
 
 def ingest(
     limit_ids: Optional["list[str]"] = None,
