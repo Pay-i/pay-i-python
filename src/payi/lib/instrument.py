@@ -43,6 +43,9 @@ class _ProviderRequest:
     
     def is_bedrock(self) -> bool:
         return self._category == PayiCategories.aws_bedrock
+    
+    def process_exception(self, exception: Exception, kwargs: Any, ) -> bool: # noqa: ARG002
+        return False
 
 class PayiInstrumentConfig(TypedDict, total=False):
     proxy: bool
@@ -191,9 +194,7 @@ class _PayiInstrumentor:
         if int(ingest_units.get("http_status_code") or 0) < 400:
             units = ingest_units.get("units", {})
             if not units or all(unit.get("input", 0) == 0 and unit.get("output", 0) == 0 for unit in units.values()):
-                logging.error(
-                    'No units to ingest.  For OpenAI streaming calls, make sure you pass stream_options={"include_usage": True}'
-                )
+                logging.error('No units to ingest')
                 return False
 
         if self._log_prompt_and_response and self._prompt_and_response_logger:
@@ -621,7 +622,9 @@ class _PayiInstrumentor:
             sw.stop()
             duration = sw.elapsed_ms_int()
 
-            # TODO ingest error
+            if request.process_exception(e, kwargs):
+                request._ingest["end_to_end_latency_ms"] = duration
+                await self._aingest_units(request._ingest)
 
             raise e
 
@@ -711,7 +714,9 @@ class _PayiInstrumentor:
             sw.stop()
             duration = sw.elapsed_ms_int()
 
-            # TODO ingest error
+            if request.process_exception(e, kwargs):
+                request._ingest["end_to_end_latency_ms"] = duration
+                self._ingest_units(request._ingest)
 
             raise e
 

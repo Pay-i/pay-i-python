@@ -155,6 +155,35 @@ class _AnthropicProviderRequest(_ProviderRequest):
                 self._estimated_prompt_tokens = estimated_token_count
         return True
 
+    @override
+    def process_exception(self, exception: Exception, kwargs: Any, ) -> bool:
+        import anthropic  # type: ignore # noqa: F401
+
+        try:
+            if isinstance(exception, anthropic.APIStatusError): # type: ignore
+                e: object = exception
+                if hasattr(e, "status_code"):
+                    status_code = getattr(e, "status_code", None)
+                    if isinstance(status_code, int):
+                        self._ingest["http_status_code"] = status_code
+
+                if hasattr(e, "request_id"):
+                    request_id = getattr(e, "request_id", None)
+                    if isinstance(request_id, str):
+                        self._ingest["provider_response_id"] = request_id
+                if hasattr(e, "response"):
+                    response = getattr(e, "response", None)
+                    if hasattr(response, "text"):
+                        text = getattr(response, "text", None)
+                        self._ingest["provider_response_json"] = text
+
+            return True
+
+        except Exception as exc:
+            logging.debug(f"Error processing exception: {exc}")
+            return False
+
+
 def has_image_and_get_texts(encoding: tiktoken.Encoding, content: Union[str, 'list[Any]']) -> 'tuple[bool, int]':
     if isinstance(content, str):
         return False, 0
