@@ -147,7 +147,7 @@ class _PayiInstrumentor:
                     logging.error(f"Error creating default use case definition based on file name {caller_filename}: {e}")
 
             self.__enter__()
-            # _init_and_set_context will update the currrent context stack location
+            # _init_current_context will update the currrent context stack location
             self._init_current_context(**global_config) # type: ignore
 
     def _instrument_all(self) -> None:
@@ -437,8 +437,6 @@ class _PayiInstrumentor:
         if resource_scope:
             context["resource_scope"] = resource_scope
         
-        self.set_context(context)
-        
     async def _acall_func(
         self,
         func: Any,
@@ -500,11 +498,6 @@ class _PayiInstrumentor:
         # Pop the current context off the stack
         if self._context_stack:
             self._context_stack.pop()
-
-    def set_context(self, context: _Context) -> None:
-        # Update the current top of the stack with the provided context
-        if self._context_stack:
-            self._context_stack[-1].update(context)
 
     def get_context(self) -> Optional[_Context]:
         # Return the current top of the stack
