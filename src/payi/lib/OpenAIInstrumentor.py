@@ -177,11 +177,13 @@ class _OpenAiProviderRequest(_ProviderRequest):
                     request_id = getattr(e, "request_id", None)
                     if isinstance(request_id, str):
                         self._ingest["provider_response_id"] = request_id
+
                 if hasattr(e, "response"):
                     response = getattr(e, "response", None)
                     if hasattr(response, "text"):
                         text = getattr(response, "text", None)
-                        self._ingest["provider_response_json"] = text
+                        if isinstance(text, str):
+                            self._ingest["provider_response_json"] = text
 
         except Exception as exc:
             logging.debug(f"Error processing exception: {exc}")

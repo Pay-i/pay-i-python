@@ -183,6 +183,29 @@ class _BedrockProviderRequest(_ProviderRequest):
         self._ingest["resource"] = kwargs.get("modelId", "")
         return True
 
+    @override
+    def process_exception(self, exception: Exception, kwargs: Any, ) -> bool:
+        try:
+            if hasattr(exception, "response"):
+                response: dict[str, Any] = getattr(exception, "response", {})
+                status_code: int = response.get('ResponseMetadata', {}).get('HTTPStatusCode', 0)
+                if status_code != 0:
+                    self._ingest["http_status_code"] = status_code
+                
+                request_id = response.get('ResponseMetadata', {}).get('RequestId', "")
+                if request_id:
+                    self._ingest["provider_response_id"] = request_id
+
+                error = response.get('Error', "")
+                if error:
+                    self._ingest["provider_response_json"] = json.dumps(error)
+
+            return True
+
+        except Exception as e:
+            logging.debug(f"Error processing exception: {exception}")
+            return False
+
 class _BedrockInvokeStreamingProviderRequest(_BedrockProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, model_id: str):
         super().__init__(instrumentor=instrumentor)

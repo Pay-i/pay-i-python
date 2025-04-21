@@ -175,7 +175,8 @@ class _AnthropicProviderRequest(_ProviderRequest):
                     response = getattr(e, "response", None)
                     if hasattr(response, "text"):
                         text = getattr(response, "text", None)
-                        self._ingest["provider_response_json"] = text
+                        if isinstance(text, str):
+                            self._ingest["provider_response_json"] = text
 
             return True
 
