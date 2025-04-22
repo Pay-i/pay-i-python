@@ -163,30 +163,31 @@ class _OpenAiProviderRequest(_ProviderRequest):
 
     @override
     def process_exception(self, exception: Exception, kwargs: Any, ) -> bool:
-        import openai  # type: ignore # noqa: F401
-
         try:
-            if isinstance(exception, openai.APIStatusError): # type: ignore
-                e: object = exception
-                if hasattr(e, "status_code"):
-                    status_code = getattr(e, "status_code", None)
-                    if isinstance(status_code, int):
-                        self._ingest["http_status_code"] = status_code
+            status_code: Optional[int] = None
 
-                if hasattr(e, "request_id"):
-                    request_id = getattr(e, "request_id", None)
-                    if isinstance(request_id, str):
-                        self._ingest["provider_response_id"] = request_id
+            if hasattr(exception, "status_code"):
+                status_code = getattr(exception, "status_code", None)
+                if isinstance(status_code, int):
+                    self._ingest["http_status_code"] = status_code
 
-                if hasattr(e, "response"):
-                    response = getattr(e, "response", None)
-                    if hasattr(response, "text"):
-                        text = getattr(response, "text", None)
-                        if isinstance(text, str):
-                            self._ingest["provider_response_json"] = text
+            if not status_code:
+                return False
 
-        except Exception as exc:
-            logging.debug(f"Error processing exception: {exc}")
+            if hasattr(exception, "request_id"):
+                request_id = getattr(exception, "request_id", None)
+                if isinstance(request_id, str):
+                    self._ingest["provider_response_id"] = request_id
+
+            if hasattr(exception, "response"):
+                response = getattr(exception, "response", None)
+                if hasattr(response, "text"):
+                    text = getattr(response, "text", None)
+                    if isinstance(text, str):
+                        self._ingest["provider_response_json"] = text
+
+        except Exception as e:
+            logging.debug(f"Error processing exception: {e}")
             return False
 
         return True

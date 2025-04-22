@@ -47,6 +47,29 @@ class _ProviderRequest:
     def process_exception(self, exception: Exception, kwargs: Any, ) -> bool: # noqa: ARG002
         return False
 
+    def exception_to_semantic_failure(self, e: Exception) -> None:
+        exception_str = f"{type(e).__name__}"
+    
+        fields: list[str] = []
+        # fields += f"args: {e.args}"
+    
+        for attr in dir(e):
+            if not attr.startswith("__"):
+                try:
+                    value = getattr(e, attr)
+                    if value and not inspect.ismethod(value) and not inspect.isfunction(value) and not callable(value):
+                        fields.append(f"{attr}={value}")
+                except Exception as ex:
+                    pass
+ 
+        self._ingest["properties"] = { "system.failure": exception_str }
+        if fields:
+            failure_description = ",".join(fields)
+            self._ingest["properties"]["system.failure.description"] = failure_description[:128]
+        if "http_status_code" not in self._ingest:
+            # use a non existent http status code so when presented to the user, the origin is clear
+            self._ingest["http_status_code"] = 299
+
 class PayiInstrumentConfig(TypedDict, total=False):
     proxy: bool
     global_instrumentation: bool
