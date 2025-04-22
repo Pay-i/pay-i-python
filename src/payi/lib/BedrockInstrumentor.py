@@ -189,8 +189,10 @@ class _BedrockProviderRequest(_ProviderRequest):
             if hasattr(exception, "response"):
                 response: dict[str, Any] = getattr(exception, "response", {})
                 status_code: int = response.get('ResponseMetadata', {}).get('HTTPStatusCode', 0)
-                if status_code != 0:
-                    self._ingest["http_status_code"] = status_code
+                if status_code == 0:
+                    return False
+
+                self._ingest["http_status_code"] = status_code
                 
                 request_id = response.get('ResponseMetadata', {}).get('RequestId', "")
                 if request_id:
@@ -203,7 +205,7 @@ class _BedrockProviderRequest(_ProviderRequest):
             return True
 
         except Exception as e:
-            logging.debug(f"Error processing exception: {exception}")
+            logging.debug(f"Error processing exception: {e}")
             return False
 
 class _BedrockInvokeStreamingProviderRequest(_BedrockProviderRequest):

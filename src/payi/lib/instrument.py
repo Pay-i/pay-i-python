@@ -59,13 +59,15 @@ class _ProviderRequest:
                     value = getattr(e, attr)
                     if value and not inspect.ismethod(value) and not inspect.isfunction(value) and not callable(value):
                         fields.append(f"{attr}={value}")
-                except Exception as ex:
+                except Exception as _ex:
                     pass
  
-        self._ingest["properties"] = { "system.failure": exception_str }
+        properties: 'dict[str,str]' = { "system.failure": exception_str }
         if fields:
             failure_description = ",".join(fields)
-            self._ingest["properties"]["system.failure.description"] = failure_description[:128]
+            properties["system.failure.description"] = failure_description[:128]
+        self._ingest["properties"] = properties
+
         if "http_status_code" not in self._ingest:
             # use a non existent http status code so when presented to the user, the origin is clear
             self._ingest["http_status_code"] = 299
