@@ -101,7 +101,7 @@ class _IsStreaming(Enum):
     true = 1 
     kwargs = 2
 
-class TrackContext:
+class _TrackContext:
     def __init__(
         self,
         context: _Context,
@@ -1140,7 +1140,7 @@ def track_context(
     route_as_resource: Optional[str] = None,
     resource_scope: Optional[str] = None,
     proxy: Optional[bool] = None,
-) -> TrackContext:
+) -> _TrackContext:
     if not _instrumentor:
         raise RuntimeError("Pay-i instrumentor not initialized. Use payi_instrument() to initialize.")
 
@@ -1158,7 +1158,7 @@ def track_context(
     context["resource_scope"] = resource_scope
     context["proxy"] = proxy
 
-    return TrackContext(context)
+    return _TrackContext(context)
 
 def ingest(
     limit_ids: Optional["list[str]"] = None,
