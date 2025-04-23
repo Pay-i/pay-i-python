@@ -1,9 +1,11 @@
+import os
 import json
 import uuid
 import asyncio
 import inspect
 import logging
 import traceback
+from abc import abstractmethod
 from enum import Enum
 from typing import Any, Set, Union, Callable, Optional, TypedDict
 from datetime import datetime, timezone
@@ -23,19 +25,52 @@ from .Stopwatch import Stopwatch
 
 
 class _ProviderRequest:
-    def __init__(self, instrumentor: '_PayiInstrumentor'):
+    def __init__(self, instrumentor: '_PayiInstrumentor', category: str):
         self._instrumentor: '_PayiInstrumentor' = instrumentor
         self._estimated_prompt_tokens: Optional[int] = None
-        self._ingest: IngestUnitsParams
-
-    def process_request(self, _kwargs: Any) -> None:
-        return
+        self._category: str = category
+        self._ingest: IngestUnitsParams = { "category": category, "units": {} } # type: ignore
 
     def process_chunk(self, _chunk: Any) -> bool:
         return True
 
     def process_synchronous_response(self, response: Any, log_prompt_and_response: bool, kwargs: Any) -> Optional[object]:  # noqa: ARG002
         return None
+    
+    @abstractmethod
+    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', kwargs: Any) -> bool:
+        ...
+    
+    def is_bedrock(self) -> bool:
+        return self._category == PayiCategories.aws_bedrock
+    
+    def process_exception(self, exception: Exception, kwargs: Any, ) -> bool: # noqa: ARG002
+        return False
+
+    def exception_to_semantic_failure(self, e: Exception) -> None:
+        exception_str = f"{type(e).__name__}"
+    
+        fields: list[str] = []
+        # fields += f"args: {e.args}"
+    
+        for attr in dir(e):
+            if not attr.startswith("__"):
+                try:
+                    value = getattr(e, attr)
+                    if value and not inspect.ismethod(value) and not inspect.isfunction(value) and not callable(value):
+                        fields.append(f"{attr}={value}")
+                except Exception as _ex:
+                    pass
+ 
+        properties: 'dict[str,str]' = { "system.failure": exception_str }
+        if fields:
+            failure_description = ",".join(fields)
+            properties["system.failure.description"] = failure_description[:128]
+        self._ingest["properties"] = properties
+
+        if "http_status_code" not in self._ingest:
+            # use a non existent http status code so when presented to the user, the origin is clear
+            self._ingest["http_status_code"] = 299
 
 class PayiInstrumentConfig(TypedDict, total=False):
     proxy: bool
@@ -49,7 +84,7 @@ class PayiInstrumentConfig(TypedDict, total=False):
     user_id: Optional[str]
 
 class _Context(TypedDict, total=False):
-    proxy: bool
+    proxy: Optional[bool]
     experience_name: Optional[str]
     experience_id: Optional[str]
     use_case_name: Optional[str]
@@ -57,11 +92,33 @@ class _Context(TypedDict, total=False):
     use_case_version: Optional[int]
     limit_ids: Optional['list[str]']
     user_id: Optional[str]
+    request_tags: Optional["list[str]"]
+    route_as_resource: Optional[str]
+    resource_scope: Optional[str]
 
 class _IsStreaming(Enum):
     false = 0
     true = 1 
     kwargs = 2
+
+class _TrackContext:
+    def __init__(
+        self,
+        context: _Context,
+    ) -> None:
+        self._context = context
+
+    def __enter__(self) -> Any:
+        if not _instrumentor:
+            return self
+        
+        _instrumentor.__enter__()
+        _instrumentor._init_current_context(**self._context)
+        return self
+
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        if _instrumentor:
+            _instrumentor.__exit__(exc_type, exc_val, exc_tb)
 
 class _PayiInstrumentor:
     def __init__(
@@ -73,7 +130,8 @@ class _PayiInstrumentor:
         prompt_and_response_logger: Optional[
             Callable[[str, "dict[str, str]"], None]
         ] = None,  # (request id, dict of data to store) -> None
-        global_config: Optional[PayiInstrumentConfig] = None,
+        global_config: PayiInstrumentConfig = {},
+        caller_filename: str = ""
     ):
         self._payi: Optional[Payi] = payi
         self._apayi: Optional[AsyncPayi] = apayi
@@ -85,28 +143,38 @@ class _PayiInstrumentor:
         self._blocked_limits: set[str] = set()
         self._exceeded_limits: set[str] = set()
 
+        # default is instrument and ingest metrics
+        self._proxy_default: bool = global_config.get("proxy", False)
+
+        global_instrumentation = global_config.pop("global_instrumentation", True)
+
         if instruments is None or "*" in instruments:
             self._instrument_all()
         else:
             self._instrument_specific(instruments)
 
-        global_instrumentation = global_config.pop("global_instrumentation", True) if global_config else True
-
         if global_instrumentation:
-            if global_config is None:
-                global_config = {}
             if "proxy" not in global_config:
-                global_config["proxy"] = False
+                global_config["proxy"] = self._proxy_default
 
             # Use default clients if not provided for global ingest instrumentation
-            if not self._payi and not self._apayi and global_config.get("proxy") == False:
+            if not self._payi and not self._apayi and global_config.get("proxy") is False:
                 self._payi = Payi()
                 self._apayi = AsyncPayi()
 
-            context: _Context = {}
-            self._context_stack.append(context)            
-            # init_context will update the currrent context stack location
-            self._init_context(context=context, parentContext={}, **global_config) # type: ignore
+            if "use_case_name" not in global_config and caller_filename:
+                try:
+                    if self._payi:
+                        self._payi.use_cases.definitions.create(name=caller_filename, description='')
+                    elif self._apayi:
+                        self._call_async_use_case_definition_create(use_case_name=caller_filename)
+                    global_config["use_case_name"] = caller_filename
+                except Exception as e:
+                    logging.error(f"Error creating default use case definition based on file name {caller_filename}: {e}")
+
+            self.__enter__()
+            # _init_current_context will update the currrent context stack location
+            self._init_current_context(**global_config) # type: ignore
 
     def _instrument_all(self) -> None:
         self._instrument_openai()
@@ -152,9 +220,7 @@ class _PayiInstrumentor:
         if int(ingest_units.get("http_status_code") or 0) < 400:
             units = ingest_units.get("units", {})
             if not units or all(unit.get("input", 0) == 0 and unit.get("output", 0) == 0 for unit in units.values()):
-                logging.error(
-                    'No units to ingest.  For OpenAI streaming calls, make sure you pass stream_options={"include_usage": True}'
-                )
+                logging.error('No units to ingest')
                 return False
 
         if self._log_prompt_and_response and self._prompt_and_response_logger:
@@ -219,6 +285,25 @@ class _PayiInstrumentor:
     
         return None         
     
+    def _call_async_use_case_definition_create(self, use_case_name: str) -> None:
+        if not self._apayi:
+            return
+
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+        
+        try:
+            if loop and loop.is_running():
+                nest_asyncio.apply(loop) # type: ignore
+                asyncio.run(self._apayi.use_cases.definitions.create(name=use_case_name, description=""))                
+            else:
+                # When there's no running loop, create a new one
+                asyncio.run(self._apayi.use_cases.definitions.create(name=use_case_name, description=""))
+        except Exception as e:
+            logging.error(f"Error calling async use_cases.definitions.create synchronously: {e}")
+
     def _call_aingest_sync(self, ingest_units: IngestUnitsParams) -> Optional[IngestResponse]:
         try:
             loop = asyncio.get_running_loop()
@@ -268,23 +353,17 @@ class _PayiInstrumentor:
 
     def _setup_call_func(
         self
-        ) -> 'tuple[_Context, _Context]':
-        context: _Context = {}
-        parentContext: _Context = {}
+        ) -> _Context:
 
         if len(self._context_stack) > 0:
             # copy current context into the upcoming context
-            context = self._context_stack[-1].copy()
-            context.pop("proxy")
-            parentContext = {**context}
+            return self._context_stack[-1].copy()
 
-        return (context, parentContext)
+        return {}
 
-    def _init_context(
+    def _init_current_context(
         self,
-        context: _Context,
-        parentContext: _Context,
-        proxy: bool,
+        proxy: Optional[bool] = None,
         limit_ids: Optional["list[str]"] = None,
         experience_name: Optional[str] = None,
         experience_id: Optional[str] = None,
@@ -292,11 +371,20 @@ class _PayiInstrumentor:
         use_case_id: Optional[str]= None,
         use_case_version: Optional[int]= None,                
         user_id: Optional[str]= None,
+        request_tags: Optional["list[str]"] = None,
+        route_as_resource: Optional[str] = None,
+        resource_scope: Optional[str] = None,
         ) -> None:
-        context["proxy"] = proxy
 
-        parent_experience_name = parentContext.get("experience_name", None)
-        parent_experience_id = parentContext.get("experience_id", None)
+        # there will always be a current context
+        context: _Context = self.get_context() # type: ignore
+        parent_context: _Context = self._context_stack[-2] if len(self._context_stack) > 1 else {}
+
+        parent_proxy = parent_context.get("proxy", self._proxy_default)
+        context["proxy"] = proxy if proxy else parent_proxy
+
+        parent_experience_name = parent_context.get("experience_name", None)
+        parent_experience_id = parent_context.get("experience_id", None)
 
         if experience_name is None:
             # If no experience_name specified, use previous values
@@ -317,9 +405,9 @@ class _PayiInstrumentor:
                 context["experience_name"] = experience_name
                 context["experience_id"] = experience_id if experience_id else str(uuid.uuid4())
 
-        parent_use_case_name = parentContext.get("use_case_name", None)
-        parent_use_case_id = parentContext.get("use_case_id", None)
-        parent_use_case_version = parentContext.get("use_case_version", None)
+        parent_use_case_name = parent_context.get("use_case_name", None)
+        parent_use_case_id = parent_context.get("use_case_id", None)
+        parent_use_case_version = parent_context.get("use_case_version", None)
 
         if use_case_name is None:
             # If no use_case_name specified, use previous values
@@ -343,7 +431,7 @@ class _PayiInstrumentor:
                 context["use_case_id"] = use_case_id if use_case_id else str(uuid.uuid4())
                 context["use_case_version"] = use_case_version if use_case_version else None
 
-        parent_limit_ids = parentContext.get("limit_ids", None)
+        parent_limit_ids = parent_context.get("limit_ids", None)
         if limit_ids is None:
             # use the parent limit_ids if it exists
             context["limit_ids"] = parent_limit_ids
@@ -354,21 +442,27 @@ class _PayiInstrumentor:
             # union of new and parent lists if the parent context contains limit ids
             context["limit_ids"] = list(set(limit_ids) | set(parent_limit_ids)) if parent_limit_ids else limit_ids
 
+        parent_user_id = parent_context.get("user_id", None)
         if user_id is None:
             # use the parent user_id if it exists
-            context["user_id"] = parentContext.get("user_id", None)
+            context["user_id"] = parent_user_id
         elif len(user_id) == 0:
             # caller passing an empty string explicitly blocks inheriting from the parent state
             context["user_id"] = None
         else:
             context["user_id"] = user_id
 
-        self.set_context(context)
+        if request_tags:
+            context["request_tags"] = request_tags
+        if route_as_resource:
+            context["route_as_resource"] = route_as_resource
+        if resource_scope:
+            context["resource_scope"] = resource_scope
         
     async def _acall_func(
         self,
         func: Any,
-        proxy: bool,
+        proxy: Optional[bool],
         limit_ids: Optional["list[str]"],
         experience_name: Optional[str],
         experience_id: Optional[str],
@@ -379,12 +473,8 @@ class _PayiInstrumentor:
         *args: Any,
         **kwargs: Any,
     ) -> Any:
-        context, parentContext = self._setup_call_func()
-
         with self:
-            self._init_context(
-                context,
-                parentContext,
+            self._init_current_context(
                 proxy, 
                 limit_ids, 
                 experience_name,
@@ -398,7 +488,7 @@ class _PayiInstrumentor:
     def _call_func(
         self,
         func: Any,
-        proxy: bool,
+        proxy: Optional[bool],
         limit_ids: Optional["list[str]"],
         experience_name: Optional[str],
         experience_id: Optional[str],
@@ -409,12 +499,8 @@ class _PayiInstrumentor:
         *args: Any,
         **kwargs: Any,
     ) -> Any:
-        context, parentContext = self._setup_call_func()
-
         with self:
-            self._init_context(
-                context,
-                parentContext,
+            self._init_current_context(
                 proxy, 
                 limit_ids, 
                 experience_name,
@@ -435,14 +521,13 @@ class _PayiInstrumentor:
         if self._context_stack:
             self._context_stack.pop()
 
-    def set_context(self, context: _Context) -> None:
-        # Update the current top of the stack with the provided context
-        if self._context_stack:
-            self._context_stack[-1].update(context)
-
     def get_context(self) -> Optional[_Context]:
         # Return the current top of the stack
         return self._context_stack[-1] if self._context_stack else None
+
+    def get_context_safe(self) -> _Context:
+        # Return the current top of the stack
+        return self.get_context() or {}
 
     def _prepare_ingest(
         self,
@@ -499,8 +584,7 @@ class _PayiInstrumentor:
         
     async def achat_wrapper(
         self,
-        category: str,
-        provider: _ProviderRequest,
+        request: _ProviderRequest,
         is_streaming: _IsStreaming,
         wrapped: Any,
         instance: Any,
@@ -519,45 +603,20 @@ class _PayiInstrumentor:
         extra_headers = kwargs.get("extra_headers", {})
         self._update_extra_headers(context, extra_headers)
 
-        if context.get("proxy", True):
-            if "extra_headers" not in kwargs:
+        if context.get("proxy", self._proxy_default):
+            if "extra_headers" not in kwargs and extra_headers:
                 kwargs["extra_headers"] = extra_headers
 
             return await wrapped(*args, **kwargs)
-
-        provider._ingest = {"category": category, "units": {}} # type: ignore
-        provider._ingest["resource"] = kwargs.get("model", "")
-
-        if category == PayiCategories.openai and instance and hasattr(instance, "_client"):
-            from .OpenAIInstrumentor import OpenAiInstrumentor # noqa: I001
-
-            if OpenAiInstrumentor.is_azure(instance):
-                route_as_resource = extra_headers.pop(PayiHeaderNames.route_as_resource, None)
-                resource_scope = extra_headers.pop(PayiHeaderNames.resource_scope, None)
-
-                if not route_as_resource:
-                    logging.error("Azure OpenAI route as resource not found, not ingesting")
-                    return await wrapped(*args, **kwargs)
-
-                if resource_scope:
-                    if not(resource_scope in ["global", "datazone"] or resource_scope.startswith("region")):
-                        logging.error("Azure OpenAI invalid resource scope, not ingesting")
-                        return wrapped(*args, **kwargs)
-
-                    provider._ingest["resource_scope"] = resource_scope
-
-                category = PayiCategories.azure_openai
-
-                provider._ingest["category"] = category
-                provider._ingest["resource"] = route_as_resource
 
         current_frame = inspect.currentframe()
         # f_back excludes the current frame, strip() cleans up whitespace and newlines
         stack = [frame.strip() for frame in traceback.format_stack(current_frame.f_back)]  # type: ignore
 
-        provider._ingest['properties'] = { 'system.stack_trace': json.dumps(stack) }
+        request._ingest['properties'] = { 'system.stack_trace': json.dumps(stack) }
 
-        provider.process_request(kwargs)
+        if request.process_request(instance, extra_headers, kwargs) is False:
+            return await wrapped(*args, **kwargs)
 
         sw = Stopwatch()
         stream: bool = False
@@ -570,7 +629,7 @@ class _PayiInstrumentor:
             stream = False
 
         try:
-            self._prepare_ingest(provider._ingest, extra_headers, kwargs)
+            self._prepare_ingest(request._ingest, extra_headers, kwargs)
             sw.start()
             response = await wrapped(*args, **kwargs)
 
@@ -578,7 +637,9 @@ class _PayiInstrumentor:
             sw.stop()
             duration = sw.elapsed_ms_int()
 
-            # TODO ingest error
+            if request.process_exception(e, kwargs):
+                request._ingest["end_to_end_latency_ms"] = duration
+                await self._aingest_units(request._ingest)
 
             raise e
 
@@ -589,18 +650,17 @@ class _PayiInstrumentor:
                 instrumentor=self,
                 log_prompt_and_response=self._log_prompt_and_response,
                 stopwatch=sw,
-                provider=provider,
-                is_bedrock=False,
+                request=request,
             )
 
             return stream_result
 
         sw.stop()
         duration = sw.elapsed_ms_int()
-        provider._ingest["end_to_end_latency_ms"] = duration
-        provider._ingest["http_status_code"] = 200
+        request._ingest["end_to_end_latency_ms"] = duration
+        request._ingest["http_status_code"] = 200
 
-        return_result: Any = provider.process_synchronous_response(
+        return_result: Any = request.process_synchronous_response(
             response=response,
             log_prompt_and_response=self._log_prompt_and_response,
             kwargs=kwargs)
@@ -608,14 +668,13 @@ class _PayiInstrumentor:
         if return_result:
             return return_result
 
-        await self._aingest_units(provider._ingest)
+        await self._aingest_units(request._ingest)
 
         return response
 
     def chat_wrapper(
         self,
-        category: str,
-        provider: _ProviderRequest,
+        request: _ProviderRequest,
         is_streaming: _IsStreaming,
         wrapped: Any,
         instance: Any,
@@ -624,10 +683,8 @@ class _PayiInstrumentor:
     ) -> Any:
         context = self.get_context()
 
-        is_bedrock:bool = category == PayiCategories.aws_bedrock
-
         if not context:
-            if is_bedrock:
+            if request.is_bedrock():
                 # boto3 doesn't allow extra_headers
                 kwargs.pop("extra_headers", None)
     
@@ -638,50 +695,24 @@ class _PayiInstrumentor:
         extra_headers = kwargs.get("extra_headers", {})
         self._update_extra_headers(context, extra_headers)
 
-        if context.get("proxy", True):
-            if "extra_headers" not in kwargs:
+        if context.get("proxy", self._proxy_default):
+            if request.is_bedrock():
+                # boto3 doesn't allow extra_headers
+                kwargs.pop("extra_headers", None)
+            elif "extra_headers" not in kwargs and extra_headers:
+                # assumes anthropic and openai clients
                 kwargs["extra_headers"] = extra_headers
 
             return wrapped(*args, **kwargs)
         
-        provider._ingest = {"category": category, "units": {}} # type: ignore
-        if is_bedrock:
-            # boto3 doesn't allow extra_headers
-            kwargs.pop("extra_headers", None)
-            provider._ingest["resource"] = kwargs.get("modelId", "")
-        else:
-            provider._ingest["resource"] = kwargs.get("model", "")
-
-        if category == PayiCategories.openai and instance and hasattr(instance, "_client"):
-            from .OpenAIInstrumentor import OpenAiInstrumentor # noqa: I001
-
-            if OpenAiInstrumentor.is_azure(instance):
-                route_as_resource:str = extra_headers.pop(PayiHeaderNames.route_as_resource, None)
-                resource_scope:str = extra_headers.pop(PayiHeaderNames.resource_scope, None)
-
-                if not route_as_resource:
-                    logging.error("Azure OpenAI route as resource not found, not ingesting")
-                    return wrapped(*args, **kwargs)
-
-                if resource_scope:
-                    if not(resource_scope in ["global", "datazone"] or resource_scope.startswith("region")):
-                        logging.error("Azure OpenAI invalid resource scope, not ingesting")
-                        return wrapped(*args, **kwargs)
-
-                    provider._ingest["resource_scope"] = resource_scope
-
-                category = PayiCategories.azure_openai
-
-                provider._ingest["category"] = category
-                provider._ingest["resource"] = route_as_resource
-
         current_frame = inspect.currentframe()
         # f_back excludes the current frame, strip() cleans up whitespace and newlines
         stack = [frame.strip() for frame in traceback.format_stack(current_frame.f_back)]  # type: ignore
 
-        provider._ingest['properties'] = { 'system.stack_trace': json.dumps(stack) }
+        request._ingest['properties'] = { 'system.stack_trace': json.dumps(stack) }
 
-        provider.process_request(kwargs)
+        if request.process_request(instance, extra_headers, kwargs) is False:
+            return wrapped(*args, **kwargs)
 
         sw = Stopwatch()
         stream: bool = False
@@ -694,7 +725,7 @@ class _PayiInstrumentor:
             stream = False
 
         try:
-            self._prepare_ingest(provider._ingest, extra_headers, kwargs)
+            self._prepare_ingest(request._ingest, extra_headers, kwargs)
             sw.start()
             response = wrapped(*args, **kwargs)
 
@@ -702,7 +733,9 @@ class _PayiInstrumentor:
             sw.stop()
             duration = sw.elapsed_ms_int()
 
-            # TODO ingest error
+            if request.process_exception(e, kwargs):
+                request._ingest["end_to_end_latency_ms"] = duration
+                self._ingest_units(request._ingest)
 
             raise e
 
@@ -713,11 +746,10 @@ class _PayiInstrumentor:
                 instrumentor=self,
                 log_prompt_and_response=self._log_prompt_and_response,
                 stopwatch=sw,
-                provider=provider,
-                is_bedrock=is_bedrock,
+                request=request,
             )
 
-            if is_bedrock:
+            if request.is_bedrock():
                 if "body" in response:
                     response["body"] = stream_result
                 else:
@@ -728,19 +760,29 @@ class _PayiInstrumentor:
 
         sw.stop()
         duration = sw.elapsed_ms_int()
-        provider._ingest["end_to_end_latency_ms"] = duration
-        provider._ingest["http_status_code"] = 200
+        request._ingest["end_to_end_latency_ms"] = duration
+        request._ingest["http_status_code"] = 200
 
-        return_result: Any = provider.process_synchronous_response(
+        return_result: Any = request.process_synchronous_response(
             response=response,
             log_prompt_and_response=self._log_prompt_and_response,
             kwargs=kwargs)
         if return_result:
             return return_result
 
-        self._ingest_units(provider._ingest)
+        self._ingest_units(request._ingest)
 
         return response
+
+    def _create_extra_headers(
+        self
+    ) -> 'dict[str, str]':
+        extra_headers: dict[str, str] = {}
+        context = self.get_context()
+        if context:
+            self._update_extra_headers(context, extra_headers)
+
+        return extra_headers
 
     @staticmethod
     def _update_extra_headers(
@@ -754,6 +796,9 @@ class _PayiInstrumentor:
         context_use_case_id: Optional[str] = context.get("use_case_id")
         context_use_case_version: Optional[int] = context.get("use_case_version")
         context_user_id: Optional[str] = context.get("user_id")
+        context_request_tags: Optional[list[str]] = context.get("request_tags")
+        context_route_as_resource: Optional[str] = context.get("route_as_resource")
+        context_resource_scope: Optional[str] = context.get("resource_scope")
 
         # headers_limit_ids = extra_headers.get(PayiHeaderNames.limit_ids, None)
     
@@ -812,6 +857,15 @@ class _PayiInstrumentor:
             if context_experience_id is not None:
                 extra_headers[PayiHeaderNames.experience_id] = context_experience_id
 
+        if PayiHeaderNames.request_tags not in extra_headers and context_request_tags:
+            extra_headers[PayiHeaderNames.request_tags] = ",".join(context_request_tags)
+
+        if PayiHeaderNames.route_as_resource not in extra_headers and context_route_as_resource:
+            extra_headers[PayiHeaderNames.route_as_resource] = context_route_as_resource
+
+        if PayiHeaderNames.resource_scope not in extra_headers and context_resource_scope:
+            extra_headers[PayiHeaderNames.resource_scope] = context_resource_scope
+
     @staticmethod
     def update_for_vision(input: int, units: 'dict[str, Units]', estimated_prompt_tokens: Optional[int]) -> int:
         if estimated_prompt_tokens:
@@ -861,14 +915,13 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
         instance: Any,
         instrumentor: _PayiInstrumentor,
         stopwatch: Stopwatch,
-        provider: _ProviderRequest,
+        request: _ProviderRequest,
         log_prompt_and_response: bool = True,
-        is_bedrock: bool = False,
     ) -> None:
 
         bedrock_from_stream: bool = False
-        if is_bedrock:
-            provider._ingest["provider_response_id"] = response["ResponseMetadata"]["RequestId"]
+        if request.is_bedrock():
+            request._ingest["provider_response_id"] = response["ResponseMetadata"]["RequestId"]
             stream = response.get("stream", None)
 
             if stream:
@@ -888,10 +941,10 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
         self._log_prompt_and_response: bool = log_prompt_and_response
         self._responses: list[str] = []
 
-        self._provider: _ProviderRequest = provider
+        self._request: _ProviderRequest = request
 
         self._first_token: bool = True
-        self._is_bedrock: bool = is_bedrock
+        self._is_bedrock: bool = request.is_bedrock()
         self._bedrock_from_stream: bool = bedrock_from_stream
 
     def __enter__(self) -> Any:
@@ -929,9 +982,9 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
     def __aiter__(self) -> Any:
         return self
 
-    def __next__(self) -> Any:
+    def __next__(self) -> object:
         try:
-            chunk: Any = self.__wrapped__.__next__()  # type: ignore
+            chunk: object = self.__wrapped__.__next__()  # type: ignore
         except Exception as e:
             if isinstance(e, StopIteration):
                 self._stop_iteration()
@@ -940,11 +993,11 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
             if self._evaluate_chunk(chunk) == False:
                 return self.__next__()
             
-            return chunk
+            return chunk # type: ignore
 
-    async def __anext__(self) -> Any:
+    async def __anext__(self) -> object:
         try:
-            chunk: Any = await self.__wrapped__.__anext__()  # type: ignore
+            chunk: object = await self.__wrapped__.__anext__()  # type: ignore
         except Exception as e:
             if isinstance(e, StopAsyncIteration):
                 await self._astop_iteration()
@@ -952,33 +1005,34 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
         else:
             if self._evaluate_chunk(chunk) == False:
                 return await self.__anext__()
-            return chunk
+
+            return chunk # type: ignore
 
     def _evaluate_chunk(self, chunk: Any) -> bool:
         if self._first_token:
-            self._provider._ingest["time_to_first_token_ms"] = self._stopwatch.elapsed_ms_int()
+            self._request._ingest["time_to_first_token_ms"] = self._stopwatch.elapsed_ms_int()
             self._first_token = False
 
         if self._log_prompt_and_response:
             self._responses.append(self.chunk_to_json(chunk))
 
-        return self._provider.process_chunk(chunk)
+        return self._request.process_chunk(chunk)
 
     def _process_stop_iteration(self) -> None:
         self._stopwatch.stop()
-        self._provider._ingest["end_to_end_latency_ms"] = self._stopwatch.elapsed_ms_int()
-        self._provider._ingest["http_status_code"] = 200
+        self._request._ingest["end_to_end_latency_ms"] = self._stopwatch.elapsed_ms_int()
+        self._request._ingest["http_status_code"] = 200
 
         if self._log_prompt_and_response:
-            self._provider._ingest["provider_response_json"] = self._responses
+            self._request._ingest["provider_response_json"] = self._responses
 
     async def _astop_iteration(self) -> None:
         self._process_stop_iteration()
-        await self._instrumentor._aingest_units(self._provider._ingest)
+        await self._instrumentor._aingest_units(self._request._ingest)
 
     def _stop_iteration(self) -> None:
         self._process_stop_iteration()
-        self._instrumentor._ingest_units(self._provider._ingest)
+        self._instrumentor._ingest_units(self._request._ingest)
 
     @staticmethod
     def chunk_to_json(chunk: Any) -> str:
@@ -1019,7 +1073,11 @@ def payi_instrument(
                 payi_param = p
             elif isinstance(p, AsyncPayi): # type: ignore
                 apayi_param = p
-    
+    frameinfo = inspect.stack()[1]
+    caller_filename = os.path.basename(frameinfo.filename).replace(' ', '_').lower()
+    if caller_filename.endswith('.py'):
+        caller_filename = caller_filename[:-3]
+
     # allow for both payi and apayi to be None for the @proxy case
     _instrumentor = _PayiInstrumentor(
         payi=payi_param,
@@ -1027,8 +1085,91 @@ def payi_instrument(
         instruments=instruments,
         log_prompt_and_response=log_prompt_and_response,
         prompt_and_response_logger=prompt_and_response_logger,
-        global_config=config,
+        global_config=config if config else PayiInstrumentConfig(),
+        caller_filename=caller_filename
     )
+
+def track(
+    limit_ids: Optional["list[str]"] = None,
+    use_case_name: Optional[str] = None,
+    use_case_id: Optional[str] = None,
+    use_case_version: Optional[int] = None,
+    user_id: Optional[str] = None,
+    proxy: Optional[bool] = None,
+) -> Any:
+
+    def _track(func: Any) -> Any:
+        import asyncio
+        if asyncio.iscoroutinefunction(func):
+            async def awrapper(*args: Any, **kwargs: Any) -> Any:
+                if not _instrumentor:
+                    return await func(*args, **kwargs)
+                # Call the instrumentor's _call_func for async functions
+                return await _instrumentor._acall_func(
+                    func,
+                    proxy,
+                    limit_ids,
+                    None, # experience_name,
+                    None, #experience_id,
+                    use_case_name,
+                    use_case_id,
+                    use_case_version,
+                    user_id,
+                    *args,
+                    **kwargs,
+                )
+            return awrapper
+        else:
+            def wrapper(*args: Any, **kwargs: Any) -> Any:
+                if not _instrumentor:
+                    return func(*args, **kwargs)
+                return _instrumentor._call_func(
+                    func,
+                    proxy,
+                    limit_ids,
+                    None, # experience_name,
+                    None, # experience_id,
+                    use_case_name,
+                    use_case_id,
+                    use_case_version,
+                    user_id,
+                    *args,
+                    **kwargs,
+                )
+            return wrapper
+    return _track
+
+def track_context(
+    limit_ids: Optional["list[str]"] = None,
+    experience_name: Optional[str] = None,
+    experience_id: Optional[str] = None,
+    use_case_name: Optional[str] = None,
+    use_case_id: Optional[str] = None,
+    use_case_version: Optional[int] = None,
+    user_id: Optional[str] = None,
+    request_tags: Optional["list[str]"] = None,
+    route_as_resource: Optional[str] = None,
+    resource_scope: Optional[str] = None,
+    proxy: Optional[bool] = None,
+) -> _TrackContext:
+    if not _instrumentor:
+        raise RuntimeError("Pay-i instrumentor not initialized. Use payi_instrument() to initialize.")
+
+    # Create a new context for tracking
+    context: _Context = {}
+    context["limit_ids"] = limit_ids
+    context["experience_name"] = experience_name
+    context["experience_id"] = experience_id
+    context["use_case_name"] = use_case_name
+    context["use_case_id"] = use_case_id
+    context["use_case_version"] = use_case_version
+    context["user_id"] = user_id
+    context["request_tags"] = request_tags
+    context["route_as_resource"] = route_as_resource
+    context["resource_scope"] = resource_scope
+    context["proxy"] = proxy
+
+    return _TrackContext(context)
 
 def ingest(
     limit_ids: Optional["list[str]"] = None,

@@ -15,7 +15,8 @@ class PayiHeaderNames:
     route_as_resource:str = "xProxy-RouteAs-Resource"
     provider_base_uri = "xProxy-Provider-BaseUri"
     resource_scope:str = "xProxy-Resource-Scope"
-
+    api_key:str = "xProxy-Api-Key"
+    
 class PayiCategories:
     anthropic:str  = "system.anthropic"
     openai:str = "system.openai"
