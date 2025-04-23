@@ -1,3 +1,4 @@
+import os
 import json
 import logging
 from typing import Any
@@ -6,15 +7,21 @@ from typing_extensions import override
 
 from wrapt import ObjectProxy, wrap_function_wrapper  # type: ignore
 
+from payi.lib.helpers import PayiHeaderNames, payi_aws_bedrock_url
 from payi.types.ingest_units_params import Units, IngestUnitsParams
 from payi.types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
 from .instrument import _IsStreaming, _ProviderRequest, _PayiInstrumentor
 
+_supported_model_prefixes = ["meta.llama3", "anthropic.", "amazon.nova-pro", "amazon.nova-lite", "amazon.nova-micro"]
 
 class BedrockInstrumentor:
+    _instrumentor: _PayiInstrumentor
+
     @staticmethod
     def instrument(instrumentor: _PayiInstrumentor) -> None:
+        BedrockInstrumentor._instrumentor = instrumentor
+
         try:
             import boto3  # type: ignore #  noqa: F401  I001
 
@@ -46,12 +53,48 @@ def create_client_wrapper(instrumentor: _PayiInstrumentor, wrapped: Any, instanc
         client.converse = wrap_converse(instrumentor, client.converse)
         client.converse_stream = wrap_converse_stream(instrumentor, client.converse_stream)
 
+        if BedrockInstrumentor._instrumentor._proxy_default:
+            # Register client callbacks to handle the Pay-i extra_headers parameter in the inference calls and redirect the request to the Pay-i endpoint
+            _register_bedrock_client_callbacks(client)
+
         return client
     except Exception as e:
         logging.debug(f"Error instrumenting bedrock client: {e}")
     
     return wrapped(*args, **kwargs)
+
+BEDROCK_REQUEST_NAMES = [
+    'request-created.bedrock-runtime.Converse',
+    'request-created.bedrock-runtime.ConverseStream',
+    'request-created.bedrock-runtime.InvokeModel',
+    'request-created.bedrock-runtime.InvokeModelWithResponseStream',
+]
+
+def _register_bedrock_client_callbacks(client: Any) -> None:
+    # Pass a unqiue_id to avoid registering the same callback multiple times in case this cell executed more than once
+    # Redirect the request to the Pay-i endpoint after the request has been signed. 
+    client.meta.events.register_last('request-created', _redirect_to_payi, unique_id=_redirect_to_payi)
+
+def _redirect_to_payi(request: Any, event_name: str, **_: 'dict[str, Any]') -> None:
+    from urllib3.util import parse_url
+    from urllib3.util.url import Url
+
+    if not event_name in BEDROCK_REQUEST_NAMES:
+        return
     
+    parsed_url: Url = parse_url(request.url)
+    route_path = parsed_url.path
+    request.url = f"{payi_aws_bedrock_url()}{route_path}"
+
+    request.headers[PayiHeaderNames.api_key] = os.environ.get("PAYI_API_KEY", "")
+    request.headers[PayiHeaderNames.provider_base_uri] = parsed_url.scheme + "://" + parsed_url.host # type: ignore
+    
+    extra_headers = BedrockInstrumentor._instrumentor._create_extra_headers()
+
+    for key, value in extra_headers.items():
+        request.headers[key] = value
+
+
 class InvokeResponseWrapper(ObjectProxy): # type: ignore
     def __init__(
         self,
@@ -67,10 +110,10 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
         self._ingest = ingest
         self._log_prompt_and_response = log_prompt_and_response
 
-    def read(self, amt: Any =None): # type: ignore
+    def read(self, amt: Any =None) -> Any: # type: ignore
         # data is array of bytes
-        data: Any = self.__wrapped__.read(amt) # type: ignore
-        response = json.loads(data)
+        data: bytes = self.__wrapped__.read(amt) # type: ignore
+        response = json.loads(data) # type: ignore
 
         resource = self._ingest["resource"]
         if not resource:
@@ -90,27 +133,29 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
         units["text"] = Units(input=input, output=output)
 
         if self._log_prompt_and_response:
-            self._ingest["provider_response_json"] = data.decode('utf-8')
+            self._ingest["provider_response_json"] = data.decode('utf-8') # type: ignore
             
         self._instrumentor._ingest_units(self._ingest)
 
-        return data
+        return data # type: ignore
+
+def _is_supported_model(modelId: str) -> bool:
+    return any(prefix in modelId for prefix in _supported_model_prefixes)
 
 def wrap_invoke(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
     @wraps(wrapped)
     def invoke_wrapper(*args: Any, **kwargs: 'dict[str, Any]') -> Any:
         modelId:str = kwargs.get("modelId", "") # type: ignore
 
-        if modelId.startswith("meta.llama3") or modelId.startswith("anthropic."):
+        if _is_supported_model(modelId):
             return instrumentor.chat_wrapper(
-                "system.aws.bedrock",
-                _BedrockInvokeSynchronousProviderRequest(instrumentor),
+                _BedrockInvokeSynchronousProviderRequest(instrumentor=instrumentor),
                 _IsStreaming.false,
                 wrapped,
                 None,
                 args,
                 kwargs,
-        )
+            )   
         return wrapped(*args, **kwargs)
     
     return invoke_wrapper
@@ -118,12 +163,11 @@ def wrap_invoke(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
 def wrap_invoke_stream(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
     @wraps(wrapped)
     def invoke_wrapper(*args: Any, **kwargs: Any) -> Any:
-        model_id: str = kwargs.get("modelId", "") # type: ignore
+        modelId: str = kwargs.get("modelId", "") # type: ignore
 
-        if model_id.startswith("meta.llama3") or model_id.startswith("anthropic."):
+        if _is_supported_model(modelId):
             return instrumentor.chat_wrapper(
-                "system.aws.bedrock",
-                _BedrockInvokeStreamingProviderRequest(instrumentor, model_id),
+                _BedrockInvokeStreamingProviderRequest(instrumentor=instrumentor, model_id=modelId),
                 _IsStreaming.true,
                 wrapped,
                 None,
@@ -139,10 +183,9 @@ def wrap_converse(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
     def invoke_wrapper(*args: Any, **kwargs: 'dict[str, Any]') -> Any:
         modelId:str = kwargs.get("modelId", "") # type: ignore
 
-        if modelId.startswith("meta.llama3") or modelId.startswith("anthropic."):
+        if _is_supported_model(modelId):
             return instrumentor.chat_wrapper(
-                "system.aws.bedrock",
-                _BedrockConverseSynchronousProviderRequest(instrumentor),
+                _BedrockConverseSynchronousProviderRequest(instrumentor=instrumentor),
                 _IsStreaming.false,
                 wrapped,
                 None,
@@ -156,12 +199,11 @@ def wrap_converse(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
 def wrap_converse_stream(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
     @wraps(wrapped)
     def invoke_wrapper(*args: Any, **kwargs: Any) -> Any:
-        model_id: str = kwargs.get("modelId", "") # type: ignore
+        modelId: str = kwargs.get("modelId", "") # type: ignore
 
-        if model_id.startswith("meta.llama3") or model_id.startswith("anthropic."):
+        if _is_supported_model(modelId):
             return instrumentor.chat_wrapper(
-                "system.aws.bedrock",
-                _BedrockConverseStreamingProviderRequest(instrumentor),
+                _BedrockConverseStreamingProviderRequest(instrumentor=instrumentor),
                 _IsStreaming.true,
                 wrapped,
                 None,
@@ -172,9 +214,45 @@ def wrap_converse_stream(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
 
     return invoke_wrapper
 
-class _BedrockInvokeStreamingProviderRequest(_ProviderRequest):
+class _BedrockProviderRequest(_ProviderRequest):
+    def __init__(self, instrumentor: _PayiInstrumentor):
+        super().__init__(instrumentor=instrumentor, category="system.aws.bedrock")
+
+    @override
+    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', kwargs: Any) -> bool:
+        # boto3 doesn't allow extra_headers
+        kwargs.pop("extra_headers", None)
+        self._ingest["resource"] = kwargs.get("modelId", "")
+        return True
+
+    @override
+    def process_exception(self, exception: Exception, kwargs: Any, ) -> bool:
+        try:
+            if hasattr(exception, "response"):
+                response: dict[str, Any] = getattr(exception, "response", {})
+                status_code: int = response.get('ResponseMetadata', {}).get('HTTPStatusCode', 0)
+                if status_code == 0:
+                    return False
+
+                self._ingest["http_status_code"] = status_code
+                
+                request_id = response.get('ResponseMetadata', {}).get('RequestId', "")
+                if request_id:
+                    self._ingest["provider_response_id"] = request_id
+
+                error = response.get('Error', "")
+                if error:
+                    self._ingest["provider_response_json"] = json.dumps(error)
+
+            return True
+
+        except Exception as e:
+            logging.debug(f"Error processing exception: {e}")
+            return False
+
+class _BedrockInvokeStreamingProviderRequest(_BedrockProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, model_id: str):
-        super().__init__(instrumentor)
+        super().__init__(instrumentor=instrumentor)
         self._is_anthropic: bool = model_id.startswith("anthropic.")
 
     @override
@@ -220,7 +298,7 @@ class _BedrockInvokeStreamingProviderRequest(_ProviderRequest):
 
         return True
 
-class _BedrockInvokeSynchronousProviderRequest(_ProviderRequest):
+class _BedrockInvokeSynchronousProviderRequest(_BedrockProviderRequest):
     @override
     def process_synchronous_response(
         self,
@@ -246,7 +324,7 @@ class _BedrockInvokeSynchronousProviderRequest(_ProviderRequest):
 
         return response
 
-class _BedrockConverseSynchronousProviderRequest(_ProviderRequest):
+class _BedrockConverseSynchronousProviderRequest(_BedrockProviderRequest):
     @override
     def process_synchronous_response(
         self,
@@ -278,7 +356,7 @@ class _BedrockConverseSynchronousProviderRequest(_ProviderRequest):
 
         return None    
 
-class _BedrockConverseStreamingProviderRequest(_ProviderRequest):
+class _BedrockConverseStreamingProviderRequest(_BedrockProviderRequest):
     @override
     def process_chunk(self, chunk: 'dict[str, Any]') -> bool:
         metadata = chunk.get("metadata", {})
