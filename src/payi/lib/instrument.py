@@ -1074,8 +1074,8 @@ def payi_instrument(
             elif isinstance(p, AsyncPayi): # type: ignore
                 apayi_param = p
     frameinfo = inspect.stack()[1]
-    caller_filename = os.path.basename(frameinfo.filename).replace(' ', '_')
-    if caller_filename.lower().endswith('.py'):
+    caller_filename = os.path.basename(frameinfo.filename).replace(' ', '_').lower()
+    if caller_filename.endswith('.py'):
         caller_filename = caller_filename[:-3]
 
     # allow for both payi and apayi to be None for the @proxy case
