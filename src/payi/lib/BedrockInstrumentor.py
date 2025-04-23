@@ -1,11 +1,13 @@
 import json
 import logging
+import os
 from typing import Any
 from functools import wraps
 from typing_extensions import override
 
 from wrapt import ObjectProxy, wrap_function_wrapper  # type: ignore
 
+from payi.lib.helpers import payi_aws_bedrock_url, PayiHeaderNames
 from payi.types.ingest_units_params import Units, IngestUnitsParams
 from payi.types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
@@ -14,8 +16,12 @@ from .instrument import _IsStreaming, _ProviderRequest, _PayiInstrumentor
 _supported_model_prefixes = ["meta.llama3", "anthropic.", "amazon.nova-pro", "amazon.nova-lite", "amazon.nova-micro"]
 
 class BedrockInstrumentor:
+    _instrumentor: _PayiInstrumentor
+
     @staticmethod
     def instrument(instrumentor: _PayiInstrumentor) -> None:
+        BedrockInstrumentor._instrumentor = instrumentor
+
         try:
             import boto3  # type: ignore #  noqa: F401  I001
 
@@ -47,12 +53,48 @@ def create_client_wrapper(instrumentor: _PayiInstrumentor, wrapped: Any, instanc
         client.converse = wrap_converse(instrumentor, client.converse)
         client.converse_stream = wrap_converse_stream(instrumentor, client.converse_stream)
 
+        if BedrockInstrumentor._instrumentor._proxy_default:
+            # Register client callbacks to handle the Pay-i extra_headers parameter in the inference calls and redirect the request to the Pay-i endpoint
+            _register_bedrock_client_callbacks(client)
+
         return client
     except Exception as e:
         logging.debug(f"Error instrumenting bedrock client: {e}")
     
     return wrapped(*args, **kwargs)
+
+BEDROCK_REQUEST_NAMES = [
+    'request-created.bedrock-runtime.Converse',
+    'request-created.bedrock-runtime.ConverseStream',
+    'request-created.bedrock-runtime.InvokeModel',
+    'request-created.bedrock-runtime.InvokeModelWithResponseStream',
+]
+
+def _register_bedrock_client_callbacks(client: Any) -> None:
+    # Pass a unqiue_id to avoid registering the same callback multiple times in case this cell executed more than once
+    # Redirect the request to the Pay-i endpoint after the request has been signed. 
+    client.meta.events.register_last('request-created', _redirect_to_payi, unique_id=_redirect_to_payi)
+
+def _redirect_to_payi(request: Any, event_name: str, **_: 'dict[str, Any]') -> None:
+    from urllib3.util import parse_url
+    from urllib3.util.url import Url
+
+    if not event_name in BEDROCK_REQUEST_NAMES:
+        return
     
+    parsed_url: Url = parse_url(request.url)
+    route_path = parsed_url.path
+    request.url = f"{payi_aws_bedrock_url()}{route_path}"
+
+    request.headers[PayiHeaderNames.api_key] = os.environ.get("PAYI_API_KEY", "")
+    request.headers[PayiHeaderNames.provider_base_uri] = parsed_url.scheme + "://" + parsed_url.host # type: ignore
+    
+    extra_headers = BedrockInstrumentor._instrumentor._create_extra_headers()
+
+    for key, value in extra_headers.items():
+        request.headers[key] = value
+
+
 class InvokeResponseWrapper(ObjectProxy): # type: ignore
     def __init__(
         self,

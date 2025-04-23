@@ -130,7 +130,7 @@ class _PayiInstrumentor:
         prompt_and_response_logger: Optional[
             Callable[[str, "dict[str, str]"], None]
         ] = None,  # (request id, dict of data to store) -> None
-        global_config: Optional[PayiInstrumentConfig] = None,
+        global_config: PayiInstrumentConfig = {},
         caller_filename: str = ""
     ):
         self._payi: Optional[Payi] = payi
@@ -143,21 +143,22 @@ class _PayiInstrumentor:
         self._blocked_limits: set[str] = set()
         self._exceeded_limits: set[str] = set()
 
+        # default is instrument and ingest metrics
+        self._proxy_default: bool = global_config.get("proxy", False)
+
+        global_instrumentation = global_config.pop("global_instrumentation", True)
+
         if instruments is None or "*" in instruments:
             self._instrument_all()
         else:
             self._instrument_specific(instruments)
 
-        global_instrumentation = global_config.pop("global_instrumentation", True) if global_config else True
-
         if global_instrumentation:
-            if global_config is None:
-                global_config = {}
             if "proxy" not in global_config:
-                global_config["proxy"] = False
+                global_config["proxy"] = self._proxy_default
 
             # Use default clients if not provided for global ingest instrumentation
-            if not self._payi and not self._apayi and global_config.get("proxy") == False:
+            if not self._payi and not self._apayi and global_config.get("proxy") is False:
                 self._payi = Payi()
                 self._apayi = AsyncPayi()
 
@@ -379,12 +380,8 @@ class _PayiInstrumentor:
         context: _Context = self.get_context() # type: ignore
         parent_context: _Context = self._context_stack[-2] if len(self._context_stack) > 1 else {}
 
-        parent_proxy = parent_context.get("proxy", False)
-        if proxy is None:
-            # If no proxy specified, use previous value
-            context["proxy"] = parent_proxy
-        else:
-            context["proxy"] = proxy
+        parent_proxy = parent_context.get("proxy", self._proxy_default)
+        context["proxy"] = proxy if proxy else parent_proxy
 
         parent_experience_name = parent_context.get("experience_name", None)
         parent_experience_id = parent_context.get("experience_id", None)
@@ -606,7 +603,7 @@ class _PayiInstrumentor:
         extra_headers = kwargs.get("extra_headers", {})
         self._update_extra_headers(context, extra_headers)
 
-        if context.get("proxy", False):
+        if context.get("proxy", self._proxy_default):
             if "extra_headers" not in kwargs and extra_headers:
                 kwargs["extra_headers"] = extra_headers
 
@@ -698,8 +695,12 @@ class _PayiInstrumentor:
         extra_headers = kwargs.get("extra_headers", {})
         self._update_extra_headers(context, extra_headers)
 
-        if context.get("proxy", False):
-            if "extra_headers" not in kwargs and extra_headers:
+        if context.get("proxy", self._proxy_default):
+            if request.is_bedrock():
+                # boto3 doesn't allow extra_headers
+                kwargs.pop("extra_headers", None)
+            elif "extra_headers" not in kwargs and extra_headers:
+                # assumes anthropic and openai clients
                 kwargs["extra_headers"] = extra_headers
 
             return wrapped(*args, **kwargs)
@@ -772,6 +773,16 @@ class _PayiInstrumentor:
         self._ingest_units(request._ingest)
 
         return response
+
+    def _create_extra_headers(
+        self
+    ) -> 'dict[str, str]':
+        extra_headers: dict[str, str] = {}
+        context = self.get_context()
+        if context:
+            self._update_extra_headers(context, extra_headers)
+
+        return extra_headers
 
     @staticmethod
     def _update_extra_headers(
@@ -1074,7 +1085,7 @@ def payi_instrument(
         instruments=instruments,
         log_prompt_and_response=log_prompt_and_response,
         prompt_and_response_logger=prompt_and_response_logger,
-        global_config=config,
+        global_config=config if config else PayiInstrumentConfig(),
         caller_filename=caller_filename
     )
 
