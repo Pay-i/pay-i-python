@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.1.0-alpha.69 (2025-04-23)
+
+Full Changelog: [v0.1.0-alpha.68...v0.1.0-alpha.69](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.68...v0.1.0-alpha.69)
+
+### Features
+
+* feat: [@track](https://github.com/track), track_context(), automatic use case ([#292](https://github.com/Pay-i/pay-i-python/issues/292)) ([d2b4593](https://github.com/Pay-i/pay-i-python/commit/d2b4593ed30117d8a0fd72f538eb054b2cc5eb98))
+
+
+### Bug Fixes
+
+* **pydantic v1:** more robust ModelField.annotation check ([7d38125](https://github.com/Pay-i/pay-i-python/commit/7d3812544db66083c00b5160096340ffba42be3d))
+
+
+### Chores
+
+* **ci:** add timeout thresholds for CI jobs ([b2d095d](https://github.com/Pay-i/pay-i-python/commit/b2d095dd2d4f8275e1bbc8bead56d58ce42c4768))
+* **internal:** fix list file params ([15e3e8a](https://github.com/Pay-i/pay-i-python/commit/15e3e8a4bc380ce3ea72fce7e53f766079548d21))
+* **internal:** import reformatting ([cf0ee48](https://github.com/Pay-i/pay-i-python/commit/cf0ee483640172d25c7d5a284d1667a54451fad3))
+* **internal:** refactor retries to not use recursion ([907871a](https://github.com/Pay-i/pay-i-python/commit/907871a66ca41281bcfc1b2b7c14ffcabcc03525))
+* **internal:** update models test ([b400b74](https://github.com/Pay-i/pay-i-python/commit/b400b74a7f1b372f30170d9ff082b30d42b6880a))
+
 ## 0.1.0-alpha.68 (2025-04-17)
 
 Full Changelog: [v0.1.0-alpha.67...v0.1.0-alpha.68](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.67...v0.1.0-alpha.68)
