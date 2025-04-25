@@ -29,15 +29,27 @@ class OpenAiInstrumentor:
             wrap_function_wrapper(
                 "openai.resources.chat.completions",
                 "Completions.create",
-                chat_wrapper(instrumentor),
+                completions_wrapper(instrumentor),
             )
 
             wrap_function_wrapper(
                 "openai.resources.chat.completions",
                 "AsyncCompletions.create",
-                achat_wrapper(instrumentor),
+                acompletions_wrapper(instrumentor),
             )
 
+            wrap_function_wrapper(
+                "openai.resources.responses.responses",
+                "Responses.create",
+                responses_wrapper(instrumentor),
+            )
+ 
+            wrap_function_wrapper(
+                "openai.resources.responses.responses",
+                "AsyncResponses.create",
+                aresponses_wrapper(instrumentor),
+            )
+            
             wrap_function_wrapper(
                 "openai.resources.embeddings",
                 "Embeddings.create",
@@ -90,7 +102,7 @@ async def aembeddings_wrapper(
     )
 
 @_PayiInstrumentor.payi_wrapper
-def chat_wrapper(
+def completions_wrapper(
     instrumentor: _PayiInstrumentor,
     wrapped: Any,
     instance: Any,
@@ -98,7 +110,7 @@ def chat_wrapper(
     **kwargs: Any,
 ) -> Any:
     return instrumentor.chat_wrapper(
-        _OpenAiChatProviderRequest(instrumentor),
+        _OpenAiCompletionsProviderRequest(instrumentor),
         _IsStreaming.kwargs,
         wrapped,
         instance,
@@ -107,7 +119,7 @@ def chat_wrapper(
     )
 
 @_PayiInstrumentor.payi_awrapper
-async def achat_wrapper(
+async def acompletions_wrapper(
     instrumentor: _PayiInstrumentor,
     wrapped: Any,
     instance: Any,
@@ -115,7 +127,41 @@ async def achat_wrapper(
     **kwargs: Any,
 ) -> Any:
     return await instrumentor.achat_wrapper(
-        _OpenAiChatProviderRequest(instrumentor),
+        _OpenAiCompletionsProviderRequest(instrumentor),
+        _IsStreaming.kwargs,
+        wrapped,
+        instance,
+        args,
+        kwargs,
+    )
+
+@_PayiInstrumentor.payi_wrapper
+def responses_wrapper(
+    instrumentor: _PayiInstrumentor,
+    wrapped: Any,
+    instance: Any,
+    *args: Any,
+    **kwargs: Any,
+) -> Any:
+    return instrumentor.chat_wrapper(
+        _OpenAiResponsesProviderRequest(instrumentor),
+        _IsStreaming.kwargs,
+        wrapped,
+        instance,
+        args,
+        kwargs,
+    )
+
+@_PayiInstrumentor.payi_awrapper
+async def aresponses_wrapper(
+    instrumentor: _PayiInstrumentor,
+    wrapped: Any,
+    instance: Any,
+    *args: Any,
+    **kwargs: Any,
+) -> Any:
+    return await instrumentor.achat_wrapper(
+        _OpenAiResponsesProviderRequest(instrumentor),
         _IsStreaming.kwargs,
         wrapped,
         instance,
@@ -202,9 +248,9 @@ class _OpenAiEmbeddingsProviderRequest(_OpenAiProviderRequest):
         response: Any,
         log_prompt_and_response: bool,
         kwargs: Any) -> Any:
-        return process_chat_synchronous_response(response, self._ingest, log_prompt_and_response, self._estimated_prompt_tokens)
+        return process_completions_synchronous_response(response, self._ingest, log_prompt_and_response, self._estimated_prompt_tokens)
 
-class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
+class _OpenAiCompletionsProviderRequest(_OpenAiProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor):
         super().__init__(instrumentor=instrumentor)
         self._include_usage_added = False
@@ -275,9 +321,81 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
         response: Any,
         log_prompt_and_response: bool,
         kwargs: Any) -> Any:
-        process_chat_synchronous_response(response, self._ingest, log_prompt_and_response, self._estimated_prompt_tokens)
+        process_completions_synchronous_response(response, self._ingest, log_prompt_and_response, self._estimated_prompt_tokens)
 
-def process_chat_synchronous_response(response: str, ingest: IngestUnitsParams, log_prompt_and_response: bool, estimated_prompt_tokens: Optional[int]) -> Any:
+class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
+    def __init__(self, instrumentor: _PayiInstrumentor):
+        super().__init__(instrumentor=instrumentor)
+
+    @override
+    def process_chunk(self, chunk: Any) -> bool:
+        model = model_to_dict(chunk)
+        
+        response = model.get("response", None)
+
+        if "provider_response_id" not in self._ingest and response:
+            response_id = response.get("id", None)
+            if response_id:
+                self._ingest["provider_response_id"] = response_id
+
+        input_key = "input_tokens"
+        usage = response.get("usage") if response else None
+        if usage and usage.get(input_key, None):
+            add_usage_units(usage, self._ingest["units"], self._estimated_prompt_tokens, input_key=input_key, output_key="output_tokens")
+
+        return True
+
+    @override
+    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', kwargs: Any) -> bool:
+        result = super().process_request(instance, extra_headers, kwargs)
+        if result is False:
+            return result
+        
+        input_kwarg = kwargs.get("input", None)
+        if input_kwarg and isinstance(input_kwarg, str):
+            return True
+        
+        input: list[dict[str, Any]] = kwargs.get("input", None)
+        if input:
+            estimated_token_count = 0 
+            has_image = False
+
+            try: 
+                enc = tiktoken.encoding_for_model(kwargs.get("model")) # type: ignore
+            except KeyError:
+                enc = tiktoken.get_encoding("o200k_base") # type: ignore
+            
+            item: dict[str, Any]
+            for item in input:
+                msg_has_image, msg_prompt_tokens = has_image_and_get_texts(enc, item.get('content', []), text_key='input_text', image_key='input_image')
+                if msg_has_image:
+                    has_image = True
+                    estimated_token_count += msg_prompt_tokens
+            
+            if has_image and estimated_token_count > 0:
+                self._estimated_prompt_tokens = estimated_token_count
+
+        return True
+
+    @override
+    def process_synchronous_response(
+        self,
+        response: Any,
+        log_prompt_and_response: bool,
+        kwargs: Any) -> Any:
+        response_dict = model_to_dict(response)
+
+        add_usage_units(response_dict.get("usage", {}), self._ingest["units"], self._estimated_prompt_tokens, input_key="input_tokens", output_key="output_tokens")
+
+        if log_prompt_and_response:
+            self._ingest["provider_response_json"] = [json.dumps(response_dict)]
+    
+        if "id" in response_dict:
+            self._ingest["provider_response_id"] = response_dict["id"]
+
+        return None
+
+def process_completions_synchronous_response(response: str, ingest: IngestUnitsParams, log_prompt_and_response: bool, estimated_prompt_tokens: Optional[int]) -> Any:
     response_dict = model_to_dict(response)
 
     add_usage_units(response_dict.get("usage", {}), ingest["units"], estimated_prompt_tokens)
@@ -301,12 +419,12 @@ def model_to_dict(model: Any) -> Any:
         return model
 
 
-def add_usage_units(usage: "dict[str, Any]", units: "dict[str, Units]", estimated_prompt_tokens: Optional[int]) -> None:
-    input = usage["prompt_tokens"] if "prompt_tokens" in usage else 0
-    output = usage["completion_tokens"] if "completion_tokens" in usage else 0
+def add_usage_units(usage: "dict[str, Any]", units: "dict[str, Units]", estimated_prompt_tokens: Optional[int], input_key:str = "prompt_tokens", output_key:str = "completion_tokens") -> None:
+    input = usage[input_key] if input_key in usage else 0
+    output = usage[output_key] if output_key in usage else 0
     input_cache = 0
 
-    prompt_tokens_details = usage.get("prompt_tokens_details")
+    prompt_tokens_details = usage.get(input_key+"_details", None)
     if prompt_tokens_details:
         input_cache = prompt_tokens_details.get("cached_tokens", 0)
         if input_cache != 0:
@@ -316,13 +434,13 @@ def add_usage_units(usage: "dict[str, Any]", units: "dict[str, Units]", estimate
 
     units["text"] = Units(input=input, output=output)
 
-def has_image_and_get_texts(encoding: tiktoken.Encoding, content: Union[str, 'list[Any]']) -> 'tuple[bool, int]':
+def has_image_and_get_texts(encoding: tiktoken.Encoding, content: Union[str, 'list[Any]'], text_key:str = 'text', image_key:str = 'image_url') -> 'tuple[bool, int]':
     if isinstance(content, str):
         return False, 0
     elif isinstance(content, list): # type: ignore
-        has_image = any(item.get("type") == "image_url" for item in content)
+        has_image = any(item.get("type") == image_key for item in content)
         if has_image is False:
             return has_image, 0
         
-        token_count = sum(len(encoding.encode(item.get("text", ""))) for item in content if item.get("type") == "text")
+        token_count = sum(len(encoding.encode(item.get("text", ""))) for item in content if item.get("type") == text_key)
         return has_image, token_count
