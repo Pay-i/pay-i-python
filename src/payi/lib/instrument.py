@@ -600,11 +600,17 @@ class _PayiInstrumentor:
             return await wrapped(*args, **kwargs)
 
         # after _udpate_headers, all metadata to add to ingest is in extra_headers, keyed by the xproxy-xxx header name
-        extra_headers = kwargs.get("extra_headers", {})
+        # kwargs"[extra_headers]" could be present and None
+        extra_headers: Optional[dict[str, Any]] = kwargs.get("extra_headers", None)
+        if extra_headers is None:
+            extra_headers = {}
         self._update_extra_headers(context, extra_headers)
 
         if context.get("proxy", self._proxy_default):
-            if "extra_headers" not in kwargs and extra_headers:
+            if request.is_bedrock():
+                kwargs.pop("extra_headers", None)
+            elif ("extra_headers" not in kwargs or kwargs["extra_headers"] is None) and extra_headers:
+                # assumes anthropic and openai clients
                 kwargs["extra_headers"] = extra_headers
 
             return await wrapped(*args, **kwargs)
@@ -692,14 +698,16 @@ class _PayiInstrumentor:
             return wrapped(*args, **kwargs)
 
         # after _udpate_headers, all metadata to add to ingest is in extra_headers, keyed by the xproxy-xxx header name
-        extra_headers = kwargs.get("extra_headers", {})
-        self._update_extra_headers(context, extra_headers)
+        # kwargs"[extra_headers]" could be present and None
+        extra_headers: Optional[dict[str, Any]] = kwargs.get("extra_headers", None)
+        if extra_headers is None:
+            extra_headers = {}
 
         if context.get("proxy", self._proxy_default):
             if request.is_bedrock():
                 # boto3 doesn't allow extra_headers
                 kwargs.pop("extra_headers", None)
-            elif "extra_headers" not in kwargs and extra_headers:
+            elif ("extra_headers" not in kwargs or kwargs["extra_headers"] is None) and extra_headers:
                 # assumes anthropic and openai clients
                 kwargs["extra_headers"] = extra_headers
 
