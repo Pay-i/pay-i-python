@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.0-alpha.70 (2025-04-24)
+
+Full Changelog: [v0.1.0-alpha.69...v0.1.0-alpha.70](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.69...v0.1.0-alpha.70)
+
+### Chores
+
+* broadly detect json family of content-type headers ([e98221d](https://github.com/Pay-i/pay-i-python/commit/e98221da505ddf7a855f661f5a8d49475616e3e3))
+* **ci:** only use depot for staging repos ([e651bba](https://github.com/Pay-i/pay-i-python/commit/e651bbad809c53a59452b0fc05f73654e343a727))
+* **internal:** codegen related update ([f71eb19](https://github.com/Pay-i/pay-i-python/commit/f71eb19111268d02d07a4db3a1be1da7a8b9ea18))
+* **internal:** minor formatting changes ([bfca4fe](https://github.com/Pay-i/pay-i-python/commit/bfca4fe4c63eb2ca6fea5858744327fee9226866))
+
 ## 0.1.0-alpha.69 (2025-04-23)
 
 Full Changelog: [v0.1.0-alpha.68...v0.1.0-alpha.69](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.68...v0.1.0-alpha.69)
