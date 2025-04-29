@@ -5,6 +5,7 @@ from typing_extensions import override
 import tiktoken
 from wrapt import wrap_function_wrapper  # type: ignore
 
+from payi.lib.helpers import PayiCategories
 from payi.types.ingest_units_params import Units
 
 from .instrument import _IsStreaming, _ProviderRequest, _PayiInstrumentor
@@ -81,7 +82,7 @@ async def achat_wrapper(
 
 class _AnthropicProviderRequest(_ProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor):
-        super().__init__(instrumentor=instrumentor, category="system.anthropic")
+        super().__init__(instrumentor=instrumentor, category=PayiCategories.anthropic)
 
     @override
     def process_chunk(self, chunk: Any) -> bool:

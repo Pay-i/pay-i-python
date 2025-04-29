@@ -125,7 +125,7 @@ async def achat_wrapper(
 
 class _OpenAiProviderRequest(_ProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor):
-        super().__init__(instrumentor=instrumentor, category="system.openai")
+        super().__init__(instrumentor=instrumentor, category=PayiCategories.openai)
 
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]', kwargs: Any) -> bool:

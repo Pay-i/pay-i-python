@@ -180,6 +180,7 @@ class _PayiInstrumentor:
         self._instrument_openai()
         self._instrument_anthropic()
         self._instrument_aws_bedrock()
+        self._instrument_google_vertex()
 
     def _instrument_specific(self, instruments: Set[str]) -> None:
         if PayiCategories.openai in instruments or PayiCategories.azure_openai in instruments:
@@ -188,6 +189,8 @@ class _PayiInstrumentor:
             self._instrument_anthropic()
         if PayiCategories.aws_bedrock in instruments:
             self._instrument_aws_bedrock()
+        if PayiCategories.google_vertex in instruments:
+            self._instrument_google_vertex()
 
     def _instrument_openai(self) -> None:
         from .OpenAIInstrumentor import OpenAiInstrumentor
@@ -215,6 +218,16 @@ class _PayiInstrumentor:
 
         except Exception as e:
             logging.error(f"Error instrumenting AWS bedrock: {e}")
+
+    def _instrument_google_vertex(self) -> None:
+        from .VertexInstrumentor import VertexInstrumentor
+
+        try:
+            VertexInstrumentor.instrument(self)
+
+        except Exception as e:
+            logging.error(f"Error instrumenting Google Vertex: {e}")
+
 
     def _process_ingest_units(self, ingest_units: IngestUnitsParams, log_data: 'dict[str, str]') -> bool:
         if int(ingest_units.get("http_status_code") or 0) < 400:

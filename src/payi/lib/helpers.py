@@ -22,6 +22,7 @@ class PayiCategories:
     openai:str = "system.openai"
     azure_openai:str = "system.azureopenai"
     aws_bedrock:str = "system.aws.bedrock"
+    google_vertex:str = "system.google.vertex"
 
 def create_limit_header_from_ids(limit_ids: List[str]) -> Dict[str, str]:
     if not isinstance(limit_ids, list):  # type: ignore

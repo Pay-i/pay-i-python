@@ -7,7 +7,7 @@ from typing_extensions import override
 
 from wrapt import ObjectProxy, wrap_function_wrapper  # type: ignore
 
-from payi.lib.helpers import PayiHeaderNames, payi_aws_bedrock_url
+from payi.lib.helpers import PayiCategories, PayiHeaderNames, payi_aws_bedrock_url
 from payi.types.ingest_units_params import Units, IngestUnitsParams
 from payi.types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
@@ -216,7 +216,7 @@ def wrap_converse_stream(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
 
 class _BedrockProviderRequest(_ProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor):
-        super().__init__(instrumentor=instrumentor, category="system.aws.bedrock")
+        super().__init__(instrumentor=instrumentor, category=PayiCategories.aws_bedrock)
 
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]', kwargs: Any) -> bool:
