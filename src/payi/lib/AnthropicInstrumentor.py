@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Union, Optional, Optional
+from typing import Any, Union, Optional
 from typing_extensions import override
 
 import tiktoken

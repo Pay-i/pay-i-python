@@ -8,7 +8,8 @@ from wrapt import wrap_function_wrapper  # type: ignore
 from payi.lib.helpers import PayiCategories
 from payi.types.ingest_units_params import Units
 
-from .instrument import _IsStreaming, _PayiInstrumentor, _ProviderRequest
+from .instrument import _IsStreaming, _ProviderRequest, _PayiInstrumentor
+
 
 class VertexInstrumentor:
     @staticmethod
