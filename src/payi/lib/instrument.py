@@ -48,13 +48,13 @@ class _ProviderRequest:
         return self._category == PayiCategories.google_vertex 
        
     def process_exception(self, exception: Exception, kwargs: Any, ) -> bool: # noqa: ARG002
-        return False
+        self.exception_to_semantic_failure(exception)
+        return True
 
     def exception_to_semantic_failure(self, e: Exception) -> None:
         exception_str = f"{type(e).__name__}"
     
         fields: list[str] = []
-        # fields += f"args: {e.args}"
     
         for attr in dir(e):
             if not attr.startswith("__"):

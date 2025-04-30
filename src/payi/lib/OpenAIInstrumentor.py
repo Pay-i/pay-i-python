@@ -172,7 +172,8 @@ class _OpenAiProviderRequest(_ProviderRequest):
                     self._ingest["http_status_code"] = status_code
 
             if not status_code:
-                return False
+                self.exception_to_semantic_failure(exception,)
+                return True
 
             if hasattr(exception, "request_id"):
                 request_id = getattr(exception, "request_id", None)

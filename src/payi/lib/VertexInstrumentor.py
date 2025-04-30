@@ -90,12 +90,16 @@ class _GoogleVertexRequest(_ProviderRequest):
 
     @override
     def process_chunk(self, chunk: Any) -> bool:
-        response_dict = chunk.to_dict()
-        if "provider_response_id" not in self._ingest and "response_id" in response_dict:
-            self._ingest["provider_response_id"] = response_dict["response_id"]
+        response_dict: dict[str, Any] = chunk.to_dict()
+        if "provider_response_id" not in self._ingest:
+            id = response_dict.get("response_id", None)
+            if id:
+                self._ingest["provider_response_id"] = id
 
-        if "resource" not in self._ingest and "model_version" in response_dict:
-            self._ingest["resource"] = "google." + response_dict["model_version"]
+        if "resource" not in self._ingest:
+            model = response_dict.get("model_version") # type: ignore
+            if model is not None:
+                self._ingest["resource"] = "google." + model
  
         usage = response_dict.get("usage_metadata", {})
         if usage and "prompt_token_count" in usage and "candidates_token_count" in usage:
