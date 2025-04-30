@@ -20,25 +20,25 @@ class VertexInstrumentor:
             wrap_function_wrapper(
                 "vertexai.generative_models",
                 "GenerativeModel.generate_content",
-                chat_wrapper(instrumentor),
+                generate_wrapper(instrumentor),
             )
 
             wrap_function_wrapper(
                 "vertexai.preview.generative_models",
                 "GenerativeModel.generate_content",
-                chat_wrapper(instrumentor),
+                generate_wrapper(instrumentor),
             )
 
             wrap_function_wrapper(
                 "vertexai.generative_models",
                 "GenerativeModel.generate_content_async",
-                achat_wrapper(instrumentor),
+                agenerate_wrapper(instrumentor),
             )
 
             wrap_function_wrapper(
                 "vertexai.preview.generative_models",
                 "GenerativeModel.generate_content_async",
-                achat_wrapper(instrumentor),
+                agenerate_wrapper(instrumentor),
             )
 
         except Exception as e:
@@ -46,7 +46,7 @@ class VertexInstrumentor:
             return
 
 @_PayiInstrumentor.payi_wrapper
-def chat_wrapper(
+def generate_wrapper(
     instrumentor: _PayiInstrumentor,
     wrapped: Any,
     instance: Any,
@@ -63,7 +63,7 @@ def chat_wrapper(
     )
 
 @_PayiInstrumentor.payi_awrapper
-async def achat_wrapper(
+async def agenerate_wrapper(
     instrumentor: _PayiInstrumentor,
     wrapped: Any,
     instance: Any,
@@ -85,12 +85,24 @@ class _GoogleVertexRequest(_ProviderRequest):
 
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]', kwargs: Any) -> bool:
-        logging.debug("process_generate_request")
+
         return True
 
     @override
     def process_chunk(self, chunk: Any) -> bool:
-        logging.debug("process_generate_chunk")
+        response_dict = chunk.to_dict()
+        if "provider_response_id" not in self._ingest and "response_id" in response_dict:
+            self._ingest["provider_response_id"] = response_dict["response_id"]
+
+        if "resource" not in self._ingest and "model_version" in response_dict:
+            self._ingest["resource"] = "google." + response_dict["model_version"]
+ 
+        usage = response_dict.get("usage_metadata", {})
+        if usage and "prompt_token_count" in usage and "candidates_token_count" in usage:
+            self._ingest["units"]["text"] = Units(
+                input=usage["prompt_token_count"],
+                output=usage["candidates_token_count"])
+
         return True
     
     @override
@@ -99,8 +111,9 @@ class _GoogleVertexRequest(_ProviderRequest):
         response: Any,
         log_prompt_and_response: bool,
         kwargs: Any) -> Any:
-        logging.debug("process_generate_synchronous_response")
         response_dict = response.to_dict()
+
+        self._ingest["provider_response_id"] = response_dict["response_id"]
 
         self._ingest["resource"] = "google." + response_dict["model_version"]
         self._ingest["units"]["text"] = Units(

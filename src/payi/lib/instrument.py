@@ -43,7 +43,10 @@ class _ProviderRequest:
     
     def is_bedrock(self) -> bool:
         return self._category == PayiCategories.aws_bedrock
-    
+
+    def is_vertex(self) -> bool:
+        return self._category == PayiCategories.google_vertex 
+       
     def process_exception(self, exception: Exception, kwargs: Any, ) -> bool: # noqa: ARG002
         return False
 
@@ -657,6 +660,15 @@ class _PayiInstrumentor:
             raise e
 
         if stream:
+            if request.is_vertex():
+                return _GeneratorWrapper(
+                    generator=response,
+                    instance=instance,
+                    instrumentor=self,
+                    stopwatch=sw,
+                    request=request,
+                    log_prompt_and_response=self._log_prompt_and_response)
+
             stream_result = ChatStreamWrapper(
                 response=response,
                 instance=instance,
@@ -741,7 +753,7 @@ class _PayiInstrumentor:
             self._prepare_ingest(request._ingest, extra_headers, kwargs)
             sw.start()
             response = wrapped(*args, **kwargs)
-
+            
         except Exception as e:  # pylint: disable=broad-except
             sw.stop()
             duration = sw.elapsed_ms_int()
@@ -753,6 +765,15 @@ class _PayiInstrumentor:
             raise e
 
         if stream:
+            if request.is_vertex():
+                return _GeneratorWrapper(
+                    generator=response,
+                    instance=instance,
+                    instrumentor=self,
+                    stopwatch=sw,
+                    request=request,
+                    log_prompt_and_response=self._log_prompt_and_response)
+
             stream_result = ChatStreamWrapper(
                 response=response,
                 instance=instance,
@@ -1059,6 +1080,92 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
             # assume dict
             return json.dumps(chunk)
 
+class _GeneratorWrapper:  # type: ignore
+    def __init__(
+        self,
+        generator: Any,
+        instance: Any,
+        instrumentor: _PayiInstrumentor, 
+        stopwatch: Stopwatch,
+        request: _ProviderRequest,
+        log_prompt_and_response: bool = True,
+    ) -> None:
+        super().__init__()  # type: ignore
+        
+        self._generator = generator
+        self._instance = instance
+        self._instrumentor = instrumentor
+        self._stopwatch: Stopwatch = stopwatch
+        self._log_prompt_and_response: bool = log_prompt_and_response
+        self._responses: list[str] = []
+        self._request: _ProviderRequest = request
+        self._first_token: bool = True
+        self._done: bool = False
+        
+    def __iter__(self) -> Any:
+        return self
+        
+    def __aiter__(self) -> Any:
+        return self
+        
+    def __next__(self) -> Any:
+        if self._done:
+            raise StopIteration
+            
+        try:
+            chunk = next(self._generator)
+            return self._process_chunk(chunk)
+
+        except StopIteration as stop_exception:
+            self._process_stop_iteration()
+            raise stop_exception
+
+    async def __anext__(self) -> Any:
+        if self._done:
+            raise StopAsyncIteration
+            
+        try:
+            chunk = await anext(self._generator) # type: ignore
+            return self._process_chunk(chunk)
+
+        except StopAsyncIteration as stop_exception:
+            await self._process_async_stop_iteration()
+            raise stop_exception
+
+    def _process_chunk(self, chunk: Any) -> Any:
+        if self._first_token:
+            self._request._ingest["time_to_first_token_ms"] = self._stopwatch.elapsed_ms_int()
+            self._first_token = False
+            
+        if self._log_prompt_and_response:
+            dict = chunk.to_dict() # type: ignore
+            self._responses.append(json.dumps(dict))
+                
+        self._request.process_chunk(chunk)
+        return chunk
+
+    def _process_stop_iteration(self) -> None:
+        self._stopwatch.stop()
+        self._request._ingest["end_to_end_latency_ms"] = self._stopwatch.elapsed_ms_int()
+        self._request._ingest["http_status_code"] = 200
+            
+        if self._log_prompt_and_response:
+            self._request._ingest["provider_response_json"] = self._responses
+                
+        self._instrumentor._ingest_units(self._request._ingest)
+        self._done = True
+
+    async def _process_async_stop_iteration(self) -> None:
+        self._stopwatch.stop() 
+        self._request._ingest["end_to_end_latency_ms"] = self._stopwatch.elapsed_ms_int()
+        self._request._ingest["http_status_code"] = 200
+            
+        if self._log_prompt_and_response:
+            self._request._ingest["provider_response_json"] = self._responses
+                
+        await self._instrumentor._aingest_units(self._request._ingest)
+        self._done = True
+
 global _instrumentor
 _instrumentor: Optional[_PayiInstrumentor] = None
 
@@ -1070,7 +1177,7 @@ def payi_instrument(
     config: Optional[PayiInstrumentConfig] = None,
 ) -> None:
     global _instrumentor
-    if _instrumentor:
+    if (_instrumentor):
         return
     
     payi_param: Optional[Payi] = None
@@ -1165,9 +1272,6 @@ def track_context(
     resource_scope: Optional[str] = None,
     proxy: Optional[bool] = None,
 ) -> _TrackContext:
-    if not _instrumentor:
-        raise RuntimeError("Pay-i instrumentor not initialized. Use payi_instrument() to initialize.")
-
     # Create a new context for tracking
     context: _Context = {}
     context["limit_ids"] = limit_ids
