@@ -103,9 +103,11 @@ class _GoogleVertexRequest(_ProviderRequest):
  
         usage = response_dict.get("usage_metadata", {})
         if usage and "prompt_token_count" in usage and "candidates_token_count" in usage:
-            self._ingest["units"]["text"] = Units(
-                input=usage["prompt_token_count"],
-                output=usage["candidates_token_count"])
+            inputChars = usage["prompt_token_count"] * 4
+            outputChars = usage["candidates_token_count"] * 4
+
+            key = "text" if inputChars < 128000 else "text_large_context"
+            self._ingest["units"][key] = Units(input=inputChars, output=outputChars)
 
         return True
     
