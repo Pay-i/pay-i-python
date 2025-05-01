@@ -1,7 +1,7 @@
 import os
 import json
 import logging
-from typing import Any
+from typing import Any, Sequence
 from functools import wraps
 from typing_extensions import override
 
@@ -219,7 +219,7 @@ class _BedrockProviderRequest(_ProviderRequest):
         super().__init__(instrumentor=instrumentor, category=PayiCategories.aws_bedrock)
 
     @override
-    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', kwargs: Any) -> bool:
+    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
         # boto3 doesn't allow extra_headers
         kwargs.pop("extra_headers", None)
         self._ingest["resource"] = kwargs.get("modelId", "")

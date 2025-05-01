@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Any, Union, Optional
+from typing import Any, Sequence, Union, Optional
 from typing_extensions import override
 from importlib.metadata import version
 
@@ -128,7 +128,7 @@ class _OpenAiProviderRequest(_ProviderRequest):
         super().__init__(instrumentor=instrumentor, category=PayiCategories.openai)
 
     @override
-    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', kwargs: Any) -> bool:
+    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool: # type: ignore
         self._ingest["resource"] = kwargs.get("model", "")
 
         if not (instance and hasattr(instance, "_client")) or OpenAiInstrumentor.is_azure(instance) is False:
@@ -233,8 +233,8 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
         return send_chunk_to_client
 
     @override
-    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', kwargs: Any) -> bool:
-        result = super().process_request(instance, extra_headers, kwargs)
+    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
+        result = super().process_request(instance, extra_headers, args, kwargs)
         if result is False:
             return result
         

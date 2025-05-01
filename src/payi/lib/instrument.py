@@ -7,7 +7,7 @@ import logging
 import traceback
 from abc import abstractmethod
 from enum import Enum
-from typing import Any, Set, Union, Callable, Optional, TypedDict
+from typing import Any, Sequence, Set, Union, Callable, Optional, TypedDict
 from datetime import datetime, timezone
 
 import nest_asyncio  # type: ignore
@@ -38,7 +38,7 @@ class _ProviderRequest:
         return None
     
     @abstractmethod
-    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', kwargs: Any) -> bool:
+    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
         ...
     
     def is_bedrock(self) -> bool:
@@ -631,7 +631,7 @@ class _PayiInstrumentor:
 
         request._ingest['properties'] = { 'system.stack_trace': json.dumps(stack) }
 
-        if request.process_request(instance, extra_headers, kwargs) is False:
+        if request.process_request(instance, extra_headers, args, kwargs) is False:
             return await wrapped(*args, **kwargs)
 
         sw = Stopwatch()
@@ -736,7 +736,7 @@ class _PayiInstrumentor:
 
         request._ingest['properties'] = { 'system.stack_trace': json.dumps(stack) }
 
-        if request.process_request(instance, extra_headers, kwargs) is False:
+        if request.process_request(instance, extra_headers, args, kwargs) is False:
             return wrapped(*args, **kwargs)
 
         sw = Stopwatch()

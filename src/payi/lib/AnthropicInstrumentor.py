@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Union, Optional
+from typing import Any, Sequence, Union, Optional
 from typing_extensions import override
 
 import tiktoken
@@ -137,7 +137,7 @@ class _AnthropicProviderRequest(_ProviderRequest):
         return None
 
     @override
-    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', kwargs: Any) -> bool:
+    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
         self._ingest["resource"] = kwargs.get("model", "")
         messages = kwargs.get("messages")
         if messages:
