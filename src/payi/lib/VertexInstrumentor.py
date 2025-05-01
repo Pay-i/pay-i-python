@@ -1,5 +1,6 @@
 import json
 import logging
+import math
 from typing import Any
 from typing_extensions import override
 
@@ -79,6 +80,15 @@ async def agenerate_wrapper(
         kwargs,
     )
 
+VERTEX_CHARACTER_BILLING_MODELS = [
+    "google.gemini-1.5-pro",
+    "google.gemini-1.5-pro-001",
+    "google.gemini-1.5-pro-002",
+    "google.gemini-1.5-flash",
+    "google.gemini-1.5-flash-001",
+    "google.gemini-1.5-flash-002",
+    ]
+
 class _GoogleVertexRequest(_ProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor):
         super().__init__(instrumentor=instrumentor, category=PayiCategories.google_vertex)
@@ -103,10 +113,27 @@ class _GoogleVertexRequest(_ProviderRequest):
  
         usage = response_dict.get("usage_metadata", {})
         if usage and "prompt_token_count" in usage and "candidates_token_count" in usage:
-            inputChars = usage["prompt_token_count"] * 4
-            outputChars = usage["candidates_token_count"] * 4
+            input: int = 0
+            output: int = 0
 
-            key = "text" if inputChars < 128000 else "text_large_context"
+            if self._ingest["resource"] in VERTEX_CHARACTER_BILLING_MODELS:
+                input = usage["prompt_token_count"] * 4
+                output = usage["candidates_token_count"] * 4
+    
+                prompt_tokens_details: list[dict[str, Any]] = usage.get("prompt_tokens_details", )
+                large_context = "" if usage["prompt_token_count"] < 128000 else "_large_context"
+                
+                for details in prompt_tokens_details:
+                    modality = details.get("modality", None)
+                    if modality:
+                        token_count = details.get("token_count", 0)
+                        video_seconds = math.ceil(token_count / 258)
+                        self._ingest["units"]["video"+large_context] = Units(input=video_seconds)
+
+            else:
+                input = usage["prompt_token_count"] * 4
+                output = usage["candidates_token_count"] * 4
+
             self._ingest["units"][key] = Units(input=inputChars, output=outputChars)
 
         return True
