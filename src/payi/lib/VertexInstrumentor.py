@@ -54,7 +54,7 @@ def generate_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
-    return instrumentor.chat_wrapper(
+    return instrumentor.invoke_wrapper(
         _GoogleVertexRequest(instrumentor),
         _IsStreaming.kwargs,
         wrapped,
@@ -71,7 +71,7 @@ async def agenerate_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
-    return await instrumentor.achat_wrapper(
+    return await instrumentor.async_invoke_wrapper(
         _GoogleVertexRequest(instrumentor),
         _IsStreaming.kwargs,
         wrapped,
@@ -130,6 +130,60 @@ class _GoogleVertexRequest(_ProviderRequest):
                 self._prompt_character_count += count_chars_skip_spaces(text) # type: ignore
              
         return True
+
+    @override
+    def process_request_prompt(self, prompt: 'dict[str, Any]', args: Sequence[Any], kwargs: 'dict[str, Any]') -> None:
+        from vertexai.generative_models import Content, Image, Part, Tool # type: ignore #  noqa: F401  I001
+
+        key = "contents"
+
+        if not args:
+            return
+        
+        value: Union[ # type: ignore
+            Content,
+            str,
+            Image,
+            Part,
+            List[Union[str, Image, Part]],
+        ] = args[0] # type: ignore
+
+        items: List[Union[str, Image, Part]] = [] # type: ignore #  noqa: F401  I001
+
+        if not value:
+            return
+
+        if isinstance(value, str):
+            prompt[key] = Content(parts=[Part.from_text(value)]).to_dict() # type: ignore
+        elif isinstance(value, (Image, Part)):
+            prompt[key] = Content(parts=[value]).to_dict() # type: ignore
+        elif isinstance(value, Content):
+            prompt[key] = value.to_dict() # type: ignore
+        elif isinstance(value, list):
+            items = value # type: ignore
+            parts = []
+
+            for item in items: # type: ignore
+                if isinstance(item, str):
+                    parts.append(Part.from_text(item)) # type: ignore
+                else:
+                    parts.append(item) # type: ignore
+            
+            prompt[key] = Content(parts=parts).to_dict() # type: ignore
+
+        tools: Optional[list[Tool]] = kwargs.get("tools", None)  # type: ignore
+        if tools:
+            t: list[dict[Any, Any]] = []
+            for tool in tools: # type: ignore
+                if isinstance(tool, Tool):
+                    t.append(tool.to_dict())  # type: ignore
+            if t:
+                prompt["tools"] = t
+
+        tool_config = kwargs.get("tool_config", None)  # type: ignore
+        if tool_config:
+            # tool_config does not have to_dict or any other serializable object
+            prompt["tool_config"] = str(tool_config)  # type: ignore
 
     @override
     def process_chunk(self, chunk: Any) -> bool:

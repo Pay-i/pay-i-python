@@ -43,6 +43,9 @@ class _ProviderRequest:
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
         ...
     
+    def process_request_prompt(self, prompt: 'dict[str, Any]', args: Sequence[Any], kwargs: 'dict[str, Any]') -> None:
+        ...
+    
     def is_bedrock(self) -> bool:
         return self._category == PayiCategories.aws_bedrock
 
@@ -168,11 +171,12 @@ class _PayiInstrumentor:
                 self._apayi = AsyncPayi()
 
             if "use_case_name" not in global_config and caller_filename:
+                description = f"Default use case for {caller_filename}.py"
                 try:
                     if self._payi:
-                        self._payi.use_cases.definitions.create(name=caller_filename, description='')
+                        self._payi.use_cases.definitions.create(name=caller_filename, description=description)
                     elif self._apayi:
-                        self._call_async_use_case_definition_create(use_case_name=caller_filename)
+                        self._call_async_use_case_definition_create(use_case_name=caller_filename, use_case_description=description)
                     global_config["use_case_name"] = caller_filename
                 except Exception as e:
                     logging.error(f"Error creating default use case definition based on file name {caller_filename}: {e}")
@@ -303,7 +307,7 @@ class _PayiInstrumentor:
     
         return None         
     
-    def _call_async_use_case_definition_create(self, use_case_name: str) -> None:
+    def _call_async_use_case_definition_create(self, use_case_name: str, use_case_description: str) -> None:
         if not self._apayi:
             return
 
@@ -315,10 +319,10 @@ class _PayiInstrumentor:
         try:
             if loop and loop.is_running():
                 nest_asyncio.apply(loop) # type: ignore
-                asyncio.run(self._apayi.use_cases.definitions.create(name=use_case_name, description=""))                
+                asyncio.run(self._apayi.use_cases.definitions.create(name=use_case_name, description=use_case_description))                
             else:
                 # When there's no running loop, create a new one
-                asyncio.run(self._apayi.use_cases.definitions.create(name=use_case_name, description=""))
+                asyncio.run(self._apayi.use_cases.definitions.create(name=use_case_name, description=use_case_description))
         except Exception as e:
             logging.error(f"Error calling async use_cases.definitions.create synchronously: {e}")
 
@@ -549,9 +553,10 @@ class _PayiInstrumentor:
 
     def _prepare_ingest(
         self,
-        ingest: IngestUnitsParams,
+        request: _ProviderRequest,
         ingest_extra_headers: "dict[str, str]", # do not coflict potential kwargs["extra_headers"]
-        kwargs: Any,
+        args: Sequence[Any],
+        kwargs: 'dict[str, Any]',
     ) -> None:
         limit_ids = ingest_extra_headers.pop(PayiHeaderNames.limit_ids, None)
         request_tags = ingest_extra_headers.pop(PayiHeaderNames.request_tags, None)
@@ -563,24 +568,24 @@ class _PayiInstrumentor:
         user_id = ingest_extra_headers.pop(PayiHeaderNames.user_id, None)
 
         if limit_ids:
-            ingest["limit_ids"] = limit_ids.split(",")
+            request._ingest["limit_ids"] = limit_ids.split(",")
         if request_tags:
-            ingest["request_tags"] = request_tags.split(",")
+            request._ingest["request_tags"] = request_tags.split(",")
         if experience_name:
-            ingest["experience_name"] = experience_name
+            request._ingest["experience_name"] = experience_name
         if experience_id:
-            ingest["experience_id"] = experience_id
+            request._ingest["experience_id"] = experience_id
         if use_case_name:
-            ingest["use_case_name"] = use_case_name
+            request._ingest["use_case_name"] = use_case_name
         if use_case_id:
-            ingest["use_case_id"] = use_case_id
+            request._ingest["use_case_id"] = use_case_id
         if use_case_version:
-            ingest["use_case_version"] = int(use_case_version)
+            request._ingest["use_case_version"] = int(use_case_version)
         if user_id:
-            ingest["user_id"] = user_id
+            request._ingest["user_id"] = user_id
 
         if len(ingest_extra_headers) > 0:
-            ingest["provider_request_headers"] = [PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) for k, v in ingest_extra_headers.items()]
+            request._ingest["provider_request_headers"] = [PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) for k, v in ingest_extra_headers.items()]
 
         provider_prompt: "dict[str, Any]" = {}
         for k, v in kwargs.items():
@@ -590,24 +595,29 @@ class _PayiInstrumentor:
                 pass
             else:
                 try:
-                    json.dumps(v)
-                    provider_prompt[k] = v
+                    if hasattr(v, "to_dict"):
+                        provider_prompt[k] = v.to_dict()
+                    else:
+                        json.dumps(v)
+                        provider_prompt[k] = v
                 except (TypeError, ValueError):
                     pass
 
-        if self._log_prompt_and_response:
-            ingest["provider_request_json"] = json.dumps(provider_prompt)
+        request.process_request_prompt(provider_prompt, args, kwargs)
 
-        ingest["event_timestamp"] = datetime.now(timezone.utc)
+        if self._log_prompt_and_response:
+            request._ingest["provider_request_json"] = json.dumps(provider_prompt)
+
+        request._ingest["event_timestamp"] = datetime.now(timezone.utc)
         
-    async def achat_wrapper(
+    async def async_invoke_wrapper(
         self,
         request: _ProviderRequest,
         is_streaming: _IsStreaming,
         wrapped: Any,
         instance: Any,
-        args: Any,
-        kwargs: Any,
+        args: Sequence[Any],
+        kwargs: 'dict[str, Any]',
     ) -> Any:
         context = self.get_context()
 
@@ -647,7 +657,7 @@ class _PayiInstrumentor:
             stream = False
 
         try:
-            self._prepare_ingest(request._ingest, extra_headers, kwargs)
+            self._prepare_ingest(request, extra_headers, args, kwargs)
             sw.start()
             response = await wrapped(*args, **kwargs)
 
@@ -699,14 +709,14 @@ class _PayiInstrumentor:
 
         return response
 
-    def chat_wrapper(
+    def invoke_wrapper(
         self,
         request: _ProviderRequest,
         is_streaming: _IsStreaming,
         wrapped: Any,
         instance: Any,
-        args: Any,
-        kwargs: Any,
+        args: Sequence[Any],
+        kwargs: 'dict[str, Any]',
     ) -> Any:
         context = self.get_context()
 
@@ -752,7 +762,7 @@ class _PayiInstrumentor:
             stream = False
 
         try:
-            self._prepare_ingest(request._ingest, extra_headers, kwargs)
+            self._prepare_ingest(request, extra_headers, args, kwargs)
             sw.start()
             response = wrapped(*args, **kwargs)
             

@@ -63,7 +63,7 @@ def embeddings_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
-    return instrumentor.chat_wrapper(
+    return instrumentor.invoke_wrapper(
         _OpenAiEmbeddingsProviderRequest(instrumentor),
         _IsStreaming.false,
         wrapped,
@@ -80,7 +80,7 @@ async def aembeddings_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
-    return await instrumentor.achat_wrapper(
+    return await instrumentor.async_invoke_wrapper(
         _OpenAiEmbeddingsProviderRequest(instrumentor),
         _IsStreaming.false,
         wrapped,
@@ -97,7 +97,7 @@ def chat_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
-    return instrumentor.chat_wrapper(
+    return instrumentor.invoke_wrapper(
         _OpenAiChatProviderRequest(instrumentor),
         _IsStreaming.kwargs,
         wrapped,
@@ -114,7 +114,7 @@ async def achat_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
-    return await instrumentor.achat_wrapper(
+    return await instrumentor.async_invoke_wrapper(
         _OpenAiChatProviderRequest(instrumentor),
         _IsStreaming.kwargs,
         wrapped,

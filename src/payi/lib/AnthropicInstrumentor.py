@@ -54,7 +54,7 @@ def chat_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
-    return instrumentor.chat_wrapper(
+    return instrumentor.invoke_wrapper(
         _AnthropicProviderRequest(instrumentor),
         _IsStreaming.kwargs,
         wrapped,
@@ -71,7 +71,7 @@ async def achat_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
-    return await instrumentor.achat_wrapper(
+    return await instrumentor.async_invoke_wrapper(
         _AnthropicProviderRequest(instrumentor),
         _IsStreaming.kwargs,
         wrapped,

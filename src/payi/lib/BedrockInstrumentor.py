@@ -148,7 +148,7 @@ def wrap_invoke(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
         modelId:str = kwargs.get("modelId", "") # type: ignore
 
         if _is_supported_model(modelId):
-            return instrumentor.chat_wrapper(
+            return instrumentor.invoke_wrapper(
                 _BedrockInvokeSynchronousProviderRequest(instrumentor=instrumentor),
                 _IsStreaming.false,
                 wrapped,
@@ -166,7 +166,7 @@ def wrap_invoke_stream(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
         modelId: str = kwargs.get("modelId", "") # type: ignore
 
         if _is_supported_model(modelId):
-            return instrumentor.chat_wrapper(
+            return instrumentor.invoke_wrapper(
                 _BedrockInvokeStreamingProviderRequest(instrumentor=instrumentor, model_id=modelId),
                 _IsStreaming.true,
                 wrapped,
@@ -184,7 +184,7 @@ def wrap_converse(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
         modelId:str = kwargs.get("modelId", "") # type: ignore
 
         if _is_supported_model(modelId):
-            return instrumentor.chat_wrapper(
+            return instrumentor.invoke_wrapper(
                 _BedrockConverseSynchronousProviderRequest(instrumentor=instrumentor),
                 _IsStreaming.false,
                 wrapped,
@@ -202,7 +202,7 @@ def wrap_converse_stream(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
         modelId: str = kwargs.get("modelId", "") # type: ignore
 
         if _is_supported_model(modelId):
-            return instrumentor.chat_wrapper(
+            return instrumentor.invoke_wrapper(
                 _BedrockConverseStreamingProviderRequest(instrumentor=instrumentor),
                 _IsStreaming.true,
                 wrapped,
