@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Any, Union, Optional
+from typing import Any, Union, Optional, Sequence
 from typing_extensions import override
 from importlib.metadata import version
 
@@ -63,7 +63,7 @@ def embeddings_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
-    return instrumentor.chat_wrapper(
+    return instrumentor.invoke_wrapper(
         _OpenAiEmbeddingsProviderRequest(instrumentor),
         _IsStreaming.false,
         wrapped,
@@ -80,7 +80,7 @@ async def aembeddings_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
-    return await instrumentor.achat_wrapper(
+    return await instrumentor.async_invoke_wrapper(
         _OpenAiEmbeddingsProviderRequest(instrumentor),
         _IsStreaming.false,
         wrapped,
@@ -97,7 +97,7 @@ def chat_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
-    return instrumentor.chat_wrapper(
+    return instrumentor.invoke_wrapper(
         _OpenAiChatProviderRequest(instrumentor),
         _IsStreaming.kwargs,
         wrapped,
@@ -114,7 +114,7 @@ async def achat_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
-    return await instrumentor.achat_wrapper(
+    return await instrumentor.async_invoke_wrapper(
         _OpenAiChatProviderRequest(instrumentor),
         _IsStreaming.kwargs,
         wrapped,
@@ -125,10 +125,10 @@ async def achat_wrapper(
 
 class _OpenAiProviderRequest(_ProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor):
-        super().__init__(instrumentor=instrumentor, category="system.openai")
+        super().__init__(instrumentor=instrumentor, category=PayiCategories.openai)
 
     @override
-    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', kwargs: Any) -> bool:
+    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool: # type: ignore
         self._ingest["resource"] = kwargs.get("model", "")
 
         if not (instance and hasattr(instance, "_client")) or OpenAiInstrumentor.is_azure(instance) is False:
@@ -172,7 +172,8 @@ class _OpenAiProviderRequest(_ProviderRequest):
                     self._ingest["http_status_code"] = status_code
 
             if not status_code:
-                return False
+                self.exception_to_semantic_failure(exception,)
+                return True
 
             if hasattr(exception, "request_id"):
                 request_id = getattr(exception, "request_id", None)
@@ -232,8 +233,8 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
         return send_chunk_to_client
 
     @override
-    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', kwargs: Any) -> bool:
-        result = super().process_request(instance, extra_headers, kwargs)
+    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
+        result = super().process_request(instance, extra_headers, args, kwargs)
         if result is False:
             return result
         

@@ -1,13 +1,13 @@
 import os
 import json
 import logging
-from typing import Any
+from typing import Any, Sequence
 from functools import wraps
 from typing_extensions import override
 
 from wrapt import ObjectProxy, wrap_function_wrapper  # type: ignore
 
-from payi.lib.helpers import PayiHeaderNames, payi_aws_bedrock_url
+from payi.lib.helpers import PayiCategories, PayiHeaderNames, payi_aws_bedrock_url
 from payi.types.ingest_units_params import Units, IngestUnitsParams
 from payi.types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
@@ -148,7 +148,7 @@ def wrap_invoke(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
         modelId:str = kwargs.get("modelId", "") # type: ignore
 
         if _is_supported_model(modelId):
-            return instrumentor.chat_wrapper(
+            return instrumentor.invoke_wrapper(
                 _BedrockInvokeSynchronousProviderRequest(instrumentor=instrumentor),
                 _IsStreaming.false,
                 wrapped,
@@ -166,7 +166,7 @@ def wrap_invoke_stream(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
         modelId: str = kwargs.get("modelId", "") # type: ignore
 
         if _is_supported_model(modelId):
-            return instrumentor.chat_wrapper(
+            return instrumentor.invoke_wrapper(
                 _BedrockInvokeStreamingProviderRequest(instrumentor=instrumentor, model_id=modelId),
                 _IsStreaming.true,
                 wrapped,
@@ -184,7 +184,7 @@ def wrap_converse(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
         modelId:str = kwargs.get("modelId", "") # type: ignore
 
         if _is_supported_model(modelId):
-            return instrumentor.chat_wrapper(
+            return instrumentor.invoke_wrapper(
                 _BedrockConverseSynchronousProviderRequest(instrumentor=instrumentor),
                 _IsStreaming.false,
                 wrapped,
@@ -202,7 +202,7 @@ def wrap_converse_stream(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
         modelId: str = kwargs.get("modelId", "") # type: ignore
 
         if _is_supported_model(modelId):
-            return instrumentor.chat_wrapper(
+            return instrumentor.invoke_wrapper(
                 _BedrockConverseStreamingProviderRequest(instrumentor=instrumentor),
                 _IsStreaming.true,
                 wrapped,
@@ -216,10 +216,10 @@ def wrap_converse_stream(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
 
 class _BedrockProviderRequest(_ProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor):
-        super().__init__(instrumentor=instrumentor, category="system.aws.bedrock")
+        super().__init__(instrumentor=instrumentor, category=PayiCategories.aws_bedrock)
 
     @override
-    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', kwargs: Any) -> bool:
+    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
         # boto3 doesn't allow extra_headers
         kwargs.pop("extra_headers", None)
         self._ingest["resource"] = kwargs.get("modelId", "")

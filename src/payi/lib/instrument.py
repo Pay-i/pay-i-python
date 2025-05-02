@@ -4,11 +4,13 @@ import uuid
 import asyncio
 import inspect
 import logging
+import warnings
 import traceback
 from abc import abstractmethod
 from enum import Enum
-from typing import Any, Set, Union, Callable, Optional, TypedDict
+from typing import Any, Set, Union, Callable, Optional, Sequence, TypedDict
 from datetime import datetime, timezone
+from typing_extensions import deprecated
 
 import nest_asyncio  # type: ignore
 from wrapt import ObjectProxy  # type: ignore
@@ -38,20 +40,26 @@ class _ProviderRequest:
         return None
     
     @abstractmethod
-    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', kwargs: Any) -> bool:
+    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
+        ...
+    
+    def process_request_prompt(self, prompt: 'dict[str, Any]', args: Sequence[Any], kwargs: 'dict[str, Any]') -> None:
         ...
     
     def is_bedrock(self) -> bool:
         return self._category == PayiCategories.aws_bedrock
-    
+
+    def is_vertex(self) -> bool:
+        return self._category == PayiCategories.google_vertex 
+       
     def process_exception(self, exception: Exception, kwargs: Any, ) -> bool: # noqa: ARG002
-        return False
+        self.exception_to_semantic_failure(exception)
+        return True
 
     def exception_to_semantic_failure(self, e: Exception) -> None:
         exception_str = f"{type(e).__name__}"
     
         fields: list[str] = []
-        # fields += f"args: {e.args}"
     
         for attr in dir(e):
             if not attr.startswith("__"):
@@ -76,8 +84,8 @@ class PayiInstrumentConfig(TypedDict, total=False):
     proxy: bool
     global_instrumentation: bool
     limit_ids: Optional["list[str]"]
-    experience_name: Optional[str]
-    experience_id: Optional[str]
+    experience_name: Optional[str] = deprecated("experience_name is deprecated, use use_case_name instead") # type: ignore
+    experience_id: Optional[str] = deprecated("experience_id is deprecated, use use_case_id instead") # type: ignore
     use_case_name: Optional[str]
     use_case_id: Optional[str]
     use_case_version: Optional[int]
@@ -163,11 +171,12 @@ class _PayiInstrumentor:
                 self._apayi = AsyncPayi()
 
             if "use_case_name" not in global_config and caller_filename:
+                description = f"Default use case for {caller_filename}.py"
                 try:
                     if self._payi:
-                        self._payi.use_cases.definitions.create(name=caller_filename, description='')
+                        self._payi.use_cases.definitions.create(name=caller_filename, description=description)
                     elif self._apayi:
-                        self._call_async_use_case_definition_create(use_case_name=caller_filename)
+                        self._call_async_use_case_definition_create(use_case_name=caller_filename, use_case_description=description)
                     global_config["use_case_name"] = caller_filename
                 except Exception as e:
                     logging.error(f"Error creating default use case definition based on file name {caller_filename}: {e}")
@@ -180,6 +189,7 @@ class _PayiInstrumentor:
         self._instrument_openai()
         self._instrument_anthropic()
         self._instrument_aws_bedrock()
+        self._instrument_google_vertex()
 
     def _instrument_specific(self, instruments: Set[str]) -> None:
         if PayiCategories.openai in instruments or PayiCategories.azure_openai in instruments:
@@ -188,6 +198,8 @@ class _PayiInstrumentor:
             self._instrument_anthropic()
         if PayiCategories.aws_bedrock in instruments:
             self._instrument_aws_bedrock()
+        if PayiCategories.google_vertex in instruments:
+            self._instrument_google_vertex()
 
     def _instrument_openai(self) -> None:
         from .OpenAIInstrumentor import OpenAiInstrumentor
@@ -215,6 +227,16 @@ class _PayiInstrumentor:
 
         except Exception as e:
             logging.error(f"Error instrumenting AWS bedrock: {e}")
+
+    def _instrument_google_vertex(self) -> None:
+        from .VertexInstrumentor import VertexInstrumentor
+
+        try:
+            VertexInstrumentor.instrument(self)
+
+        except Exception as e:
+            logging.error(f"Error instrumenting Google Vertex: {e}")
+
 
     def _process_ingest_units(self, ingest_units: IngestUnitsParams, log_data: 'dict[str, str]') -> bool:
         if int(ingest_units.get("http_status_code") or 0) < 400:
@@ -285,7 +307,7 @@ class _PayiInstrumentor:
     
         return None         
     
-    def _call_async_use_case_definition_create(self, use_case_name: str) -> None:
+    def _call_async_use_case_definition_create(self, use_case_name: str, use_case_description: str) -> None:
         if not self._apayi:
             return
 
@@ -297,10 +319,10 @@ class _PayiInstrumentor:
         try:
             if loop and loop.is_running():
                 nest_asyncio.apply(loop) # type: ignore
-                asyncio.run(self._apayi.use_cases.definitions.create(name=use_case_name, description=""))                
+                asyncio.run(self._apayi.use_cases.definitions.create(name=use_case_name, description=use_case_description))                
             else:
                 # When there's no running loop, create a new one
-                asyncio.run(self._apayi.use_cases.definitions.create(name=use_case_name, description=""))
+                asyncio.run(self._apayi.use_cases.definitions.create(name=use_case_name, description=use_case_description))
         except Exception as e:
             logging.error(f"Error calling async use_cases.definitions.create synchronously: {e}")
 
@@ -531,9 +553,10 @@ class _PayiInstrumentor:
 
     def _prepare_ingest(
         self,
-        ingest: IngestUnitsParams,
+        request: _ProviderRequest,
         ingest_extra_headers: "dict[str, str]", # do not coflict potential kwargs["extra_headers"]
-        kwargs: Any,
+        args: Sequence[Any],
+        kwargs: 'dict[str, Any]',
     ) -> None:
         limit_ids = ingest_extra_headers.pop(PayiHeaderNames.limit_ids, None)
         request_tags = ingest_extra_headers.pop(PayiHeaderNames.request_tags, None)
@@ -545,24 +568,24 @@ class _PayiInstrumentor:
         user_id = ingest_extra_headers.pop(PayiHeaderNames.user_id, None)
 
         if limit_ids:
-            ingest["limit_ids"] = limit_ids.split(",")
+            request._ingest["limit_ids"] = limit_ids.split(",")
         if request_tags:
-            ingest["request_tags"] = request_tags.split(",")
+            request._ingest["request_tags"] = request_tags.split(",")
         if experience_name:
-            ingest["experience_name"] = experience_name
+            request._ingest["experience_name"] = experience_name
         if experience_id:
-            ingest["experience_id"] = experience_id
+            request._ingest["experience_id"] = experience_id
         if use_case_name:
-            ingest["use_case_name"] = use_case_name
+            request._ingest["use_case_name"] = use_case_name
         if use_case_id:
-            ingest["use_case_id"] = use_case_id
+            request._ingest["use_case_id"] = use_case_id
         if use_case_version:
-            ingest["use_case_version"] = int(use_case_version)
+            request._ingest["use_case_version"] = int(use_case_version)
         if user_id:
-            ingest["user_id"] = user_id
+            request._ingest["user_id"] = user_id
 
         if len(ingest_extra_headers) > 0:
-            ingest["provider_request_headers"] = [PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) for k, v in ingest_extra_headers.items()]
+            request._ingest["provider_request_headers"] = [PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) for k, v in ingest_extra_headers.items()]
 
         provider_prompt: "dict[str, Any]" = {}
         for k, v in kwargs.items():
@@ -572,24 +595,29 @@ class _PayiInstrumentor:
                 pass
             else:
                 try:
-                    json.dumps(v)
-                    provider_prompt[k] = v
-                except (TypeError, ValueError):
+                    if hasattr(v, "to_dict"):
+                        provider_prompt[k] = v.to_dict()
+                    else:
+                        json.dumps(v)
+                        provider_prompt[k] = v
+                except Exception as _e:
                     pass
 
-        if self._log_prompt_and_response:
-            ingest["provider_request_json"] = json.dumps(provider_prompt)
+        request.process_request_prompt(provider_prompt, args, kwargs)
 
-        ingest["event_timestamp"] = datetime.now(timezone.utc)
+        if self._log_prompt_and_response:
+            request._ingest["provider_request_json"] = json.dumps(provider_prompt)
+
+        request._ingest["event_timestamp"] = datetime.now(timezone.utc)
         
-    async def achat_wrapper(
+    async def async_invoke_wrapper(
         self,
         request: _ProviderRequest,
         is_streaming: _IsStreaming,
         wrapped: Any,
         instance: Any,
-        args: Any,
-        kwargs: Any,
+        args: Sequence[Any],
+        kwargs: 'dict[str, Any]',
     ) -> Any:
         context = self.get_context()
 
@@ -615,7 +643,7 @@ class _PayiInstrumentor:
 
         request._ingest['properties'] = { 'system.stack_trace': json.dumps(stack) }
 
-        if request.process_request(instance, extra_headers, kwargs) is False:
+        if request.process_request(instance, extra_headers, args, kwargs) is False:
             return await wrapped(*args, **kwargs)
 
         sw = Stopwatch()
@@ -629,7 +657,7 @@ class _PayiInstrumentor:
             stream = False
 
         try:
-            self._prepare_ingest(request._ingest, extra_headers, kwargs)
+            self._prepare_ingest(request, extra_headers, args, kwargs)
             sw.start()
             response = await wrapped(*args, **kwargs)
 
@@ -644,6 +672,15 @@ class _PayiInstrumentor:
             raise e
 
         if stream:
+            if request.is_vertex():
+                return _GeneratorWrapper(
+                    generator=response,
+                    instance=instance,
+                    instrumentor=self,
+                    stopwatch=sw,
+                    request=request,
+                    log_prompt_and_response=self._log_prompt_and_response)
+
             stream_result = ChatStreamWrapper(
                 response=response,
                 instance=instance,
@@ -672,14 +709,14 @@ class _PayiInstrumentor:
 
         return response
 
-    def chat_wrapper(
+    def invoke_wrapper(
         self,
         request: _ProviderRequest,
         is_streaming: _IsStreaming,
         wrapped: Any,
         instance: Any,
-        args: Any,
-        kwargs: Any,
+        args: Sequence[Any],
+        kwargs: 'dict[str, Any]',
     ) -> Any:
         context = self.get_context()
 
@@ -711,7 +748,7 @@ class _PayiInstrumentor:
 
         request._ingest['properties'] = { 'system.stack_trace': json.dumps(stack) }
 
-        if request.process_request(instance, extra_headers, kwargs) is False:
+        if request.process_request(instance, extra_headers, args, kwargs) is False:
             return wrapped(*args, **kwargs)
 
         sw = Stopwatch()
@@ -725,10 +762,10 @@ class _PayiInstrumentor:
             stream = False
 
         try:
-            self._prepare_ingest(request._ingest, extra_headers, kwargs)
+            self._prepare_ingest(request, extra_headers, args, kwargs)
             sw.start()
             response = wrapped(*args, **kwargs)
-
+            
         except Exception as e:  # pylint: disable=broad-except
             sw.stop()
             duration = sw.elapsed_ms_int()
@@ -740,6 +777,15 @@ class _PayiInstrumentor:
             raise e
 
         if stream:
+            if request.is_vertex():
+                return _GeneratorWrapper(
+                    generator=response,
+                    instance=instance,
+                    instrumentor=self,
+                    stopwatch=sw,
+                    request=request,
+                    log_prompt_and_response=self._log_prompt_and_response)
+
             stream_result = ChatStreamWrapper(
                 response=response,
                 instance=instance,
@@ -1046,6 +1092,92 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
             # assume dict
             return json.dumps(chunk)
 
+class _GeneratorWrapper:  # type: ignore
+    def __init__(
+        self,
+        generator: Any,
+        instance: Any,
+        instrumentor: _PayiInstrumentor, 
+        stopwatch: Stopwatch,
+        request: _ProviderRequest,
+        log_prompt_and_response: bool = True,
+    ) -> None:
+        super().__init__()  # type: ignore
+        
+        self._generator = generator
+        self._instance = instance
+        self._instrumentor = instrumentor
+        self._stopwatch: Stopwatch = stopwatch
+        self._log_prompt_and_response: bool = log_prompt_and_response
+        self._responses: list[str] = []
+        self._request: _ProviderRequest = request
+        self._first_token: bool = True
+        self._done: bool = False
+        
+    def __iter__(self) -> Any:
+        return self
+        
+    def __aiter__(self) -> Any:
+        return self
+        
+    def __next__(self) -> Any:
+        if self._done:
+            raise StopIteration
+            
+        try:
+            chunk = next(self._generator)
+            return self._process_chunk(chunk)
+
+        except StopIteration as stop_exception:
+            self._process_stop_iteration()
+            raise stop_exception
+
+    async def __anext__(self) -> Any:
+        if self._done:
+            raise StopAsyncIteration
+            
+        try:
+            chunk = await anext(self._generator) # type: ignore
+            return self._process_chunk(chunk)
+
+        except StopAsyncIteration as stop_exception:
+            await self._process_async_stop_iteration()
+            raise stop_exception
+
+    def _process_chunk(self, chunk: Any) -> Any:
+        if self._first_token:
+            self._request._ingest["time_to_first_token_ms"] = self._stopwatch.elapsed_ms_int()
+            self._first_token = False
+            
+        if self._log_prompt_and_response:
+            dict = chunk.to_dict() # type: ignore
+            self._responses.append(json.dumps(dict))
+                
+        self._request.process_chunk(chunk)
+        return chunk
+
+    def _process_stop_iteration(self) -> None:
+        self._stopwatch.stop()
+        self._request._ingest["end_to_end_latency_ms"] = self._stopwatch.elapsed_ms_int()
+        self._request._ingest["http_status_code"] = 200
+            
+        if self._log_prompt_and_response:
+            self._request._ingest["provider_response_json"] = self._responses
+                
+        self._instrumentor._ingest_units(self._request._ingest)
+        self._done = True
+
+    async def _process_async_stop_iteration(self) -> None:
+        self._stopwatch.stop() 
+        self._request._ingest["end_to_end_latency_ms"] = self._stopwatch.elapsed_ms_int()
+        self._request._ingest["http_status_code"] = 200
+            
+        if self._log_prompt_and_response:
+            self._request._ingest["provider_response_json"] = self._responses
+                
+        await self._instrumentor._aingest_units(self._request._ingest)
+        self._done = True
+
 global _instrumentor
 _instrumentor: Optional[_PayiInstrumentor] = None
 
@@ -1057,7 +1189,7 @@ def payi_instrument(
     config: Optional[PayiInstrumentConfig] = None,
 ) -> None:
     global _instrumentor
-    if _instrumentor:
+    if (_instrumentor):
         return
     
     payi_param: Optional[Payi] = None
@@ -1141,8 +1273,6 @@ def track(
 
 def track_context(
     limit_ids: Optional["list[str]"] = None,
-    experience_name: Optional[str] = None,
-    experience_id: Optional[str] = None,
     use_case_name: Optional[str] = None,
     use_case_id: Optional[str] = None,
     use_case_version: Optional[int] = None,
@@ -1152,14 +1282,9 @@ def track_context(
     resource_scope: Optional[str] = None,
     proxy: Optional[bool] = None,
 ) -> _TrackContext:
-    if not _instrumentor:
-        raise RuntimeError("Pay-i instrumentor not initialized. Use payi_instrument() to initialize.")
-
     # Create a new context for tracking
     context: _Context = {}
     context["limit_ids"] = limit_ids
-    context["experience_name"] = experience_name
-    context["experience_id"] = experience_id
     context["use_case_name"] = use_case_name
     context["use_case_id"] = use_case_id
     context["use_case_version"] = use_case_version
@@ -1171,6 +1296,8 @@ def track_context(
 
     return _TrackContext(context)
 
+
+@deprecated("@ingest() is deprecated. Use @track() instead")
 def ingest(
     limit_ids: Optional["list[str]"] = None,
     experience_name: Optional[str] = None,
@@ -1180,6 +1307,13 @@ def ingest(
     use_case_version: Optional[int] = None,
     user_id: Optional[str] = None,
 ) -> Any:
+    warnings.warn(
+        "@ingest is deprecated and will be removed in a future version. Use @track instead.",
+        DeprecationWarning,
+        stacklevel=2
+
+    )
+
     def _ingest(func: Any) -> Any:
         import asyncio
         if asyncio.iscoroutinefunction(func):
@@ -1219,8 +1353,10 @@ def ingest(
                     **kwargs,
                 )
             return wrapper
+
     return _ingest
 
+@deprecated("@proxy() is deprecated. Use @track() instead")
 def proxy(
     limit_ids: Optional["list[str]"] = None,
     experience_name: Optional[str] = None,
@@ -1230,6 +1366,13 @@ def proxy(
     use_case_version: Optional[int] = None,
     user_id: Optional[str] = None,
 ) -> Any:
+    warnings.warn(
+        "@proxy is deprecated and will be removed in a future version. Use @track instead.",
+        DeprecationWarning,
+        stacklevel=2
+
+    )
+
     def _proxy(func: Any) -> Any:
         import asyncio
         if asyncio.iscoroutinefunction(func):

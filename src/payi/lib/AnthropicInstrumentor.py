@@ -1,10 +1,11 @@
 import logging
-from typing import Any, Union, Optional
+from typing import Any, Union, Optional, Sequence
 from typing_extensions import override
 
 import tiktoken
 from wrapt import wrap_function_wrapper  # type: ignore
 
+from payi.lib.helpers import PayiCategories
 from payi.types.ingest_units_params import Units
 
 from .instrument import _IsStreaming, _ProviderRequest, _PayiInstrumentor
@@ -53,7 +54,7 @@ def chat_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
-    return instrumentor.chat_wrapper(
+    return instrumentor.invoke_wrapper(
         _AnthropicProviderRequest(instrumentor),
         _IsStreaming.kwargs,
         wrapped,
@@ -70,7 +71,7 @@ async def achat_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
-    return await instrumentor.achat_wrapper(
+    return await instrumentor.async_invoke_wrapper(
         _AnthropicProviderRequest(instrumentor),
         _IsStreaming.kwargs,
         wrapped,
@@ -81,7 +82,7 @@ async def achat_wrapper(
 
 class _AnthropicProviderRequest(_ProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor):
-        super().__init__(instrumentor=instrumentor, category="system.anthropic")
+        super().__init__(instrumentor=instrumentor, category=PayiCategories.anthropic)
 
     @override
     def process_chunk(self, chunk: Any) -> bool:
@@ -136,7 +137,7 @@ class _AnthropicProviderRequest(_ProviderRequest):
         return None
 
     @override
-    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', kwargs: Any) -> bool:
+    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
         self._ingest["resource"] = kwargs.get("model", "")
         messages = kwargs.get("messages")
         if messages:
@@ -166,7 +167,8 @@ class _AnthropicProviderRequest(_ProviderRequest):
                     self._ingest["http_status_code"] = status_code
 
             if not status_code:
-                return False
+                self.exception_to_semantic_failure(exception,)
+                return True
 
             if hasattr(exception, "request_id"):
                 request_id = getattr(exception, "request_id", None)
