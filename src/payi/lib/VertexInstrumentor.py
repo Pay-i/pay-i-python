@@ -87,6 +87,7 @@ class _GoogleVertexRequest(_ProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor):
         super().__init__(instrumentor=instrumentor, category=PayiCategories.google_vertex)
         self._prompt_character_count = 0
+        self._candiates_character_count = 0
 
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
@@ -138,16 +139,24 @@ class _GoogleVertexRequest(_ProviderRequest):
             if id:
                 self._ingest["provider_response_id"] = id
 
-        if "resource" not in self._ingest:
-            model = response_dict.get("model_version") # type: ignore
-            if model is not None:
-                self._ingest["resource"] = "google." + model
- 
+        model: str = response_dict.get("model_version", "")
+
+        self._ingest["resource"] = "google." + model
+
+        for candidate in response_dict.get("candidates", []):
+            parts = candidate.get("content", {}).get("parts", [])
+            for part in parts:
+                self._candiates_character_count += count_chars_skip_spaces(part.get("text", ""))
+
         usage = response_dict.get("usage_metadata", {})
         if usage and "prompt_token_count" in usage and "candidates_token_count" in usage:
-            self._compute_usage(response_dict)
+            self._compute_usage(response_dict, streaming_candidates_characters=self._candiates_character_count)
 
         return True
+    
+    @staticmethod
+    def _is_character_billing_model(model: str) -> bool:
+        return model.startswith("gemini-1.")
     
     @override
     def process_synchronous_response(
@@ -168,18 +177,23 @@ class _GoogleVertexRequest(_ProviderRequest):
         return None
 
     def add_units(self, key: str, input: Optional[int] = None, output: Optional[int] = None) -> None:
+        if key not in self._ingest["units"]:
+            self._ingest["units"][key] = {}
         if input is not None:
             self._ingest["units"][key]["input"] = input
         if output is not None:
             self._ingest["units"][key]["output"] = output
 
-    def _compute_usage(self, response_dict: 'dict[str, Any]') -> None:
+    def _compute_usage(self, response_dict: 'dict[str, Any]', streaming_candidates_characters: Optional[int] = None) -> None:
         usage = response_dict.get("usage_metadata", {})
         input = usage.get("prompt_token_count", 0)
+
         prompt_tokens_details: list[dict[str, Any]] = usage.get("prompt_tokens_details")
         candidates_tokens_details: list[dict[str, Any]] = usage.get("candidates_tokens_details")
 
-        if response_dict["model_version"].startswith("gemini-1."):
+        model: str = response_dict.get("model_version", "")
+
+        if self._is_character_billing_model(model):
             # gemini 1.0 and 1.5 units are reported in characters, per second, per image, etc...
             large_context = "" if input < 128000 else "_large_context"
         
@@ -192,17 +206,21 @@ class _GoogleVertexRequest(_ProviderRequest):
                 if modality == "TEXT":
                     input = self._prompt_character_count
                     if input == 0:
+                        # back up calc if nothing was calculated from the prompt
                         input = response_dict["usage_metadata"]["prompt_token_count"] * 4
 
                     output = 0
-                    for candidate in response_dict["candidates"]:
-                        parts = candidate.get("content", {}).get("parts", [])
-                        for part in parts:
-                            if "text" in part:
-                                output += count_chars_skip_spaces(part["text"])
+                    if streaming_candidates_characters is None:
+                        for candidate in response_dict.get("candidates", []):
+                            parts = candidate.get("content", {}).get("parts", [])
+                            for part in parts:
+                                output += count_chars_skip_spaces(part.get("text", ""))
 
-                    if output == 0:
-                        output = response_dict["usage_metadata"]["candidates_token_count"] * 4
+                        if output == 0:
+                            # back up calc if no parts
+                            output = response_dict["usage_metadata"]["candidates_token_count"] * 4
+                    else:
+                        output = streaming_candidates_characters
 
                     self._ingest["units"]["text"+large_context] = Units(input=input, output=output)
 
@@ -218,7 +236,7 @@ class _GoogleVertexRequest(_ProviderRequest):
                     audio_seconds = math.ceil(modality_token_count / 25)
                     self.add_units("audio"+large_context, input=audio_seconds)
 
-        elif response_dict["model_version"].startswith("gemini-2.0"):
+        elif model.startswith("gemini-2.0"):
             for details in prompt_tokens_details:
                 modality = details.get("modality", "")
                 if not modality:
