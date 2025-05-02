@@ -1,7 +1,7 @@
 import json
-import logging
 import math
-from typing import Any, List, Sequence, Union
+import logging
+from typing import Any, List, Union, Optional, Sequence
 from typing_extensions import override
 
 from wrapt import wrap_function_wrapper  # type: ignore
@@ -180,6 +180,12 @@ class _GoogleVertexRequest(_ProviderRequest):
 
         return True
     
+    def add_units(self, key: str, input: Optional[int] = None, output: Optional[int] = None) -> None:
+        if input is not None:
+            self._ingest["units"][key]["input"] = input
+        if output is not None:
+            self._ingest["units"][key]["output"] = output
+
     @override
     def process_synchronous_response(
         self,
@@ -192,22 +198,20 @@ class _GoogleVertexRequest(_ProviderRequest):
         self._ingest["resource"] = "google." + response_dict["model_version"]
 
         usage = response_dict.get("usage_metadata", {})
-
         input = usage.get("prompt_token_count", 0)
-
+        prompt_tokens_details: list[dict[str, Any]] = usage.get("prompt_tokens_details")
+        candidates_tokens_details: list[dict[str, Any]] = usage.get("candidates_tokens_details")
 
         if response_dict["model_version"].startswith("gemini-1."):
             # gemini 1.0 and 1.5 units are reported in characters, per second, per image, etc...
             large_context = "" if input < 128000 else "_large_context"
-
-            prompt_tokens_details: list[dict[str, Any]] = usage.get("prompt_tokens_details")
-            
+        
             for details in prompt_tokens_details:
                 modality = details.get("modality", "")
                 if not modality:
                     continue
 
-                input_token_details = details.get("token_count", 0)
+                modality_token_count = details.get("token_count", 0)
                 if modality == "TEXT":
                     input = self._prompt_character_count
                     if input == 0:
@@ -226,21 +230,42 @@ class _GoogleVertexRequest(_ProviderRequest):
                     self._ingest["units"]["text"+large_context] = Units(input=input, output=output)
 
                 elif modality == "IMAGE":
-                    num_images = math.ceil(input_token_details / 258)
-                    self._ingest["units"]["vision"+large_context] = Units(input=num_images)
+                    num_images = math.ceil(modality_token_count / 258)
+                    self.add_units("vision"+large_context, input=num_images)
 
                 elif modality == "VIDEO":
-                    video_seconds = math.ceil(input_token_details / 285)
-                    self._ingest["units"]["video"+large_context] = Units(input=video_seconds)
+                    video_seconds = math.ceil(modality_token_count / 285)
+                    self.add_units("video"+large_context, input=video_seconds)
 
                 elif modality == "AUDIO":
-                    audio_seconds = math.ceil(input_token_details / 25)
-                    self._ingest["units"]["audio"+large_context] = Units(input=audio_seconds)
-        else:
-            # other models are reported in tokens
-            self._ingest["units"]["text"] = Units(
-                input=response_dict["usage_metadata"]["prompt_token_count"],
-                output=response_dict["usage_metadata"]["candidates_token_count"])
+                    audio_seconds = math.ceil(modality_token_count / 25)
+                    self.add_units("audio"+large_context, input=audio_seconds)
+
+        elif response_dict["model_version"].startswith("gemini-2.0"):
+            for details in prompt_tokens_details:
+                modality = details.get("modality", "")
+                if not modality:
+                    continue
+
+                modality_token_count = details.get("token_count", 0)
+                if modality == "IMAGE":
+                    self.add_units("vision", input=modality_token_count)
+                elif modality in ("VIDEO", "AUDIO", "TEXT"):
+                    self.add_units(modality.lower(), input=modality_token_count)
+            for details in candidates_tokens_details:
+                modality = details.get("modality", "")
+                if not modality:
+                    continue
+
+                modality_token_count = details.get("token_count", 0)
+                if modality in ("VIDEO", "AUDIO", "TEXT", "IMAGE"):
+                    self.add_units(modality.lower(), output=modality_token_count)
+        
+        # else:
+        #     # other models are reported in tokens
+        #     self._ingest["units"]["text"] = Units(
+        #         input=response_dict["usage_metadata"]["prompt_token_count"],
+        #         output=response_dict["usage_metadata"]["candidates_token_count"])
 
         if log_prompt_and_response:
             self._ingest["provider_response_json"] = [json.dumps(response_dict)]
