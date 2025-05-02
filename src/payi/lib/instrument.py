@@ -600,7 +600,7 @@ class _PayiInstrumentor:
                     else:
                         json.dumps(v)
                         provider_prompt[k] = v
-                except (TypeError, ValueError):
+                except Exception as _e:
                     pass
 
         request.process_request_prompt(provider_prompt, args, kwargs)

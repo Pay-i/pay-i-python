@@ -126,7 +126,7 @@ class _GoogleVertexRequest(_ProviderRequest):
             elif isinstance(item, str):
                 text = item
 
-            if text:
+            if text != "":
                 self._prompt_character_count += count_chars_skip_spaces(text) # type: ignore
              
         return True
@@ -166,9 +166,11 @@ class _GoogleVertexRequest(_ProviderRequest):
             for item in items: # type: ignore
                 if isinstance(item, str):
                     parts.append(Part.from_text(item)) # type: ignore
-                else:
+                elif isinstance(item, Part):
                     parts.append(item) # type: ignore
-            
+                elif isinstance(item, Image):
+                    parts.append(Part.from_image(item)) # type: ignore
+                        
             prompt[key] = Content(parts=parts).to_dict() # type: ignore
 
         tools: Optional[list[Tool]] = kwargs.get("tools", None)  # type: ignore
