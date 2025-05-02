@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Any, Sequence, Union, Optional
+from typing import Any, Union, Optional, Sequence
 from typing_extensions import override
 from importlib.metadata import version
 

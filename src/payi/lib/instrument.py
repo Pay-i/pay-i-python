@@ -4,11 +4,13 @@ import uuid
 import asyncio
 import inspect
 import logging
+import warnings
 import traceback
 from abc import abstractmethod
 from enum import Enum
-from typing import Any, Sequence, Set, Union, Callable, Optional, TypedDict
+from typing import Any, Set, Union, Callable, Optional, Sequence, TypedDict
 from datetime import datetime, timezone
+from typing_extensions import deprecated
 
 import nest_asyncio  # type: ignore
 from wrapt import ObjectProxy  # type: ignore
@@ -79,8 +81,8 @@ class PayiInstrumentConfig(TypedDict, total=False):
     proxy: bool
     global_instrumentation: bool
     limit_ids: Optional["list[str]"]
-    experience_name: Optional[str]
-    experience_id: Optional[str]
+    experience_name: Optional[str] = deprecated("experience_name is deprecated, use use_case_name instead") # type: ignore
+    experience_id: Optional[str] = deprecated("experience_id is deprecated, use use_case_id instead") # type: ignore
     use_case_name: Optional[str]
     use_case_id: Optional[str]
     use_case_version: Optional[int]
@@ -1261,8 +1263,6 @@ def track(
 
 def track_context(
     limit_ids: Optional["list[str]"] = None,
-    experience_name: Optional[str] = None,
-    experience_id: Optional[str] = None,
     use_case_name: Optional[str] = None,
     use_case_id: Optional[str] = None,
     use_case_version: Optional[int] = None,
@@ -1275,8 +1275,6 @@ def track_context(
     # Create a new context for tracking
     context: _Context = {}
     context["limit_ids"] = limit_ids
-    context["experience_name"] = experience_name
-    context["experience_id"] = experience_id
     context["use_case_name"] = use_case_name
     context["use_case_id"] = use_case_id
     context["use_case_version"] = use_case_version
@@ -1288,6 +1286,8 @@ def track_context(
 
     return _TrackContext(context)
 
+
+@deprecated("@ingest() is deprecated. Use @track() instead")
 def ingest(
     limit_ids: Optional["list[str]"] = None,
     experience_name: Optional[str] = None,
@@ -1297,6 +1297,13 @@ def ingest(
     use_case_version: Optional[int] = None,
     user_id: Optional[str] = None,
 ) -> Any:
+    warnings.warn(
+        "@ingest is deprecated and will be removed in a future version. Use @track instead.",
+        DeprecationWarning,
+        stacklevel=2
+
+    )
+
     def _ingest(func: Any) -> Any:
         import asyncio
         if asyncio.iscoroutinefunction(func):
@@ -1336,8 +1343,10 @@ def ingest(
                     **kwargs,
                 )
             return wrapper
+
     return _ingest
 
+@deprecated("@proxy() is deprecated. Use @track() instead")
 def proxy(
     limit_ids: Optional["list[str]"] = None,
     experience_name: Optional[str] = None,
@@ -1347,6 +1356,13 @@ def proxy(
     use_case_version: Optional[int] = None,
     user_id: Optional[str] = None,
 ) -> Any:
+    warnings.warn(
+        "@proxy is deprecated and will be removed in a future version. Use @track instead.",
+        DeprecationWarning,
+        stacklevel=2
+
+    )
+
     def _proxy(func: Any) -> Any:
         import asyncio
         if asyncio.iscoroutinefunction(func):
