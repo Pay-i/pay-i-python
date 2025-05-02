@@ -80,15 +80,6 @@ async def agenerate_wrapper(
         kwargs,
     )
 
-VERTEX_CHARACTER_BILLING_MODELS = [
-    "google.gemini-1.5-pro",
-    "google.gemini-1.5-pro-001",
-    "google.gemini-1.5-pro-002",
-    "google.gemini-1.5-flash",
-    "google.gemini-1.5-flash-001",
-    "google.gemini-1.5-flash-002",
-    ]
-
 def count_chars_skip_spaces(text: str) -> int:
     return sum(1 for c in text if not c.isspace())
 
@@ -154,38 +145,10 @@ class _GoogleVertexRequest(_ProviderRequest):
  
         usage = response_dict.get("usage_metadata", {})
         if usage and "prompt_token_count" in usage and "candidates_token_count" in usage:
-            input: int = 0
-            output: int = 0
-
-            if self._ingest["resource"] in VERTEX_CHARACTER_BILLING_MODELS:
-                input = usage["prompt_token_count"] * 4
-                output = usage["candidates_token_count"] * 4
-    
-                prompt_tokens_details: list[dict[str, Any]] = usage.get("prompt_tokens_details")
-                large_context = "" if usage["prompt_token_count"] < 128000 else "_large_context"
-                
-                for details in prompt_tokens_details:
-                    modality = details.get("modality", None)
-                    if modality:
-                        if modality == "VIDEO":
-                            token_count = details.get("token_count", 0)
-                            video_seconds = math.ceil(token_count / 258)
-                            self._ingest["units"]["video"+large_context] = Units(input=video_seconds)
-
-            else:
-                input = usage["prompt_token_count"] * 4
-                output = usage["candidates_token_count"] * 4
-
-            self._ingest["units"][key] = Units(input=inputChars, output=outputChars)
+            self._compute_usage(response_dict)
 
         return True
     
-    def add_units(self, key: str, input: Optional[int] = None, output: Optional[int] = None) -> None:
-        if input is not None:
-            self._ingest["units"][key]["input"] = input
-        if output is not None:
-            self._ingest["units"][key]["output"] = output
-
     @override
     def process_synchronous_response(
         self,
@@ -197,6 +160,20 @@ class _GoogleVertexRequest(_ProviderRequest):
         self._ingest["provider_response_id"] = response_dict["response_id"]
         self._ingest["resource"] = "google." + response_dict["model_version"]
 
+        self._compute_usage(response_dict)
+        
+        if log_prompt_and_response:
+            self._ingest["provider_response_json"] = [json.dumps(response_dict)]
+
+        return None
+
+    def add_units(self, key: str, input: Optional[int] = None, output: Optional[int] = None) -> None:
+        if input is not None:
+            self._ingest["units"][key]["input"] = input
+        if output is not None:
+            self._ingest["units"][key]["output"] = output
+
+    def _compute_usage(self, response_dict: 'dict[str, Any]') -> None:
         usage = response_dict.get("usage_metadata", {})
         input = usage.get("prompt_token_count", 0)
         prompt_tokens_details: list[dict[str, Any]] = usage.get("prompt_tokens_details")
@@ -260,14 +237,3 @@ class _GoogleVertexRequest(_ProviderRequest):
                 modality_token_count = details.get("token_count", 0)
                 if modality in ("VIDEO", "AUDIO", "TEXT", "IMAGE"):
                     self.add_units(modality.lower(), output=modality_token_count)
-        
-        # else:
-        #     # other models are reported in tokens
-        #     self._ingest["units"]["text"] = Units(
-        #         input=response_dict["usage_metadata"]["prompt_token_count"],
-        #         output=response_dict["usage_metadata"]["candidates_token_count"])
-
-        if log_prompt_and_response:
-            self._ingest["provider_response_json"] = [json.dumps(response_dict)]
-
-        return None
