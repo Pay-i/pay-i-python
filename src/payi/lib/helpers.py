@@ -41,7 +41,6 @@ def create_request_header_from_tags(request_tags: List[str]) -> Dict[str, str]:
 
     return { PayiHeaderNames.request_tags: ",".join(valid_tags) } if valid_tags else {}
 
-
 def create_headers(
     limit_ids: Union[List[str], None] = None,
     request_tags: Union[List[str], None] = None,
