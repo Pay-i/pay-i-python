@@ -7,9 +7,10 @@ from datetime import datetime
 from typing_extensions import Required, Annotated, TypedDict
 
 from .._utils import PropertyInfo
+from .shared_params.ingest_units import IngestUnits
 from .pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
-__all__ = ["IngestUnitsParams", "Units"]
+__all__ = ["IngestUnitsParams"]
 
 
 class IngestUnitsParams(TypedDict, total=False):
@@ -17,7 +18,7 @@ class IngestUnitsParams(TypedDict, total=False):
 
     resource: Required[str]
 
-    units: Required[Dict[str, Units]]
+    units: Required[Dict[str, IngestUnits]]
 
     end_to_end_latency_ms: Optional[int]
 
@@ -60,6 +61,8 @@ class IngestUnitsParams(TypedDict, total=False):
     use_case_version: Annotated[Union[int, None], PropertyInfo(alias="xProxy-UseCase-Version")]
 
     resource_scope: Annotated[Union[str, None], PropertyInfo(alias="xProxy-Resource-Scope")]
+
+    use_case_step: Annotated[Union[str, None], PropertyInfo(alias="xProxy-UseCase-Step")]
 
     user_id: Annotated[Union[str, None], PropertyInfo(alias="xProxy-User-ID")]
 

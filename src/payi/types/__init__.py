@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from .shared import (
+    IngestUnits as IngestUnits,
+    XproxyError as XproxyError,
+    XproxyResult as XproxyResult,
     PropertiesResponse as PropertiesResponse,
     PayICommonModelsBudgetManagementCostDetailsBase as PayICommonModelsBudgetManagementCostDetailsBase,
     PayICommonModelsBudgetManagementCreateLimitBase as PayICommonModelsBudgetManagementCreateLimitBase,

@@ -66,6 +66,7 @@ class TestIngest:
                     "use_case_id": "use_case_id",
                     "use_case_name": "use_case_name",
                     "use_case_properties": {"foo": "string"},
+                    "use_case_step": "use_case_step",
                     "use_case_version": 0,
                     "user_id": "user_id",
                 }
@@ -141,6 +142,7 @@ class TestIngest:
             experience_name="experience_name",
             experience_id="experience_id",
             use_case_name="use_case_name",
+            use_case_step="step_1",
             use_case_id="use_case_id",
             use_case_version=0,
             resource_scope="datazone",
@@ -228,6 +230,7 @@ class TestAsyncIngest:
                     "use_case_id": "use_case_id",
                     "use_case_name": "use_case_name",
                     "use_case_properties": {"foo": "string"},
+                    "use_case_step": "use_case_step",
                     "use_case_version": 0,
                     "user_id": "user_id",
                 }
@@ -304,6 +307,7 @@ class TestAsyncIngest:
             experience_id="experience_id",
             use_case_name="use_case_name",
             use_case_id="use_case_id",
+            use_case_step="step_1",
             use_case_version=0,
             resource_scope="datazone",
             user_id="UserName123",

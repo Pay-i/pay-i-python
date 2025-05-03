@@ -7,15 +7,10 @@ from datetime import datetime
 from typing_extensions import Required, Annotated, TypedDict
 
 from .._utils import PropertyInfo
+from .shared_params.ingest_units import IngestUnits
 from .pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
-__all__ = ["IngestEventParam", "Units"]
-
-
-class Units(TypedDict, total=False):
-    input: int
-
-    output: int
+__all__ = ["IngestEventParam"]
 
 
 class IngestEventParam(TypedDict, total=False):
@@ -23,7 +18,7 @@ class IngestEventParam(TypedDict, total=False):
 
     resource: Required[str]
 
-    units: Required[Dict[str, Units]]
+    units: Required[Dict[str, IngestUnits]]
 
     end_to_end_latency_ms: Optional[int]
 
@@ -63,8 +58,10 @@ class IngestEventParam(TypedDict, total=False):
 
     use_case_name: Optional[str]
 
-    use_case_version: Optional[int]
-
     use_case_properties: Optional[Dict[str, str]]
+
+    use_case_step: Optional[str]
+
+    use_case_version: Optional[int]
 
     user_id: Optional[str]

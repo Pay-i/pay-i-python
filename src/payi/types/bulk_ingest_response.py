@@ -6,14 +6,9 @@ from datetime import datetime
 from pydantic import Field as FieldInfo
 
 from .._models import BaseModel
+from .shared.xproxy_error import XproxyError
 
-__all__ = ["BulkIngestResponse", "Error", "ErrorXproxyResult", "ErrorXproxyResultXproxyError"]
-
-
-class ErrorXproxyResultXproxyError(BaseModel):
-    code: Optional[str] = None
-
-    message: Optional[str] = None
+__all__ = ["BulkIngestResponse", "Error", "ErrorXproxyResult"]
 
 
 class ErrorXproxyResult(BaseModel):
@@ -21,7 +16,7 @@ class ErrorXproxyResult(BaseModel):
 
     status_code: int = FieldInfo(alias="statusCode")
 
-    xproxy_error: Optional[ErrorXproxyResultXproxyError] = None
+    xproxy_error: Optional[XproxyError] = None
 
 
 class Error(BaseModel):

@@ -7,6 +7,8 @@ from datetime import datetime
 
 import httpx
 
+from payi._utils._utils import is_given
+
 from ..types import ingest_units_params
 from .._types import NOT_GIVEN, Body, Query, Headers, NotGiven
 from .._utils import maybe_transform, strip_not_given, async_maybe_transform
@@ -22,6 +24,7 @@ from .._base_client import make_request_options
 from ..types.ingest_response import IngestResponse
 from ..types.ingest_event_param import IngestEventParam
 from ..types.bulk_ingest_response import BulkIngestResponse
+from ..types.shared_params.ingest_units import IngestUnits
 from ..types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
 __all__ = ["IngestResource", "AsyncIngestResource"]
@@ -84,7 +87,7 @@ class IngestResource(SyncAPIResource):
         *,
         category: str,
         resource: str,
-        units: Dict[str, ingest_units_params.Units],
+        units: Dict[str, IngestUnits],
         end_to_end_latency_ms: Optional[int] | NotGiven = NOT_GIVEN,
         event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
         experience_properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
@@ -104,6 +107,7 @@ class IngestResource(SyncAPIResource):
         experience_name: Optional[str] | NotGiven = NOT_GIVEN,
         use_case_id: Optional[str] | NotGiven = NOT_GIVEN,
         use_case_name: Optional[str] | NotGiven = NOT_GIVEN,
+        use_case_step: Optional[str] | NotGiven = NOT_GIVEN,
         use_case_version: Optional[int] | NotGiven = NOT_GIVEN,
         user_id: Optional[str] | NotGiven = NOT_GIVEN,
         resource_scope: Optional[str] | NotGiven = NOT_GIVEN,
@@ -139,6 +143,8 @@ class IngestResource(SyncAPIResource):
           use_case_name (str, optional): The use case name
 
           use_case_id (str, optional): The use case instance id
+
+          use_case_step (str, optional): The use case step
 
           use_case_version (int, optional): The use case instance version
 
@@ -184,6 +190,9 @@ class IngestResource(SyncAPIResource):
 
         if use_case_name is None or isinstance(use_case_name, NotGiven):
             use_case_name = NOT_GIVEN
+
+        if use_case_step is None or isinstance(use_case_step, NotGiven):
+            use_case_step = NOT_GIVEN
         
         if use_case_id is None or isinstance(use_case_id, NotGiven):
             use_case_id = NOT_GIVEN
@@ -196,18 +205,26 @@ class IngestResource(SyncAPIResource):
         if user_id is None or isinstance(user_id, NotGiven):
             user_id = NOT_GIVEN
 
+        if resource_scope is None or isinstance(resource_scope, NotGiven):
+            resource_scope = NOT_GIVEN
+
         extra_headers = {
-            **{key: value for key, value in strip_not_given({
-                "xProxy-Limit-IDs": valid_ids_str,
-                "xProxy-Request-Tags": valid_tags_str,
-                "xProxy-Experience-Name": experience_name,
-                "xProxy-Experience-ID": experience_id,
-                "xProxy-UseCase-ID": use_case_id,
-                "xProxy-UseCase-Name": use_case_name,
-                "xProxy-UseCase-Version": use_case_version_str,
-                "xProxy-User-ID": user_id,
-                "xProxy-Resource-Scope": resource_scope,
-            }).items() if value is not None},  # Ensure no 'None' values are included
+            **strip_not_given(
+                {
+                    "xProxy-Experience-ID": experience_id,
+                    "xProxy-Experience-Name": experience_name,
+                    "xProxy-Limit-IDs": valid_ids_str,
+                    "xProxy-Request-Tags": valid_tags_str,
+                    "xProxy-UseCase-ID": use_case_id,
+                    "xProxy-UseCase-Name": use_case_name,
+                    "xProxy-UseCase-Step": use_case_step,
+                    "xProxy-UseCase-Version": use_case_version_str
+                    if is_given(use_case_version)
+                    else NOT_GIVEN,
+                    "xProxy-User-ID": user_id,
+                    "xProxy-Resource-Scope": resource_scope,
+                }
+            ),
             **(extra_headers or {}),
         }
 
@@ -298,7 +315,7 @@ class AsyncIngestResource(AsyncAPIResource):
         *,
         category: str,
         resource: str,
-        units: Dict[str, ingest_units_params.Units],
+        units: Dict[str, IngestUnits],
         end_to_end_latency_ms: Optional[int] | NotGiven = NOT_GIVEN,
         event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
         experience_properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
@@ -318,6 +335,7 @@ class AsyncIngestResource(AsyncAPIResource):
         experience_id: Optional[str] | NotGiven = NOT_GIVEN,
         use_case_id: Optional[str] | NotGiven = NOT_GIVEN,
         use_case_name: Optional[str] | NotGiven = NOT_GIVEN,
+        use_case_step: Optional[str] | NotGiven = NOT_GIVEN,
         use_case_version: Optional[int] | NotGiven = NOT_GIVEN,
         user_id: Optional[str] | NotGiven = NOT_GIVEN,
         resource_scope: Union[str, None] | NotGiven = NOT_GIVEN,
@@ -350,6 +368,8 @@ class AsyncIngestResource(AsyncAPIResource):
           experience_id (str, optional): DEPRECATED, replaced with use_case_id.
 
           use_case_name (str, optional): The use case name
+
+          use_case_step (str, optional): The use case step
 
           use_case_id (str, optional): The use case instance id
 
@@ -398,6 +418,9 @@ class AsyncIngestResource(AsyncAPIResource):
         if use_case_name is None or isinstance(use_case_name, NotGiven):
             use_case_name = NOT_GIVEN
         
+        if use_case_step is None or isinstance(use_case_step, NotGiven):
+            use_case_step = NOT_GIVEN
+        
         if use_case_id is None or isinstance(use_case_id, NotGiven):
             use_case_id = NOT_GIVEN
 
@@ -409,18 +432,26 @@ class AsyncIngestResource(AsyncAPIResource):
         if user_id is None or isinstance(user_id, NotGiven):
             user_id = NOT_GIVEN
 
+        if resource_scope is None or isinstance(resource_scope, NotGiven):
+            resource_scope = NOT_GIVEN
+
         extra_headers = {
-            **{key: value for key, value in strip_not_given({
-                "xProxy-Limit-IDs": valid_ids_str,
-                "xProxy-Request-Tags": valid_tags_str,
-                "xProxy-Experience-Name": experience_name,
-                "xProxy-Experience-ID": experience_id,
-                "xProxy-UseCase-ID": use_case_id,
-                "xProxy-UseCase-Name": use_case_name,
-                "xProxy-UseCase-Version": use_case_version_str,
-                "xProxy-User-ID": user_id,
-                "xProxy-Resource-Scope": resource_scope,
-            }).items() if value is not None},  # Ensure no 'None' values are included
+            **strip_not_given(
+                {
+                    "xProxy-Experience-ID": experience_id,
+                    "xProxy-Experience-Name": experience_name,
+                    "xProxy-Limit-IDs": valid_ids_str,
+                    "xProxy-Request-Tags": valid_tags_str,
+                    "xProxy-UseCase-ID": use_case_id,
+                    "xProxy-UseCase-Name": use_case_name,
+                    "xProxy-UseCase-Step": use_case_step,
+                    "xProxy-UseCase-Version": use_case_version_str
+                    if is_given(use_case_version)
+                    else NOT_GIVEN,
+                    "xProxy-User-ID": user_id,
+                    "xProxy-Resource-Scope": resource_scope,
+                }
+            ),
             **(extra_headers or {}),
         }
         return await self._post(
