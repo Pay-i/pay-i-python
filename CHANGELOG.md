@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.0-alpha.71 (2025-05-03)
+
+Full Changelog: [v0.1.0-alpha.70...v0.1.0-alpha.71](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.70...v0.1.0-alpha.71)
+
+### Features
+
+* **api:** google vertex ([#294](https://github.com/Pay-i/pay-i-python/issues/294)) ([6d9e39b](https://github.com/Pay-i/pay-i-python/commit/6d9e39b2ee522589d4962c73f697f9cce76fdf6a))
+* **api:** manual updates ([7d11112](https://github.com/Pay-i/pay-i-python/commit/7d1111205f30fe78c9e2e833d3f99a62f95419e8))
+
+
+### Bug Fixes
+
+* lint ([e7d5a21](https://github.com/Pay-i/pay-i-python/commit/e7d5a210db38448629511b470a4d1b426368577f))
+
 ## 0.1.0-alpha.70 (2025-04-24)
 
 Full Changelog: [v0.1.0-alpha.69...v0.1.0-alpha.70](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.69...v0.1.0-alpha.70)
