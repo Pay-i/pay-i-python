@@ -2,9 +2,12 @@
 
 ```python
 from payi.types import (
+    IngestUnits,
     PayICommonModelsBudgetManagementCostDetailsBase,
     PayICommonModelsBudgetManagementCreateLimitBase,
     PropertiesResponse,
+    XproxyError,
+    XproxyResult,
 )
 ```
 
