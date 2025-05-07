@@ -211,10 +211,10 @@ class _PayiInstrumentor:
             logging.error(f"Error instrumenting OpenAI: {e}")
 
     def _instrument_anthropic(self) -> None:
-        from .AnthropicInstrumentor import AnthropicIntrumentor
+        from .AnthropicInstrumentor import AnthropicInstrumentor
 
         try:
-            AnthropicIntrumentor.instrument(self)
+            AnthropicInstrumentor.instrument(self)
 
         except Exception as e:
             logging.error(f"Error instrumenting Anthropic: {e}")
@@ -628,7 +628,9 @@ class _PayiInstrumentor:
             return await wrapped(*args, **kwargs)
 
         # after _udpate_headers, all metadata to add to ingest is in extra_headers, keyed by the xproxy-xxx header name
-        extra_headers = kwargs.get("extra_headers", {})
+        extra_headers: Optional[dict[str, str]] = kwargs.get("extra_headers")
+        if extra_headers is None:
+            extra_headers = {}
         self._update_extra_headers(context, extra_headers)
 
         if context.get("proxy", self._proxy_default):
@@ -729,7 +731,9 @@ class _PayiInstrumentor:
             return wrapped(*args, **kwargs)
 
         # after _udpate_headers, all metadata to add to ingest is in extra_headers, keyed by the xproxy-xxx header name
-        extra_headers = kwargs.get("extra_headers", {})
+        extra_headers: Optional[dict[str, str]] = kwargs.get("extra_headers")
+        if extra_headers is None:
+            extra_headers = {}
         self._update_extra_headers(context, extra_headers)
 
         if context.get("proxy", self._proxy_default):

@@ -32,7 +32,6 @@ def create_limit_header_from_ids(limit_ids: List[str]) -> Dict[str, str]:
 
     return { PayiHeaderNames.limit_ids: ",".join(valid_ids) } if valid_ids else {}
 
-
 def create_request_header_from_tags(request_tags: List[str]) -> Dict[str, str]:
     if not isinstance(request_tags, list):  # type: ignore
         raise TypeError("request_tags must be a list")
@@ -99,3 +98,6 @@ def payi_azure_openai_url(payi_base_url: Union[str, None] = None) -> str:
 
 def payi_aws_bedrock_url(payi_base_url: Union[str, None] = None) -> str:
     return _resolve_payi_base_url(payi_base_url=payi_base_url) + "/api/v1/proxy/aws.bedrock"
+
+# def payi_google_vertex_url(payi_base_url: Union[str, None] = None) -> str:
+#     return _resolve_payi_base_url(payi_base_url=payi_base_url) + "/api/v1/proxy/google.vertex"
