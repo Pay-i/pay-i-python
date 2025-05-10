@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.72 (2025-05-10)
+
+Full Changelog: [v0.1.0-alpha.71...v0.1.0-alpha.72](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.71...v0.1.0-alpha.72)
+
+### Bug Fixes
+
+* **package:** support direct resource imports ([314f86c](https://github.com/Pay-i/pay-i-python/commit/314f86cb0d46aa35628c9d059c1b1ca25d24d911))
+
+
+### Chores
+
+* **internal:** avoid errors for isinstance checks on proxies ([b935f82](https://github.com/Pay-i/pay-i-python/commit/b935f82c9de01353ec83b9c12c4ed6749e984c7d))
+
 ## 0.1.0-alpha.71 (2025-05-03)
 
 Full Changelog: [v0.1.0-alpha.70...v0.1.0-alpha.71](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.70...v0.1.0-alpha.71)
