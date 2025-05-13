@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.73 (2025-05-13)
+
+Full Changelog: [v0.1.0-alpha.72...v0.1.0-alpha.73](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.72...v0.1.0-alpha.73)
+
+### Features
+
+* Anthropic Vertex, OpenAi Responses ([#297](https://github.com/Pay-i/pay-i-python/issues/297)) ([535163f](https://github.com/Pay-i/pay-i-python/commit/535163f1d29f39838a16dc87a4ef40542b5d93b0))
+
 ## 0.1.0-alpha.72 (2025-05-10)
 
 Full Changelog: [v0.1.0-alpha.71...v0.1.0-alpha.72](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.71...v0.1.0-alpha.72)
