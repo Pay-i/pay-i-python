@@ -567,13 +567,18 @@ class _PayiInstrumentor:
         args: Sequence[Any],
         kwargs: 'dict[str, Any]',
     ) -> None:
+
         limit_ids = ingest_extra_headers.pop(PayiHeaderNames.limit_ids, None)
         request_tags = ingest_extra_headers.pop(PayiHeaderNames.request_tags, None)
+
         experience_name = ingest_extra_headers.pop(PayiHeaderNames.experience_name, None)
         experience_id = ingest_extra_headers.pop(PayiHeaderNames.experience_id, None)
+
         use_case_name = ingest_extra_headers.pop(PayiHeaderNames.use_case_name, None)
         use_case_id = ingest_extra_headers.pop(PayiHeaderNames.use_case_id, None)
         use_case_version = ingest_extra_headers.pop(PayiHeaderNames.use_case_version, None)
+        use_case_step = ingest_extra_headers.pop(PayiHeaderNames.use_case_step, None)
+
         user_id = ingest_extra_headers.pop(PayiHeaderNames.user_id, None)
 
         if limit_ids:
@@ -590,6 +595,8 @@ class _PayiInstrumentor:
             request._ingest["use_case_id"] = use_case_id
         if use_case_version:
             request._ingest["use_case_version"] = int(use_case_version)
+        if use_case_step:
+            request._ingest["use_case_step"] = use_case_step
         if user_id:
             request._ingest["user_id"] = user_id
 
