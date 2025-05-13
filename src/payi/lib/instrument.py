@@ -98,10 +98,12 @@ class _Context(TypedDict, total=False):
     use_case_name: Optional[str]
     use_case_id: Optional[str]
     use_case_version: Optional[int]
+    use_case_step: Optional[str]
     limit_ids: Optional['list[str]']
     user_id: Optional[str]
     request_tags: Optional["list[str]"]
-    route_as_resource: Optional[str]
+    price_as_category: Optional[str]
+    price_as_resource: Optional[str]
     resource_scope: Optional[str]
 
 class _IsStreaming(Enum):
@@ -166,7 +168,7 @@ class _PayiInstrumentor:
                 global_config["proxy"] = self._proxy_default
 
             # Use default clients if not provided for global ingest instrumentation
-            if not self._payi and not self._apayi and global_config.get("proxy") is False:
+            if not self._payi and not self._apayi:
                 self._payi = Payi()
                 self._apayi = AsyncPayi()
 
@@ -391,10 +393,12 @@ class _PayiInstrumentor:
         experience_id: Optional[str] = None,
         use_case_name: Optional[str]= None,
         use_case_id: Optional[str]= None,
-        use_case_version: Optional[int]= None,                
+        use_case_version: Optional[int]= None,
+        use_case_step: Optional[str]= None,
         user_id: Optional[str]= None,
         request_tags: Optional["list[str]"] = None,
-        route_as_resource: Optional[str] = None,
+        price_as_category: Optional[str] = None,
+        price_as_resource: Optional[str] = None,
         resource_scope: Optional[str] = None,
         ) -> None:
 
@@ -441,6 +445,7 @@ class _PayiInstrumentor:
             context["use_case_name"] = None
             context["use_case_id"] = None
             context["use_case_version"] = None
+            context["use_case_step"] = None
         else:
             if use_case_name == parent_use_case_name:
                 # Same use case name, use previous ID unless new one specified
@@ -474,10 +479,14 @@ class _PayiInstrumentor:
         else:
             context["user_id"] = user_id
 
+        if use_case_step and (context["use_case_name"] or context["use_case_id"]):
+            context["use_case_step"] = use_case_step
         if request_tags:
             context["request_tags"] = request_tags
-        if route_as_resource:
-            context["route_as_resource"] = route_as_resource
+        if price_as_category:
+            context["price_as_category"] = price_as_category
+        if price_as_resource:
+            context["price_as_resource"] = price_as_resource
         if resource_scope:
             context["resource_scope"] = resource_scope
         
@@ -497,14 +506,14 @@ class _PayiInstrumentor:
     ) -> Any:
         with self:
             self._init_current_context(
-                proxy, 
-                limit_ids, 
-                experience_name,
-                experience_id,
-                use_case_name,
-                use_case_id,
-                use_case_version,
-                user_id)
+                proxy=proxy,
+                limit_ids=limit_ids,
+                experience_name=experience_name,
+                experience_id=experience_id,
+                use_case_name=use_case_name,
+                use_case_id=use_case_id,
+                use_case_version=use_case_version,
+                user_id=user_id)
             return await func(*args, **kwargs)
 
     def _call_func(
@@ -523,14 +532,14 @@ class _PayiInstrumentor:
     ) -> Any:
         with self:
             self._init_current_context(
-                proxy, 
-                limit_ids, 
-                experience_name,
-                experience_id,
-                use_case_name,
-                use_case_id,
-                use_case_version,
-                user_id)
+                proxy=proxy,
+                limit_ids=limit_ids,
+                experience_name=experience_name,
+                experience_id=experience_id,
+                use_case_name=use_case_name,
+                use_case_id=use_case_id,
+                use_case_version=use_case_version,
+                user_id=user_id)
             return func(*args, **kwargs)
 
     def __enter__(self) -> Any:
@@ -840,14 +849,20 @@ class _PayiInstrumentor:
         extra_headers: "dict[str, str]",
     ) -> None:
         context_limit_ids: Optional[list[str]] = context.get("limit_ids")
+
         context_experience_name: Optional[str] = context.get("experience_name")
         context_experience_id: Optional[str] = context.get("experience_id")
+
         context_use_case_name: Optional[str] = context.get("use_case_name")
         context_use_case_id: Optional[str] = context.get("use_case_id")
         context_use_case_version: Optional[int] = context.get("use_case_version")
+        context_use_case_step: Optional[str] = context.get("use_case_step")
+
         context_user_id: Optional[str] = context.get("user_id")
         context_request_tags: Optional[list[str]] = context.get("request_tags")
-        context_route_as_resource: Optional[str] = context.get("route_as_resource")
+
+        context_price_as_category: Optional[str] = context.get("price_as_category")
+        context_price_as_resource: Optional[str] = context.get("price_as_resource")
         context_resource_scope: Optional[str] = context.get("resource_scope")
 
         # headers_limit_ids = extra_headers.get(PayiHeaderNames.limit_ids, None)
@@ -883,6 +898,7 @@ class _PayiInstrumentor:
                 extra_headers.pop(PayiHeaderNames.use_case_name, None)
                 extra_headers.pop(PayiHeaderNames.use_case_id, None)
                 extra_headers.pop(PayiHeaderNames.use_case_version, None)
+                extra_headers.pop(PayiHeaderNames.use_case_step, None)
             else:
                 # leave the value in extra_headers
                 ...
@@ -892,6 +908,8 @@ class _PayiInstrumentor:
                 extra_headers[PayiHeaderNames.use_case_id] = context_use_case_id
             if context_use_case_version is not None:
                 extra_headers[PayiHeaderNames.use_case_version] = str(context_use_case_version)
+            if context_use_case_step is not None:
+                extra_headers[PayiHeaderNames.use_case_step] = str(context_use_case_step)
 
         if PayiHeaderNames.experience_name in extra_headers:
             headers_experience_name = extra_headers.get(PayiHeaderNames.experience_name, None)
@@ -910,8 +928,11 @@ class _PayiInstrumentor:
         if PayiHeaderNames.request_tags not in extra_headers and context_request_tags:
             extra_headers[PayiHeaderNames.request_tags] = ",".join(context_request_tags)
 
-        if PayiHeaderNames.route_as_resource not in extra_headers and context_route_as_resource:
-            extra_headers[PayiHeaderNames.route_as_resource] = context_route_as_resource
+        if PayiHeaderNames.price_as_category not in extra_headers and context_price_as_category:
+            extra_headers[PayiHeaderNames.price_as_category] = context_price_as_category
+
+        if PayiHeaderNames.price_as_resource not in extra_headers and context_price_as_resource:
+            extra_headers[PayiHeaderNames.price_as_resource] = context_price_as_resource
 
         if PayiHeaderNames.resource_scope not in extra_headers and context_resource_scope:
             extra_headers[PayiHeaderNames.resource_scope] = context_resource_scope
@@ -1280,26 +1301,34 @@ def track_context(
     use_case_name: Optional[str] = None,
     use_case_id: Optional[str] = None,
     use_case_version: Optional[int] = None,
+    use_case_step: Optional[str] = None,
     user_id: Optional[str] = None,
     request_tags: Optional["list[str]"] = None,
-    route_as_resource: Optional[str] = None,
+    price_as_category: Optional[str] = None,
+    price_as_resource: Optional[str] = None,
     resource_scope: Optional[str] = None,
     proxy: Optional[bool] = None,
 ) -> _TrackContext:
     # Create a new context for tracking
     context: _Context = {}
+
+    context["proxy"] = proxy
+
     context["limit_ids"] = limit_ids
+
     context["use_case_name"] = use_case_name
     context["use_case_id"] = use_case_id
     context["use_case_version"] = use_case_version
+    context["use_case_step"] = use_case_step
+
     context["user_id"] = user_id
     context["request_tags"] = request_tags
-    context["route_as_resource"] = route_as_resource
+
+    context["price_as_category"] = price_as_category
+    context["price_as_resource"] = price_as_resource
     context["resource_scope"] = resource_scope
-    context["proxy"] = proxy
 
     return _TrackContext(context)
-
 
 @deprecated("@ingest() is deprecated. Use @track() instead")
 def ingest(

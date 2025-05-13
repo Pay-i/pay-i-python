@@ -11,8 +11,10 @@ class PayiHeaderNames:
     use_case_id:str = "xProxy-UseCase-ID"
     use_case_name:str = "xProxy-UseCase-Name"
     use_case_version:str = "xProxy-UseCase-Version"
+    use_case_step:str = "xProxy-UseCase-Step"
     user_id:str = "xProxy-User-ID"
-    route_as_resource:str = "xProxy-RouteAs-Resource"
+    price_as_category:str = "xProxy-PriceAs-Category"
+    price_as_resource:str = "xProxy-PriceAs-Resource"
     provider_base_uri = "xProxy-Provider-BaseUri"
     resource_scope:str = "xProxy-Resource-Scope"
     api_key:str = "xProxy-Api-Key"
@@ -49,7 +51,9 @@ def create_headers(
     use_case_id: Union[str, None] = None,
     use_case_name: Union[str, None] = None,
     use_case_version: Union[int, None] = None,
-    route_as_resource: Union[str, None] = None,
+    use_case_step: Union[str, None] = None,
+    price_as_category: Union[str, None] = None,
+    price_as_resource: Union[str, None] = None,
     resource_scope: Union[str, None] = None,
 ) -> Dict[str, str]:
     headers: Dict[str, str] = {}
@@ -70,8 +74,12 @@ def create_headers(
         headers.update({ PayiHeaderNames.use_case_name: use_case_name})
     if use_case_version:
         headers.update({ PayiHeaderNames.use_case_version: str(use_case_version)})
-    if route_as_resource:
-        headers.update({ PayiHeaderNames.route_as_resource: route_as_resource})
+    if use_case_step:
+        headers.update({ PayiHeaderNames.use_case_step: use_case_step})
+    if price_as_category:
+        headers.update({ PayiHeaderNames.price_as_category: price_as_category})
+    if price_as_resource:
+        headers.update({ PayiHeaderNames.price_as_resource: price_as_resource})
     if resource_scope:
         headers.update({ PayiHeaderNames.resource_scope: resource_scope })
     return headers

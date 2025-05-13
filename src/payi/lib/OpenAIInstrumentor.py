@@ -191,16 +191,19 @@ class _OpenAiProviderRequest(_ProviderRequest):
             return True
 
         context = self._instrumentor.get_context_safe()
-        route_as_resource = extra_headers.get(PayiHeaderNames.route_as_resource) or context.get("route_as_resource")
+        price_as_category = extra_headers.get(PayiHeaderNames.price_as_category) or context.get("price_as_category")
+        price_as_resource = extra_headers.get(PayiHeaderNames.price_as_resource) or context.get("price_as_resource")
         resource_scope = extra_headers.get(PayiHeaderNames.resource_scope) or context.get("resource_scope")
 
-        if PayiHeaderNames.route_as_resource in extra_headers:
-            del extra_headers[PayiHeaderNames.route_as_resource]
+        if PayiHeaderNames.price_as_category in extra_headers:
+            del extra_headers[PayiHeaderNames.price_as_category]
+        if PayiHeaderNames.price_as_resource in extra_headers:
+            del extra_headers[PayiHeaderNames.price_as_resource]
         if PayiHeaderNames.resource_scope in extra_headers:
             del extra_headers[PayiHeaderNames.resource_scope]
             
-        if not route_as_resource:
-            logging.error("Azure OpenAI route as resource not found, not ingesting")
+        if not price_as_resource and not price_as_category:
+            logging.error("Azure OpenAI requires price as resource and/or category to be specified, not ingesting")
             return False
 
         if resource_scope:
@@ -213,8 +216,13 @@ class _OpenAiProviderRequest(_ProviderRequest):
         self._category = PayiCategories.azure_openai
 
         self._ingest["category"] = self._category
-        self._ingest["resource"] = route_as_resource
- 
+
+        if price_as_category:
+            # price as category overrides default
+            self._ingest["category"] = price_as_category
+        if price_as_resource:
+            self._ingest["resource"] = price_as_resource
+
         return True
 
     @override
