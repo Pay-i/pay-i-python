@@ -11,7 +11,13 @@ from payi.types.ingest_units_params import Units
 from .instrument import _IsStreaming, _ProviderRequest, _PayiInstrumentor
 
 
-class AnthropicIntrumentor:
+class AnthropicInstrumentor:
+    @staticmethod
+    def is_vertex(instance: Any) -> bool:
+        from anthropic import AnthropicVertex, AsyncAnthropicVertex  # type: ignore # noqa: I001
+
+        return isinstance(instance._client, (AsyncAnthropicVertex, AnthropicVertex))
+
     @staticmethod
     def instrument(instrumentor: _PayiInstrumentor) -> None:
         try:
@@ -20,25 +26,25 @@ class AnthropicIntrumentor:
             wrap_function_wrapper(
                 "anthropic.resources.messages",
                 "Messages.create",
-                chat_wrapper(instrumentor),
+                messages_wrapper(instrumentor),
             )
 
             wrap_function_wrapper(
                 "anthropic.resources.messages",
                 "Messages.stream",
-                chat_wrapper(instrumentor),
+                messages_wrapper(instrumentor),
             )
 
             wrap_function_wrapper(
                 "anthropic.resources.messages",
                 "AsyncMessages.create",
-                achat_wrapper(instrumentor),
+                amessages_wrapper(instrumentor),
             )
 
             wrap_function_wrapper(
                 "anthropic.resources.messages",
                 "AsyncMessages.stream",
-                achat_wrapper(instrumentor),
+                amessages_wrapper(instrumentor),
             )
 
         except Exception as e:
@@ -47,7 +53,7 @@ class AnthropicIntrumentor:
 
 
 @_PayiInstrumentor.payi_wrapper
-def chat_wrapper(
+def messages_wrapper(
     instrumentor: _PayiInstrumentor,
     wrapped: Any,
     instance: Any,
@@ -55,7 +61,7 @@ def chat_wrapper(
     **kwargs: Any,
 ) -> Any:
     return instrumentor.invoke_wrapper(
-        _AnthropicProviderRequest(instrumentor),
+        _AnthropicProviderRequest(instrumentor, instance),
         _IsStreaming.kwargs,
         wrapped,
         instance,
@@ -64,7 +70,7 @@ def chat_wrapper(
     )
 
 @_PayiInstrumentor.payi_awrapper
-async def achat_wrapper(
+async def amessages_wrapper(
     instrumentor: _PayiInstrumentor,
     wrapped: Any,
     instance: Any,
@@ -72,7 +78,7 @@ async def achat_wrapper(
     **kwargs: Any,
 ) -> Any:
     return await instrumentor.async_invoke_wrapper(
-        _AnthropicProviderRequest(instrumentor),
+        _AnthropicProviderRequest(instrumentor, instance),
         _IsStreaming.kwargs,
         wrapped,
         instance,
@@ -81,8 +87,12 @@ async def achat_wrapper(
     )
 
 class _AnthropicProviderRequest(_ProviderRequest):
-    def __init__(self, instrumentor: _PayiInstrumentor):
-        super().__init__(instrumentor=instrumentor, category=PayiCategories.anthropic)
+    def __init__(self, instrumentor: _PayiInstrumentor, instance: Any = None) -> None:
+        self._vertex: bool = AnthropicInstrumentor.is_vertex(instance)
+        super().__init__(
+            instrumentor=instrumentor,
+            category=PayiCategories.google_vertex if self._vertex else PayiCategories.anthropic
+            )
 
     @override
     def process_chunk(self, chunk: Any) -> bool:
@@ -138,7 +148,8 @@ class _AnthropicProviderRequest(_ProviderRequest):
 
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
-        self._ingest["resource"] = kwargs.get("model", "")
+        self._ingest["resource"] = ("anthropic." if self._vertex else "") + kwargs.get("model", "")
+
         messages = kwargs.get("messages")
         if messages:
             estimated_token_count = 0 
