@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-alpha.74 (2025-05-16)
+
+Full Changelog: [v0.1.0-alpha.73...v0.1.0-alpha.74](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.73...v0.1.0-alpha.74)
+
+### Chores
+
+* **ci:** fix installation instructions ([f63b318](https://github.com/Pay-i/pay-i-python/commit/f63b318339983ef6f0f90a452728efc1baab2693))
+* **ci:** upload sdks to package manager ([3340716](https://github.com/Pay-i/pay-i-python/commit/334071651b6096ab7724fbfd4004fe636747e984))
+
 ## 0.1.0-alpha.73 (2025-05-13)
 
 Full Changelog: [v0.1.0-alpha.72...v0.1.0-alpha.73](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.72...v0.1.0-alpha.73)
