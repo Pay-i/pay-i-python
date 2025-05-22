@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-alpha.75 (2025-05-22)
+
+Full Changelog: [v0.1.0-alpha.74...v0.1.0-alpha.75](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.74...v0.1.0-alpha.75)
+
+### Chores
+
+* **docs:** grammar improvements ([6d91c51](https://github.com/Pay-i/pay-i-python/commit/6d91c51bb84c757cb4354af73fac662290c7362b))
+* **internal:** codegen related update ([25ac129](https://github.com/Pay-i/pay-i-python/commit/25ac1298decbbca8f4d1749fa6113faea8dc3b50))
+
 ## 0.1.0-alpha.74 (2025-05-16)
 
 Full Changelog: [v0.1.0-alpha.73...v0.1.0-alpha.74](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.73...v0.1.0-alpha.74)
