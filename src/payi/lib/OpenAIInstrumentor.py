@@ -300,7 +300,6 @@ class _OpenAiProviderRequest(_ProviderRequest):
             
             token_count = sum(len(encoding.encode(item.get("text", ""))) for item in content if item.get("type") == text_type)
             return has_image, token_count
-
         return False, 0
 
 class _OpenAiEmbeddingsProviderRequest(_OpenAiProviderRequest):
