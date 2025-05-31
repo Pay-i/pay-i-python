@@ -306,6 +306,8 @@ class _OpenAiProviderRequest(_ProviderRequest):
             return has_image, token_count
         return False, 0
 
+        return False, 0
+
 class _OpenAiEmbeddingsProviderRequest(_OpenAiProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor):
         super().__init__(
