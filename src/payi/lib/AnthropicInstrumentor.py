@@ -201,13 +201,13 @@ class _AnthropicProviderRequest(_ProviderRequest):
 
 
 def has_image_and_get_texts(encoding: tiktoken.Encoding, content: Union[str, 'list[Any]']) -> 'tuple[bool, int]':
-    if isinstance(content, str):
-        return False, 0
-    elif isinstance(content, list): # type: ignore
+    if isinstance(content, list): # type: ignore
         has_image = any(item.get("type") == "image" for item in content)
         if has_image is False:
             return has_image, 0
         
         token_count = sum(len(encoding.encode(item.get("text", ""))) for item in content if item.get("type") == "text")
         return has_image, token_count
+    
+    return False, 0
 
