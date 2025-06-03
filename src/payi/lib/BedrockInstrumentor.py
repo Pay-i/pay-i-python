@@ -11,7 +11,7 @@ from payi.lib.helpers import PayiCategories, PayiHeaderNames, payi_aws_bedrock_u
 from payi.types.ingest_units_params import Units, IngestUnitsParams
 from payi.types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
-from .instrument import _IsStreaming, _ProviderRequest, _PayiInstrumentor
+from .instrument import _IsStreaming, _StreamingType, _ProviderRequest, _PayiInstrumentor
 
 _supported_model_prefixes = ["meta.llama3", "anthropic.", "amazon.nova-pro", "amazon.nova-lite", "amazon.nova-micro"]
 
@@ -216,7 +216,11 @@ def wrap_converse_stream(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
 
 class _BedrockProviderRequest(_ProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor):
-        super().__init__(instrumentor=instrumentor, category=PayiCategories.aws_bedrock)
+        super().__init__(
+            instrumentor=instrumentor,
+            category=PayiCategories.aws_bedrock,
+            streaming_type=_StreamingType.iterator,
+            )
 
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:

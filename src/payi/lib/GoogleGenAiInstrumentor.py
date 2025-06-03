@@ -12,34 +12,32 @@ from payi.types.ingest_units_params import Units
 from .instrument import _IsStreaming, _StreamingType, _ProviderRequest, _PayiInstrumentor
 
 
-class VertexInstrumentor:
+class GoogleGenAiInstrumentor:
     @staticmethod
     def instrument(instrumentor: _PayiInstrumentor) -> None:
         try:
-            import vertexai  # type: ignore #  noqa: F401  I001
-
             wrap_function_wrapper(
-                "vertexai.generative_models",
-                "GenerativeModel.generate_content",
+                "google.genai.models",
+                "Models.generate_content",
                 generate_wrapper(instrumentor),
             )
 
             wrap_function_wrapper(
-                "vertexai.preview.generative_models",
-                "GenerativeModel.generate_content",
-                generate_wrapper(instrumentor),
+                "google.genai.models",
+                "Models.generate_content_stream",
+                generate_stream_wrapper(instrumentor),
             )
 
             wrap_function_wrapper(
-                "vertexai.generative_models",
-                "GenerativeModel.generate_content_async",
+                "google.genai.models",
+                "AsyncModels.generate_content",
                 agenerate_wrapper(instrumentor),
             )
 
             wrap_function_wrapper(
-                "vertexai.preview.generative_models",
-                "GenerativeModel.generate_content_async",
-                agenerate_wrapper(instrumentor),
+                "google.genai.models",
+                "AsyncModels.generate_content_stream",
+                agenerate_stream_wrapper(instrumentor),
             )
 
         except Exception as e:
@@ -55,8 +53,25 @@ def generate_wrapper(
     **kwargs: Any,
 ) -> Any:
     return instrumentor.invoke_wrapper(
-        _GoogleVertexRequest(instrumentor),
-        _IsStreaming.kwargs,
+        _GoogleGenAiRequest(instrumentor),
+        _IsStreaming.false,
+        wrapped,
+        instance,
+        args,
+        kwargs,
+    )
+
+@_PayiInstrumentor.payi_wrapper
+def generate_stream_wrapper(
+    instrumentor: _PayiInstrumentor,
+    wrapped: Any,
+    instance: Any,
+    *args: Any,
+    **kwargs: Any,
+) -> Any:
+    return instrumentor.invoke_wrapper(
+        _GoogleGenAiRequest(instrumentor),
+        _IsStreaming.true,
         wrapped,
         instance,
         args,
@@ -72,8 +87,25 @@ async def agenerate_wrapper(
     **kwargs: Any,
 ) -> Any:
     return await instrumentor.async_invoke_wrapper(
-        _GoogleVertexRequest(instrumentor),
-        _IsStreaming.kwargs,
+        _GoogleGenAiRequest(instrumentor),
+        _IsStreaming.false,
+        wrapped,
+        instance,
+        args,
+        kwargs,
+    )
+
+@_PayiInstrumentor.payi_wrapper
+async def agenerate_stream_wrapper(
+    instrumentor: _PayiInstrumentor,
+    wrapped: Any,
+    instance: Any,
+    *args: Any,
+    **kwargs: Any,
+) -> Any:
+    return await instrumentor.async_invoke_wrapper(
+        _GoogleGenAiRequest(instrumentor),
+        _IsStreaming.true,
         wrapped,
         instance,
         args,
@@ -83,7 +115,7 @@ async def agenerate_wrapper(
 def count_chars_skip_spaces(text: str) -> int:
     return sum(1 for c in text if not c.isspace())
 
-class _GoogleVertexRequest(_ProviderRequest):
+class _GoogleGenAiRequest(_ProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor):
         super().__init__(
             instrumentor=instrumentor,
@@ -95,18 +127,21 @@ class _GoogleVertexRequest(_ProviderRequest):
 
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
-        from vertexai.generative_models import Content, Image, Part # type: ignore #  noqa: F401  I001
+        from google.genai.types import Content, PIL_Image, Part # type: ignore #  noqa: F401  I001
 
-        if not args:
+        if not kwargs:
             return True
-        
+
+        model: str = kwargs.get("model", "")
+        self._ingest["resource"] = "google." + model
+
         value: Union[ # type: ignore
             Content,
             str,
-            Image,
+            PIL_Image,
             Part,
-            List[Union[str, Image, Part]],
-        ] = args[0] # type: ignore
+            List[Union[str, PIL_Image, Part]],
+        ] = kwargs.get("contents", None)  # type: ignore 
 
         items: List[Union[str, Image, Part]] = [] # type: ignore #  noqa: F401  I001
 
@@ -115,7 +150,7 @@ class _GoogleVertexRequest(_ProviderRequest):
 
         if isinstance(value, Content):
             items = value.parts # type: ignore
-        if isinstance(value, (str, Image, Part)):
+        if isinstance(value, (str, PIL_Image, Part)):
             items = [value] # type: ignore
         if isinstance(value, list):
             items = value # type: ignore
@@ -123,7 +158,7 @@ class _GoogleVertexRequest(_ProviderRequest):
         for item in items: # type: ignore
             text = ""
             if isinstance(item, Part):
-                d = item.to_dict() # type: ignore
+                d = item.to_json_dict() # type: ignore
                 if "text" in d:
                     text = d["text"] # type: ignore
             elif isinstance(item, str):
@@ -136,20 +171,20 @@ class _GoogleVertexRequest(_ProviderRequest):
 
     @override
     def process_request_prompt(self, prompt: 'dict[str, Any]', args: Sequence[Any], kwargs: 'dict[str, Any]') -> None:
-        from vertexai.generative_models import Content, Image, Part, Tool # type: ignore #  noqa: F401  I001
+        from google.genai.types import Content, PIL_Image, Part, Tool, GenerateContentConfig, GenerateContentConfigDict, ToolConfig  # type: ignore #  noqa: F401  I001
 
         key = "contents"
 
-        if not args:
+        if not kwargs:
             return
         
         value: Union[ # type: ignore
             Content,
             str,
-            Image,
+            PIL_Image,
             Part,
-            List[Union[str, Image, Part]],
-        ] = args[0] # type: ignore
+            List[Union[str, PIL_Image, Part]],
+        ] = kwargs.get("contents", None)  # type: ignore
 
         items: List[Union[str, Image, Part]] = [] # type: ignore #  noqa: F401  I001
 
@@ -157,42 +192,61 @@ class _GoogleVertexRequest(_ProviderRequest):
             return
 
         if isinstance(value, str):
-            prompt[key] = Content(parts=[Part.from_text(value)]).to_dict() # type: ignore
-        elif isinstance(value, (Image, Part)):
-            prompt[key] = Content(parts=[value]).to_dict() # type: ignore
+            prompt[key] = Content(parts=[Part.from_text(text=value)]).to_json_dict() # type: ignore
+        elif isinstance(value, (PIL_Image, Part)):
+            prompt[key] = Content(parts=[value]).to_json_dict() # type: ignore
         elif isinstance(value, Content):
-            prompt[key] = value.to_dict() # type: ignore
+            prompt[key] = value.to_json_dict() # type: ignore
         elif isinstance(value, list):
             items = value # type: ignore
             parts = []
 
             for item in items: # type: ignore
                 if isinstance(item, str):
-                    parts.append(Part.from_text(item)) # type: ignore
+                    parts.append(Part.from_text(text=item)) # type: ignore
                 elif isinstance(item, Part):
                     parts.append(item) # type: ignore
-                elif isinstance(item, Image):
-                    parts.append(Part.from_image(item)) # type: ignore
+                # elif isinstance(item, PIL_Image): TODO
+                #     parts.append(Part.from_image(item)) # type: ignore
                         
-            prompt[key] = Content(parts=parts).to_dict() # type: ignore
+            prompt[key] = Content(parts=parts).to_json_dict() # type: ignore
 
-        tools: Optional[list[Tool]] = kwargs.get("tools", None)  # type: ignore
-        if tools:
-            t: list[dict[Any, Any]] = []
+        # tools: Optional[list[Tool]] = kwargs.get("tools", None)  # type: ignore
+        # if tools:
+        #     t: list[dict[Any, Any]] = []
+        #     for tool in tools: # type: ignore
+        #         if isinstance(tool, Tool):
+        #             t.append(tool.text=())  # type: ignore
+        #     if t:
+        #         prompt["tools"] = t
+        config_kwarg = kwargs.get("config", None)  # type: ignore
+        if config_kwarg is None:
+            return
+        
+        config: GenerateContentConfigDict = {}
+        if isinstance(config_kwarg, GenerateContentConfig):
+            config = config_kwarg.to_json_dict()  # type: ignore
+        else:
+            config = config_kwarg
+        
+        tools = config.get("tools", None)  # type: ignore
+        if isinstance(tools, list):
+            t: list[dict[str, object]] = []
             for tool in tools: # type: ignore
                 if isinstance(tool, Tool):
-                    t.append(tool.to_dict())  # type: ignore
+                    t.append(tool.to_json_dict())  # type: ignore
             if t:
                 prompt["tools"] = t
 
-        tool_config = kwargs.get("tool_config", None)  # type: ignore
-        if tool_config:
-            # tool_config does not have to_dict or any other serializable object
-            prompt["tool_config"] = str(tool_config)  # type: ignore
+        tool_config = config.get("tool_config", None)  # type: ignore
+        if isinstance(tool_config, ToolConfig):
+            prompt["tool_config"] = tool_config.to_json_dict()  # type: ignore
+        elif isinstance(tool_config, dict):
+            prompt["tool_config"] = tool_config
 
     @override
     def process_chunk(self, chunk: Any) -> bool:
-        response_dict: dict[str, Any] = chunk.to_dict()
+        response_dict: dict[str, Any] = chunk.to_json_dict()
         if "provider_response_id" not in self._ingest:
             id = response_dict.get("response_id", None)
             if id:
@@ -223,7 +277,7 @@ class _GoogleVertexRequest(_ProviderRequest):
         response: Any,
         log_prompt_and_response: bool,
         kwargs: Any) -> Any:
-        response_dict = response.to_dict()
+        response_dict = response.to_json_dict()
 
         self._ingest["provider_response_id"] = response_dict["response_id"]
         self._ingest["resource"] = "google." + response_dict["model_version"]
