@@ -1238,9 +1238,9 @@ class _GeneratorWrapper:  # type: ignore
     @staticmethod
     def _chunk_to_dict(chunk: Any) -> 'dict[str, object]':
         if hasattr(chunk, "to_json"):
-            return chunk.to_json()
+            return chunk.to_json() # type: ignore
         elif hasattr(chunk, "to_json_dict"):  
-            return chunk.to_json_dict() 
+            return chunk.to_json_dict() # type: ignore
         else:
             return {}
 
