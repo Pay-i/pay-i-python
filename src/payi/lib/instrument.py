@@ -27,11 +27,12 @@ from .Stopwatch import Stopwatch
 
 
 class _ProviderRequest:
-    def __init__(self, instrumentor: '_PayiInstrumentor', category: str):
+    def __init__(self, instrumentor: '_PayiInstrumentor', category: str, streaming_type: '_StreamingType'):
         self._instrumentor: '_PayiInstrumentor' = instrumentor
         self._estimated_prompt_tokens: Optional[int] = None
         self._category: str = category
         self._ingest: IngestUnitsParams = { "category": category, "units": {} } # type: ignore
+        self._streaming_type: '_StreamingType' = streaming_type
 
     def process_chunk(self, _chunk: Any) -> bool:
         return True
@@ -55,6 +56,10 @@ class _ProviderRequest:
     def process_exception(self, exception: Exception, kwargs: Any, ) -> bool: # noqa: ARG002
         self.exception_to_semantic_failure(exception)
         return True
+    
+    @property
+    def streaming_type(self) -> '_StreamingType':
+        return self._streaming_type
 
     def exception_to_semantic_failure(self, e: Exception) -> None:
         exception_str = f"{type(e).__name__}"
@@ -110,6 +115,11 @@ class _IsStreaming(Enum):
     false = 0
     true = 1 
     kwargs = 2
+
+class _StreamingType(Enum):
+    generator = 0
+    iterator = 1
+    stream_manager = 2
 
 class _TrackContext:
     def __init__(
@@ -690,25 +700,29 @@ class _PayiInstrumentor:
             raise e
 
         if stream:
-            if request.is_vertex():
+            if request.streaming_type == _StreamingType.generator:
                 return _GeneratorWrapper(
                     generator=response,
                     instance=instance,
                     instrumentor=self,
                     stopwatch=sw,
                     request=request,
-                    log_prompt_and_response=self._log_prompt_and_response)
-
-            stream_result = ChatStreamWrapper(
-                response=response,
-                instance=instance,
-                instrumentor=self,
-                log_prompt_and_response=self._log_prompt_and_response,
-                stopwatch=sw,
-                request=request,
-            )
-
-            return stream_result
+                    )
+            elif request.streaming_type == _StreamingType.stream_manager:
+                return _StreamManagerWrapper(
+                    instance=instance,
+                    instrumentor=self,
+                    stopwatch=sw,
+                    request=request,
+                )
+            else:
+                return _StreamIteratorWrapper(
+                    response=response,
+                    instance=instance,
+                    instrumentor=self,
+                    stopwatch=sw,
+                    request=request,
+                )
 
         sw.stop()
         duration = sw.elapsed_ms_int()
@@ -797,32 +811,39 @@ class _PayiInstrumentor:
             raise e
 
         if stream:
-            if request.is_vertex():
+            if request.streaming_type == _StreamingType.generator:
                 return _GeneratorWrapper(
                     generator=response,
                     instance=instance,
                     instrumentor=self,
                     stopwatch=sw,
                     request=request,
-                    log_prompt_and_response=self._log_prompt_and_response)
+                )
+            elif request.streaming_type == _StreamingType.stream_manager:
+                return _StreamManagerWrapper(
+                    instance=instance,
+                    instrumentor=self,
+                    stopwatch=sw,
+                    request=request,
+                )
+            else:
+                # request.streaming_type == _StreamingType.iterator
+                stream_result = _StreamIteratorWrapper(
+                    response=response,
+                    instance=instance,
+                    instrumentor=self,
+                    stopwatch=sw,
+                    request=request,
+                )
 
-            stream_result = ChatStreamWrapper(
-                response=response,
-                instance=instance,
-                instrumentor=self,
-                log_prompt_and_response=self._log_prompt_and_response,
-                stopwatch=sw,
-                request=request,
-            )
-
-            if request.is_bedrock():
-                if "body" in response:
-                    response["body"] = stream_result
-                else:
-                    response["stream"] = stream_result
-                return response
-            
-            return stream_result
+                if request.is_bedrock():
+                    if "body" in response:
+                        response["body"] = stream_result
+                    else:
+                        response["stream"] = stream_result
+                    return response
+                
+                return stream_result
 
         sw.stop()
         duration = sw.elapsed_ms_int()
@@ -986,7 +1007,7 @@ class _PayiInstrumentor:
 
         return _payi_awrapper
 
-class ChatStreamWrapper(ObjectProxy):  # type: ignore
+class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
     def __init__(
         self,
         response: Any,
@@ -994,7 +1015,6 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
         instrumentor: _PayiInstrumentor,
         stopwatch: Stopwatch,
         request: _ProviderRequest,
-        log_prompt_and_response: bool = True,
     ) -> None:
 
         bedrock_from_stream: bool = False
@@ -1016,7 +1036,6 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
 
         self._instrumentor = instrumentor
         self._stopwatch: Stopwatch = stopwatch
-        self._log_prompt_and_response: bool = log_prompt_and_response
         self._responses: list[str] = []
 
         self._request: _ProviderRequest = request
@@ -1091,7 +1110,7 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
             self._request._ingest["time_to_first_token_ms"] = self._stopwatch.elapsed_ms_int()
             self._first_token = False
 
-        if self._log_prompt_and_response:
+        if self._instrumentor._log_prompt_and_response:
             self._responses.append(self.chunk_to_json(chunk))
 
         return self._request.process_chunk(chunk)
@@ -1101,7 +1120,7 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
         self._request._ingest["end_to_end_latency_ms"] = self._stopwatch.elapsed_ms_int()
         self._request._ingest["http_status_code"] = 200
 
-        if self._log_prompt_and_response:
+        if self._instrumentor._log_prompt_and_response:
             self._request._ingest["provider_response_json"] = self._responses
 
     async def _astop_iteration(self) -> None:
@@ -1124,6 +1143,33 @@ class ChatStreamWrapper(ObjectProxy):  # type: ignore
             # assume dict
             return json.dumps(chunk)
 
+class _StreamManagerWrapper(ObjectProxy):  # type: ignore
+    def __init__(
+        self,
+        instance: Any,
+        instrumentor: _PayiInstrumentor, 
+        stopwatch: Stopwatch,
+        request: _ProviderRequest,
+    ) -> None:
+        super().__init__()  # type: ignore
+        
+        self._instance = instance
+        self._instrumentor = instrumentor
+        self._stopwatch: Stopwatch = stopwatch
+        self._responses: list[str] = []
+        self._request: _ProviderRequest = request
+        self._first_token: bool = True
+        self._done: bool = False
+
+    def __enter__(self) -> _StreamIteratorWrapper:
+        return _StreamIteratorWrapper(
+            response=self.__wrapped__.enter(),  # type: ignore
+            instance=self._instance,
+            instrumentor=self._instrumentor,
+            stopwatch=self._stopwatch,
+            request=self._request,
+        )
+
 class _GeneratorWrapper:  # type: ignore
     def __init__(
         self,
@@ -1132,7 +1178,6 @@ class _GeneratorWrapper:  # type: ignore
         instrumentor: _PayiInstrumentor, 
         stopwatch: Stopwatch,
         request: _ProviderRequest,
-        log_prompt_and_response: bool = True,
     ) -> None:
         super().__init__()  # type: ignore
         
@@ -1140,7 +1185,7 @@ class _GeneratorWrapper:  # type: ignore
         self._instance = instance
         self._instrumentor = instrumentor
         self._stopwatch: Stopwatch = stopwatch
-        self._log_prompt_and_response: bool = log_prompt_and_response
+        self._log_prompt_and_response: bool = instrumentor._log_prompt_and_response
         self._responses: list[str] = []
         self._request: _ProviderRequest = request
         self._first_token: bool = True

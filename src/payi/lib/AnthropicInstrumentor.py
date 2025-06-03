@@ -8,7 +8,7 @@ from wrapt import wrap_function_wrapper  # type: ignore
 from payi.lib.helpers import PayiCategories
 from payi.types.ingest_units_params import Units
 
-from .instrument import _IsStreaming, _ProviderRequest, _PayiInstrumentor
+from .instrument import _IsStreaming, _StreamingType, _ProviderRequest, _PayiInstrumentor
 
 
 class AnthropicInstrumentor:
@@ -32,7 +32,7 @@ class AnthropicInstrumentor:
             wrap_function_wrapper(
                 "anthropic.resources.messages",
                 "Messages.stream",
-                messages_wrapper(instrumentor),
+                stream_messages_wrapper(instrumentor),
             )
 
             wrap_function_wrapper(
@@ -44,7 +44,7 @@ class AnthropicInstrumentor:
             wrap_function_wrapper(
                 "anthropic.resources.messages",
                 "AsyncMessages.stream",
-                amessages_wrapper(instrumentor),
+                astream_messages_wrapper(instrumentor),
             )
 
         except Exception as e:
@@ -61,7 +61,24 @@ def messages_wrapper(
     **kwargs: Any,
 ) -> Any:
     return instrumentor.invoke_wrapper(
-        _AnthropicProviderRequest(instrumentor, instance),
+        _AnthropicProviderRequest(instrumentor=instrumentor, streaming_type=_StreamingType.iterator, instance=instance),
+        _IsStreaming.kwargs,
+        wrapped,
+        instance,
+        args,
+        kwargs,
+    )
+
+@_PayiInstrumentor.payi_wrapper
+def stream_messages_wrapper(
+    instrumentor: _PayiInstrumentor,
+    wrapped: Any,
+    instance: Any,
+    *args: Any,
+    **kwargs: Any,
+) -> Any:
+    return instrumentor.invoke_wrapper(
+        _AnthropicProviderRequest(instrumentor=instrumentor, streaming_type=_StreamingType.stream_manager, instance=instance),
         _IsStreaming.kwargs,
         wrapped,
         instance,
@@ -78,7 +95,24 @@ async def amessages_wrapper(
     **kwargs: Any,
 ) -> Any:
     return await instrumentor.async_invoke_wrapper(
-        _AnthropicProviderRequest(instrumentor, instance),
+        _AnthropicProviderRequest(instrumentor=instrumentor, streaming_type=_StreamingType.iterator, instance=instance),
+        _IsStreaming.kwargs,
+        wrapped,
+        instance,
+        args,
+        kwargs,
+    )
+
+@_PayiInstrumentor.payi_awrapper
+async def astream_messages_wrapper(
+    instrumentor: _PayiInstrumentor,
+    wrapped: Any,
+    instance: Any,
+    *args: Any,
+    **kwargs: Any,
+) -> Any:
+    return await instrumentor.async_invoke_wrapper(
+        _AnthropicProviderRequest(instrumentor=instrumentor, streaming_type=_StreamingType.stream_manager, instance=instance),
         _IsStreaming.kwargs,
         wrapped,
         instance,
@@ -87,11 +121,12 @@ async def amessages_wrapper(
     )
 
 class _AnthropicProviderRequest(_ProviderRequest):
-    def __init__(self, instrumentor: _PayiInstrumentor, instance: Any = None) -> None:
+    def __init__(self, instrumentor: _PayiInstrumentor, streaming_type: _StreamingType, instance: Any = None) -> None:
         self._vertex: bool = AnthropicInstrumentor.is_vertex(instance)
         super().__init__(
             instrumentor=instrumentor,
-            category=PayiCategories.google_vertex if self._vertex else PayiCategories.anthropic
+            category=PayiCategories.google_vertex if self._vertex else PayiCategories.anthropic,
+            streaming_type=streaming_type,
             )
 
     @override

@@ -9,7 +9,7 @@ from wrapt import wrap_function_wrapper  # type: ignore
 from payi.lib.helpers import PayiCategories
 from payi.types.ingest_units_params import Units
 
-from .instrument import _IsStreaming, _ProviderRequest, _PayiInstrumentor
+from .instrument import _IsStreaming, _StreamingType, _ProviderRequest, _PayiInstrumentor
 
 
 class VertexInstrumentor:
@@ -85,7 +85,11 @@ def count_chars_skip_spaces(text: str) -> int:
 
 class _GoogleVertexRequest(_ProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor):
-        super().__init__(instrumentor=instrumentor, category=PayiCategories.google_vertex)
+        super().__init__(
+            instrumentor=instrumentor,
+            category=PayiCategories.google_vertex,
+            streaming_type=_StreamingType.generator,
+            )
         self._prompt_character_count = 0
         self._candiates_character_count = 0
 
