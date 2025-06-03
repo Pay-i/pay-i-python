@@ -10,7 +10,7 @@ from wrapt import wrap_function_wrapper  # type: ignore
 from payi.lib.helpers import PayiCategories, PayiHeaderNames
 from payi.types.ingest_units_params import Units
 
-from .instrument import _IsStreaming, _ProviderRequest, _PayiInstrumentor
+from .instrument import _IsStreaming, _StreamingType, _ProviderRequest, _PayiInstrumentor
 
 
 class OpenAiInstrumentor:
@@ -178,7 +178,11 @@ class _OpenAiProviderRequest(_ProviderRequest):
     responses_input_tokens_details_key: str = "input_tokens_details"
 
     def __init__(self, instrumentor: _PayiInstrumentor, input_tokens_key: str, output_tokens_key: str, input_tokens_details_key: str) -> None:
-        super().__init__(instrumentor=instrumentor, category=PayiCategories.openai)
+        super().__init__(
+            instrumentor=instrumentor,
+            category=PayiCategories.openai,
+            streaming_type=_StreamingType.iterator,
+            )
         self._input_tokens_key = input_tokens_key
         self._output_tokens_key = output_tokens_key
         self._input_tokens_details_key = input_tokens_details_key
