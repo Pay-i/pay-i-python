@@ -79,7 +79,7 @@ def stream_messages_wrapper(
 ) -> Any:
     return instrumentor.invoke_wrapper(
         _AnthropicProviderRequest(instrumentor=instrumentor, streaming_type=_StreamingType.stream_manager, instance=instance),
-        _IsStreaming.kwargs,
+        _IsStreaming.true,
         wrapped,
         instance,
         args,
@@ -113,7 +113,7 @@ async def astream_messages_wrapper(
 ) -> Any:
     return await instrumentor.async_invoke_wrapper(
         _AnthropicProviderRequest(instrumentor=instrumentor, streaming_type=_StreamingType.stream_manager, instance=instance),
-        _IsStreaming.kwargs,
+        _IsStreaming.true,
         wrapped,
         instance,
         args,

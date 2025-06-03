@@ -710,6 +710,7 @@ class _PayiInstrumentor:
                     )
             elif request.streaming_type == _StreamingType.stream_manager:
                 return _StreamManagerWrapper(
+                    stream_manager=response,
                     instance=instance,
                     instrumentor=self,
                     stopwatch=sw,
@@ -821,6 +822,7 @@ class _PayiInstrumentor:
                 )
             elif request.streaming_type == _StreamingType.stream_manager:
                 return _StreamManagerWrapper(
+                    stream_manager=response,
                     instance=instance,
                     instrumentor=self,
                     stopwatch=sw,
@@ -1146,13 +1148,15 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
 class _StreamManagerWrapper(ObjectProxy):  # type: ignore
     def __init__(
         self,
+        stream_manager: Any,  # type: ignore
         instance: Any,
         instrumentor: _PayiInstrumentor, 
         stopwatch: Stopwatch,
         request: _ProviderRequest,
     ) -> None:
-        super().__init__()  # type: ignore
-        
+        super().__init__(stream_manager)  # type: ignore
+
+        self._stream_manager = stream_manager  
         self._instance = instance
         self._instrumentor = instrumentor
         self._stopwatch: Stopwatch = stopwatch
@@ -1163,7 +1167,7 @@ class _StreamManagerWrapper(ObjectProxy):  # type: ignore
 
     def __enter__(self) -> _StreamIteratorWrapper:
         return _StreamIteratorWrapper(
-            response=self.__wrapped__.enter(),  # type: ignore
+            response=self.__wrapped__.__enter__(),  # type: ignore
             instance=self._instance,
             instrumentor=self._instrumentor,
             stopwatch=self._stopwatch,
