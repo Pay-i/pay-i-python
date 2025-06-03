@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.78 (2025-06-03)
+
+Full Changelog: [v0.1.0-alpha.77...v0.1.0-alpha.78](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.77...v0.1.0-alpha.78)
+
+### Features
+
+* **api:** google genai, anthropic stream() ([#306](https://github.com/Pay-i/pay-i-python/issues/306)) ([341da40](https://github.com/Pay-i/pay-i-python/commit/341da40fb228cb83994bec12e7cda457f5452692))
+
 ## 0.1.0-alpha.77 (2025-06-03)
 
 Full Changelog: [v0.1.0-alpha.76...v0.1.0-alpha.77](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.76...v0.1.0-alpha.77)
