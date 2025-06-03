@@ -202,6 +202,7 @@ class _PayiInstrumentor:
         self._instrument_anthropic()
         self._instrument_aws_bedrock()
         self._instrument_google_vertex()
+        self._instrument_google_genai()
 
     def _instrument_specific(self, instruments: Set[str]) -> None:
         if PayiCategories.openai in instruments or PayiCategories.azure_openai in instruments:
@@ -212,6 +213,7 @@ class _PayiInstrumentor:
             self._instrument_aws_bedrock()
         if PayiCategories.google_vertex in instruments:
             self._instrument_google_vertex()
+            self._instrument_google_genai()
 
     def _instrument_openai(self) -> None:
         from .OpenAIInstrumentor import OpenAiInstrumentor
@@ -249,6 +251,14 @@ class _PayiInstrumentor:
         except Exception as e:
             logging.error(f"Error instrumenting Google Vertex: {e}")
 
+    def _instrument_google_genai(self) -> None:
+        from .GoogleGenAiInstrumentor import GoogleGenAiInstrumentor
+
+        try:
+            GoogleGenAiInstrumentor.instrument(self)
+
+        except Exception as e:
+            logging.error(f"Error instrumenting Google GenAi: {e}")
 
     def _process_ingest_units(self, ingest_units: IngestUnitsParams, log_data: 'dict[str, str]') -> bool:
         if int(ingest_units.get("http_status_code") or 0) < 400:
@@ -1225,13 +1235,22 @@ class _GeneratorWrapper:  # type: ignore
             await self._process_async_stop_iteration()
             raise stop_exception
 
+    @staticmethod
+    def _chunk_to_dict(chunk: Any) -> 'dict[str, object]':
+        if hasattr(chunk, "to_json"):
+            return chunk.to_json()
+        elif hasattr(chunk, "to_json_dict"):  
+            return chunk.to_json_dict() 
+        else:
+            return {}
+
     def _process_chunk(self, chunk: Any) -> Any:
         if self._first_token:
             self._request._ingest["time_to_first_token_ms"] = self._stopwatch.elapsed_ms_int()
             self._first_token = False
             
         if self._log_prompt_and_response:
-            dict = chunk.to_dict() # type: ignore
+            dict = self._chunk_to_dict(chunk) 
             self._responses.append(json.dumps(dict))
                 
         self._request.process_chunk(chunk)
