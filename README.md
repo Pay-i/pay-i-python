@@ -154,12 +154,7 @@ client = Payi()
 use_case_definition = client.use_cases.definitions.create(
     description="x",
     name="x",
-    limit_config={
-        "max": 0,
-        "limit_tags": ["tag1", "tag2"],
-        "limit_type": "block",
-        "threshold": 0,
-    },
+    limit_config={"max": 0},
 )
 print(use_case_definition.limit_config)
 ```
