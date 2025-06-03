@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.0-alpha.77 (2025-06-03)
+
+Full Changelog: [v0.1.0-alpha.76...v0.1.0-alpha.77](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.76...v0.1.0-alpha.77)
+
+### Features
+
+* **client:** add follow_redirects request option ([3308085](https://github.com/Pay-i/pay-i-python/commit/3308085121c320d80931d6749f36ecee049be669))
+
+
+### Chores
+
+* **docs:** remove reference to rye shell ([eb25599](https://github.com/Pay-i/pay-i-python/commit/eb255999808df39a9eaaf5b91825c8fe150dbf55))
+* **docs:** remove unnecessary param examples ([4d34a34](https://github.com/Pay-i/pay-i-python/commit/4d34a343cd19fc091fb836d411034d9ad62bf564))
+
 ## 0.1.0-alpha.76 (2025-05-31)
 
 Full Changelog: [v0.1.0-alpha.75...v0.1.0-alpha.76](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.75...v0.1.0-alpha.76)
