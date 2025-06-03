@@ -152,8 +152,7 @@ class _GoogleGenAiRequest(_ProviderRequest):
             items = value.parts # type: ignore
         if isinstance(value, (str, PIL_Image, Part)):
             items = [value] # type: ignore
-
-        elif isinstance(value, list):
+        if isinstance(value, list):
             items = value # type: ignore
 
         for item in items: # type: ignore
