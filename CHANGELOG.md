@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.80 (2025-06-04)
+
+Full Changelog: [v0.1.0-alpha.79...v0.1.0-alpha.80](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.79...v0.1.0-alpha.80)
+
+### Bug Fixes
+
+* tiktoken fallback failure ([#310](https://github.com/Pay-i/pay-i-python/issues/310)) ([76f6a31](https://github.com/Pay-i/pay-i-python/commit/76f6a318f514da2dc5b4e9fbe7927cc6f28a7b27))
+
 ## 0.1.0-alpha.79 (2025-06-04)
 
 Full Changelog: [v0.1.0-alpha.78...v0.1.0-alpha.79](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.78...v0.1.0-alpha.79)
