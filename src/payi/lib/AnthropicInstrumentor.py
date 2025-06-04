@@ -190,16 +190,20 @@ class _AnthropicProviderRequest(_ProviderRequest):
             estimated_token_count = 0 
             has_image = False
 
-            enc = tiktoken.get_encoding("cl100k_base")
-            
-            for message in messages:
-                msg_has_image, msg_prompt_tokens = has_image_and_get_texts(enc, message.get('content', ''))
-                if msg_has_image:
-                    has_image = True
-                    estimated_token_count += msg_prompt_tokens
-            
-            if has_image and estimated_token_count > 0:
-                self._estimated_prompt_tokens = estimated_token_count
+            try:
+                enc = tiktoken.get_encoding("cl100k_base")
+                for message in messages:
+                    msg_has_image, msg_prompt_tokens = has_image_and_get_texts(enc, message.get('content', ''))
+                    if msg_has_image:
+                        has_image = True
+                        estimated_token_count += msg_prompt_tokens
+                
+                if has_image and estimated_token_count > 0:
+                    self._estimated_prompt_tokens = estimated_token_count
+     
+            except Exception:
+                logging.warning("Error getting encoding for cl100k_base")
+
         return True
 
     @override
