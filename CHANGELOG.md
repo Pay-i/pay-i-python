@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.79 (2025-06-04)
+
+Full Changelog: [v0.1.0-alpha.78...v0.1.0-alpha.79](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.78...v0.1.0-alpha.79)
+
+### Features
+
+* optional response_id for vertexai, google.genai sync response ([#308](https://github.com/Pay-i/pay-i-python/issues/308)) ([a3d1207](https://github.com/Pay-i/pay-i-python/commit/a3d1207f26db9b40d849bfb8402d4e8142845c3c))
+
 ## 0.1.0-alpha.78 (2025-06-03)
 
 Full Changelog: [v0.1.0-alpha.77...v0.1.0-alpha.78](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.77...v0.1.0-alpha.78)
