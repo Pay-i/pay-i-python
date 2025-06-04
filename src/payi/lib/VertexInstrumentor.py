@@ -225,8 +225,13 @@ class _GoogleVertexRequest(_ProviderRequest):
         kwargs: Any) -> Any:
         response_dict = response.to_dict()
 
-        self._ingest["provider_response_id"] = response_dict["response_id"]
-        self._ingest["resource"] = "google." + response_dict["model_version"]
+        id: Optional[str] = response_dict.get("response_id", None)
+        if id:
+            self._ingest["provider_response_id"] = id
+        
+        model: Optional[str] = response_dict.get("model_version", None)
+        if model:
+            self._ingest["resource"] = "google." + model
 
         self._compute_usage(response_dict)
         
