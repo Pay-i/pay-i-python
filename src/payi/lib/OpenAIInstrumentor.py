@@ -364,20 +364,26 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
         if messages:
             estimated_token_count = 0 
             has_image = False
+            enc: Optional[tiktoken.Encoding] = None
 
             try: 
                 enc = tiktoken.encoding_for_model(kwargs.get("model")) # type: ignore
-            except KeyError:
-                enc = tiktoken.get_encoding("o200k_base") # type: ignore
+            except Exception:
+                try:
+                    enc = tiktoken.get_encoding("o200k_base") # type: ignore
+                except Exception:
+                    logging.warning("Error getting encoding for fallback o200k_base")
+                    enc = None
             
-            for message in messages:
-                msg_has_image, msg_prompt_tokens = self.has_image_and_get_texts(enc, message.get('content', ''))
-                if msg_has_image:
-                    has_image = True
-                    estimated_token_count += msg_prompt_tokens
+            if enc:
+                for message in messages:
+                    msg_has_image, msg_prompt_tokens = self.has_image_and_get_texts(enc, message.get('content', ''))
+                    if msg_has_image:
+                        has_image = True
+                        estimated_token_count += msg_prompt_tokens
             
-            if has_image and estimated_token_count > 0:
-                self._estimated_prompt_tokens = estimated_token_count
+                if has_image and estimated_token_count > 0:
+                    self._estimated_prompt_tokens = estimated_token_count
 
             stream: bool = kwargs.get("stream", False)
             if stream:
@@ -436,11 +442,16 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
         
         estimated_token_count = 0 
         has_image = False
+        enc: Optional[tiktoken.Encoding] = None
 
         try: 
             enc = tiktoken.encoding_for_model(kwargs.get("model")) # type: ignore
-        except KeyError:
-            enc = tiktoken.get_encoding("o200k_base") # type: ignore
+        except Exception:
+            try:
+                enc = tiktoken.get_encoding("o200k_base") # type: ignore
+            except Exception:
+                logging.warning("Error getting encoding for fallback o200k_base")
+                enc = None
         
         # find each content..type="input_text" and count tokens
         # input=[{
@@ -456,18 +467,19 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
         #         },
         #     ],
         # }]
-        for item in input: # type: ignore
-            if isinstance(item, dict):
-                for key, value in item.items(): # type: ignore
-                    if key == "content":
-                        if isinstance(value, list):
-                            msg_has_image, msg_prompt_tokens = self.has_image_and_get_texts(enc, value, image_type="input_image", text_type="input_text") # type: ignore 
-                            if msg_has_image:
-                                has_image = True
-                                estimated_token_count += msg_prompt_tokens
+        if enc:
+            for item in input: # type: ignore
+                if isinstance(item, dict):
+                    for key, value in item.items(): # type: ignore
+                        if key == "content":
+                            if isinstance(value, list):
+                                msg_has_image, msg_prompt_tokens = self.has_image_and_get_texts(enc, value, image_type="input_image", text_type="input_text") # type: ignore 
+                                if msg_has_image:
+                                    has_image = True
+                                    estimated_token_count += msg_prompt_tokens
 
-        if has_image and estimated_token_count > 0:
-            self._estimated_prompt_tokens = estimated_token_count
+            if has_image and estimated_token_count > 0:
+                self._estimated_prompt_tokens = estimated_token_count
 
         return True
 
