@@ -10,6 +10,7 @@ from abc import abstractmethod
 from enum import Enum
 from typing import Any, Set, Union, Callable, Optional, Sequence, TypedDict
 from datetime import datetime, timezone
+from dataclasses import dataclass
 from typing_extensions import deprecated
 
 import nest_asyncio  # type: ignore
@@ -28,6 +29,11 @@ from .Stopwatch import Stopwatch
 global _g_logger
 _g_logger: logging.Logger = logging.getLogger("payi.instrument")
 
+@dataclass
+class _ChunkResult:
+    send_chunk_to_caller: bool
+    ingest: bool = False
+    
 class _ProviderRequest:
     def __init__(self, instrumentor: '_PayiInstrumentor', category: str, streaming_type: '_StreamingType'):
         self._instrumentor: '_PayiInstrumentor' = instrumentor
@@ -36,8 +42,8 @@ class _ProviderRequest:
         self._ingest: IngestUnitsParams = { "category": category, "units": {} } # type: ignore
         self._streaming_type: '_StreamingType' = streaming_type
 
-    def process_chunk(self, _chunk: Any) -> bool:
-        return True
+    def process_chunk(self, _chunk: Any) -> _ChunkResult:
+        return _ChunkResult(send_chunk_to_caller=True)
 
     def process_synchronous_response(self, response: Any, log_prompt_and_response: bool, kwargs: Any) -> Optional[object]:  # noqa: ARG002
         return None
@@ -275,8 +281,7 @@ class _PayiInstrumentor:
         if int(ingest_units.get("http_status_code") or 0) < 400:
             units = ingest_units.get("units", {})
             if not units or all(unit.get("input", 0) == 0 and unit.get("output", 0) == 0 for unit in units.values()):
-                self._logger.error('No units to ingest!')
-                return False
+                self._logger.info('ingesting with no token counts')
 
         if self._log_prompt_and_response and self._prompt_and_response_logger:
             response_json = ingest_units.pop("provider_response_json", None)
@@ -341,7 +346,7 @@ class _PayiInstrumentor:
 
             return ingest_response
         except Exception as e:
-            self._logger.error(f"Error Pay-i ingesting request: {e}")
+            self._logger.error(f"Error Pay-i async ingesting: exception {e}, request {ingest_units}")
     
         return None         
     
@@ -413,7 +418,7 @@ class _PayiInstrumentor:
                 self._logger.error("No payi instance to ingest units")
 
         except Exception as e:
-            self._logger.error(f"Error Pay-i ingesting request: {e}")
+            self._logger.error(f"Error Pay-i ingesting: exception {e}, request {ingest_units}")
         
         return None
 
@@ -1105,6 +1110,8 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
         self._first_token: bool = True
         self._is_bedrock: bool = request.is_bedrock()
         self._bedrock_from_stream: bool = bedrock_from_stream
+        self._ingested: bool = False
+        self._iter_started: bool = False
 
     def __enter__(self) -> Any:
         self._instrumentor._logger.debug(f"StreamIteratorWrapper: __enter__")
@@ -1123,6 +1130,7 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
         await self.__wrapped__.__aexit__(exc_type, exc_val, exc_tb)  # type: ignore
 
     def __iter__(self) -> Any:  
+        self._iter_started = True
         if self._is_bedrock:
             # MUST reside in a separate function so that the yield statement (e.g. the generator) doesn't implicitly return its own iterator and overriding self
             self._instrumentor._logger.debug(f"StreamIteratorWrapper: bedrock __iter__")
@@ -1134,13 +1142,19 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
     def _iter_bedrock(self) -> Any:
         # botocore EventStream doesn't have a __next__ method so iterate over the wrapped object in place
         for event in self.__wrapped__: # type: ignore
+            result: Optional[_ChunkResult] = None
+
             if (self._bedrock_from_stream):
-                self._evaluate_chunk(event)
+                result = self._evaluate_chunk(event)
             else:
                 chunk = event.get('chunk') # type: ignore
                 if chunk:
                     decode = chunk.get('bytes').decode() # type: ignore
-                    self._evaluate_chunk(decode)
+                    result = self._evaluate_chunk(decode)
+
+            if result and result.ingest:
+                self._stop_iteration()
+
             yield event
 
         self._instrumentor._logger.debug(f"StreamIteratorWrapper: bedrock iter finished")
@@ -1148,40 +1162,60 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
         self._stop_iteration()
 
     def __aiter__(self) -> Any:
+        self._iter_started = True
         self._instrumentor._logger.debug(f"StreamIteratorWrapper: __aiter__")
         return self
 
     def __next__(self) -> object:
         try:
             chunk: object = self.__wrapped__.__next__()  # type: ignore
+
+            if self._ingested:
+                self._instrumentor._logger.debug(f"StreamIteratorWrapper: __next__ already ingested, not processing chunk {chunk}")
+                return chunk # type: ignore
+
+            result = self._evaluate_chunk(chunk)
+
+            if result.ingest:
+                self._stop_iteration()
+
+            if result.send_chunk_to_caller:
+                return chunk # type: ignore
+            else:
+                return self.__next__()
         except Exception as e:
             if isinstance(e, StopIteration):
                 self._stop_iteration()
             else:
                 self._instrumentor._logger.debug(f"StreamIteratorWrapper: __next__ exception {e}")
             raise e
-        else:
-            if self._evaluate_chunk(chunk) == False:
-                return self.__next__()
-            
-            return chunk # type: ignore
 
     async def __anext__(self) -> object:
         try:
             chunk: object = await self.__wrapped__.__anext__()  # type: ignore
+
+            if self._ingested:
+                self._instrumentor._logger.debug(f"StreamIteratorWrapper: __next__ already ingested, not processing chunk {chunk}")
+                return chunk # type: ignore
+
+            result = self._evaluate_chunk(chunk)
+
+            if result.ingest:
+                await self._astop_iteration()
+
+            if  result.send_chunk_to_caller:
+                return chunk # type: ignore
+            else:
+                return await self.__anext__()
+
         except Exception as e:
             if isinstance(e, StopAsyncIteration):
                 await self._astop_iteration()
             else:
                 self._instrumentor._logger.debug(f"StreamIteratorWrapper: __anext__ exception {e}")
             raise e
-        else:
-            if self._evaluate_chunk(chunk) == False:
-                return await self.__anext__()
 
-            return chunk # type: ignore
-
-    def _evaluate_chunk(self, chunk: Any) -> bool:
+    def _evaluate_chunk(self, chunk: Any) -> _ChunkResult:
         if self._first_token:
             self._request._ingest["time_to_first_token_ms"] = self._stopwatch.elapsed_ms_int()
             self._first_token = False
@@ -1192,7 +1226,7 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
         return self._request.process_chunk(chunk)
 
     def _process_stop_iteration(self) -> None:
-        self._instrumentor._logger.debug(f"StreamIteratorWrapper: stop iteration")
+        self._instrumentor._logger.debug(f"StreamIteratorWrapper: process stop iteration")
 
         self._stopwatch.stop()
         self._request._ingest["end_to_end_latency_ms"] = self._stopwatch.elapsed_ms_int()
@@ -1202,12 +1236,23 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
             self._request._ingest["provider_response_json"] = self._responses
 
     async def _astop_iteration(self) -> None:
+        if self._ingested:
+            self._instrumentor._logger.debug(f"StreamIteratorWrapper: astop iteration already ingested, skipping")
+            return
+
         self._process_stop_iteration()
+
         await self._instrumentor._aingest_units(self._request._ingest)
+        self._ingested = True
 
     def _stop_iteration(self) -> None:
+        if self._ingested:
+            self._instrumentor._logger.debug(f"StreamIteratorWrapper: stop iteration already ingested, skipping")
+            return
+
         self._process_stop_iteration()
         self._instrumentor._ingest_units(self._request._ingest)
+        self._ingested = True
 
     @staticmethod
     def chunk_to_json(chunk: Any) -> str:
@@ -1241,7 +1286,6 @@ class _StreamManagerWrapper(ObjectProxy):  # type: ignore
         self._responses: list[str] = []
         self._request: _ProviderRequest = request
         self._first_token: bool = True
-        self._done: bool = False
 
     def __enter__(self) -> _StreamIteratorWrapper:
         self._instrumentor._logger.debug(f"_StreamManagerWrapper: __enter__")
@@ -1275,56 +1319,19 @@ class _GeneratorWrapper:  # type: ignore
         self._responses: list[str] = []
         self._request: _ProviderRequest = request
         self._first_token: bool = True
-        self._done: bool = False
-        
+        self._ingested: bool = False
+        self._iter_started: bool = False
+
     def __iter__(self) -> Any:
+        self._iter_started = True
         self._instrumentor._logger.debug(f"GeneratorWrapper: __iter__")
         return self
         
     def __aiter__(self) -> Any:
         self._instrumentor._logger.debug(f"GeneratorWrapper: __aiter__")
         return self
-        
-    def __next__(self) -> Any:
-        if self._done:
-            raise StopIteration
-            
-        try:
-            chunk = next(self._generator)
-            return self._process_chunk(chunk)
 
-        except Exception as e:
-            if isinstance(e, StopIteration):
-                self._process_stop_iteration()
-            else:
-                self._instrumentor._logger.debug(f"GeneratorWrapper: __next__ exception {e}")            
-            raise e
-
-    async def __anext__(self) -> Any:
-        if self._done:
-            raise StopAsyncIteration
-            
-        try:
-            chunk = await anext(self._generator) # type: ignore
-            return self._process_chunk(chunk)
-
-        except Exception as e:
-            if isinstance(e, StopAsyncIteration):
-                await self._process_async_stop_iteration()
-            else:
-                self._instrumentor._logger.debug(f"GeneratorWrapper: __anext__ exception {e}")
-            raise e
-
-    @staticmethod
-    def _chunk_to_dict(chunk: Any) -> 'dict[str, object]':
-        if hasattr(chunk, "to_json"):
-            return chunk.to_json() # type: ignore
-        elif hasattr(chunk, "to_json_dict"):  
-            return chunk.to_json_dict() # type: ignore
-        else:
-            return {}
-
-    def _process_chunk(self, chunk: Any) -> Any:
+    def _process_chunk(self, chunk: Any) -> _ChunkResult:
         if self._first_token:
             self._request._ingest["time_to_first_token_ms"] = self._stopwatch.elapsed_ms_int()
             self._first_token = False
@@ -1333,8 +1340,72 @@ class _GeneratorWrapper:  # type: ignore
             dict = self._chunk_to_dict(chunk) 
             self._responses.append(json.dumps(dict))
                 
-        self._request.process_chunk(chunk)
-        return chunk
+        return self._request.process_chunk(chunk)
+    
+    def __next__(self) -> Any:
+        try:
+            chunk = next(self._generator)
+            result = self._process_chunk(chunk)
+
+            if result.ingest:
+                self._stop_iteration()
+
+            # ignore result.send_chunk_to_caller:
+            return chunk
+
+        except Exception as e:
+            if isinstance(e, StopIteration):
+                self._stop_iteration()
+            else:
+                self._instrumentor._logger.debug(f"GeneratorWrapper: __next__ exception {e}")            
+            raise e
+
+    async def __anext__(self) -> Any:
+        try:
+            chunk = await anext(self._generator) # type: ignore
+            result = self._process_chunk(chunk)
+
+            if result.ingest:
+                await self._astop_iteration()
+
+            # ignore result.send_chunk_to_caller:
+            return chunk # type: ignore
+
+        except Exception as e:
+            if isinstance(e, StopAsyncIteration):
+                await self._astop_iteration()
+            else:
+                self._instrumentor._logger.debug(f"GeneratorWrapper: __anext__ exception {e}")
+            raise e
+
+    @staticmethod
+    def _chunk_to_dict(chunk: Any) -> 'dict[str, object]':
+        if hasattr(chunk, "to_dict"):
+            return chunk.to_dict() # type: ignore
+        elif hasattr(chunk, "to_json_dict"):  
+            return chunk.to_json_dict() # type: ignore
+        else:
+            return {}
+
+    def _stop_iteration(self) -> None:
+        if self._ingested:
+            self._instrumentor._logger.debug(f"GeneratorWrapper: stop iteration already ingested, skipping")
+            return
+
+        self._process_stop_iteration()
+
+        self._instrumentor._ingest_units(self._request._ingest)
+        self._ingested = True
+
+    async def _astop_iteration(self) -> None:
+        if self._ingested:
+            self._instrumentor._logger.debug(f"GeneratorWrapper: astop iteration already ingested, skipping")
+            return
+
+        self._process_stop_iteration()
+        
+        await self._instrumentor._aingest_units(self._request._ingest)
+        self._ingested = True
 
     def _process_stop_iteration(self) -> None:
         self._instrumentor._logger.debug(f"GeneratorWrapper: stop iteration")
@@ -1345,22 +1416,6 @@ class _GeneratorWrapper:  # type: ignore
             
         if self._log_prompt_and_response:
             self._request._ingest["provider_response_json"] = self._responses
-                
-        self._instrumentor._ingest_units(self._request._ingest)
-        self._done = True
-
-    async def _process_async_stop_iteration(self) -> None:
-        self._instrumentor._logger.debug(f"GeneratorWrapper: async stop iteration")
-        
-        self._stopwatch.stop() 
-        self._request._ingest["end_to_end_latency_ms"] = self._stopwatch.elapsed_ms_int()
-        self._request._ingest["http_status_code"] = 200
-            
-        if self._log_prompt_and_response:
-            self._request._ingest["provider_response_json"] = self._responses
-                
-        await self._instrumentor._aingest_units(self._request._ingest)
-        self._done = True
 
 global _instrumentor
 _instrumentor: Optional[_PayiInstrumentor] = None
