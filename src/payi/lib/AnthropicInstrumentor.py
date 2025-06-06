@@ -1,4 +1,3 @@
-import logging
 from typing import Any, Union, Optional, Sequence
 from typing_extensions import override
 
@@ -48,7 +47,7 @@ class AnthropicInstrumentor:
             )
 
         except Exception as e:
-            logging.debug(f"Error instrumenting anthropic: {e}")
+            instrumentor._logger.debug(f"Error instrumenting anthropic: {e}")
             return
 
 
@@ -60,6 +59,7 @@ def messages_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
+    instrumentor._logger.debug("Anthropic messages wrapper")
     return instrumentor.invoke_wrapper(
         _AnthropicProviderRequest(instrumentor=instrumentor, streaming_type=_StreamingType.iterator, instance=instance),
         _IsStreaming.kwargs,
@@ -77,6 +77,7 @@ def stream_messages_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
+    instrumentor._logger.debug("Anthropic stream wrapper")
     return instrumentor.invoke_wrapper(
         _AnthropicProviderRequest(instrumentor=instrumentor, streaming_type=_StreamingType.stream_manager, instance=instance),
         _IsStreaming.true,
@@ -94,6 +95,7 @@ async def amessages_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
+    instrumentor._logger.debug("aync Anthropic messages wrapper")
     return await instrumentor.async_invoke_wrapper(
         _AnthropicProviderRequest(instrumentor=instrumentor, streaming_type=_StreamingType.iterator, instance=instance),
         _IsStreaming.kwargs,
@@ -111,6 +113,7 @@ async def astream_messages_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
+    instrumentor._logger.debug("aync Anthropic stream wrapper")
     return await instrumentor.async_invoke_wrapper(
         _AnthropicProviderRequest(instrumentor=instrumentor, streaming_type=_StreamingType.stream_manager, instance=instance),
         _IsStreaming.true,
@@ -202,7 +205,7 @@ class _AnthropicProviderRequest(_ProviderRequest):
                     self._estimated_prompt_tokens = estimated_token_count
      
             except Exception:
-                logging.warning("Error getting encoding for cl100k_base")
+                self._instrumentor._logger.warning("Error getting encoding for cl100k_base")
 
         return True
 
@@ -233,7 +236,7 @@ class _AnthropicProviderRequest(_ProviderRequest):
                         self._ingest["provider_response_json"] = text
 
         except Exception as e:
-            logging.debug(f"Error processing exception: {e}")
+            self._instrumentor._logger.debug(f"Error processing exception: {e}")
             return False
 
         return True
