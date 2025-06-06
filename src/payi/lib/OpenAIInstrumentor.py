@@ -9,7 +9,7 @@ from wrapt import wrap_function_wrapper  # type: ignore
 from payi.lib.helpers import PayiCategories, PayiHeaderNames
 from payi.types.ingest_units_params import Units
 
-from .instrument import _IsStreaming, _StreamingType, _ProviderRequest, _PayiInstrumentor
+from .instrument import _ChunkResult, _IsStreaming, _StreamingType, _ProviderRequest, _PayiInstrumentor
 
 
 class OpenAiInstrumentor:
@@ -22,8 +22,6 @@ class OpenAiInstrumentor:
     @staticmethod
     def instrument(instrumentor: _PayiInstrumentor) -> None:
         try:
-            from openai import OpenAI  # type: ignore #  noqa: F401  I001
-            
             wrap_function_wrapper(
                 "openai.resources.chat.completions",
                 "Completions.create",
@@ -47,7 +45,11 @@ class OpenAiInstrumentor:
                  "AsyncEmbeddings.create",
                 aembeddings_wrapper(instrumentor),
             )
+        except Exception as e:
+            instrumentor._logger.debug(f"Error instrumenting openai: {e}")
 
+        # responses separately as they are relatively new and the client may not be using the latest openai module
+        try:            
             wrap_function_wrapper(
                 "openai.resources.responses",
                 "Responses.create",
@@ -62,8 +64,6 @@ class OpenAiInstrumentor:
 
         except Exception as e:
             instrumentor._logger.debug(f"Error instrumenting openai: {e}")
-            return
-
 
 @_PayiInstrumentor.payi_wrapper
 def embeddings_wrapper(
@@ -338,7 +338,8 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
         self._include_usage_added = False
 
     @override
-    def process_chunk(self, chunk: Any) -> bool:
+    def process_chunk(self, chunk: Any) -> _ChunkResult:
+        ingest = False
         model = model_to_dict(chunk)
         
         if "provider_response_id" not in self._ingest:
@@ -356,8 +357,9 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
             # packet which contains the usage to the client as they are not expecting the data
             if self._include_usage_added:
                 send_chunk_to_client = False
+            ingest = True
 
-        return send_chunk_to_client
+        return _ChunkResult(send_chunk_to_caller=send_chunk_to_client, ingest=ingest)
 
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
@@ -420,7 +422,8 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
             input_tokens_details_key=_OpenAiProviderRequest.responses_input_tokens_details_key)
 
     @override
-    def process_chunk(self, chunk: Any) -> bool:
+    def process_chunk(self, chunk: Any) -> _ChunkResult:
+        ingest = False
         model = model_to_dict(chunk)
         response: dict[str, Any] = model.get("response", {})
 
@@ -432,8 +435,9 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
         usage = response.get("usage")
         if usage:
             self.add_usage_units(usage)
+            ingest = True
 
-        return True
+        return _ChunkResult(send_chunk_to_caller=True, ingest=ingest)
 
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:

@@ -10,7 +10,7 @@ from payi.lib.helpers import PayiCategories, PayiHeaderNames, payi_aws_bedrock_u
 from payi.types.ingest_units_params import Units, IngestUnitsParams
 from payi.types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
-from .instrument import _IsStreaming, _StreamingType, _ProviderRequest, _PayiInstrumentor
+from .instrument import _ChunkResult, _IsStreaming, _StreamingType, _ProviderRequest, _PayiInstrumentor
 
 _supported_model_prefixes = ["meta.llama3", "anthropic.", "amazon.nova-pro", "amazon.nova-lite", "amazon.nova-micro"]
 
@@ -22,8 +22,6 @@ class BedrockInstrumentor:
         BedrockInstrumentor._instrumentor = instrumentor
 
         try:
-            import boto3  # type: ignore #  noqa: F401  I001
-
             wrap_function_wrapper(
                 "botocore.client",
                 "ClientCreator.create_client",
@@ -43,7 +41,7 @@ class BedrockInstrumentor:
 @_PayiInstrumentor.payi_wrapper
 def create_client_wrapper(instrumentor: _PayiInstrumentor, wrapped: Any, instance: Any, *args: Any, **kwargs: Any) -> Any: #  noqa: ARG001
     if kwargs.get("service_name") != "bedrock-runtime":
-        instrumentor._logger.debug(f"skipping client wrapper creation for {kwargs.get('service_name', '')} service")
+        # instrumentor._logger.debug(f"skipping client wrapper creation for {kwargs.get('service_name', '')} service")
         return wrapped(*args, **kwargs)
 
     try:
@@ -272,13 +270,14 @@ class _BedrockInvokeStreamingProviderRequest(_BedrockProviderRequest):
         self._is_anthropic: bool = model_id.startswith("anthropic.")
 
     @override
-    def process_chunk(self, chunk: Any) -> bool:
+    def process_chunk(self, chunk: Any) -> _ChunkResult:
         if self._is_anthropic:
             return self.process_invoke_streaming_anthropic_chunk(chunk)
         else:
             return self.process_invoke_streaming_llama_chunk(chunk)
 
-    def process_invoke_streaming_anthropic_chunk(self, chunk: str) -> bool:
+    def process_invoke_streaming_anthropic_chunk(self, chunk: str) -> _ChunkResult:
+        ingest = False
         chunk_dict =  json.loads(chunk)
         type = chunk_dict.get("type", "")
 
@@ -301,18 +300,21 @@ class _BedrockInvokeStreamingProviderRequest(_BedrockProviderRequest):
         elif type == "message_delta":
             usage = chunk_dict['usage']
             self._ingest["units"]["text"]["output"] = usage['output_tokens']
+            ingest = True
 
-        return True    
+        return _ChunkResult(send_chunk_to_caller=True, ingest=ingest)    
 
-    def process_invoke_streaming_llama_chunk(self, chunk: str) -> bool:
+    def process_invoke_streaming_llama_chunk(self, chunk: str) -> _ChunkResult:
+        ingest = False
         chunk_dict =  json.loads(chunk)
         metrics = chunk_dict.get("amazon-bedrock-invocationMetrics", {})
         if metrics:
             input = metrics.get("inputTokenCount", 0)
             output = metrics.get("outputTokenCount", 0)
             self._ingest["units"]["text"] = Units(input=input, output=output)
+            ingest = True
 
-        return True
+        return _ChunkResult(send_chunk_to_caller=True, ingest=ingest)    
 
 class _BedrockInvokeSynchronousProviderRequest(_BedrockProviderRequest):
     @override
@@ -374,7 +376,8 @@ class _BedrockConverseSynchronousProviderRequest(_BedrockProviderRequest):
 
 class _BedrockConverseStreamingProviderRequest(_BedrockProviderRequest):
     @override
-    def process_chunk(self, chunk: 'dict[str, Any]') -> bool:
+    def process_chunk(self, chunk: 'dict[str, Any]') -> _ChunkResult:
+        ingest = False
         metadata = chunk.get("metadata", {})
 
         if metadata:
@@ -383,4 +386,6 @@ class _BedrockConverseStreamingProviderRequest(_BedrockProviderRequest):
             output = usage["outputTokens"]
             self._ingest["units"]["text"] = Units(input=input, output=output)
 
-        return True
+            ingest = True
+
+        return _ChunkResult(send_chunk_to_caller=True, ingest=ingest)

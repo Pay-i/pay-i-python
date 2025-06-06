@@ -7,7 +7,7 @@ from wrapt import wrap_function_wrapper  # type: ignore
 from payi.lib.helpers import PayiCategories
 from payi.types.ingest_units_params import Units
 
-from .instrument import _IsStreaming, _StreamingType, _ProviderRequest, _PayiInstrumentor
+from .instrument import _ChunkResult, _IsStreaming, _StreamingType, _ProviderRequest, _PayiInstrumentor
 
 
 class AnthropicInstrumentor:
@@ -133,7 +133,8 @@ class _AnthropicProviderRequest(_ProviderRequest):
             )
 
     @override
-    def process_chunk(self, chunk: Any) -> bool:
+    def process_chunk(self, chunk: Any) -> _ChunkResult:
+        ingest = False
         if chunk.type == "message_start":
             self._ingest["provider_response_id"] = chunk.message.id
 
@@ -154,9 +155,15 @@ class _AnthropicProviderRequest(_ProviderRequest):
 
         elif chunk.type == "message_delta":
             usage = chunk.usage
+            ingest = True
+
+            # Web search will return an updated input tokens value at the end of streaming
+            if usage.input_tokens > 0:
+                self._ingest["units"]["text"]["input"] = usage.input_tokens
+
             self._ingest["units"]["text"]["output"] = usage.output_tokens
         
-        return True
+        return _ChunkResult(send_chunk_to_caller=True, ingest=ingest)
 
     @override
     def process_synchronous_response(self, response: Any, log_prompt_and_response: bool, kwargs: Any) -> Any:
