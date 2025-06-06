@@ -97,11 +97,19 @@ class _GoogleVertexRequest(_ProviderRequest):
             )
         self._prompt_character_count = 0
         self._candiates_character_count = 0
+        self._model_name: Optional[str] = None
 
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
         from vertexai.generative_models import Content, Image, Part # type: ignore #  noqa: F401  I001
 
+        # Try to extra the model name as a backup if the response does not provide it (older vertexai versions do not)
+        if instance and hasattr(instance, "_model_name"):
+            model = instance._model_name
+            if model and isinstance(model, str):
+                # Extract the model name after the last slash
+                self._model_name = model.split('/')[-1]
+        
         if not args:
             return True
         
@@ -195,6 +203,13 @@ class _GoogleVertexRequest(_ProviderRequest):
             # tool_config does not have to_dict or any other serializable object
             prompt["tool_config"] = str(tool_config)  # type: ignore
 
+    def _get_model_name(self, response: 'dict[str, Any]') -> Optional[str]:
+        model: Optional[str] = response.get("model_version", None)
+        if model:
+            return model
+
+        return self._model_name
+
     @override
     def process_chunk(self, chunk: Any) -> _ChunkResult:
         ingest = False
@@ -204,9 +219,10 @@ class _GoogleVertexRequest(_ProviderRequest):
             if id:
                 self._ingest["provider_response_id"] = id
 
-        model: str = response_dict.get("model_version", "")
-
-        self._ingest["resource"] = "google." + model
+        if "resource" not in self._ingest: 
+            model: Optional[str] = self._get_model_name(response_dict)  # type: ignore[unreachable]
+            if model:
+                self._ingest["resource"] = "google." + model
 
         for candidate in response_dict.get("candidates", []):
             parts = candidate.get("content", {}).get("parts", [])
@@ -236,7 +252,7 @@ class _GoogleVertexRequest(_ProviderRequest):
         if id:
             self._ingest["provider_response_id"] = id
         
-        model: Optional[str] = response_dict.get("model_version", None)
+        model: Optional[str] = self._get_model_name(response_dict)
         if model:
             self._ingest["resource"] = "google." + model
 
@@ -262,7 +278,9 @@ class _GoogleVertexRequest(_ProviderRequest):
         prompt_tokens_details: list[dict[str, Any]] = usage.get("prompt_tokens_details", [])
         candidates_tokens_details: list[dict[str, Any]] = usage.get("candidates_tokens_details", [])
 
-        model: str = response_dict.get("model_version", "")
+        model: Optional[str] = self._get_model_name(response_dict)
+        if not model:
+            model = ""
         
         # for character billing only
         large_context = "" if input < 128000 else "_large_context"
