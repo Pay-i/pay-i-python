@@ -1,5 +1,4 @@
 import json
-import logging
 from typing import Any, Union, Optional, Sequence
 from typing_extensions import override
 from importlib.metadata import version
@@ -62,7 +61,7 @@ class OpenAiInstrumentor:
             )
 
         except Exception as e:
-            logging.debug(f"Error instrumenting openai: {e}")
+            instrumentor._logger.debug(f"Error instrumenting openai: {e}")
             return
 
 
@@ -74,6 +73,7 @@ def embeddings_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
+    instrumentor._logger.debug("OpenAI Embeddings wrapper")
     return instrumentor.invoke_wrapper(
         _OpenAiEmbeddingsProviderRequest(instrumentor),
         _IsStreaming.false,
@@ -91,6 +91,7 @@ async def aembeddings_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
+    instrumentor._logger.debug("async OpenAI Embeddings wrapper")
     return await instrumentor.async_invoke_wrapper(
         _OpenAiEmbeddingsProviderRequest(instrumentor),
         _IsStreaming.false,
@@ -108,6 +109,7 @@ def chat_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
+    instrumentor._logger.debug("OpenAI completions wrapper")
     return instrumentor.invoke_wrapper(
         _OpenAiChatProviderRequest(instrumentor),
         _IsStreaming.kwargs,
@@ -125,6 +127,7 @@ async def achat_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
+    instrumentor._logger.debug("async OpenAI completions wrapper")
     return await instrumentor.async_invoke_wrapper(
         _OpenAiChatProviderRequest(instrumentor),
         _IsStreaming.kwargs,
@@ -142,6 +145,7 @@ def responses_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
+    instrumentor._logger.debug("OpenAI responses wrapper")
     return instrumentor.invoke_wrapper(
         _OpenAiResponsesProviderRequest(instrumentor),
         _IsStreaming.kwargs,
@@ -159,6 +163,7 @@ async def aresponses_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
+    instrumentor._logger.debug("async OpenAI responses wrapper")
     return await instrumentor.async_invoke_wrapper(
         _OpenAiResponsesProviderRequest(instrumentor),
         _IsStreaming.kwargs,
@@ -207,12 +212,12 @@ class _OpenAiProviderRequest(_ProviderRequest):
             del extra_headers[PayiHeaderNames.resource_scope]
             
         if not price_as_resource and not price_as_category:
-            logging.error("Azure OpenAI requires price as resource and/or category to be specified, not ingesting")
+            self._instrumentor._logger.error("Azure OpenAI requires price as resource and/or category to be specified, not ingesting")
             return False
 
         if resource_scope:
             if not(resource_scope in ["global", "datazone"] or resource_scope.startswith("region")):
-                logging.error("Azure OpenAI invalid resource scope, not ingesting")
+                self._instrumentor._logger.error("Azure OpenAI invalid resource scope, not ingesting")
                 return False
 
             self._ingest["resource_scope"] = resource_scope
@@ -256,7 +261,7 @@ class _OpenAiProviderRequest(_ProviderRequest):
                         self._ingest["provider_response_json"] = text
 
         except Exception as e:
-            logging.debug(f"Error processing exception: {e}")
+            self._instrumentor._logger.debug(f"Error processing exception: {e}")
             return False
 
         return True
@@ -372,7 +377,7 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
                 try:
                     enc = tiktoken.get_encoding("o200k_base") # type: ignore
                 except Exception:
-                    logging.warning("Error getting encoding for fallback o200k_base")
+                    self._instrumentor._logger.warning("Error getting encoding for fallback o200k_base")
                     enc = None
             
             if enc:
@@ -450,7 +455,7 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
             try:
                 enc = tiktoken.get_encoding("o200k_base") # type: ignore
             except Exception:
-                logging.warning("Error getting encoding for fallback o200k_base")
+                self._instrumentor._logger.warning("Error getting encoding for fallback o200k_base")
                 enc = None
         
         # find each content..type="input_text" and count tokens

@@ -1,6 +1,5 @@
 import os
 import json
-import logging
 from typing import Any, Sequence
 from functools import wraps
 from typing_extensions import override
@@ -38,12 +37,13 @@ class BedrockInstrumentor:
             )
 
         except Exception as e:
-            logging.debug(f"Error instrumenting bedrock: {e}")
+            instrumentor._logger.debug(f"Error instrumenting bedrock: {e}")
             return
 
 @_PayiInstrumentor.payi_wrapper
 def create_client_wrapper(instrumentor: _PayiInstrumentor, wrapped: Any, instance: Any, *args: Any, **kwargs: Any) -> Any: #  noqa: ARG001
     if kwargs.get("service_name") != "bedrock-runtime":
+        instrumentor._logger.debug(f"skipping client wrapper creation for {kwargs.get('service_name', '')} service")
         return wrapped(*args, **kwargs)
 
     try:
@@ -53,13 +53,16 @@ def create_client_wrapper(instrumentor: _PayiInstrumentor, wrapped: Any, instanc
         client.converse = wrap_converse(instrumentor, client.converse)
         client.converse_stream = wrap_converse_stream(instrumentor, client.converse_stream)
 
+        instrumentor._logger.debug(f"Instrumented bedrock client")
+
         if BedrockInstrumentor._instrumentor._proxy_default:
             # Register client callbacks to handle the Pay-i extra_headers parameter in the inference calls and redirect the request to the Pay-i endpoint
             _register_bedrock_client_callbacks(client)
+            instrumentor._logger.debug(f"Registered bedrock client callbaks for proxy")
 
         return client
     except Exception as e:
-        logging.debug(f"Error instrumenting bedrock client: {e}")
+        instrumentor._logger.debug(f"Error instrumenting bedrock client: {e}")
     
     return wrapped(*args, **kwargs)
 
@@ -148,6 +151,7 @@ def wrap_invoke(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
         modelId:str = kwargs.get("modelId", "") # type: ignore
 
         if _is_supported_model(modelId):
+            instrumentor._logger.debug(f"bedrock invoke wrapper, modelId: {modelId}")
             return instrumentor.invoke_wrapper(
                 _BedrockInvokeSynchronousProviderRequest(instrumentor=instrumentor),
                 _IsStreaming.false,
@@ -156,6 +160,8 @@ def wrap_invoke(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
                 args,
                 kwargs,
             )   
+
+        instrumentor._logger.debug(f"bedrock invoke wrapper, unsupported modelId: {modelId}")
         return wrapped(*args, **kwargs)
     
     return invoke_wrapper
@@ -166,6 +172,7 @@ def wrap_invoke_stream(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
         modelId: str = kwargs.get("modelId", "") # type: ignore
 
         if _is_supported_model(modelId):
+            instrumentor._logger.debug(f"bedrock invoke stream wrapper, modelId: {modelId}")
             return instrumentor.invoke_wrapper(
                 _BedrockInvokeStreamingProviderRequest(instrumentor=instrumentor, model_id=modelId),
                 _IsStreaming.true,
@@ -174,6 +181,7 @@ def wrap_invoke_stream(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
                 args,
                 kwargs,
             )
+        instrumentor._logger.debug(f"bedrock invoke stream wrapper, unsupported modelId: {modelId}")
         return wrapped(*args, **kwargs)
 
     return invoke_wrapper
@@ -184,6 +192,7 @@ def wrap_converse(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
         modelId:str = kwargs.get("modelId", "") # type: ignore
 
         if _is_supported_model(modelId):
+            instrumentor._logger.debug(f"bedrock converse wrapper, modelId: {modelId}")
             return instrumentor.invoke_wrapper(
                 _BedrockConverseSynchronousProviderRequest(instrumentor=instrumentor),
                 _IsStreaming.false,
@@ -192,6 +201,7 @@ def wrap_converse(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
                 args,
                 kwargs,
         )
+        instrumentor._logger.debug(f"bedrock converse wrapper, unsupported modelId: {modelId}")
         return wrapped(*args, **kwargs)
     
     return invoke_wrapper
@@ -202,6 +212,7 @@ def wrap_converse_stream(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
         modelId: str = kwargs.get("modelId", "") # type: ignore
 
         if _is_supported_model(modelId):
+            instrumentor._logger.debug(f"bedrock converse stream wrapper, modelId: {modelId}")
             return instrumentor.invoke_wrapper(
                 _BedrockConverseStreamingProviderRequest(instrumentor=instrumentor),
                 _IsStreaming.true,
@@ -210,6 +221,7 @@ def wrap_converse_stream(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
                 args,
                 kwargs,
             )
+        instrumentor._logger.debug(f"bedrock converse stream wrapper, unsupported modelId: {modelId}")
         return wrapped(*args, **kwargs)
 
     return invoke_wrapper
@@ -251,7 +263,7 @@ class _BedrockProviderRequest(_ProviderRequest):
             return True
 
         except Exception as e:
-            logging.debug(f"Error processing exception: {e}")
+            self._instrumentor._logger.debug(f"Error processing exception: {e}")
             return False
 
 class _BedrockInvokeStreamingProviderRequest(_BedrockProviderRequest):
