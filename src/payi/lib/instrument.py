@@ -25,6 +25,8 @@ from payi.types.pay_i_common_models_api_router_header_info_param import PayIComm
 from .helpers import PayiCategories
 from .Stopwatch import Stopwatch
 
+global _g_logger
+_g_logger: logging.Logger = logging.getLogger("payi.instrument")
 
 class _ProviderRequest:
     def __init__(self, instrumentor: '_PayiInstrumentor', category: str, streaming_type: '_StreamingType'):
@@ -147,14 +149,23 @@ class _PayiInstrumentor:
         apayi: Optional[AsyncPayi],
         instruments: Union[Set[str], None] = None,
         log_prompt_and_response: bool = True,
+        logger: Optional[logging.Logger] = None,
         prompt_and_response_logger: Optional[
             Callable[[str, "dict[str, str]"], None]
         ] = None,  # (request id, dict of data to store) -> None
         global_config: PayiInstrumentConfig = {},
         caller_filename: str = ""
     ):
+        global _g_logger
+        self._logger: logging.Logger = logger if logger else _g_logger
+
         self._payi: Optional[Payi] = payi
         self._apayi: Optional[AsyncPayi] = apayi
+
+        if self._payi:
+            _g_logger.debug(f"Pay-i instrumentor initialized with Payi instance: {self._payi}")
+        if self._apayi:
+            _g_logger.debug(f"Pay-i instrumentor initialized with AsyncPayi instance: {self._apayi}")            
 
         self._context_stack: list[_Context] = []  # Stack of context dictionaries
         self._log_prompt_and_response: bool = log_prompt_and_response
@@ -191,7 +202,7 @@ class _PayiInstrumentor:
                         self._call_async_use_case_definition_create(use_case_name=caller_filename, use_case_description=description)
                     global_config["use_case_name"] = caller_filename
                 except Exception as e:
-                    logging.error(f"Error creating default use case definition based on file name {caller_filename}: {e}")
+                    self._logger.error(f"Error creating default use case definition based on file name {caller_filename}: {e}")
 
             self.__enter__()
             # _init_current_context will update the currrent context stack location
@@ -222,7 +233,7 @@ class _PayiInstrumentor:
             OpenAiInstrumentor.instrument(self)
 
         except Exception as e:
-            logging.error(f"Error instrumenting OpenAI: {e}")
+            self._logger.error(f"Error instrumenting OpenAI: {e}")
 
     def _instrument_anthropic(self) -> None:
         from .AnthropicInstrumentor import AnthropicInstrumentor
@@ -231,7 +242,7 @@ class _PayiInstrumentor:
             AnthropicInstrumentor.instrument(self)
 
         except Exception as e:
-            logging.error(f"Error instrumenting Anthropic: {e}")
+            self._logger.error(f"Error instrumenting Anthropic: {e}")
 
     def _instrument_aws_bedrock(self) -> None:
         from .BedrockInstrumentor import BedrockInstrumentor
@@ -240,7 +251,7 @@ class _PayiInstrumentor:
             BedrockInstrumentor.instrument(self)
 
         except Exception as e:
-            logging.error(f"Error instrumenting AWS bedrock: {e}")
+            self._logger.error(f"Error instrumenting AWS bedrock: {e}")
 
     def _instrument_google_vertex(self) -> None:
         from .VertexInstrumentor import VertexInstrumentor
@@ -249,7 +260,7 @@ class _PayiInstrumentor:
             VertexInstrumentor.instrument(self)
 
         except Exception as e:
-            logging.error(f"Error instrumenting Google Vertex: {e}")
+            self._logger.error(f"Error instrumenting Google Vertex: {e}")
 
     def _instrument_google_genai(self) -> None:
         from .GoogleGenAiInstrumentor import GoogleGenAiInstrumentor
@@ -258,13 +269,13 @@ class _PayiInstrumentor:
             GoogleGenAiInstrumentor.instrument(self)
 
         except Exception as e:
-            logging.error(f"Error instrumenting Google GenAi: {e}")
+            self._logger.error(f"Error instrumenting Google GenAi: {e}")
 
     def _process_ingest_units(self, ingest_units: IngestUnitsParams, log_data: 'dict[str, str]') -> bool:
         if int(ingest_units.get("http_status_code") or 0) < 400:
             units = ingest_units.get("units", {})
             if not units or all(unit.get("input", 0) == 0 and unit.get("output", 0) == 0 for unit in units.values()):
-                logging.error('No units to ingest')
+                self._logger.error('No units to ingest!')
                 return False
 
         if self._log_prompt_and_response and self._prompt_and_response_logger:
@@ -302,19 +313,24 @@ class _PayiInstrumentor:
     async def _aingest_units(self, ingest_units: IngestUnitsParams) -> Optional[IngestResponse]:
         ingest_response: Optional[IngestResponse] = None
     
+        self._logger.debug(f"_aingest_units")
+
         # return early if there are no units to ingest and on a successul ingest request
         log_data: 'dict[str,str]' = {}
         if not self._process_ingest_units(ingest_units, log_data):
+            self._logger.debug(f"_aingest_units: exit early")
             return None
 
         try:
             if self._apayi:    
-                ingest_response= await self._apayi.ingest.units(**ingest_units)
+                ingest_response = await self._apayi.ingest.units(**ingest_units)
             elif self._payi:
                 ingest_response = self._payi.ingest.units(**ingest_units)
             else:
-                logging.error("No payi instance to ingest units")
+                self._logger.error("No payi instance to ingest units")
                 return None         
+
+            self._logger.debug(f"_aingest_units: success ({ingest_response})")
 
             if ingest_response:
                 self._process_ingest_units_response(ingest_response)
@@ -325,7 +341,7 @@ class _PayiInstrumentor:
 
             return ingest_response
         except Exception as e:
-            logging.error(f"Error Pay-i ingesting result: {e}")
+            self._logger.error(f"Error Pay-i ingesting request: {e}")
     
         return None         
     
@@ -346,7 +362,7 @@ class _PayiInstrumentor:
                 # When there's no running loop, create a new one
                 asyncio.run(self._apayi.use_cases.definitions.create(name=use_case_name, description=use_case_description))
         except Exception as e:
-            logging.error(f"Error calling async use_cases.definitions.create synchronously: {e}")
+            self._logger.error(f"Error calling async use_cases.definitions.create synchronously: {e}")
 
     def _call_aingest_sync(self, ingest_units: IngestUnitsParams) -> Optional[IngestResponse]:
         try:
@@ -362,20 +378,25 @@ class _PayiInstrumentor:
                 # When there's no running loop, create a new one
                 return asyncio.run(self._aingest_units(ingest_units))
         except Exception as e:
-            logging.error(f"Error calling aingest_units synchronously: {e}")
+            self._logger.error(f"Error calling aingest_units synchronously: {e}")
         return None
         
     def _ingest_units(self, ingest_units: IngestUnitsParams) -> Optional[IngestResponse]:
         ingest_response: Optional[IngestResponse] = None
         
+        self._logger.debug(f"_ingest_units")
+
         # return early if there are no units to ingest and on a successul ingest request
         log_data: 'dict[str,str]' = {}
         if not self._process_ingest_units(ingest_units, log_data):
+            self._logger.debug(f"_ingest_units: exit early")
             return None
 
         try:
             if self._payi:
                 ingest_response = self._payi.ingest.units(**ingest_units)
+                self._logger.debug(f"_ingest_units: success ({ingest_response})")
+
                 self._process_ingest_units_response(ingest_response)
 
                 if self._log_prompt_and_response and self._prompt_and_response_logger:
@@ -386,12 +407,13 @@ class _PayiInstrumentor:
             elif self._apayi:
                 # task runs async. aingest_units will invoke the callback and post process
                 ingest_response = self._call_aingest_sync(ingest_units)
+                self._logger.debug(f"_ingest_units: apayi success ({ingest_response})")
                 return ingest_response
             else:
-                logging.error("No payi instance to ingest units")
+                self._logger.error("No payi instance to ingest units")
 
         except Exception as e:
-            logging.error(f"Error Pay-i ingesting result: {e}")
+            self._logger.error(f"Error Pay-i ingesting request: {e}")
         
         return None
 
@@ -655,11 +677,15 @@ class _PayiInstrumentor:
         args: Sequence[Any],
         kwargs: 'dict[str, Any]',
     ) -> Any:
+        self._logger.debug(f"async_invoke_wrapper: instance {instance}, category {request._category}")
+
         context = self.get_context()
 
         # Bedrock client does not have an async method
 
         if not context:   
+            self._logger.debug(f"async_invoke_wrapper: no instrumentation context, exit early")
+
             # wrapped function invoked outside of decorator scope
             return await wrapped(*args, **kwargs)
 
@@ -673,6 +699,8 @@ class _PayiInstrumentor:
             if "extra_headers" not in kwargs and extra_headers:
                 kwargs["extra_headers"] = extra_headers
 
+            self._logger.debug(f"async_invoke_wrapper: sending proxy request")
+
             return await wrapped(*args, **kwargs)
 
         current_frame = inspect.currentframe()
@@ -682,6 +710,7 @@ class _PayiInstrumentor:
         request._ingest['properties'] = { 'system.stack_trace': json.dumps(stack) }
 
         if request.process_request(instance, extra_headers, args, kwargs) is False:
+            self._logger.debug(f"async_invoke_wrapper: calling wrapped instance")
             return await wrapped(*args, **kwargs)
 
         sw = Stopwatch()
@@ -696,12 +725,16 @@ class _PayiInstrumentor:
 
         try:
             self._prepare_ingest(request, extra_headers, args, kwargs)
+            self._logger.debug(f"async_invoke_wrapper: calling wrapped instance (stream={stream})")
+
             sw.start()
             response = await wrapped(*args, **kwargs)
 
         except Exception as e:  # pylint: disable=broad-except
             sw.stop()
             duration = sw.elapsed_ms_int()
+
+            self._logger.debug(f"invoke_wrapper: calling wrapped instance exception {e}")
 
             if request.process_exception(e, kwargs):
                 request._ingest["end_to_end_latency_ms"] = duration
@@ -746,10 +779,12 @@ class _PayiInstrumentor:
             kwargs=kwargs)
 
         if return_result:
+            self._logger.debug(f"async_invoke_wrapper: process sync response return")
             return return_result
 
         await self._aingest_units(request._ingest)
 
+        self._logger.debug(f"async_invoke_wrapper: finished")
         return response
 
     def invoke_wrapper(
@@ -761,13 +796,17 @@ class _PayiInstrumentor:
         args: Sequence[Any],
         kwargs: 'dict[str, Any]',
     ) -> Any:
+        self._logger.debug(f"invoke_wrapper: instance {instance}, category {request._category}")
+
         context = self.get_context()
 
         if not context:
             if request.is_bedrock():
                 # boto3 doesn't allow extra_headers
                 kwargs.pop("extra_headers", None)
-    
+
+            self._logger.debug(f"invoke_wrapper: no instrumentation context, exit early")
+
             # wrapped function invoked outside of decorator scope
             return wrapped(*args, **kwargs)
 
@@ -785,6 +824,8 @@ class _PayiInstrumentor:
                 # assumes anthropic and openai clients
                 kwargs["extra_headers"] = extra_headers
 
+            self._logger.debug(f"invoke_wrapper: sending proxy request")
+
             return wrapped(*args, **kwargs)
         
         current_frame = inspect.currentframe()
@@ -794,6 +835,7 @@ class _PayiInstrumentor:
         request._ingest['properties'] = { 'system.stack_trace': json.dumps(stack) }
 
         if request.process_request(instance, extra_headers, args, kwargs) is False:
+            self._logger.debug(f"invoke_wrapper: calling wrapped instance")
             return wrapped(*args, **kwargs)
 
         sw = Stopwatch()
@@ -808,12 +850,16 @@ class _PayiInstrumentor:
 
         try:
             self._prepare_ingest(request, extra_headers, args, kwargs)
+            self._logger.debug(f"invoke_wrapper: calling wrapped instance (stream={stream})")
+
             sw.start()
             response = wrapped(*args, **kwargs)
             
         except Exception as e:  # pylint: disable=broad-except
             sw.stop()
             duration = sw.elapsed_ms_int()
+
+            self._logger.debug(f"invoke_wrapper: calling wrapped instance exception {e}")
 
             if request.process_exception(e, kwargs):
                 request._ingest["end_to_end_latency_ms"] = duration
@@ -867,10 +913,12 @@ class _PayiInstrumentor:
             log_prompt_and_response=self._log_prompt_and_response,
             kwargs=kwargs)
         if return_result:
+            self._logger.debug(f"invoke_wrapper: process sync response return")
             return return_result
 
         self._ingest_units(request._ingest)
 
+        self._logger.debug(f"invoke_wrapper: finished")
         return response
 
     def _create_extra_headers(
@@ -1029,6 +1077,8 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
         request: _ProviderRequest,
     ) -> None:
 
+        instrumentor._logger.debug(f"StreamIteratorWrapper: instance {instance}, category {request._category}")
+
         bedrock_from_stream: bool = False
         if request.is_bedrock():
             request._ingest["provider_response_id"] = response["ResponseMetadata"]["RequestId"]
@@ -1057,21 +1107,28 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
         self._bedrock_from_stream: bool = bedrock_from_stream
 
     def __enter__(self) -> Any:
+        self._instrumentor._logger.debug(f"StreamIteratorWrapper: __enter__")
         return self
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None: 
+        self._instrumentor._logger.debug(f"StreamIteratorWrapper: __exit__")
         self.__wrapped__.__exit__(exc_type, exc_val, exc_tb)  # type: ignore
 
     async def __aenter__(self) -> Any:
+        self._instrumentor._logger.debug(f"StreamIteratorWrapper: __aenter__")
         return self
 
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        self._instrumentor._logger.debug(f"StreamIteratorWrapper: __aexit__")
         await self.__wrapped__.__aexit__(exc_type, exc_val, exc_tb)  # type: ignore
 
     def __iter__(self) -> Any:  
         if self._is_bedrock:
             # MUST reside in a separate function so that the yield statement (e.g. the generator) doesn't implicitly return its own iterator and overriding self
+            self._instrumentor._logger.debug(f"StreamIteratorWrapper: bedrock __iter__")
             return self._iter_bedrock()
+
+        self._instrumentor._logger.debug(f"StreamIteratorWrapper: __iter__")
         return self
 
     def _iter_bedrock(self) -> Any:
@@ -1086,9 +1143,12 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
                     self._evaluate_chunk(decode)
             yield event
 
+        self._instrumentor._logger.debug(f"StreamIteratorWrapper: bedrock iter finished")
+
         self._stop_iteration()
 
     def __aiter__(self) -> Any:
+        self._instrumentor._logger.debug(f"StreamIteratorWrapper: __aiter__")
         return self
 
     def __next__(self) -> object:
@@ -1097,6 +1157,8 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
         except Exception as e:
             if isinstance(e, StopIteration):
                 self._stop_iteration()
+            else:
+                self._instrumentor._logger.debug(f"StreamIteratorWrapper: __next__ exception {e}")
             raise e
         else:
             if self._evaluate_chunk(chunk) == False:
@@ -1110,6 +1172,8 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
         except Exception as e:
             if isinstance(e, StopAsyncIteration):
                 await self._astop_iteration()
+            else:
+                self._instrumentor._logger.debug(f"StreamIteratorWrapper: __anext__ exception {e}")
             raise e
         else:
             if self._evaluate_chunk(chunk) == False:
@@ -1128,6 +1192,8 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
         return self._request.process_chunk(chunk)
 
     def _process_stop_iteration(self) -> None:
+        self._instrumentor._logger.debug(f"StreamIteratorWrapper: stop iteration")
+
         self._stopwatch.stop()
         self._request._ingest["end_to_end_latency_ms"] = self._stopwatch.elapsed_ms_int()
         self._request._ingest["http_status_code"] = 200
@@ -1164,6 +1230,8 @@ class _StreamManagerWrapper(ObjectProxy):  # type: ignore
         stopwatch: Stopwatch,
         request: _ProviderRequest,
     ) -> None:
+        instrumentor._logger.debug(f"StreamManagerWrapper: instance {instance}, category {request._category}")
+
         super().__init__(stream_manager)  # type: ignore
 
         self._stream_manager = stream_manager  
@@ -1176,6 +1244,8 @@ class _StreamManagerWrapper(ObjectProxy):  # type: ignore
         self._done: bool = False
 
     def __enter__(self) -> _StreamIteratorWrapper:
+        self._instrumentor._logger.debug(f"_StreamManagerWrapper: __enter__")
+
         return _StreamIteratorWrapper(
             response=self.__wrapped__.__enter__(),  # type: ignore
             instance=self._instance,
@@ -1193,6 +1263,8 @@ class _GeneratorWrapper:  # type: ignore
         stopwatch: Stopwatch,
         request: _ProviderRequest,
     ) -> None:
+        instrumentor._logger.debug(f"GeneratorWrapper: instance {instance}, category {request._category}")
+
         super().__init__()  # type: ignore
         
         self._generator = generator
@@ -1206,9 +1278,11 @@ class _GeneratorWrapper:  # type: ignore
         self._done: bool = False
         
     def __iter__(self) -> Any:
+        self._instrumentor._logger.debug(f"GeneratorWrapper: __iter__")
         return self
         
     def __aiter__(self) -> Any:
+        self._instrumentor._logger.debug(f"GeneratorWrapper: __aiter__")
         return self
         
     def __next__(self) -> Any:
@@ -1219,9 +1293,12 @@ class _GeneratorWrapper:  # type: ignore
             chunk = next(self._generator)
             return self._process_chunk(chunk)
 
-        except StopIteration as stop_exception:
-            self._process_stop_iteration()
-            raise stop_exception
+        except Exception as e:
+            if isinstance(e, StopIteration):
+                self._process_stop_iteration()
+            else:
+                self._instrumentor._logger.debug(f"GeneratorWrapper: __next__ exception {e}")            
+            raise e
 
     async def __anext__(self) -> Any:
         if self._done:
@@ -1231,9 +1308,12 @@ class _GeneratorWrapper:  # type: ignore
             chunk = await anext(self._generator) # type: ignore
             return self._process_chunk(chunk)
 
-        except StopAsyncIteration as stop_exception:
-            await self._process_async_stop_iteration()
-            raise stop_exception
+        except Exception as e:
+            if isinstance(e, StopAsyncIteration):
+                await self._process_async_stop_iteration()
+            else:
+                self._instrumentor._logger.debug(f"GeneratorWrapper: __anext__ exception {e}")
+            raise e
 
     @staticmethod
     def _chunk_to_dict(chunk: Any) -> 'dict[str, object]':
@@ -1257,6 +1337,8 @@ class _GeneratorWrapper:  # type: ignore
         return chunk
 
     def _process_stop_iteration(self) -> None:
+        self._instrumentor._logger.debug(f"GeneratorWrapper: stop iteration")
+
         self._stopwatch.stop()
         self._request._ingest["end_to_end_latency_ms"] = self._stopwatch.elapsed_ms_int()
         self._request._ingest["http_status_code"] = 200
@@ -1268,6 +1350,8 @@ class _GeneratorWrapper:  # type: ignore
         self._done = True
 
     async def _process_async_stop_iteration(self) -> None:
+        self._instrumentor._logger.debug(f"GeneratorWrapper: async stop iteration")
+        
         self._stopwatch.stop() 
         self._request._ingest["end_to_end_latency_ms"] = self._stopwatch.elapsed_ms_int()
         self._request._ingest["http_status_code"] = 200
@@ -1287,6 +1371,7 @@ def payi_instrument(
     log_prompt_and_response: bool = True,
     prompt_and_response_logger: Optional[Callable[[str, "dict[str, str]"], None]] = None,
     config: Optional[PayiInstrumentConfig] = None,
+    logger: Optional[logging.Logger] = None,
 ) -> None:
     global _instrumentor
     if (_instrumentor):
@@ -1316,6 +1401,7 @@ def payi_instrument(
         apayi=apayi_param,
         instruments=instruments,
         log_prompt_and_response=log_prompt_and_response,
+        logger=logger,
         prompt_and_response_logger=prompt_and_response_logger,
         global_config=config if config else PayiInstrumentConfig(),
         caller_filename=caller_filename
@@ -1335,7 +1421,10 @@ def track(
         if asyncio.iscoroutinefunction(func):
             async def awrapper(*args: Any, **kwargs: Any) -> Any:
                 if not _instrumentor:
+                    _g_logger.debug(f"track: no instrumentor!")
                     return await func(*args, **kwargs)
+
+                _instrumentor._logger.debug(f"track: call async function (proxy={proxy}, limit_ids={limit_ids}, use_case_name={use_case_name}, use_case_id={use_case_id}, use_case_version={use_case_version}, user_id={user_id})")
                 # Call the instrumentor's _call_func for async functions
                 return await _instrumentor._acall_func(
                     func,
@@ -1354,7 +1443,11 @@ def track(
         else:
             def wrapper(*args: Any, **kwargs: Any) -> Any:
                 if not _instrumentor:
+                    _g_logger.debug(f"track: no instrumentor!")
                     return func(*args, **kwargs)
+
+                _instrumentor._logger.debug(f"track: call sync function (proxy={proxy}, limit_ids={limit_ids}, use_case_name={use_case_name}, use_case_id={use_case_id}, use_case_version={use_case_version}, user_id={user_id})")
+
                 return _instrumentor._call_func(
                     func,
                     proxy,
@@ -1427,7 +1520,11 @@ def ingest(
         if asyncio.iscoroutinefunction(func):
             async def awrapper(*args: Any, **kwargs: Any) -> Any:
                 if not _instrumentor:
+                    _g_logger.debug(f"ingest: call no instrumentor!")
                     return await func(*args, **kwargs)
+
+                _instrumentor._logger.debug(f"ingest: call async function (limit_ids={limit_ids}, experience_name={experience_name}, experience_id={experience_id}, use_case_name={use_case_name}, use_case_id={use_case_id}, use_case_version={use_case_version}, user_id={user_id})")
+
                 # Call the instrumentor's _call_func for async functions
                 return await _instrumentor._acall_func(
                     func,
@@ -1446,7 +1543,11 @@ def ingest(
         else:
             def wrapper(*args: Any, **kwargs: Any) -> Any:
                 if not _instrumentor:
+                    _g_logger.debug(f"ingest: call no instrumentor!")
                     return func(*args, **kwargs)
+
+                _instrumentor._logger.debug(f"ingest: call sync function (limit_ids={limit_ids}, experience_name={experience_name}, experience_id={experience_id}, use_case_name={use_case_name}, use_case_id={use_case_id}, use_case_version={use_case_version}, user_id={user_id})")
+
                 return _instrumentor._call_func(
                     func,
                     False,
@@ -1478,7 +1579,6 @@ def proxy(
         "@proxy is deprecated and will be removed in a future version. Use @track instead.",
         DeprecationWarning,
         stacklevel=2
-
     )
 
     def _proxy(func: Any) -> Any:
@@ -1486,7 +1586,11 @@ def proxy(
         if asyncio.iscoroutinefunction(func):
             async def _proxy_awrapper(*args: Any, **kwargs: Any) -> Any:
                 if not _instrumentor:
+                    _g_logger.debug(f"proxy: call no instrumentor!")
                     return await func(*args, **kwargs)
+
+                _instrumentor._logger.debug(f"proxy: call async function (limit_ids={limit_ids}, experience_name={experience_name}, experience_id={experience_id}, use_case_name={use_case_name}, use_case_id={use_case_id}, use_case_version={use_case_version}, user_id={user_id})")
+
                 return await _instrumentor._call_func(
                     func,
                     True,
@@ -1505,7 +1609,11 @@ def proxy(
         else:
             def _proxy_wrapper(*args: Any, **kwargs: Any) -> Any:
                 if not _instrumentor:
+                    _g_logger.debug(f"proxy: call no instrumentor!")
                     return func(*args, **kwargs)
+
+                _instrumentor._logger.debug(f"proxy: call sync function (limit_ids={limit_ids}, experience_name={experience_name}, experience_id={experience_id}, use_case_name={use_case_name}, use_case_id={use_case_id}, use_case_version={use_case_version}, user_id={user_id})")
+
                 return _instrumentor._call_func(
                     func,
                     True,

@@ -1,6 +1,5 @@
 import json
 import math
-import logging
 from typing import Any, List, Union, Optional, Sequence
 from typing_extensions import override
 
@@ -41,7 +40,7 @@ class GoogleGenAiInstrumentor:
             )
 
         except Exception as e:
-            logging.debug(f"Error instrumenting vertex: {e}")
+            instrumentor._logger.debug(f"Error instrumenting vertex: {e}")
             return
 
 @_PayiInstrumentor.payi_wrapper
@@ -52,6 +51,7 @@ def generate_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
+    instrumentor._logger.debug("genai generate_content wrapper")
     return instrumentor.invoke_wrapper(
         _GoogleGenAiRequest(instrumentor),
         _IsStreaming.false,
@@ -69,6 +69,7 @@ def generate_stream_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
+    instrumentor._logger.debug("genai generate_content_stream wrapper")
     return instrumentor.invoke_wrapper(
         _GoogleGenAiRequest(instrumentor),
         _IsStreaming.true,
@@ -86,6 +87,7 @@ async def agenerate_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
+    instrumentor._logger.debug("async genai generate_content wrapper")
     return await instrumentor.async_invoke_wrapper(
         _GoogleGenAiRequest(instrumentor),
         _IsStreaming.false,
@@ -103,6 +105,7 @@ async def agenerate_stream_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
+    instrumentor._logger.debug("async genai generate_content_stream wrapper")
     return await instrumentor.async_invoke_wrapper(
         _GoogleGenAiRequest(instrumentor),
         _IsStreaming.true,

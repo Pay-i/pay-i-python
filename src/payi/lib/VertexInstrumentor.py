@@ -1,6 +1,5 @@
 import json
 import math
-import logging
 from typing import Any, List, Union, Optional, Sequence
 from typing_extensions import override
 
@@ -43,7 +42,7 @@ class VertexInstrumentor:
             )
 
         except Exception as e:
-            logging.debug(f"Error instrumenting vertex: {e}")
+            instrumentor._logger.debug(f"Error instrumenting vertex: {e}")
             return
 
 @_PayiInstrumentor.payi_wrapper
@@ -54,6 +53,7 @@ def generate_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
+    instrumentor._logger.debug("vertexai generate_content wrapper")
     return instrumentor.invoke_wrapper(
         _GoogleVertexRequest(instrumentor),
         _IsStreaming.kwargs,
@@ -71,6 +71,7 @@ async def agenerate_wrapper(
     *args: Any,
     **kwargs: Any,
 ) -> Any:
+    instrumentor._logger.debug("async vertexai generate_content wrapper")
     return await instrumentor.async_invoke_wrapper(
         _GoogleVertexRequest(instrumentor),
         _IsStreaming.kwargs,
