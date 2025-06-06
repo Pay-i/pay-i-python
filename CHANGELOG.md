@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.81 (2025-06-06)
+
+Full Changelog: [v0.1.0-alpha.80...v0.1.0-alpha.81](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.80...v0.1.0-alpha.81)
+
+### Features
+
+* logger support ([#312](https://github.com/Pay-i/pay-i-python/issues/312)) ([f353bb2](https://github.com/Pay-i/pay-i-python/commit/f353bb2cbc24d28114c3bd770a8243f8b115d1fc))
+
 ## 0.1.0-alpha.80 (2025-06-04)
 
 Full Changelog: [v0.1.0-alpha.79...v0.1.0-alpha.80](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.79...v0.1.0-alpha.80)
