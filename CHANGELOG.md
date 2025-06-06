@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.82 (2025-06-06)
+
+Full Changelog: [v0.1.0-alpha.81...v0.1.0-alpha.82](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.81...v0.1.0-alpha.82)
+
+### Bug Fixes
+
+* vertex, google.genai report tokens when details missing ([#314](https://github.com/Pay-i/pay-i-python/issues/314)) ([54dd25b](https://github.com/Pay-i/pay-i-python/commit/54dd25b1abd93e6fdec22dd7bb8dae39236ee532))
+
 ## 0.1.0-alpha.81 (2025-06-06)
 
 Full Changelog: [v0.1.0-alpha.80...v0.1.0-alpha.81](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.80...v0.1.0-alpha.81)
