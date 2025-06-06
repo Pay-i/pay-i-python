@@ -253,15 +253,16 @@ class _GoogleVertexRequest(_ProviderRequest):
         usage = response_dict.get("usage_metadata", {})
         input = usage.get("prompt_token_count", 0)
 
-        prompt_tokens_details: list[dict[str, Any]] = usage.get("prompt_tokens_details")
-        candidates_tokens_details: list[dict[str, Any]] = usage.get("candidates_tokens_details")
+        prompt_tokens_details: list[dict[str, Any]] = usage.get("prompt_tokens_details", [])
+        candidates_tokens_details: list[dict[str, Any]] = usage.get("candidates_tokens_details", [])
 
         model: str = response_dict.get("model_version", "")
+        
+        # for character billing only
+        large_context = "" if input < 128000 else "_large_context"
 
         if self._is_character_billing_model(model):
             # gemini 1.0 and 1.5 units are reported in characters, per second, per image, etc...
-            large_context = "" if input < 128000 else "_large_context"
-        
             for details in prompt_tokens_details:
                 modality = details.get("modality", "")
                 if not modality:
@@ -301,7 +302,7 @@ class _GoogleVertexRequest(_ProviderRequest):
                     audio_seconds = math.ceil(modality_token_count / 25)
                     self.add_units("audio"+large_context, input=audio_seconds)
 
-        elif model.startswith("gemini-2.0"):
+        else:
             for details in prompt_tokens_details:
                 modality = details.get("modality", "")
                 if not modality:
@@ -320,3 +321,19 @@ class _GoogleVertexRequest(_ProviderRequest):
                 modality_token_count = details.get("token_count", 0)
                 if modality in ("VIDEO", "AUDIO", "TEXT", "IMAGE"):
                     self.add_units(modality.lower(), output=modality_token_count)
+
+        if not self._ingest["units"]:
+            input = usage.get("prompt_token_count", 0)
+            output = usage.get("candidates_token_count", 0) * 4
+            
+            if self._is_character_billing_model(model):
+                if self._prompt_character_count > 0:
+                    input = self._prompt_character_count
+                else:
+                    input *= 4
+
+                # if no units were added, add a default unit and assume 4 characters per token
+                self._ingest["units"]["text"+large_context] = Units(input=input, output=output)
+            else:
+                # if no units were added, add a default unit
+                self._ingest["units"]["text"] = Units(input=input, output=output)
