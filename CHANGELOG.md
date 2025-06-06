@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.83 (2025-06-06)
+
+Full Changelog: [v0.1.0-alpha.82...v0.1.0-alpha.83](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.82...v0.1.0-alpha.83)
+
+### Features
+
+* ingest streaming results aggressively ([#316](https://github.com/Pay-i/pay-i-python/issues/316)) ([2d196f7](https://github.com/Pay-i/pay-i-python/commit/2d196f781c7d4ed1317f453e99501d682f684d3c))
+
 ## 0.1.0-alpha.82 (2025-06-06)
 
 Full Changelog: [v0.1.0-alpha.81...v0.1.0-alpha.82](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.81...v0.1.0-alpha.82)
