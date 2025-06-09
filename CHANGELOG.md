@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-alpha.84 (2025-06-09)
+
+Full Changelog: [v0.1.0-alpha.83...v0.1.0-alpha.84](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.83...v0.1.0-alpha.84)
+
+### Features
+
+* **api:** manual updates ([b5edce3](https://github.com/Pay-i/pay-i-python/commit/b5edce3207c9cd01ded791e67b8cc0bbf5ef4ef4))
+* consolidate anthropic vision, google.genai and vertex compute usage ([#318](https://github.com/Pay-i/pay-i-python/issues/318)) ([28700fd](https://github.com/Pay-i/pay-i-python/commit/28700fd25e76b03e06f9cb7c963890dbb1675f2b))
+
 ## 0.1.0-alpha.83 (2025-06-06)
 
 Full Changelog: [v0.1.0-alpha.82...v0.1.0-alpha.83](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.82...v0.1.0-alpha.83)
