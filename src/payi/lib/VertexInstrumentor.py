@@ -231,19 +231,17 @@ class _GoogleVertexRequest(_ProviderRequest):
 
         usage = response_dict.get("usage_metadata", {})
         if usage and "prompt_token_count" in usage and "candidates_token_count" in usage:
-            self._compute_usage(response_dict, streaming_candidates_characters=self._candidates_character_count)
+            vertex_compute_usage(
+                request=self,
+                model=self._get_model_name(response_dict),
+                response_dict=response_dict,
+                prompt_character_count=self._prompt_character_count,
+                streaming_candidates_characters=self._candidates_character_count,
+            )
             ingest = True
 
         return _ChunkResult(send_chunk_to_caller=True, ingest=ingest)
     
-    @staticmethod
-    def _is_character_billing_model(model: str) -> bool:
-        return model.startswith("gemini-1.")
-
-    @staticmethod
-    def _is_large_context_token_model(model: str, input_tokens: int) -> bool:
-        return model.startswith("gemini-2.5-pro") and input_tokens > 200_000
-
     @override
     def process_synchronous_response(
         self,
@@ -260,116 +258,139 @@ class _GoogleVertexRequest(_ProviderRequest):
         if model:
             self._ingest["resource"] = "google." + model
 
-        self._compute_usage(response_dict)
+        vertex_compute_usage(
+            request=self,
+            model=model,
+            response_dict=response_dict,
+            prompt_character_count=self._prompt_character_count,
+            streaming_candidates_characters=self._candidates_character_count
+            )
         
         if log_prompt_and_response:
             self._ingest["provider_response_json"] = [json.dumps(response_dict)]
 
         return None
 
-    def add_units(self, key: str, input: Optional[int] = None, output: Optional[int] = None) -> None:
-        if key not in self._ingest["units"]:
-            self._ingest["units"][key] = {}
+def vertex_compute_usage(
+    request: _ProviderRequest,
+    model: Optional[str],
+    response_dict: 'dict[str, Any]',
+    prompt_character_count: int = 0,
+    streaming_candidates_characters: Optional[int] = None) -> None:
+
+    def is_character_billing_model(model: str) -> bool:
+        return model.startswith("gemini-1.")
+
+    def is_large_context_token_model(model: str, input_tokens: int) -> bool:
+        return model.startswith("gemini-2.5-pro") and input_tokens > 200_000
+
+    def add_units(request: _ProviderRequest, key: str, input: Optional[int] = None, output: Optional[int] = None) -> None:
+        if key not in request._ingest["units"]:
+            request._ingest["units"][key] = {}
         if input is not None:
-            self._ingest["units"][key]["input"] = input
+            request._ingest["units"][key]["input"] = input
         if output is not None:
-            self._ingest["units"][key]["output"] = output
+            request._ingest["units"][key]["output"] = output
 
-    def _compute_usage(self, response_dict: 'dict[str, Any]', streaming_candidates_characters: Optional[int] = None) -> None:
-        usage = response_dict.get("usage_metadata", {})
-        input = usage.get("prompt_token_count", 0)
+    usage = response_dict.get("usage_metadata", {})
+    input = usage.get("prompt_token_count", 0)
 
-        prompt_tokens_details: list[dict[str, Any]] = usage.get("prompt_tokens_details", [])
-        candidates_tokens_details: list[dict[str, Any]] = usage.get("candidates_tokens_details", [])
+    prompt_tokens_details: list[dict[str, Any]] = usage.get("prompt_tokens_details", [])
+    candidates_tokens_details: list[dict[str, Any]] = usage.get("candidates_tokens_details", [])
 
-        model: Optional[str] = self._get_model_name(response_dict)
-        if not model:
-            model = ""
-        
-        large_context = ""
+    if not model:
+        model = ""
+    
+    large_context = ""
 
-        if self._is_character_billing_model(model):
-            if input > 128000: 
-                large_context = "_large_context"
+    if is_character_billing_model(model):
+        if input > 128000: 
+            large_context = "_large_context"
 
-            # gemini 1.0 and 1.5 units are reported in characters, per second, per image, etc...
-            for details in prompt_tokens_details:
-                modality = details.get("modality", "")
-                if not modality:
-                    continue
+        # gemini 1.0 and 1.5 units are reported in characters, per second, per image, etc...
+        for details in prompt_tokens_details:
+            modality = details.get("modality", "")
+            if not modality:
+                continue
 
-                modality_token_count = details.get("token_count", 0)
-                if modality == "TEXT":
-                    input = self._prompt_character_count
-                    if input == 0:
-                        # back up calc if nothing was calculated from the prompt
-                        input = response_dict["usage_metadata"]["prompt_token_count"] * 4
+            modality_token_count = details.get("token_count", 0)
+            if modality == "TEXT":
+                input = prompt_character_count
+                if input == 0:
+                    # back up calc if nothing was calculated from the prompt
+                    input = response_dict["usage_metadata"]["prompt_token_count"] * 4
 
-                    output = 0
-                    if streaming_candidates_characters is None:
-                        for candidate in response_dict.get("candidates", []):
-                            parts = candidate.get("content", {}).get("parts", [])
-                            for part in parts:
-                                output += count_chars_skip_spaces(part.get("text", ""))
+                output = 0
+                if streaming_candidates_characters is None:
+                    for candidate in response_dict.get("candidates", []):
+                        parts = candidate.get("content", {}).get("parts", [])
+                        for part in parts:
+                            output += count_chars_skip_spaces(part.get("text", ""))
 
-                        if output == 0:
-                            # back up calc if no parts
-                            output = response_dict["usage_metadata"]["candidates_token_count"] * 4
-                    else:
-                        output = streaming_candidates_characters
-
-                    self._ingest["units"]["text"+large_context] = Units(input=input, output=output)
-
-                elif modality == "IMAGE":
-                    num_images = math.ceil(modality_token_count / 258)
-                    self.add_units("vision"+large_context, input=num_images)
-
-                elif modality == "VIDEO":
-                    video_seconds = math.ceil(modality_token_count / 285)
-                    self.add_units("video"+large_context, input=video_seconds)
-
-                elif modality == "AUDIO":
-                    audio_seconds = math.ceil(modality_token_count / 25)
-                    self.add_units("audio"+large_context, input=audio_seconds)
-
-            # No need to gover the candidates_tokens_details as all the character based 1.x models only output TEXT
-            # for details in candidates_tokens_details:
-
-        else:
-            if self._is_large_context_token_model(model, input):
-                large_context = "_large_context"
-
-            for details in prompt_tokens_details:
-                modality = details.get("modality", "")
-                if not modality:
-                    continue
-
-                modality_token_count = details.get("token_count", 0)
-                if modality == "IMAGE":
-                    self.add_units("vision", input=modality_token_count)
-                elif modality in ("VIDEO", "AUDIO", "TEXT"):
-                    self.add_units(modality.lower(), input=modality_token_count)
-            for details in candidates_tokens_details:
-                modality = details.get("modality", "")
-                if not modality:
-                    continue
-
-                modality_token_count = details.get("token_count", 0)
-                if modality in ("VIDEO", "AUDIO", "TEXT", "IMAGE"):
-                    self.add_units(modality.lower(), output=modality_token_count)
-
-        if not self._ingest["units"]:
-            input = usage.get("prompt_token_count", 0)
-            output = usage.get("candidates_token_count", 0) * 4
-            
-            if self._is_character_billing_model(model):
-                if self._prompt_character_count > 0:
-                    input = self._prompt_character_count
+                    if output == 0:
+                        # back up calc if no parts
+                        output = response_dict["usage_metadata"]["candidates_token_count"] * 4
                 else:
-                    input *= 4
+                    output = streaming_candidates_characters
 
-                # if no units were added, add a default unit and assume 4 characters per token
-                self._ingest["units"]["text"+large_context] = Units(input=input, output=output)
+                request._ingest["units"]["text"+large_context] = Units(input=input, output=output)
+
+            elif modality == "IMAGE":
+                num_images = math.ceil(modality_token_count / 258)
+                add_units(request, "vision"+large_context, input=num_images)
+
+            elif modality == "VIDEO":
+                video_seconds = math.ceil(modality_token_count / 285)
+                add_units(request, "video"+large_context, input=video_seconds)
+
+            elif modality == "AUDIO":
+                audio_seconds = math.ceil(modality_token_count / 25)
+                add_units(request, "audio"+large_context, input=audio_seconds)
+
+        # No need to gover the candidates_tokens_details as all the character based 1.x models only output TEXT
+        # for details in candidates_tokens_details:
+
+    else:
+        # thinking tokens introduced in 2.5 after the transition to token based billing
+        thinking_token_count = usage.get("thoughts_token_count", 0)
+
+        if is_large_context_token_model(model, input):
+            large_context = "_large_context"
+
+        for details in prompt_tokens_details:
+            modality = details.get("modality", "")
+            if not modality:
+                continue
+
+            modality_token_count = details.get("token_count", 0)
+            if modality == "IMAGE":
+                add_units(request, "vision"+large_context, input=modality_token_count)
+            elif modality in ("VIDEO", "AUDIO", "TEXT"):
+                add_units(request, modality.lower()+large_context, input=modality_token_count)
+        for details in candidates_tokens_details:
+            modality = details.get("modality", "")
+            if not modality:
+                continue
+
+            modality_token_count = details.get("token_count", 0)
+            if modality in ("VIDEO", "AUDIO", "TEXT", "IMAGE"):
+                add_units(request, modality.lower()+large_context, output=modality_token_count)
+
+        if thinking_token_count > 0:
+            add_units(request, "reasoning"+large_context, output=thinking_token_count)
+
+    if not request._ingest["units"]:
+        input = usage.get("prompt_token_count", 0)
+        output = usage.get("candidates_token_count", 0) * 4
+        
+        if is_character_billing_model(model):
+            if prompt_character_count > 0:
+                input = prompt_character_count
             else:
-                # if no units were added, add a default unit
-                self._ingest["units"]["text"] = Units(input=input, output=output)
+                input *= 4
+
+            # if no units were added, add a default unit and assume 4 characters per token
+            request._ingest["units"]["text"+large_context] = Units(input=input, output=output)
+        else:
+            # if no units were added, add a default unit
+            request._ingest["units"]["text"] = Units(input=input, output=output)
