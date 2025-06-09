@@ -96,7 +96,7 @@ class _GoogleVertexRequest(_ProviderRequest):
             streaming_type=_StreamingType.generator,
             )
         self._prompt_character_count = 0
-        self._candiates_character_count = 0
+        self._candidates_character_count = 0
         self._model_name: Optional[str] = None
 
     @override
@@ -227,11 +227,11 @@ class _GoogleVertexRequest(_ProviderRequest):
         for candidate in response_dict.get("candidates", []):
             parts = candidate.get("content", {}).get("parts", [])
             for part in parts:
-                self._candiates_character_count += count_chars_skip_spaces(part.get("text", ""))
+                self._candidates_character_count += count_chars_skip_spaces(part.get("text", ""))
 
         usage = response_dict.get("usage_metadata", {})
         if usage and "prompt_token_count" in usage and "candidates_token_count" in usage:
-            self._compute_usage(response_dict, streaming_candidates_characters=self._candiates_character_count)
+            self._compute_usage(response_dict, streaming_candidates_characters=self._candidates_character_count)
             ingest = True
 
         return _ChunkResult(send_chunk_to_caller=True, ingest=ingest)
@@ -239,7 +239,11 @@ class _GoogleVertexRequest(_ProviderRequest):
     @staticmethod
     def _is_character_billing_model(model: str) -> bool:
         return model.startswith("gemini-1.")
-    
+
+    @staticmethod
+    def _is_large_context_token_model(model: str, input_tokens: int) -> bool:
+        return model.startswith("gemini-2.5-pro") and input_tokens > 200_000
+
     @override
     def process_synchronous_response(
         self,
@@ -282,10 +286,12 @@ class _GoogleVertexRequest(_ProviderRequest):
         if not model:
             model = ""
         
-        # for character billing only
-        large_context = "" if input < 128000 else "_large_context"
+        large_context = ""
 
         if self._is_character_billing_model(model):
+            if input > 128000: 
+                large_context = "_large_context"
+
             # gemini 1.0 and 1.5 units are reported in characters, per second, per image, etc...
             for details in prompt_tokens_details:
                 modality = details.get("modality", "")
@@ -326,7 +332,13 @@ class _GoogleVertexRequest(_ProviderRequest):
                     audio_seconds = math.ceil(modality_token_count / 25)
                     self.add_units("audio"+large_context, input=audio_seconds)
 
+            # No need to gover the candidates_tokens_details as all the character based 1.x models only output TEXT
+            # for details in candidates_tokens_details:
+
         else:
+            if self._is_large_context_token_model(model, input):
+                large_context = "_large_context"
+
             for details in prompt_tokens_details:
                 modality = details.get("modality", "")
                 if not modality:

@@ -7,12 +7,11 @@ from typing_extensions import override
 from wrapt import ObjectProxy, wrap_function_wrapper  # type: ignore
 
 from payi.lib.helpers import PayiCategories, PayiHeaderNames, payi_aws_bedrock_url
-from payi.types.ingest_units_params import Units, IngestUnitsParams
+from payi.types.ingest_units_params import Units
 from payi.types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
 from .instrument import _ChunkResult, _IsStreaming, _StreamingType, _ProviderRequest, _PayiInstrumentor
 
-_supported_model_prefixes = ["meta.llama3", "anthropic.", "amazon.nova-pro", "amazon.nova-lite", "amazon.nova-micro"]
 
 class BedrockInstrumentor:
     _instrumentor: _PayiInstrumentor
@@ -100,15 +99,13 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
     def __init__(
         self,
         response: Any,
-        instrumentor: _PayiInstrumentor,
-        ingest: IngestUnitsParams,
+        request: '_BedrockInvokeProviderRequest',
         log_prompt_and_response: bool
         ) -> None:
 
         super().__init__(response) # type: ignore
         self._response = response
-        self._instrumentor = instrumentor
-        self._ingest = ingest
+        self._request = request
         self._log_prompt_and_response = log_prompt_and_response
 
     def read(self, amt: Any =None) -> Any: # type: ignore
@@ -116,51 +113,50 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
         data: bytes = self.__wrapped__.read(amt) # type: ignore
         response = json.loads(data) # type: ignore
 
-        resource = self._ingest["resource"]
+        ingest = self._request._ingest
+
+        resource = ingest["resource"]
         if not resource:
             return
         
         input: int = 0
         output: int = 0
-        units: dict[str, Units] = self._ingest["units"]
+        units: dict[str, Units] = ingest["units"]
 
-        if resource.startswith("meta.llama3"):
+        if self._request._is_anthropic:
+            from .AnthropicInstrumentor import anthropic_process_synchronous_response
+
+            anthropic_process_synchronous_response(
+                request=self._request, 
+                response=response,
+                log_prompt_and_response=False, # will evaluate logging later
+                assign_id=False)
+
+        elif resource.startswith("meta.llama3"):
             input = response['prompt_token_count']
             output = response['generation_token_count']
-        elif resource.startswith("anthropic."):
-            usage = response['usage']
-            input = usage['input_tokens']
-            output = usage['output_tokens']
-        units["text"] = Units(input=input, output=output)
+            units["text"] = Units(input=input, output=output)
 
         if self._log_prompt_and_response:
-            self._ingest["provider_response_json"] = data.decode('utf-8') # type: ignore
+            ingest["provider_response_json"] = data.decode('utf-8') # type: ignore
             
-        self._instrumentor._ingest_units(self._ingest)
+        self._request._instrumentor._ingest_units(ingest)
 
         return data # type: ignore
-
-def _is_supported_model(modelId: str) -> bool:
-    return any(prefix in modelId for prefix in _supported_model_prefixes)
 
 def wrap_invoke(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
     @wraps(wrapped)
     def invoke_wrapper(*args: Any, **kwargs: 'dict[str, Any]') -> Any:
         modelId:str = kwargs.get("modelId", "") # type: ignore
 
-        if _is_supported_model(modelId):
-            instrumentor._logger.debug(f"bedrock invoke wrapper, modelId: {modelId}")
-            return instrumentor.invoke_wrapper(
-                _BedrockInvokeSynchronousProviderRequest(instrumentor=instrumentor),
-                _IsStreaming.false,
-                wrapped,
-                None,
-                args,
-                kwargs,
-            )   
-
-        instrumentor._logger.debug(f"bedrock invoke wrapper, unsupported modelId: {modelId}")
-        return wrapped(*args, **kwargs)
+        return instrumentor.invoke_wrapper(
+            _BedrockInvokeProviderRequest(instrumentor=instrumentor, model_id=modelId),
+            _IsStreaming.false,
+            wrapped,
+            None,
+            args,
+            kwargs,
+        )   
     
     return invoke_wrapper
 
@@ -169,18 +165,15 @@ def wrap_invoke_stream(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
     def invoke_wrapper(*args: Any, **kwargs: Any) -> Any:
         modelId: str = kwargs.get("modelId", "") # type: ignore
 
-        if _is_supported_model(modelId):
-            instrumentor._logger.debug(f"bedrock invoke stream wrapper, modelId: {modelId}")
-            return instrumentor.invoke_wrapper(
-                _BedrockInvokeStreamingProviderRequest(instrumentor=instrumentor, model_id=modelId),
-                _IsStreaming.true,
-                wrapped,
-                None,
-                args,
-                kwargs,
-            )
-        instrumentor._logger.debug(f"bedrock invoke stream wrapper, unsupported modelId: {modelId}")
-        return wrapped(*args, **kwargs)
+        instrumentor._logger.debug(f"bedrock invoke stream wrapper, modelId: {modelId}")
+        return instrumentor.invoke_wrapper(
+            _BedrockInvokeProviderRequest(instrumentor=instrumentor, model_id=modelId),
+            _IsStreaming.true,
+            wrapped,
+            None,
+            args,
+            kwargs,
+        )
 
     return invoke_wrapper
 
@@ -189,18 +182,15 @@ def wrap_converse(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
     def invoke_wrapper(*args: Any, **kwargs: 'dict[str, Any]') -> Any:
         modelId:str = kwargs.get("modelId", "") # type: ignore
 
-        if _is_supported_model(modelId):
-            instrumentor._logger.debug(f"bedrock converse wrapper, modelId: {modelId}")
-            return instrumentor.invoke_wrapper(
-                _BedrockConverseSynchronousProviderRequest(instrumentor=instrumentor),
-                _IsStreaming.false,
-                wrapped,
-                None,
-                args,
-                kwargs,
+        instrumentor._logger.debug(f"bedrock converse wrapper, modelId: {modelId}")
+        return instrumentor.invoke_wrapper(
+            _BedrockConverseProviderRequest(instrumentor=instrumentor),
+            _IsStreaming.false,
+            wrapped,
+            None,
+            args,
+            kwargs,
         )
-        instrumentor._logger.debug(f"bedrock converse wrapper, unsupported modelId: {modelId}")
-        return wrapped(*args, **kwargs)
     
     return invoke_wrapper
 
@@ -209,18 +199,15 @@ def wrap_converse_stream(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
     def invoke_wrapper(*args: Any, **kwargs: Any) -> Any:
         modelId: str = kwargs.get("modelId", "") # type: ignore
 
-        if _is_supported_model(modelId):
-            instrumentor._logger.debug(f"bedrock converse stream wrapper, modelId: {modelId}")
-            return instrumentor.invoke_wrapper(
-                _BedrockConverseStreamingProviderRequest(instrumentor=instrumentor),
-                _IsStreaming.true,
-                wrapped,
-                None,
-                args,
-                kwargs,
-            )
-        instrumentor._logger.debug(f"bedrock converse stream wrapper, unsupported modelId: {modelId}")
-        return wrapped(*args, **kwargs)
+        instrumentor._logger.debug(f"bedrock converse stream wrapper, modelId: {modelId}")
+        return instrumentor.invoke_wrapper(
+            _BedrockConverseProviderRequest(instrumentor=instrumentor),
+            _IsStreaming.true,
+            wrapped,
+            None,
+            args,
+            kwargs,
+        )
 
     return invoke_wrapper
 
@@ -238,6 +225,10 @@ class _BedrockProviderRequest(_ProviderRequest):
         kwargs.pop("extra_headers", None)
         self._ingest["resource"] = kwargs.get("modelId", "")
         return True
+
+    @override
+    def process_initial_stream_response(self, response: Any) -> None:
+        self._ingest["provider_response_id"] = response.get("ResponseMetadata", {}).get("RequestId", None)
 
     @override
     def process_exception(self, exception: Exception, kwargs: Any, ) -> bool:
@@ -264,10 +255,27 @@ class _BedrockProviderRequest(_ProviderRequest):
             self._instrumentor._logger.debug(f"Error processing exception: {e}")
             return False
 
-class _BedrockInvokeStreamingProviderRequest(_BedrockProviderRequest):
+class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, model_id: str):
         super().__init__(instrumentor=instrumentor)
-        self._is_anthropic: bool = model_id.startswith("anthropic.")
+        self._is_anthropic: bool = 'anthropic' in model_id
+
+    @override
+    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
+        from .AnthropicInstrumentor import anthropic_has_image_and_get_texts
+
+        super().process_request(instance, extra_headers, args, kwargs)
+    
+        if self._is_anthropic:
+            try:
+                body = json.loads( kwargs.get("body", ""))
+                messages = body.get("messages", {})
+                if messages:
+                    anthropic_has_image_and_get_texts(self, messages)
+            except Exception as e:
+                self._instrumentor._logger.debug(f"Bedrock invoke error processing request body: {e}")
+
+        return True
 
     @override
     def process_chunk(self, chunk: Any) -> _ChunkResult:
@@ -277,32 +285,9 @@ class _BedrockInvokeStreamingProviderRequest(_BedrockProviderRequest):
             return self.process_invoke_streaming_llama_chunk(chunk)
 
     def process_invoke_streaming_anthropic_chunk(self, chunk: str) -> _ChunkResult:
-        ingest = False
-        chunk_dict =  json.loads(chunk)
-        type = chunk_dict.get("type", "")
-
-        if type == "message_start":
-            usage = chunk_dict['message']['usage']
-            units = self._ingest["units"]
-
-            input = _PayiInstrumentor.update_for_vision(usage['input_tokens'], units, self._estimated_prompt_tokens)
-
-            units["text"] = Units(input=input, output=0)
-
-            text_cache_write: int = usage.get("cache_creation_input_tokens", 0)
-            if text_cache_write > 0:
-                units["text_cache_write"] = Units(input=text_cache_write, output=0)
-
-            text_cache_read: int = usage.get("cache_read_input_tokens", 0)
-            if text_cache_read > 0:
-                units["text_cache_read"] = Units(input=text_cache_read, output=0)
-
-        elif type == "message_delta":
-            usage = chunk_dict['usage']
-            self._ingest["units"]["text"]["output"] = usage['output_tokens']
-            ingest = True
-
-        return _ChunkResult(send_chunk_to_caller=True, ingest=ingest)    
+        from .AnthropicInstrumentor import anthropic_process_chunk
+        
+        return anthropic_process_chunk(self, json.loads(chunk), assign_id=False)
 
     def process_invoke_streaming_llama_chunk(self, chunk: str) -> _ChunkResult:
         ingest = False
@@ -316,7 +301,6 @@ class _BedrockInvokeStreamingProviderRequest(_BedrockProviderRequest):
 
         return _ChunkResult(send_chunk_to_caller=True, ingest=ingest)    
 
-class _BedrockInvokeSynchronousProviderRequest(_BedrockProviderRequest):
     @override
     def process_synchronous_response(
         self,
@@ -336,13 +320,12 @@ class _BedrockInvokeSynchronousProviderRequest(_BedrockProviderRequest):
 
         response["body"] = InvokeResponseWrapper(
             response=response["body"],
-            instrumentor=self._instrumentor,
-            ingest=self._ingest,
+            request=self,
             log_prompt_and_response=log_prompt_and_response)
 
         return response
 
-class _BedrockConverseSynchronousProviderRequest(_BedrockProviderRequest):
+class _BedrockConverseProviderRequest(_BedrockProviderRequest):
     @override
     def process_synchronous_response(
         self,
@@ -374,7 +357,6 @@ class _BedrockConverseSynchronousProviderRequest(_BedrockProviderRequest):
 
         return None    
 
-class _BedrockConverseStreamingProviderRequest(_BedrockProviderRequest):
     @override
     def process_chunk(self, chunk: 'dict[str, Any]') -> _ChunkResult:
         ingest = False

@@ -1,3 +1,4 @@
+import json
 from typing import Any, Union, Optional, Sequence
 from typing_extensions import override
 
@@ -134,61 +135,16 @@ class _AnthropicProviderRequest(_ProviderRequest):
 
     @override
     def process_chunk(self, chunk: Any) -> _ChunkResult:
-        ingest = False
-        if chunk.type == "message_start":
-            self._ingest["provider_response_id"] = chunk.message.id
-
-            usage = chunk.message.usage
-            units = self._ingest["units"]
-
-            input = _PayiInstrumentor.update_for_vision(usage.input_tokens, units, self._estimated_prompt_tokens)
-
-            units["text"] = Units(input=input, output=0)
-
-            if hasattr(usage, "cache_creation_input_tokens") and usage.cache_creation_input_tokens > 0:
-                text_cache_write = usage.cache_creation_input_tokens
-                units["text_cache_write"] = Units(input=text_cache_write, output=0)
-
-            if hasattr(usage, "cache_read_input_tokens") and usage.cache_read_input_tokens > 0:
-                text_cache_read = usage.cache_read_input_tokens
-                units["text_cache_read"] = Units(input=text_cache_read, output=0)
-
-        elif chunk.type == "message_delta":
-            usage = chunk.usage
-            ingest = True
-
-            # Web search will return an updated input tokens value at the end of streaming
-            if usage.input_tokens > 0:
-                self._ingest["units"]["text"]["input"] = usage.input_tokens
-
-            self._ingest["units"]["text"]["output"] = usage.output_tokens
-        
-        return _ChunkResult(send_chunk_to_caller=True, ingest=ingest)
+        return anthropic_process_chunk(self, chunk.to_dict(), assign_id=True)
 
     @override
     def process_synchronous_response(self, response: Any, log_prompt_and_response: bool, kwargs: Any) -> Any:
-        usage = response.usage
-        input = usage.input_tokens
-        output = usage.output_tokens
-        units: dict[str, Units] = self._ingest["units"]
+        anthropic_process_synchronous_response(
+            request=self,
+            response=response.to_dict(),
+            log_prompt_and_response=log_prompt_and_response,
+            assign_id=True)
 
-        if hasattr(usage, "cache_creation_input_tokens") and usage.cache_creation_input_tokens > 0:
-            text_cache_write = usage.cache_creation_input_tokens
-            units["text_cache_write"] = Units(input=text_cache_write, output=0)
-
-        if hasattr(usage, "cache_read_input_tokens") and usage.cache_read_input_tokens > 0:
-            text_cache_read = usage.cache_read_input_tokens
-            units["text_cache_read"] = Units(input=text_cache_read, output=0)
-
-        input = _PayiInstrumentor.update_for_vision(input, units, self._estimated_prompt_tokens)
-
-        units["text"] = Units(input=input, output=output)
-
-        if log_prompt_and_response:
-            self._ingest["provider_response_json"] = response.to_json()
-        
-        self._ingest["provider_response_id"] = response.id
-        
         return None
 
     @override
@@ -197,22 +153,7 @@ class _AnthropicProviderRequest(_ProviderRequest):
 
         messages = kwargs.get("messages")
         if messages:
-            estimated_token_count = 0 
-            has_image = False
-
-            try:
-                enc = tiktoken.get_encoding("cl100k_base")
-                for message in messages:
-                    msg_has_image, msg_prompt_tokens = has_image_and_get_texts(enc, message.get('content', ''))
-                    if msg_has_image:
-                        has_image = True
-                        estimated_token_count += msg_prompt_tokens
-                
-                if has_image and estimated_token_count > 0:
-                    self._estimated_prompt_tokens = estimated_token_count
-     
-            except Exception:
-                self._instrumentor._logger.warning("Error getting encoding for cl100k_base")
+            anthropic_has_image_and_get_texts(self, messages)
 
         return True
 
@@ -248,6 +189,88 @@ class _AnthropicProviderRequest(_ProviderRequest):
 
         return True
 
+def anthropic_process_synchronous_response(request: _ProviderRequest, response: 'dict[str, Any]', log_prompt_and_response: bool, assign_id: bool) -> Any:
+    usage = response['usage']
+    input = usage['input_tokens']
+    output = usage['output_tokens']
+    units: dict[str, Units] = request._ingest["units"]
+
+    cache_creation_input_tokens = usage.get("cache_creation_input_tokens", 0)
+    if cache_creation_input_tokens > 0:
+        units["text_cache_write"] = Units(input=cache_creation_input_tokens, output=0)
+
+    cache_read_input_tokens = usage.get("cache_read_input_tokens", 0)
+    if cache_read_input_tokens > 0:
+        units["text_cache_read"] = Units(input=cache_read_input_tokens, output=0)
+
+    input = _PayiInstrumentor.update_for_vision(input, units, request._estimated_prompt_tokens)
+
+    units["text"] = Units(input=input, output=output)
+
+    if log_prompt_and_response:
+        request._ingest["provider_response_json"] = json.dumps(response)
+    
+    if assign_id:
+        request._ingest["provider_response_id"] = response.get('id', None)
+    
+    return None
+
+def anthropic_process_chunk(request: _ProviderRequest, chunk: 'dict[str, Any]', assign_id: bool) -> _ChunkResult:    
+    ingest = False
+    type = chunk.get('type', "")
+
+    if type == "message_start":
+        message = chunk['message']
+
+        if assign_id:
+            request._ingest["provider_response_id"] = message.get('id', None)
+
+        usage = message['usage']
+        units = request._ingest["units"]
+
+        input = _PayiInstrumentor.update_for_vision(usage['input_tokens'], units, request._estimated_prompt_tokens)
+
+        units["text"] = Units(input=input, output=0)
+
+        text_cache_write: int = usage.get("cache_creation_input_tokens", 0)
+        if text_cache_write > 0:
+            units["text_cache_write"] = Units(input=text_cache_write, output=0)
+
+        text_cache_read: int = usage.get("cache_read_input_tokens", 0)
+        if text_cache_read > 0:
+            units["text_cache_read"] = Units(input=text_cache_read, output=0)
+
+    elif type == "message_delta":
+        usage = chunk.get('usage', {})
+        ingest = True
+
+        # Web search will return an updated input tokens value at the end of streaming
+        input_tokens = usage.get('input_tokens', None)
+        if input_tokens is not None:
+            request._ingest["units"]["text"]["input"] = input_tokens
+
+        request._ingest["units"]["text"]["output"] = usage.get('output_tokens', 0)
+    
+    return _ChunkResult(send_chunk_to_caller=True, ingest=ingest)
+
+
+def anthropic_has_image_and_get_texts(request: _ProviderRequest, messages: Any) -> None:
+    estimated_token_count = 0 
+    has_image = False
+
+    try:
+        enc = tiktoken.get_encoding("cl100k_base")
+        for message in messages:
+            msg_has_image, msg_prompt_tokens = has_image_and_get_texts(enc, message.get('content', ''))
+            if msg_has_image:
+                has_image = True
+                estimated_token_count += msg_prompt_tokens
+        
+        if has_image and estimated_token_count > 0:
+            request._estimated_prompt_tokens = estimated_token_count
+
+    except Exception:
+        request._instrumentor._logger.warning("Error getting encoding for cl100k_base")
 
 def has_image_and_get_texts(encoding: tiktoken.Encoding, content: Union[str, 'list[Any]']) -> 'tuple[bool, int]':
     if isinstance(content, list): # type: ignore

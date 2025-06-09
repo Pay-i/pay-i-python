@@ -55,15 +55,24 @@ class _ProviderRequest:
     def process_request_prompt(self, prompt: 'dict[str, Any]', args: Sequence[Any], kwargs: 'dict[str, Any]') -> None:
         ...
     
+    def process_initial_stream_response(self, response: Any) -> None:
+        pass
+
+    @property
     def is_bedrock(self) -> bool:
         return self._category == PayiCategories.aws_bedrock
 
+    @property
     def is_vertex(self) -> bool:
         return self._category == PayiCategories.google_vertex 
        
     def process_exception(self, exception: Exception, kwargs: Any, ) -> bool: # noqa: ARG002
         self.exception_to_semantic_failure(exception)
         return True
+    
+    @property
+    def supports_extra_headers(self) -> bool:
+        return not self.is_bedrock and not self.is_vertex
     
     @property
     def streaming_type(self) -> '_StreamingType':
@@ -806,8 +815,7 @@ class _PayiInstrumentor:
         context = self.get_context()
 
         if not context:
-            if request.is_bedrock():
-                # boto3 doesn't allow extra_headers
+            if not request.supports_extra_headers:
                 kwargs.pop("extra_headers", None)
 
             self._logger.debug(f"invoke_wrapper: no instrumentation context, exit early")
@@ -822,8 +830,7 @@ class _PayiInstrumentor:
         self._update_extra_headers(context, extra_headers)
 
         if context.get("proxy", self._proxy_default):
-            if request.is_bedrock():
-                # boto3 doesn't allow extra_headers
+            if not request.supports_extra_headers:
                 kwargs.pop("extra_headers", None)
             elif "extra_headers" not in kwargs and extra_headers:
                 # assumes anthropic and openai clients
@@ -899,7 +906,7 @@ class _PayiInstrumentor:
                     request=request,
                 )
 
-                if request.is_bedrock():
+                if request.is_bedrock:
                     if "body" in response:
                         response["body"] = stream_result
                     else:
@@ -1084,9 +1091,10 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
 
         instrumentor._logger.debug(f"StreamIteratorWrapper: instance {instance}, category {request._category}")
 
+        request.process_initial_stream_response(response)
+
         bedrock_from_stream: bool = False
-        if request.is_bedrock():
-            request._ingest["provider_response_id"] = response["ResponseMetadata"]["RequestId"]
+        if request.is_bedrock:
             stream = response.get("stream", None)
 
             if stream:
@@ -1108,7 +1116,6 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
         self._request: _ProviderRequest = request
 
         self._first_token: bool = True
-        self._is_bedrock: bool = request.is_bedrock()
         self._bedrock_from_stream: bool = bedrock_from_stream
         self._ingested: bool = False
         self._iter_started: bool = False
@@ -1131,7 +1138,7 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
 
     def __iter__(self) -> Any:  
         self._iter_started = True
-        if self._is_bedrock:
+        if self._request.is_bedrock:
             # MUST reside in a separate function so that the yield statement (e.g. the generator) doesn't implicitly return its own iterator and overriding self
             self._instrumentor._logger.debug(f"StreamIteratorWrapper: bedrock __iter__")
             return self._iter_bedrock()
