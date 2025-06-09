@@ -66,6 +66,7 @@ class LimitsResource(SyncAPIResource):
         *,
         limit_name: str,
         max: float,
+        limit_id: Optional[str] | NotGiven = NOT_GIVEN,
         limit_tags: Optional[List[str]] | NotGiven = NOT_GIVEN,
         limit_type: Literal["block", "allow"] | NotGiven = NOT_GIVEN,
         threshold: Optional[float] | NotGiven = NOT_GIVEN,
@@ -94,6 +95,7 @@ class LimitsResource(SyncAPIResource):
                 {
                     "limit_name": limit_name,
                     "max": max,
+                    "limit_id": limit_id,
                     "limit_tags": limit_tags,
                     "limit_type": limit_type,
                     "threshold": threshold,
@@ -331,6 +333,7 @@ class AsyncLimitsResource(AsyncAPIResource):
         *,
         limit_name: str,
         max: float,
+        limit_id: Optional[str] | NotGiven = NOT_GIVEN,
         limit_tags: Optional[List[str]] | NotGiven = NOT_GIVEN,
         limit_type: Literal["block", "allow"] | NotGiven = NOT_GIVEN,
         threshold: Optional[float] | NotGiven = NOT_GIVEN,
@@ -359,6 +362,7 @@ class AsyncLimitsResource(AsyncAPIResource):
                 {
                     "limit_name": limit_name,
                     "max": max,
+                    "limit_id": limit_id,
                     "limit_tags": limit_tags,
                     "limit_type": limit_type,
                     "threshold": threshold,
