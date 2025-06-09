@@ -52,6 +52,13 @@ class TestIngest:
                         }
                     ],
                     "provider_request_json": "provider_request_json",
+                    "provider_request_reasoning_json": "provider_request_reasoning_json",
+                    "provider_response_function_calls": [
+                        {
+                            "name": "x",
+                            "arguments": "arguments",
+                        }
+                    ],
                     "provider_response_headers": [
                         {
                             "name": "x",
@@ -62,6 +69,7 @@ class TestIngest:
                     "provider_response_json": "string",
                     "provider_uri": "provider_uri",
                     "request_tags": ["string"],
+                    "time_to_first_completion_token_ms": 0,
                     "time_to_first_token_ms": 0,
                     "use_case_id": "use_case_id",
                     "use_case_name": "use_case_name",
@@ -126,6 +134,13 @@ class TestIngest:
                 }
             ],
             provider_request_json="provider_request_json",
+            provider_request_reasoning_json="provider_request_reasoning_json",
+            provider_response_function_calls=[
+                {
+                    "name": "x",
+                    "arguments": "arguments",
+                }
+            ],
             provider_response_headers=[
                 {
                     "name": "x",
@@ -135,6 +150,7 @@ class TestIngest:
             provider_response_id="provider_response_id",
             provider_response_json="string",
             provider_uri="provider_uri",
+            time_to_first_completion_token_ms=0,
             time_to_first_token_ms=0,
             use_case_properties={"foo": "string"},
             limit_ids=["limitId1", "limitId_2"],
@@ -216,6 +232,13 @@ class TestAsyncIngest:
                         }
                     ],
                     "provider_request_json": "provider_request_json",
+                    "provider_request_reasoning_json": "provider_request_reasoning_json",
+                    "provider_response_function_calls": [
+                        {
+                            "name": "x",
+                            "arguments": "arguments",
+                        }
+                    ],
                     "provider_response_headers": [
                         {
                             "name": "x",
@@ -226,6 +249,7 @@ class TestAsyncIngest:
                     "provider_response_json": "string",
                     "provider_uri": "provider_uri",
                     "request_tags": ["string"],
+                    "time_to_first_completion_token_ms": 0,
                     "time_to_first_token_ms": 0,
                     "use_case_id": "use_case_id",
                     "use_case_name": "use_case_name",
@@ -290,6 +314,13 @@ class TestAsyncIngest:
                 }
             ],
             provider_request_json="provider_request_json",
+            provider_request_reasoning_json="provider_request_reasoning_json",
+            provider_response_function_calls=[
+                {
+                    "name": "x",
+                    "arguments": "arguments",
+                }
+            ],
             provider_response_headers=[
                 {
                     "name": "x",
@@ -299,6 +330,7 @@ class TestAsyncIngest:
             provider_response_id="provider_response_id",
             provider_response_json="string",
             provider_uri="provider_uri",
+            time_to_first_completion_token_ms=0,
             time_to_first_token_ms=0,
             use_case_properties={"foo": "string"},
             limit_ids=["limitId1", "limitId_2"],

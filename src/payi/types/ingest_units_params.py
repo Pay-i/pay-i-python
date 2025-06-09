@@ -10,7 +10,7 @@ from .._utils import PropertyInfo
 from .shared_params.ingest_units import IngestUnits
 from .pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
-__all__ = ["IngestUnitsParams"]
+__all__ = ["IngestUnitsParams", "ProviderResponseFunctionCall"]
 
 
 class IngestUnitsParams(TypedDict, total=False):
@@ -34,6 +34,10 @@ class IngestUnitsParams(TypedDict, total=False):
 
     provider_request_json: Optional[str]
 
+    provider_request_reasoning_json: Optional[str]
+
+    provider_response_function_calls: Optional[Iterable[ProviderResponseFunctionCall]]
+
     provider_response_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]]
 
     provider_response_id: Optional[str]
@@ -41,6 +45,8 @@ class IngestUnitsParams(TypedDict, total=False):
     provider_response_json: Union[str, List[str], None]
 
     provider_uri: Optional[str]
+
+    time_to_first_completion_token_ms: Optional[int]
 
     time_to_first_token_ms: Optional[int]
 
@@ -66,6 +72,10 @@ class IngestUnitsParams(TypedDict, total=False):
 
     user_id: Annotated[Union[str, None], PropertyInfo(alias="xProxy-User-ID")]
 
+class ProviderResponseFunctionCall(TypedDict, total=False):
+    name: Required[str]
+
+    arguments: Optional[str]
 
 class Units(TypedDict, total=False):
     input: int

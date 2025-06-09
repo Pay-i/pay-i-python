@@ -108,6 +108,12 @@ Methods:
 - <code title="get /api/v1/categories/{category}/resources/{resource}">client.categories.resources.<a href="./src/payi/resources/categories/resources.py">list</a>(resource, \*, category, \*\*<a href="src/payi/types/categories/resource_list_params.py">params</a>) -> <a href="./src/payi/types/category_resource_response.py">SyncCursorPage[CategoryResourceResponse]</a></code>
 - <code title="delete /api/v1/categories/{category}/resources/{resource}/{resource_id}">client.categories.resources.<a href="./src/payi/resources/categories/resources.py">delete</a>(resource_id, \*, category, resource) -> <a href="./src/payi/types/category_resource_response.py">CategoryResourceResponse</a></code>
 
+## FixedCostResources
+
+Methods:
+
+- <code title="post /api/v1/categories/{category}/fixed_cost_resources/{resource}">client.categories.fixed_cost_resources.<a href="./src/payi/resources/categories/fixed_cost_resources.py">create</a>(resource, \*, category, \*\*<a href="src/payi/types/categories/fixed_cost_resource_create_params.py">params</a>) -> <a href="./src/payi/types/category_resource_response.py">CategoryResourceResponse</a></code>
+
 # Experiences
 
 Types:

@@ -10,7 +10,13 @@ from .._utils import PropertyInfo
 from .shared_params.ingest_units import IngestUnits
 from .pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
-__all__ = ["IngestEventParam"]
+__all__ = ["IngestEventParam", "ProviderResponseFunctionCall"]
+
+
+class ProviderResponseFunctionCall(TypedDict, total=False):
+    name: Required[str]
+
+    arguments: Optional[str]
 
 
 class IngestEventParam(TypedDict, total=False):
@@ -42,6 +48,10 @@ class IngestEventParam(TypedDict, total=False):
 
     provider_request_json: Optional[str]
 
+    provider_request_reasoning_json: Optional[str]
+
+    provider_response_function_calls: Optional[Iterable[ProviderResponseFunctionCall]]
+
     provider_response_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]]
 
     provider_response_id: Optional[str]
@@ -51,6 +61,8 @@ class IngestEventParam(TypedDict, total=False):
     provider_uri: Optional[str]
 
     request_tags: Optional[List[str]]
+
+    time_to_first_completion_token_ms: Optional[int]
 
     time_to_first_token_ms: Optional[int]
 

@@ -11,9 +11,11 @@ __all__ = ["LimitHistoryResponse", "LimitHistory"]
 
 
 class LimitHistory(BaseModel):
+    limit_id: Optional[str] = None
+
     limit_name: Optional[str] = None
 
-    limit_id: Optional[str] = None
+    totals: TotalCostData
 
     limit_reset_timestamp: Optional[datetime] = None
 
@@ -22,8 +24,6 @@ class LimitHistory(BaseModel):
     limit_type: Optional[Literal["block", "allow"]] = None
 
     max: Optional[float] = None
-
-    totals: Optional[TotalCostData] = None
 
 
 class LimitHistoryResponse(BaseModel):
