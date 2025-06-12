@@ -94,6 +94,7 @@ class _GoogleVertexRequest(_ProviderRequest):
             instrumentor=instrumentor,
             category=PayiCategories.google_vertex,
             streaming_type=_StreamingType.generator,
+            is_google_vertex_or_genai_client=True,
             )
         self._prompt_character_count = 0
         self._candidates_character_count = 0
