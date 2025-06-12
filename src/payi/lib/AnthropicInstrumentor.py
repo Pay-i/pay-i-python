@@ -19,6 +19,12 @@ class AnthropicInstrumentor:
         return isinstance(instance._client, (AsyncAnthropicVertex, AnthropicVertex))
 
     @staticmethod
+    def is_bedrock(instance: Any) -> bool:
+        from anthropic import AnthropicBedrock, AsyncAnthropicBedrock  # type: ignore # noqa: I001
+
+        return isinstance(instance._client, (AsyncAnthropicBedrock, AnthropicBedrock))
+
+    @staticmethod
     def instrument(instrumentor: _PayiInstrumentor) -> None:
         try:
             import anthropic  # type: ignore #  noqa: F401  I001
@@ -126,10 +132,20 @@ async def astream_messages_wrapper(
 
 class _AnthropicProviderRequest(_ProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, streaming_type: _StreamingType, instance: Any = None) -> None:
-        self._vertex: bool = AnthropicInstrumentor.is_vertex(instance)
+        self._is_vertex: bool = AnthropicInstrumentor.is_vertex(instance)
+        self._is_bedrock: bool = AnthropicInstrumentor.is_bedrock(instance)
+
+        category: str = ""
+        if self._is_vertex:
+            category = PayiCategories.google_vertex
+        elif self._is_bedrock:
+            category = PayiCategories.aws_bedrock
+        else:
+            category = PayiCategories.anthropic
+
         super().__init__(
             instrumentor=instrumentor,
-            category=PayiCategories.google_vertex if self._vertex else PayiCategories.anthropic,
+            category=category,
             streaming_type=streaming_type,
             )
 
@@ -149,7 +165,7 @@ class _AnthropicProviderRequest(_ProviderRequest):
 
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
-        self._ingest["resource"] = ("anthropic." if self._vertex else "") + kwargs.get("model", "")
+        self._ingest["resource"] = ("anthropic." if self._is_vertex else "") + kwargs.get("model", "")
 
         messages = kwargs.get("messages")
         if messages:

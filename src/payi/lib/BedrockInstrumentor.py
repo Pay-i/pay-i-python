@@ -217,6 +217,7 @@ class _BedrockProviderRequest(_ProviderRequest):
             instrumentor=instrumentor,
             category=PayiCategories.aws_bedrock,
             streaming_type=_StreamingType.iterator,
+            is_aws_client=True,
             )
 
     @override
