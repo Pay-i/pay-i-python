@@ -35,12 +35,20 @@ class _ChunkResult:
     ingest: bool = False
     
 class _ProviderRequest:
-    def __init__(self, instrumentor: '_PayiInstrumentor', category: str, streaming_type: '_StreamingType'):
+    def __init__(
+            self, instrumentor: '_PayiInstrumentor',
+            category: str,
+            streaming_type: '_StreamingType',
+            is_aws_client: Optional[bool] = None,
+            is_google_vertex_or_genai_client: Optional[bool] = None,
+            ) -> None:
         self._instrumentor: '_PayiInstrumentor' = instrumentor
         self._estimated_prompt_tokens: Optional[int] = None
         self._category: str = category
         self._ingest: IngestUnitsParams = { "category": category, "units": {} } # type: ignore
         self._streaming_type: '_StreamingType' = streaming_type
+        self._is_aws_client: Optional[bool] = is_aws_client
+        self._is_google_vertex_or_genai_client: Optional[bool] = is_google_vertex_or_genai_client
 
     def process_chunk(self, _chunk: Any) -> _ChunkResult:
         return _ChunkResult(send_chunk_to_caller=True)
@@ -59,20 +67,20 @@ class _ProviderRequest:
         pass
 
     @property
-    def is_bedrock(self) -> bool:
-        return self._category == PayiCategories.aws_bedrock
+    def is_aws_client(self) -> bool:
+        return self._is_aws_client if self._is_aws_client is not None else False
 
     @property
-    def is_vertex(self) -> bool:
-        return self._category == PayiCategories.google_vertex 
-       
+    def is_google_vertex_or_genai_client(self) -> bool:
+        return self._is_google_vertex_or_genai_client if self._is_google_vertex_or_genai_client is not None else False
+
     def process_exception(self, exception: Exception, kwargs: Any, ) -> bool: # noqa: ARG002
         self.exception_to_semantic_failure(exception)
         return True
     
     @property
     def supports_extra_headers(self) -> bool:
-        return not self.is_bedrock and not self.is_vertex
+        return not self.is_aws_client and not self.is_google_vertex_or_genai_client
     
     @property
     def streaming_type(self) -> '_StreamingType':
@@ -286,6 +294,22 @@ class _PayiInstrumentor:
         except Exception as e:
             self._logger.error(f"Error instrumenting Google GenAi: {e}")
 
+    @staticmethod
+    def _create_logged_ingest_units(
+        ingest_units: IngestUnitsParams,
+    ) -> IngestUnitsParams:
+        # remove large and potentially sensitive data from the log
+        log_ingest_units: IngestUnitsParams = ingest_units.copy()
+        
+        log_ingest_units.pop('provider_request_json', None)
+        log_ingest_units.pop('provider_response_json', None)
+
+        # Pop system.stack_trace from properties if it exists
+        if 'properties' in log_ingest_units and isinstance(log_ingest_units['properties'], dict):
+            log_ingest_units['properties'].pop('system.stack_trace', None)
+
+        return log_ingest_units
+        
     def _process_ingest_units(self, ingest_units: IngestUnitsParams, log_data: 'dict[str, str]') -> bool:
         if int(ingest_units.get("http_status_code") or 0) < 400:
             units = ingest_units.get("units", {})
@@ -336,6 +360,9 @@ class _PayiInstrumentor:
             return None
 
         try:
+            if self._logger.isEnabledFor(logging.DEBUG):
+                self._logger.debug(f"_aingest_units: sending ({self._create_logged_ingest_units(ingest_units)})")
+
             if self._apayi:    
                 ingest_response = await self._apayi.ingest.units(**ingest_units)
             elif self._payi:
@@ -408,6 +435,9 @@ class _PayiInstrumentor:
 
         try:
             if self._payi:
+                if self._logger.isEnabledFor(logging.DEBUG):
+                    self._logger.debug(f"_ingest_units: sending ({self._create_logged_ingest_units(ingest_units)})")
+
                 ingest_response = self._payi.ingest.units(**ingest_units)
                 self._logger.debug(f"_ingest_units: success ({ingest_response})")
 
@@ -906,7 +936,7 @@ class _PayiInstrumentor:
                     request=request,
                 )
 
-                if request.is_bedrock:
+                if request.is_aws_client:
                     if "body" in response:
                         response["body"] = stream_result
                     else:
@@ -1094,7 +1124,7 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
         request.process_initial_stream_response(response)
 
         bedrock_from_stream: bool = False
-        if request.is_bedrock:
+        if request.is_aws_client:
             stream = response.get("stream", None)
 
             if stream:
@@ -1138,7 +1168,7 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
 
     def __iter__(self) -> Any:  
         self._iter_started = True
-        if self._request.is_bedrock:
+        if self._request.is_aws_client:
             # MUST reside in a separate function so that the yield statement (e.g. the generator) doesn't implicitly return its own iterator and overriding self
             self._instrumentor._logger.debug(f"StreamIteratorWrapper: bedrock __iter__")
             return self._iter_bedrock()
