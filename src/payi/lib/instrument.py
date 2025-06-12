@@ -294,6 +294,22 @@ class _PayiInstrumentor:
         except Exception as e:
             self._logger.error(f"Error instrumenting Google GenAi: {e}")
 
+    @staticmethod
+    def _create_logged_ingest_units(
+        ingest_units: IngestUnitsParams,
+    ) -> IngestUnitsParams:
+        # remove large and potentially sensitive data from the log
+        log_ingest_units: IngestUnitsParams = ingest_units.copy()
+        
+        log_ingest_units.pop('provider_request_json', None)
+        log_ingest_units.pop('provider_response_json', None)
+
+        # Pop system.stack_trace from properties if it exists
+        if 'properties' in log_ingest_units and isinstance(log_ingest_units['properties'], dict):
+            log_ingest_units['properties'].pop('system.stack_trace', None)
+
+        return log_ingest_units
+        
     def _process_ingest_units(self, ingest_units: IngestUnitsParams, log_data: 'dict[str, str]') -> bool:
         if int(ingest_units.get("http_status_code") or 0) < 400:
             units = ingest_units.get("units", {})
@@ -344,6 +360,9 @@ class _PayiInstrumentor:
             return None
 
         try:
+            if self._logger.isEnabledFor(logging.DEBUG):
+                self._logger.debug(f"_aingest_units: sending ({self._create_logged_ingest_units(ingest_units)})")
+
             if self._apayi:    
                 ingest_response = await self._apayi.ingest.units(**ingest_units)
             elif self._payi:
@@ -416,6 +435,9 @@ class _PayiInstrumentor:
 
         try:
             if self._payi:
+                if self._logger.isEnabledFor(logging.DEBUG):
+                    self._logger.debug(f"_ingest_units: sending ({self._create_logged_ingest_units(ingest_units)})")
+
                 ingest_response = self._payi.ingest.units(**ingest_units)
                 self._logger.debug(f"_ingest_units: success ({ingest_response})")
 
