@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.85 (2025-06-12)
+
+Full Changelog: [v0.1.0-alpha.84...v0.1.0-alpha.85](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.84...v0.1.0-alpha.85)
+
+### Features
+
+* AnthropicBedrock ([#320](https://github.com/Pay-i/pay-i-python/issues/320)) ([33b42e3](https://github.com/Pay-i/pay-i-python/commit/33b42e38d7ba3245e0633254b4401cf991937933))
+
 ## 0.1.0-alpha.84 (2025-06-09)
 
 Full Changelog: [v0.1.0-alpha.83...v0.1.0-alpha.84](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.83...v0.1.0-alpha.84)
