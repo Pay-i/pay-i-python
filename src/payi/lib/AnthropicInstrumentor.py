@@ -134,7 +134,7 @@ class _AnthropicProviderRequest(_ProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, streaming_type: _StreamingType, instance: Any = None) -> None:
         self._is_vertex: bool = AnthropicInstrumentor.is_vertex(instance)
         self._is_bedrock: bool = AnthropicInstrumentor.is_bedrock(instance)
-
+    
         category: str = ""
         if self._is_vertex:
             category = PayiCategories.google_vertex
@@ -142,6 +142,8 @@ class _AnthropicProviderRequest(_ProviderRequest):
             category = PayiCategories.aws_bedrock
         else:
             category = PayiCategories.anthropic
+
+        instrumentor._logger.debug(f"Anthropic messages instrumenting category {category}")
 
         super().__init__(
             instrumentor=instrumentor,
