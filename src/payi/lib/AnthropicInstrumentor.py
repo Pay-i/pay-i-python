@@ -169,6 +169,8 @@ class _AnthropicProviderRequest(_ProviderRequest):
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
         self._ingest["resource"] = ("anthropic." if self._is_vertex else "") + kwargs.get("model", "")
 
+        self._instrumentor._logger.debug(f"Processing anthropic request: model {self._ingest['resource']}, category {self._category}")
+
         messages = kwargs.get("messages")
         if messages:
             anthropic_has_image_and_get_texts(self, messages)
@@ -243,6 +245,11 @@ def anthropic_process_chunk(request: _ProviderRequest, chunk: 'dict[str, Any]', 
         if assign_id:
             request._ingest["provider_response_id"] = message.get('id', None)
 
+        model = message.get('model', None)
+        if model:
+            request._instrumentor._logger.debug(f"Anthropic streaming, reported model: {model}, instrumented model {request._ingest['resource']}")
+
+
         usage = message['usage']
         units = request._ingest["units"]
 
@@ -258,6 +265,8 @@ def anthropic_process_chunk(request: _ProviderRequest, chunk: 'dict[str, Any]', 
         if text_cache_read > 0:
             units["text_cache_read"] = Units(input=text_cache_read, output=0)
 
+        request._instrumentor._logger.debug(f"Anthropic streaming captured {input} input tokens, ")
+
     elif type == "message_delta":
         usage = chunk.get('usage', {})
         ingest = True
@@ -265,12 +274,16 @@ def anthropic_process_chunk(request: _ProviderRequest, chunk: 'dict[str, Any]', 
         # Web search will return an updated input tokens value at the end of streaming
         input_tokens = usage.get('input_tokens', None)
         if input_tokens is not None:
+            request._instrumentor._logger.debug(f"Anthropic streaming finished, updated input tokens: {input_tokens}")
             request._ingest["units"]["text"]["input"] = input_tokens
 
         request._ingest["units"]["text"]["output"] = usage.get('output_tokens', 0)
-    
-    return _ChunkResult(send_chunk_to_caller=True, ingest=ingest)
 
+        request._instrumentor._logger.debug(f"Anthropic streaming finished: output tokens {usage.get('output_tokens', 0)} ")
+    else:
+        request._instrumentor._logger.debug(f"Anthropic streaming chunk: {type}")
+        
+    return _ChunkResult(send_chunk_to_caller=True, ingest=ingest)
 
 def anthropic_has_image_and_get_texts(request: _ProviderRequest, messages: Any) -> None:
     estimated_token_count = 0 

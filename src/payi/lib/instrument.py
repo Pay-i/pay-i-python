@@ -16,7 +16,7 @@ from typing_extensions import deprecated
 import nest_asyncio  # type: ignore
 from wrapt import ObjectProxy  # type: ignore
 
-from payi import Payi, AsyncPayi
+from payi import Payi, AsyncPayi, __version__ as _payi_version
 from payi.types import IngestUnitsParams
 from payi.lib.helpers import PayiHeaderNames
 from payi.types.ingest_response import IngestResponse
@@ -181,6 +181,8 @@ class _PayiInstrumentor:
     ):
         global _g_logger
         self._logger: logging.Logger = logger if logger else _g_logger
+
+        self._logger.info(f"Pay-i instrumentor version: {_payi_version}")
 
         self._payi: Optional[Payi] = payi
         self._apayi: Optional[AsyncPayi] = apayi
