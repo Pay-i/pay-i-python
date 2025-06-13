@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.86 (2025-06-13)
+
+Full Changelog: [v0.1.0-alpha.85...v0.1.0-alpha.86](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.85...v0.1.0-alpha.86)
+
+### Bug Fixes
+
+* anthopic logging ([#322](https://github.com/Pay-i/pay-i-python/issues/322)) ([1af515b](https://github.com/Pay-i/pay-i-python/commit/1af515b9603058cf23b75e477fbb67e7acd405ad))
+
 ## 0.1.0-alpha.85 (2025-06-12)
 
 Full Changelog: [v0.1.0-alpha.84...v0.1.0-alpha.85](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.84...v0.1.0-alpha.85)
