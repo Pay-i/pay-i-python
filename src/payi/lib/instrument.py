@@ -4,14 +4,12 @@ import uuid
 import asyncio
 import inspect
 import logging
-import warnings
 import traceback
 from abc import abstractmethod
 from enum import Enum
 from typing import Any, Set, Union, Callable, Optional, Sequence, TypedDict
 from datetime import datetime, timezone
 from dataclasses import dataclass
-from typing_extensions import deprecated
 
 import nest_asyncio  # type: ignore
 from wrapt import ObjectProxy  # type: ignore
@@ -114,8 +112,6 @@ class PayiInstrumentConfig(TypedDict, total=False):
     proxy: bool
     global_instrumentation: bool
     limit_ids: Optional["list[str]"]
-    experience_name: Optional[str] = deprecated("experience_name is deprecated, use use_case_name instead") # type: ignore
-    experience_id: Optional[str] = deprecated("experience_id is deprecated, use use_case_id instead") # type: ignore
     use_case_name: Optional[str]
     use_case_id: Optional[str]
     use_case_version: Optional[int]
@@ -123,8 +119,6 @@ class PayiInstrumentConfig(TypedDict, total=False):
 
 class _Context(TypedDict, total=False):
     proxy: Optional[bool]
-    experience_name: Optional[str]
-    experience_id: Optional[str]
     use_case_name: Optional[str]
     use_case_id: Optional[str]
     use_case_version: Optional[int]
@@ -477,8 +471,6 @@ class _PayiInstrumentor:
         self,
         proxy: Optional[bool] = None,
         limit_ids: Optional["list[str]"] = None,
-        experience_name: Optional[str] = None,
-        experience_id: Optional[str] = None,
         use_case_name: Optional[str]= None,
         use_case_id: Optional[str]= None,
         use_case_version: Optional[int]= None,
@@ -496,28 +488,6 @@ class _PayiInstrumentor:
 
         parent_proxy = parent_context.get("proxy", self._proxy_default)
         context["proxy"] = proxy if proxy else parent_proxy
-
-        parent_experience_name = parent_context.get("experience_name", None)
-        parent_experience_id = parent_context.get("experience_id", None)
-
-        if experience_name is None:
-            # If no experience_name specified, use previous values
-            context["experience_name"] = parent_experience_name
-            context["experience_id"] = parent_experience_id
-        elif len(experience_name) == 0:
-            # Empty string explicitly blocks inheriting from the parent state
-            context["experience_name"] = None
-            context["experience_id"] = None
-        else:
-            # Check if experience_name is the same as the previous one
-            if experience_name == parent_experience_name:
-                # Same experience name, use previous ID unless new one specified
-                context["experience_name"] = experience_name
-                context["experience_id"] = experience_id if experience_id else parent_experience_id
-            else:
-                # Different experience name, use specified ID or generate one
-                context["experience_name"] = experience_name
-                context["experience_id"] = experience_id if experience_id else str(uuid.uuid4())
 
         parent_use_case_name = parent_context.get("use_case_name", None)
         parent_use_case_id = parent_context.get("use_case_id", None)
@@ -583,8 +553,6 @@ class _PayiInstrumentor:
         func: Any,
         proxy: Optional[bool],
         limit_ids: Optional["list[str]"],
-        experience_name: Optional[str],
-        experience_id: Optional[str],
         use_case_name: Optional[str],
         use_case_id: Optional[str],
         use_case_version: Optional[int],        
@@ -596,8 +564,6 @@ class _PayiInstrumentor:
             self._init_current_context(
                 proxy=proxy,
                 limit_ids=limit_ids,
-                experience_name=experience_name,
-                experience_id=experience_id,
                 use_case_name=use_case_name,
                 use_case_id=use_case_id,
                 use_case_version=use_case_version,
@@ -609,8 +575,6 @@ class _PayiInstrumentor:
         func: Any,
         proxy: Optional[bool],
         limit_ids: Optional["list[str]"],
-        experience_name: Optional[str],
-        experience_id: Optional[str],
         use_case_name: Optional[str],
         use_case_id: Optional[str],
         use_case_version: Optional[int],        
@@ -622,8 +586,6 @@ class _PayiInstrumentor:
             self._init_current_context(
                 proxy=proxy,
                 limit_ids=limit_ids,
-                experience_name=experience_name,
-                experience_id=experience_id,
                 use_case_name=use_case_name,
                 use_case_id=use_case_id,
                 use_case_version=use_case_version,
@@ -659,9 +621,6 @@ class _PayiInstrumentor:
         limit_ids = ingest_extra_headers.pop(PayiHeaderNames.limit_ids, None)
         request_tags = ingest_extra_headers.pop(PayiHeaderNames.request_tags, None)
 
-        experience_name = ingest_extra_headers.pop(PayiHeaderNames.experience_name, None)
-        experience_id = ingest_extra_headers.pop(PayiHeaderNames.experience_id, None)
-
         use_case_name = ingest_extra_headers.pop(PayiHeaderNames.use_case_name, None)
         use_case_id = ingest_extra_headers.pop(PayiHeaderNames.use_case_id, None)
         use_case_version = ingest_extra_headers.pop(PayiHeaderNames.use_case_version, None)
@@ -673,10 +632,6 @@ class _PayiInstrumentor:
             request._ingest["limit_ids"] = limit_ids.split(",")
         if request_tags:
             request._ingest["request_tags"] = request_tags.split(",")
-        if experience_name:
-            request._ingest["experience_name"] = experience_name
-        if experience_id:
-            request._ingest["experience_id"] = experience_id
         if use_case_name:
             request._ingest["use_case_name"] = use_case_name
         if use_case_id:
@@ -982,9 +937,6 @@ class _PayiInstrumentor:
     ) -> None:
         context_limit_ids: Optional[list[str]] = context.get("limit_ids")
 
-        context_experience_name: Optional[str] = context.get("experience_name")
-        context_experience_id: Optional[str] = context.get("experience_id")
-
         context_use_case_name: Optional[str] = context.get("use_case_name")
         context_use_case_id: Optional[str] = context.get("use_case_id")
         context_use_case_version: Optional[int] = context.get("use_case_version")
@@ -1042,20 +994,6 @@ class _PayiInstrumentor:
                 extra_headers[PayiHeaderNames.use_case_version] = str(context_use_case_version)
             if context_use_case_step is not None:
                 extra_headers[PayiHeaderNames.use_case_step] = str(context_use_case_step)
-
-        if PayiHeaderNames.experience_name in extra_headers:
-            headers_experience_name = extra_headers.get(PayiHeaderNames.experience_name, None)
-            if headers_experience_name is None or len(headers_experience_name) == 0:
-                # headers_experience_name is empty, remove all experience related headers
-                extra_headers.pop(PayiHeaderNames.experience_name, None)
-                extra_headers.pop(PayiHeaderNames.experience_id, None)
-            else:
-                # leave the value in extra_headers
-                ...
-        elif context_experience_name is not None:
-            extra_headers[PayiHeaderNames.experience_name] = context_experience_name
-            if context_experience_id is not None:
-                extra_headers[PayiHeaderNames.experience_id] = context_experience_id
 
         if PayiHeaderNames.request_tags not in extra_headers and context_request_tags:
             extra_headers[PayiHeaderNames.request_tags] = ",".join(context_request_tags)
@@ -1524,8 +1462,6 @@ def track(
                     func,
                     proxy,
                     limit_ids,
-                    None, # experience_name,
-                    None, #experience_id,
                     use_case_name,
                     use_case_id,
                     use_case_version,
@@ -1546,8 +1482,6 @@ def track(
                     func,
                     proxy,
                     limit_ids,
-                    None, # experience_name,
-                    None, # experience_id,
                     use_case_name,
                     use_case_id,
                     use_case_version,
@@ -1591,137 +1525,3 @@ def track_context(
     context["resource_scope"] = resource_scope
 
     return _TrackContext(context)
-
-@deprecated("@ingest() is deprecated. Use @track() instead")
-def ingest(
-    limit_ids: Optional["list[str]"] = None,
-    experience_name: Optional[str] = None,
-    experience_id: Optional[str] = None,
-    use_case_name: Optional[str] = None,
-    use_case_id: Optional[str] = None,
-    use_case_version: Optional[int] = None,
-    user_id: Optional[str] = None,
-) -> Any:
-    warnings.warn(
-        "@ingest is deprecated and will be removed in a future version. Use @track instead.",
-        DeprecationWarning,
-        stacklevel=2
-
-    )
-
-    def _ingest(func: Any) -> Any:
-        import asyncio
-        if asyncio.iscoroutinefunction(func):
-            async def awrapper(*args: Any, **kwargs: Any) -> Any:
-                if not _instrumentor:
-                    _g_logger.debug(f"ingest: call no instrumentor!")
-                    return await func(*args, **kwargs)
-
-                _instrumentor._logger.debug(f"ingest: call async function (limit_ids={limit_ids}, experience_name={experience_name}, experience_id={experience_id}, use_case_name={use_case_name}, use_case_id={use_case_id}, use_case_version={use_case_version}, user_id={user_id})")
-
-                # Call the instrumentor's _call_func for async functions
-                return await _instrumentor._acall_func(
-                    func,
-                    False,
-                    limit_ids,
-                    experience_name,
-                    experience_id,
-                    use_case_name,
-                    use_case_id,
-                    use_case_version,
-                    user_id,
-                    *args,
-                    **kwargs,
-                )
-            return awrapper
-        else:
-            def wrapper(*args: Any, **kwargs: Any) -> Any:
-                if not _instrumentor:
-                    _g_logger.debug(f"ingest: call no instrumentor!")
-                    return func(*args, **kwargs)
-
-                _instrumentor._logger.debug(f"ingest: call sync function (limit_ids={limit_ids}, experience_name={experience_name}, experience_id={experience_id}, use_case_name={use_case_name}, use_case_id={use_case_id}, use_case_version={use_case_version}, user_id={user_id})")
-
-                return _instrumentor._call_func(
-                    func,
-                    False,
-                    limit_ids,
-                    experience_name,
-                    experience_id,
-                    use_case_name,
-                    use_case_id,
-                    use_case_version,
-                    user_id,
-                    *args,
-                    **kwargs,
-                )
-            return wrapper
-
-    return _ingest
-
-@deprecated("@proxy() is deprecated. Use @track() instead")
-def proxy(
-    limit_ids: Optional["list[str]"] = None,
-    experience_name: Optional[str] = None,
-    experience_id: Optional[str] = None,
-    use_case_id: Optional[str] = None,
-    use_case_name: Optional[str] = None,
-    use_case_version: Optional[int] = None,
-    user_id: Optional[str] = None,
-) -> Any:
-    warnings.warn(
-        "@proxy is deprecated and will be removed in a future version. Use @track instead.",
-        DeprecationWarning,
-        stacklevel=2
-    )
-
-    def _proxy(func: Any) -> Any:
-        import asyncio
-        if asyncio.iscoroutinefunction(func):
-            async def _proxy_awrapper(*args: Any, **kwargs: Any) -> Any:
-                if not _instrumentor:
-                    _g_logger.debug(f"proxy: call no instrumentor!")
-                    return await func(*args, **kwargs)
-
-                _instrumentor._logger.debug(f"proxy: call async function (limit_ids={limit_ids}, experience_name={experience_name}, experience_id={experience_id}, use_case_name={use_case_name}, use_case_id={use_case_id}, use_case_version={use_case_version}, user_id={user_id})")
-
-                return await _instrumentor._call_func(
-                    func,
-                    True,
-                    limit_ids,
-                    experience_name,
-                    experience_id,
-                    use_case_name,
-                    use_case_id,
-                    use_case_version,
-                    user_id,
-                    *args,
-                    **kwargs
-                )
-
-            return _proxy_awrapper
-        else:
-            def _proxy_wrapper(*args: Any, **kwargs: Any) -> Any:
-                if not _instrumentor:
-                    _g_logger.debug(f"proxy: call no instrumentor!")
-                    return func(*args, **kwargs)
-
-                _instrumentor._logger.debug(f"proxy: call sync function (limit_ids={limit_ids}, experience_name={experience_name}, experience_id={experience_id}, use_case_name={use_case_name}, use_case_id={use_case_id}, use_case_version={use_case_version}, user_id={user_id})")
-
-                return _instrumentor._call_func(
-                    func,
-                    True,
-                    limit_ids,
-                    experience_name,
-                    experience_id,
-                    use_case_name,
-                    use_case_id,
-                    use_case_version,
-                    user_id,
-                    *args,
-                    **kwargs
-                )
-
-            return _proxy_wrapper
-
-    return _proxy
