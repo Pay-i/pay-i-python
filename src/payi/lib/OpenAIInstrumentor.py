@@ -379,7 +379,7 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
                 try:
                     enc = tiktoken.get_encoding("o200k_base") # type: ignore
                 except Exception:
-                    self._instrumentor._logger.warning("Error getting encoding for fallback o200k_base")
+                    self._instrumentor._logger.info("OpenAI skipping vision token calc, could not load o200k_base")
                     enc = None
             
             if enc:
@@ -459,7 +459,7 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
             try:
                 enc = tiktoken.get_encoding("o200k_base") # type: ignore
             except Exception:
-                self._instrumentor._logger.warning("Error getting encoding for fallback o200k_base")
+                self._instrumentor._logger.info("OpenAI skipping vision token calc, could not load o200k_base")
                 enc = None
         
         # find each content..type="input_text" and count tokens

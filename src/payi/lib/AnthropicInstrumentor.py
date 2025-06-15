@@ -301,7 +301,7 @@ def anthropic_has_image_and_get_texts(request: _ProviderRequest, messages: Any) 
             request._estimated_prompt_tokens = estimated_token_count
 
     except Exception:
-        request._instrumentor._logger.warning("Error getting encoding for cl100k_base")
+        request._instrumentor._logger.info("Anthropic skipping vision token calc, could not load cl100k_base")
 
 def has_image_and_get_texts(encoding: tiktoken.Encoding, content: Union[str, 'list[Any]']) -> 'tuple[bool, int]':
     if isinstance(content, list): # type: ignore
