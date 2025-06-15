@@ -227,6 +227,20 @@ def anthropic_process_synchronous_response(request: _ProviderRequest, response: 
 
     units["text"] = Units(input=input, output=output)
 
+    content = response.get('content', [])
+    if content:
+        for c in content:
+            if c.get("type", "") != "tool_use":
+                continue
+            name = c.get("name", "")
+            input = c.get("input", "")
+            arguments: Optional[str] = None
+            if input and isinstance(input, dict):
+                arguments = json.dumps(input, ensure_ascii=False)
+            
+            if name and arguments:
+                request.add_synchronous_function_call(name=name, arguments=arguments)
+
     if log_prompt_and_response:
         request._ingest["provider_response_json"] = json.dumps(response)
     
@@ -280,6 +294,32 @@ def anthropic_process_chunk(request: _ProviderRequest, chunk: 'dict[str, Any]', 
         request._ingest["units"]["text"]["output"] = usage.get('output_tokens', 0)
 
         request._instrumentor._logger.debug(f"Anthropic streaming finished: output tokens {usage.get('output_tokens', 0)} ")
+
+    elif type == "content_block_start":
+        request._building_function_response = False
+
+        content_block = chunk.get('content_block', {})
+        if content_block and content_block.get('type', "") == "tool_use":
+            index = chunk.get('index', None)
+            name = content_block.get('name', "")
+
+            if index and isinstance(index, int) and name:
+                request._building_function_response = True
+                request.add_streaming_function_call(index=index, name=name, arguments=None)
+
+    elif type == "content_block_delta":
+        if request._building_function_response:
+            delta = chunk.get("delta", {})
+            type = delta.get("type", "")
+            partial_json = delta.get("partial_json", "")
+            index = chunk.get('index', None)
+
+            if index and isinstance(index, int) and type == "input_json_delta" and partial_json:
+                request.add_streaming_function_call(index=index, name=None, arguments=partial_json)
+
+    elif type == "content_block_stop":
+        request._building_function_response = False
+
     else:
         request._instrumentor._logger.debug(f"Anthropic streaming chunk: {type}")
         
