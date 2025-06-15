@@ -18,7 +18,7 @@ from payi import Payi, AsyncPayi, __version__ as _payi_version
 from payi.types import IngestUnitsParams
 from payi.lib.helpers import PayiHeaderNames
 from payi.types.ingest_response import IngestResponse
-from payi.types.ingest_units_params import Units
+from payi.types.ingest_units_params import Units, ProviderResponseFunctionCall
 from payi.types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
 from .helpers import PayiCategories
@@ -47,6 +47,8 @@ class _ProviderRequest:
         self._streaming_type: '_StreamingType' = streaming_type
         self._is_aws_client: Optional[bool] = is_aws_client
         self._is_google_vertex_or_genai_client: Optional[bool] = is_google_vertex_or_genai_client
+        self._function_call_builder: Optional[dict[int, ProviderResponseFunctionCall]] = None
+        self._function_calls: Optional[list[ProviderResponseFunctionCall]] = None
 
     def process_chunk(self, _chunk: Any) -> _ChunkResult:
         return _ChunkResult(send_chunk_to_caller=True)
@@ -107,6 +109,25 @@ class _ProviderRequest:
         if "http_status_code" not in self._ingest:
             # use a non existent http status code so when presented to the user, the origin is clear
             self._ingest["http_status_code"] = 299
+
+    def add_streaming_function_call(self, index: int, name: Optional[str], arguments: Optional[str]) -> None:
+        if not self._function_call_builder:
+            self._function_call_builder = {}
+
+        if not index in self._function_call_builder:
+            self._function_call_builder[index] = ProviderResponseFunctionCall(name=name or "", arguments=arguments or "")
+        else:
+            function = self._function_call_builder[index]
+            if name:
+                function["name"] = function["name"] + name
+            if arguments:
+                function["arguments"] = (function.get("arguments", "") or "") + arguments
+
+    def add_synchronous_function_call(self, name: str, arguments: Optional[str]) -> None:
+        if not self._function_calls:
+            self._function_calls = []
+            self._ingest["provider_response_function_calls"] = self._function_calls
+        self._function_calls.append(ProviderResponseFunctionCall(name=name, arguments=arguments))
 
 class PayiInstrumentConfig(TypedDict, total=False):
     proxy: bool
@@ -306,7 +327,13 @@ class _PayiInstrumentor:
 
         return log_ingest_units
         
-    def _process_ingest_units(self, ingest_units: IngestUnitsParams, log_data: 'dict[str, str]') -> bool:
+    def _process_ingest_units(self, request: _ProviderRequest, log_data: 'dict[str, str]') -> bool:
+        ingest_units = request._ingest
+
+        if request._function_call_builder:
+            # convert the function call builder to a list of function calls
+            ingest_units["provider_response_function_calls"] = list(request._function_call_builder.values())
+
         if int(ingest_units.get("http_status_code") or 0) < 400:
             units = ingest_units.get("units", {})
             if not units or all(unit.get("input", 0) == 0 and unit.get("output", 0) == 0 for unit in units.values()):
@@ -344,14 +371,15 @@ class _PayiInstrumentor:
                 if removeBlockedId:
                     self._blocked_limits.discard(limit_id)
 
-    async def _aingest_units(self, ingest_units: IngestUnitsParams) -> Optional[IngestResponse]:
+    async def _aingest_units(self, request: _ProviderRequest) -> Optional[IngestResponse]:
         ingest_response: Optional[IngestResponse] = None
-    
+        ingest_units = request._ingest
+
         self._logger.debug(f"_aingest_units")
 
         # return early if there are no units to ingest and on a successul ingest request
         log_data: 'dict[str,str]' = {}
-        if not self._process_ingest_units(ingest_units, log_data):
+        if not self._process_ingest_units(request, log_data):
             self._logger.debug(f"_aingest_units: exit early")
             return None
 
@@ -401,7 +429,7 @@ class _PayiInstrumentor:
         except Exception as e:
             self._logger.error(f"Error calling async use_cases.definitions.create synchronously: {e}")
 
-    def _call_aingest_sync(self, ingest_units: IngestUnitsParams) -> Optional[IngestResponse]:
+    def _call_aingest_sync(self, request: _ProviderRequest) -> Optional[IngestResponse]:
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:
@@ -410,22 +438,23 @@ class _PayiInstrumentor:
         try:
             if loop and loop.is_running():
                 nest_asyncio.apply(loop) # type: ignore
-                return asyncio.run(self._aingest_units(ingest_units))                
+                return asyncio.run(self._aingest_units(request))                
             else:
                 # When there's no running loop, create a new one
-                return asyncio.run(self._aingest_units(ingest_units))
+                return asyncio.run(self._aingest_units(request))
         except Exception as e:
             self._logger.error(f"Error calling aingest_units synchronously: {e}")
         return None
         
-    def _ingest_units(self, ingest_units: IngestUnitsParams) -> Optional[IngestResponse]:
+    def _ingest_units(self, request: _ProviderRequest) -> Optional[IngestResponse]:
         ingest_response: Optional[IngestResponse] = None
-        
+        ingest_units = request._ingest
+
         self._logger.debug(f"_ingest_units")
 
         # return early if there are no units to ingest and on a successul ingest request
         log_data: 'dict[str,str]' = {}
-        if not self._process_ingest_units(ingest_units, log_data):
+        if not self._process_ingest_units(request, log_data):
             self._logger.debug(f"_ingest_units: exit early")
             return None
 
@@ -446,7 +475,7 @@ class _PayiInstrumentor:
                 return ingest_response
             elif self._apayi:
                 # task runs async. aingest_units will invoke the callback and post process
-                ingest_response = self._call_aingest_sync(ingest_units)
+                ingest_response = self._call_aingest_sync(request)
                 self._logger.debug(f"_ingest_units: apayi success ({ingest_response})")
                 return ingest_response
             else:
@@ -739,7 +768,7 @@ class _PayiInstrumentor:
 
             if request.process_exception(e, kwargs):
                 request._ingest["end_to_end_latency_ms"] = duration
-                await self._aingest_units(request._ingest)
+                await self._aingest_units(request)
 
             raise e
 
@@ -783,7 +812,7 @@ class _PayiInstrumentor:
             self._logger.debug(f"async_invoke_wrapper: process sync response return")
             return return_result
 
-        await self._aingest_units(request._ingest)
+        await self._aingest_units(request)
 
         self._logger.debug(f"async_invoke_wrapper: finished")
         return response
@@ -862,7 +891,7 @@ class _PayiInstrumentor:
 
             if request.process_exception(e, kwargs):
                 request._ingest["end_to_end_latency_ms"] = duration
-                self._ingest_units(request._ingest)
+                self._ingest_units(request)
 
             raise e
 
@@ -915,7 +944,7 @@ class _PayiInstrumentor:
             self._logger.debug(f"invoke_wrapper: process sync response return")
             return return_result
 
-        self._ingest_units(request._ingest)
+        self._ingest_units(request)
 
         self._logger.debug(f"invoke_wrapper: finished")
         return response
@@ -1219,7 +1248,7 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
 
         self._process_stop_iteration()
 
-        await self._instrumentor._aingest_units(self._request._ingest)
+        await self._instrumentor._aingest_units(self._request)
         self._ingested = True
 
     def _stop_iteration(self) -> None:
@@ -1228,7 +1257,7 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
             return
 
         self._process_stop_iteration()
-        self._instrumentor._ingest_units(self._request._ingest)
+        self._instrumentor._ingest_units(self._request)
         self._ingested = True
 
     @staticmethod
@@ -1371,7 +1400,7 @@ class _GeneratorWrapper:  # type: ignore
 
         self._process_stop_iteration()
 
-        self._instrumentor._ingest_units(self._request._ingest)
+        self._instrumentor._ingest_units(self._request)
         self._ingested = True
 
     async def _astop_iteration(self) -> None:
@@ -1381,7 +1410,7 @@ class _GeneratorWrapper:  # type: ignore
 
         self._process_stop_iteration()
         
-        await self._instrumentor._aingest_units(self._request._ingest)
+        await self._instrumentor._aingest_units(self._request)
         self._ingested = True
 
     def _process_stop_iteration(self) -> None:

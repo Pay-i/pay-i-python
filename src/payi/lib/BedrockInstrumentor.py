@@ -140,7 +140,7 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
         if self._log_prompt_and_response:
             ingest["provider_response_json"] = data.decode('utf-8') # type: ignore
             
-        self._request._instrumentor._ingest_units(ingest)
+        self._request._instrumentor._ingest_units(self._request)
 
         return data # type: ignore
 
