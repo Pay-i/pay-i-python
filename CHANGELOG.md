@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.87 (2025-06-16)
+
+Full Changelog: [v0.1.0-alpha.86...v0.1.0-alpha.87](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.86...v0.1.0-alpha.87)
+
+### Features
+
+* capture function calling ([#324](https://github.com/Pay-i/pay-i-python/issues/324)) ([5e89cb8](https://github.com/Pay-i/pay-i-python/commit/5e89cb8f8526cd8c9053683e40a9d6c9a1773742))
+
 ## 0.1.0-alpha.86 (2025-06-13)
 
 Full Changelog: [v0.1.0-alpha.85...v0.1.0-alpha.86](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.85...v0.1.0-alpha.86)
