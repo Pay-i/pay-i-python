@@ -48,6 +48,7 @@ class _ProviderRequest:
         self._is_aws_client: Optional[bool] = is_aws_client
         self._is_google_vertex_or_genai_client: Optional[bool] = is_google_vertex_or_genai_client
         self._function_call_builder: Optional[dict[int, ProviderResponseFunctionCall]] = None
+        self._building_function_response: bool = False
         self._function_calls: Optional[list[ProviderResponseFunctionCall]] = None
 
     def process_chunk(self, _chunk: Any) -> _ChunkResult:

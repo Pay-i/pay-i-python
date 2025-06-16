@@ -229,6 +229,7 @@ class _GoogleVertexRequest(_ProviderRequest):
             parts = candidate.get("content", {}).get("parts", [])
             for part in parts:
                 self._candidates_character_count += count_chars_skip_spaces(part.get("text", ""))
+                self.process_response_part_for_function_call(part)
 
         usage = response_dict.get("usage_metadata", {})
         if usage and "prompt_token_count" in usage and "candidates_token_count" in usage:
@@ -243,6 +244,17 @@ class _GoogleVertexRequest(_ProviderRequest):
 
         return _ChunkResult(send_chunk_to_caller=True, ingest=ingest)
     
+    def process_response_part_for_function_call(self, part: 'dict[str, Any]') -> None:
+        function = part.get("function_call", {})
+        name = function.get("name", "")
+        args = function.get("args", {})
+        arguments: Optional[str] = None
+        if args and isinstance(args, dict):
+            arguments = json.dumps(args)
+
+        if name:
+            self.add_synchronous_function_call(name=name, arguments=arguments)
+
     @override
     def process_synchronous_response(
         self,
@@ -258,6 +270,12 @@ class _GoogleVertexRequest(_ProviderRequest):
         model: Optional[str] = self._get_model_name(response_dict)
         if model:
             self._ingest["resource"] = "google." + model
+
+        candidates = response_dict.get("candidates", [])
+        for candidate in candidates:
+            parts = candidate.get("content", {}).get("parts", [])
+            for part in parts:
+                self.process_response_part_for_function_call(part)
 
         vertex_compute_usage(
             request=self,
