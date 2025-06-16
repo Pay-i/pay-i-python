@@ -4,14 +4,12 @@ import uuid
 import asyncio
 import inspect
 import logging
-import warnings
 import traceback
 from abc import abstractmethod
 from enum import Enum
 from typing import Any, Set, Union, Callable, Optional, Sequence, TypedDict
 from datetime import datetime, timezone
 from dataclasses import dataclass
-from typing_extensions import deprecated
 
 import nest_asyncio  # type: ignore
 from wrapt import ObjectProxy  # type: ignore
@@ -20,7 +18,7 @@ from payi import Payi, AsyncPayi, __version__ as _payi_version
 from payi.types import IngestUnitsParams
 from payi.lib.helpers import PayiHeaderNames
 from payi.types.ingest_response import IngestResponse
-from payi.types.ingest_units_params import Units
+from payi.types.ingest_units_params import Units, ProviderResponseFunctionCall
 from payi.types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
 from .helpers import PayiCategories
@@ -49,6 +47,9 @@ class _ProviderRequest:
         self._streaming_type: '_StreamingType' = streaming_type
         self._is_aws_client: Optional[bool] = is_aws_client
         self._is_google_vertex_or_genai_client: Optional[bool] = is_google_vertex_or_genai_client
+        self._function_call_builder: Optional[dict[int, ProviderResponseFunctionCall]] = None
+        self._building_function_response: bool = False
+        self._function_calls: Optional[list[ProviderResponseFunctionCall]] = None
 
     def process_chunk(self, _chunk: Any) -> _ChunkResult:
         return _ChunkResult(send_chunk_to_caller=True)
@@ -110,12 +111,29 @@ class _ProviderRequest:
             # use a non existent http status code so when presented to the user, the origin is clear
             self._ingest["http_status_code"] = 299
 
+    def add_streaming_function_call(self, index: int, name: Optional[str], arguments: Optional[str]) -> None:
+        if not self._function_call_builder:
+            self._function_call_builder = {}
+
+        if not index in self._function_call_builder:
+            self._function_call_builder[index] = ProviderResponseFunctionCall(name=name or "", arguments=arguments or "")
+        else:
+            function = self._function_call_builder[index]
+            if name:
+                function["name"] = function["name"] + name
+            if arguments:
+                function["arguments"] = (function.get("arguments", "") or "") + arguments
+
+    def add_synchronous_function_call(self, name: str, arguments: Optional[str]) -> None:
+        if not self._function_calls:
+            self._function_calls = []
+            self._ingest["provider_response_function_calls"] = self._function_calls
+        self._function_calls.append(ProviderResponseFunctionCall(name=name, arguments=arguments))
+
 class PayiInstrumentConfig(TypedDict, total=False):
     proxy: bool
     global_instrumentation: bool
     limit_ids: Optional["list[str]"]
-    experience_name: Optional[str] = deprecated("experience_name is deprecated, use use_case_name instead") # type: ignore
-    experience_id: Optional[str] = deprecated("experience_id is deprecated, use use_case_id instead") # type: ignore
     use_case_name: Optional[str]
     use_case_id: Optional[str]
     use_case_version: Optional[int]
@@ -123,8 +141,6 @@ class PayiInstrumentConfig(TypedDict, total=False):
 
 class _Context(TypedDict, total=False):
     proxy: Optional[bool]
-    experience_name: Optional[str]
-    experience_id: Optional[str]
     use_case_name: Optional[str]
     use_case_id: Optional[str]
     use_case_version: Optional[int]
@@ -312,7 +328,13 @@ class _PayiInstrumentor:
 
         return log_ingest_units
         
-    def _process_ingest_units(self, ingest_units: IngestUnitsParams, log_data: 'dict[str, str]') -> bool:
+    def _process_ingest_units(self, request: _ProviderRequest, log_data: 'dict[str, str]') -> bool:
+        ingest_units = request._ingest
+
+        if request._function_call_builder:
+            # convert the function call builder to a list of function calls
+            ingest_units["provider_response_function_calls"] = list(request._function_call_builder.values())
+
         if int(ingest_units.get("http_status_code") or 0) < 400:
             units = ingest_units.get("units", {})
             if not units or all(unit.get("input", 0) == 0 and unit.get("output", 0) == 0 for unit in units.values()):
@@ -350,14 +372,15 @@ class _PayiInstrumentor:
                 if removeBlockedId:
                     self._blocked_limits.discard(limit_id)
 
-    async def _aingest_units(self, ingest_units: IngestUnitsParams) -> Optional[IngestResponse]:
+    async def _aingest_units(self, request: _ProviderRequest) -> Optional[IngestResponse]:
         ingest_response: Optional[IngestResponse] = None
-    
+        ingest_units = request._ingest
+
         self._logger.debug(f"_aingest_units")
 
         # return early if there are no units to ingest and on a successul ingest request
         log_data: 'dict[str,str]' = {}
-        if not self._process_ingest_units(ingest_units, log_data):
+        if not self._process_ingest_units(request, log_data):
             self._logger.debug(f"_aingest_units: exit early")
             return None
 
@@ -407,7 +430,7 @@ class _PayiInstrumentor:
         except Exception as e:
             self._logger.error(f"Error calling async use_cases.definitions.create synchronously: {e}")
 
-    def _call_aingest_sync(self, ingest_units: IngestUnitsParams) -> Optional[IngestResponse]:
+    def _call_aingest_sync(self, request: _ProviderRequest) -> Optional[IngestResponse]:
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:
@@ -416,22 +439,23 @@ class _PayiInstrumentor:
         try:
             if loop and loop.is_running():
                 nest_asyncio.apply(loop) # type: ignore
-                return asyncio.run(self._aingest_units(ingest_units))                
+                return asyncio.run(self._aingest_units(request))                
             else:
                 # When there's no running loop, create a new one
-                return asyncio.run(self._aingest_units(ingest_units))
+                return asyncio.run(self._aingest_units(request))
         except Exception as e:
             self._logger.error(f"Error calling aingest_units synchronously: {e}")
         return None
         
-    def _ingest_units(self, ingest_units: IngestUnitsParams) -> Optional[IngestResponse]:
+    def _ingest_units(self, request: _ProviderRequest) -> Optional[IngestResponse]:
         ingest_response: Optional[IngestResponse] = None
-        
+        ingest_units = request._ingest
+
         self._logger.debug(f"_ingest_units")
 
         # return early if there are no units to ingest and on a successul ingest request
         log_data: 'dict[str,str]' = {}
-        if not self._process_ingest_units(ingest_units, log_data):
+        if not self._process_ingest_units(request, log_data):
             self._logger.debug(f"_ingest_units: exit early")
             return None
 
@@ -452,7 +476,7 @@ class _PayiInstrumentor:
                 return ingest_response
             elif self._apayi:
                 # task runs async. aingest_units will invoke the callback and post process
-                ingest_response = self._call_aingest_sync(ingest_units)
+                ingest_response = self._call_aingest_sync(request)
                 self._logger.debug(f"_ingest_units: apayi success ({ingest_response})")
                 return ingest_response
             else:
@@ -477,8 +501,6 @@ class _PayiInstrumentor:
         self,
         proxy: Optional[bool] = None,
         limit_ids: Optional["list[str]"] = None,
-        experience_name: Optional[str] = None,
-        experience_id: Optional[str] = None,
         use_case_name: Optional[str]= None,
         use_case_id: Optional[str]= None,
         use_case_version: Optional[int]= None,
@@ -496,28 +518,6 @@ class _PayiInstrumentor:
 
         parent_proxy = parent_context.get("proxy", self._proxy_default)
         context["proxy"] = proxy if proxy else parent_proxy
-
-        parent_experience_name = parent_context.get("experience_name", None)
-        parent_experience_id = parent_context.get("experience_id", None)
-
-        if experience_name is None:
-            # If no experience_name specified, use previous values
-            context["experience_name"] = parent_experience_name
-            context["experience_id"] = parent_experience_id
-        elif len(experience_name) == 0:
-            # Empty string explicitly blocks inheriting from the parent state
-            context["experience_name"] = None
-            context["experience_id"] = None
-        else:
-            # Check if experience_name is the same as the previous one
-            if experience_name == parent_experience_name:
-                # Same experience name, use previous ID unless new one specified
-                context["experience_name"] = experience_name
-                context["experience_id"] = experience_id if experience_id else parent_experience_id
-            else:
-                # Different experience name, use specified ID or generate one
-                context["experience_name"] = experience_name
-                context["experience_id"] = experience_id if experience_id else str(uuid.uuid4())
 
         parent_use_case_name = parent_context.get("use_case_name", None)
         parent_use_case_id = parent_context.get("use_case_id", None)
@@ -583,8 +583,6 @@ class _PayiInstrumentor:
         func: Any,
         proxy: Optional[bool],
         limit_ids: Optional["list[str]"],
-        experience_name: Optional[str],
-        experience_id: Optional[str],
         use_case_name: Optional[str],
         use_case_id: Optional[str],
         use_case_version: Optional[int],        
@@ -596,8 +594,6 @@ class _PayiInstrumentor:
             self._init_current_context(
                 proxy=proxy,
                 limit_ids=limit_ids,
-                experience_name=experience_name,
-                experience_id=experience_id,
                 use_case_name=use_case_name,
                 use_case_id=use_case_id,
                 use_case_version=use_case_version,
@@ -609,8 +605,6 @@ class _PayiInstrumentor:
         func: Any,
         proxy: Optional[bool],
         limit_ids: Optional["list[str]"],
-        experience_name: Optional[str],
-        experience_id: Optional[str],
         use_case_name: Optional[str],
         use_case_id: Optional[str],
         use_case_version: Optional[int],        
@@ -622,8 +616,6 @@ class _PayiInstrumentor:
             self._init_current_context(
                 proxy=proxy,
                 limit_ids=limit_ids,
-                experience_name=experience_name,
-                experience_id=experience_id,
                 use_case_name=use_case_name,
                 use_case_id=use_case_id,
                 use_case_version=use_case_version,
@@ -659,9 +651,6 @@ class _PayiInstrumentor:
         limit_ids = ingest_extra_headers.pop(PayiHeaderNames.limit_ids, None)
         request_tags = ingest_extra_headers.pop(PayiHeaderNames.request_tags, None)
 
-        experience_name = ingest_extra_headers.pop(PayiHeaderNames.experience_name, None)
-        experience_id = ingest_extra_headers.pop(PayiHeaderNames.experience_id, None)
-
         use_case_name = ingest_extra_headers.pop(PayiHeaderNames.use_case_name, None)
         use_case_id = ingest_extra_headers.pop(PayiHeaderNames.use_case_id, None)
         use_case_version = ingest_extra_headers.pop(PayiHeaderNames.use_case_version, None)
@@ -673,10 +662,6 @@ class _PayiInstrumentor:
             request._ingest["limit_ids"] = limit_ids.split(",")
         if request_tags:
             request._ingest["request_tags"] = request_tags.split(",")
-        if experience_name:
-            request._ingest["experience_name"] = experience_name
-        if experience_id:
-            request._ingest["experience_id"] = experience_id
         if use_case_name:
             request._ingest["use_case_name"] = use_case_name
         if use_case_id:
@@ -784,7 +769,7 @@ class _PayiInstrumentor:
 
             if request.process_exception(e, kwargs):
                 request._ingest["end_to_end_latency_ms"] = duration
-                await self._aingest_units(request._ingest)
+                await self._aingest_units(request)
 
             raise e
 
@@ -828,7 +813,7 @@ class _PayiInstrumentor:
             self._logger.debug(f"async_invoke_wrapper: process sync response return")
             return return_result
 
-        await self._aingest_units(request._ingest)
+        await self._aingest_units(request)
 
         self._logger.debug(f"async_invoke_wrapper: finished")
         return response
@@ -907,7 +892,7 @@ class _PayiInstrumentor:
 
             if request.process_exception(e, kwargs):
                 request._ingest["end_to_end_latency_ms"] = duration
-                self._ingest_units(request._ingest)
+                self._ingest_units(request)
 
             raise e
 
@@ -960,7 +945,7 @@ class _PayiInstrumentor:
             self._logger.debug(f"invoke_wrapper: process sync response return")
             return return_result
 
-        self._ingest_units(request._ingest)
+        self._ingest_units(request)
 
         self._logger.debug(f"invoke_wrapper: finished")
         return response
@@ -981,9 +966,6 @@ class _PayiInstrumentor:
         extra_headers: "dict[str, str]",
     ) -> None:
         context_limit_ids: Optional[list[str]] = context.get("limit_ids")
-
-        context_experience_name: Optional[str] = context.get("experience_name")
-        context_experience_id: Optional[str] = context.get("experience_id")
 
         context_use_case_name: Optional[str] = context.get("use_case_name")
         context_use_case_id: Optional[str] = context.get("use_case_id")
@@ -1042,20 +1024,6 @@ class _PayiInstrumentor:
                 extra_headers[PayiHeaderNames.use_case_version] = str(context_use_case_version)
             if context_use_case_step is not None:
                 extra_headers[PayiHeaderNames.use_case_step] = str(context_use_case_step)
-
-        if PayiHeaderNames.experience_name in extra_headers:
-            headers_experience_name = extra_headers.get(PayiHeaderNames.experience_name, None)
-            if headers_experience_name is None or len(headers_experience_name) == 0:
-                # headers_experience_name is empty, remove all experience related headers
-                extra_headers.pop(PayiHeaderNames.experience_name, None)
-                extra_headers.pop(PayiHeaderNames.experience_id, None)
-            else:
-                # leave the value in extra_headers
-                ...
-        elif context_experience_name is not None:
-            extra_headers[PayiHeaderNames.experience_name] = context_experience_name
-            if context_experience_id is not None:
-                extra_headers[PayiHeaderNames.experience_id] = context_experience_id
 
         if PayiHeaderNames.request_tags not in extra_headers and context_request_tags:
             extra_headers[PayiHeaderNames.request_tags] = ",".join(context_request_tags)
@@ -1281,7 +1249,7 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
 
         self._process_stop_iteration()
 
-        await self._instrumentor._aingest_units(self._request._ingest)
+        await self._instrumentor._aingest_units(self._request)
         self._ingested = True
 
     def _stop_iteration(self) -> None:
@@ -1290,7 +1258,7 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
             return
 
         self._process_stop_iteration()
-        self._instrumentor._ingest_units(self._request._ingest)
+        self._instrumentor._ingest_units(self._request)
         self._ingested = True
 
     @staticmethod
@@ -1433,7 +1401,7 @@ class _GeneratorWrapper:  # type: ignore
 
         self._process_stop_iteration()
 
-        self._instrumentor._ingest_units(self._request._ingest)
+        self._instrumentor._ingest_units(self._request)
         self._ingested = True
 
     async def _astop_iteration(self) -> None:
@@ -1443,7 +1411,7 @@ class _GeneratorWrapper:  # type: ignore
 
         self._process_stop_iteration()
         
-        await self._instrumentor._aingest_units(self._request._ingest)
+        await self._instrumentor._aingest_units(self._request)
         self._ingested = True
 
     def _process_stop_iteration(self) -> None:
@@ -1524,8 +1492,6 @@ def track(
                     func,
                     proxy,
                     limit_ids,
-                    None, # experience_name,
-                    None, #experience_id,
                     use_case_name,
                     use_case_id,
                     use_case_version,
@@ -1546,8 +1512,6 @@ def track(
                     func,
                     proxy,
                     limit_ids,
-                    None, # experience_name,
-                    None, # experience_id,
                     use_case_name,
                     use_case_id,
                     use_case_version,
@@ -1591,137 +1555,3 @@ def track_context(
     context["resource_scope"] = resource_scope
 
     return _TrackContext(context)
-
-@deprecated("@ingest() is deprecated. Use @track() instead")
-def ingest(
-    limit_ids: Optional["list[str]"] = None,
-    experience_name: Optional[str] = None,
-    experience_id: Optional[str] = None,
-    use_case_name: Optional[str] = None,
-    use_case_id: Optional[str] = None,
-    use_case_version: Optional[int] = None,
-    user_id: Optional[str] = None,
-) -> Any:
-    warnings.warn(
-        "@ingest is deprecated and will be removed in a future version. Use @track instead.",
-        DeprecationWarning,
-        stacklevel=2
-
-    )
-
-    def _ingest(func: Any) -> Any:
-        import asyncio
-        if asyncio.iscoroutinefunction(func):
-            async def awrapper(*args: Any, **kwargs: Any) -> Any:
-                if not _instrumentor:
-                    _g_logger.debug(f"ingest: call no instrumentor!")
-                    return await func(*args, **kwargs)
-
-                _instrumentor._logger.debug(f"ingest: call async function (limit_ids={limit_ids}, experience_name={experience_name}, experience_id={experience_id}, use_case_name={use_case_name}, use_case_id={use_case_id}, use_case_version={use_case_version}, user_id={user_id})")
-
-                # Call the instrumentor's _call_func for async functions
-                return await _instrumentor._acall_func(
-                    func,
-                    False,
-                    limit_ids,
-                    experience_name,
-                    experience_id,
-                    use_case_name,
-                    use_case_id,
-                    use_case_version,
-                    user_id,
-                    *args,
-                    **kwargs,
-                )
-            return awrapper
-        else:
-            def wrapper(*args: Any, **kwargs: Any) -> Any:
-                if not _instrumentor:
-                    _g_logger.debug(f"ingest: call no instrumentor!")
-                    return func(*args, **kwargs)
-
-                _instrumentor._logger.debug(f"ingest: call sync function (limit_ids={limit_ids}, experience_name={experience_name}, experience_id={experience_id}, use_case_name={use_case_name}, use_case_id={use_case_id}, use_case_version={use_case_version}, user_id={user_id})")
-
-                return _instrumentor._call_func(
-                    func,
-                    False,
-                    limit_ids,
-                    experience_name,
-                    experience_id,
-                    use_case_name,
-                    use_case_id,
-                    use_case_version,
-                    user_id,
-                    *args,
-                    **kwargs,
-                )
-            return wrapper
-
-    return _ingest
-
-@deprecated("@proxy() is deprecated. Use @track() instead")
-def proxy(
-    limit_ids: Optional["list[str]"] = None,
-    experience_name: Optional[str] = None,
-    experience_id: Optional[str] = None,
-    use_case_id: Optional[str] = None,
-    use_case_name: Optional[str] = None,
-    use_case_version: Optional[int] = None,
-    user_id: Optional[str] = None,
-) -> Any:
-    warnings.warn(
-        "@proxy is deprecated and will be removed in a future version. Use @track instead.",
-        DeprecationWarning,
-        stacklevel=2
-    )
-
-    def _proxy(func: Any) -> Any:
-        import asyncio
-        if asyncio.iscoroutinefunction(func):
-            async def _proxy_awrapper(*args: Any, **kwargs: Any) -> Any:
-                if not _instrumentor:
-                    _g_logger.debug(f"proxy: call no instrumentor!")
-                    return await func(*args, **kwargs)
-
-                _instrumentor._logger.debug(f"proxy: call async function (limit_ids={limit_ids}, experience_name={experience_name}, experience_id={experience_id}, use_case_name={use_case_name}, use_case_id={use_case_id}, use_case_version={use_case_version}, user_id={user_id})")
-
-                return await _instrumentor._call_func(
-                    func,
-                    True,
-                    limit_ids,
-                    experience_name,
-                    experience_id,
-                    use_case_name,
-                    use_case_id,
-                    use_case_version,
-                    user_id,
-                    *args,
-                    **kwargs
-                )
-
-            return _proxy_awrapper
-        else:
-            def _proxy_wrapper(*args: Any, **kwargs: Any) -> Any:
-                if not _instrumentor:
-                    _g_logger.debug(f"proxy: call no instrumentor!")
-                    return func(*args, **kwargs)
-
-                _instrumentor._logger.debug(f"proxy: call sync function (limit_ids={limit_ids}, experience_name={experience_name}, experience_id={experience_id}, use_case_name={use_case_name}, use_case_id={use_case_id}, use_case_version={use_case_version}, user_id={user_id})")
-
-                return _instrumentor._call_func(
-                    func,
-                    True,
-                    limit_ids,
-                    experience_name,
-                    experience_id,
-                    use_case_name,
-                    use_case_id,
-                    use_case_version,
-                    user_id,
-                    *args,
-                    **kwargs
-                )
-
-            return _proxy_wrapper
-
-    return _proxy
