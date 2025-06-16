@@ -1,12 +1,10 @@
-import json
-from typing import Any, List, Union, Optional, Sequence
+from typing import Any, List, Union, Sequence
 from typing_extensions import override
 
 from wrapt import wrap_function_wrapper  # type: ignore
 
-from payi.lib.helpers import PayiCategories
-
-from .instrument import _ChunkResult, _IsStreaming, _StreamingType, _ProviderRequest, _PayiInstrumentor
+from .instrument import _ChunkResult, _IsStreaming, _PayiInstrumentor
+from .VertexRequest import _VertexRequest
 
 
 class GoogleGenAiInstrumentor:
@@ -113,13 +111,10 @@ async def agenerate_stream_wrapper(
         kwargs,
     )
 
-class _GoogleGenAiRequest(_ProviderRequest):
+class _GoogleGenAiRequest(_VertexRequest):
     def __init__(self, instrumentor: _PayiInstrumentor):
         super().__init__(
             instrumentor=instrumentor,
-            category=PayiCategories.google_vertex,
-            streaming_type=_StreamingType.generator,
-            is_google_vertex_or_genai_client=True,
             )
         self._prompt_character_count = 0
         self._candidates_character_count = 0
@@ -154,8 +149,6 @@ class _GoogleGenAiRequest(_ProviderRequest):
         if isinstance(value, list):
             items = value # type: ignore
 
-        from .VertexInstrumentor import count_chars_skip_spaces
-
         for item in items: # type: ignore
             text = ""
             if isinstance(item, Part):
@@ -166,8 +159,8 @@ class _GoogleGenAiRequest(_ProviderRequest):
                 text = item
 
             if text != "":
-                self._prompt_character_count += count_chars_skip_spaces(text) # type: ignore
-             
+                self._prompt_character_count += self.count_chars_skip_spaces(text) # type: ignore
+
         return True
 
     @override
@@ -247,65 +240,21 @@ class _GoogleGenAiRequest(_ProviderRequest):
 
     @override
     def process_chunk(self, chunk: Any) -> _ChunkResult:
-        from .VertexInstrumentor import vertex_compute_usage, count_chars_skip_spaces
-
-        ingest = False
         response_dict: dict[str, Any] = chunk.to_json_dict()
-        if "provider_response_id" not in self._ingest:
-            id = response_dict.get("response_id", None)
-            if id:
-                self._ingest["provider_response_id"] = id
 
         model: str = response_dict.get("model_version", "")
-
         self._ingest["resource"] = "google." + model
 
+        return self.process_chunk_dict(response_dict=response_dict)
 
-        for candidate in response_dict.get("candidates", []):
-            parts = candidate.get("content", {}).get("parts", [])
-            for part in parts:
-                self._candidates_character_count += count_chars_skip_spaces(part.get("text", ""))
-
-        usage = response_dict.get("usage_metadata", {})
-        if usage and "prompt_token_count" in usage and "candidates_token_count" in usage:
-            vertex_compute_usage(
-                request=self,
-                model=model,
-                response_dict=response_dict,
-                prompt_character_count=self._prompt_character_count,
-                streaming_candidates_characters=self._candidates_character_count
-                )
-            ingest = True
-
-        return _ChunkResult(send_chunk_to_caller=True, ingest=ingest)
-    
     @override
     def process_synchronous_response(
         self,
         response: Any,
         log_prompt_and_response: bool,
         kwargs: Any) -> Any:
-        response_dict = response.to_json_dict()
 
-        from .VertexInstrumentor import vertex_compute_usage
-
-        id: Optional[str] = response_dict.get("response_id", None)
-        if id:
-            self._ingest["provider_response_id"] = id
-        
-        model: Optional[str] = response_dict.get("model_version", None)
-        if model:
-            self._ingest["resource"] = "google." + model
-
-        vertex_compute_usage(
-            request=self,
-            model=model,
-            response_dict=response_dict,
-            prompt_character_count=self._prompt_character_count,
-            streaming_candidates_characters=self._candidates_character_count
-            )
-
-        if log_prompt_and_response:
-            self._ingest["provider_response_json"] = [json.dumps(response_dict)]
-
-        return None
+        return self.vertex_process_synchronous_response(
+            response_dict=response.to_json_dict(),
+            log_prompt_and_response=log_prompt_and_response,
+        )

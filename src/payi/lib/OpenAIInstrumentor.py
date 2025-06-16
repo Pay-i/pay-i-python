@@ -349,6 +349,19 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
 
         send_chunk_to_client = True
 
+        choices = model.get("choices", [])
+        if choices:
+            for choice in choices:
+                function = choice.get("delta", {}).get("function_call", {})
+                index = choice.get("index", None)
+
+                if function and index is not None:
+                    name = function.get("name", None)
+                    arguments = function.get("arguments", None)
+
+                    if name or arguments:
+                        self.add_streaming_function_call(index=index, name=name, arguments=arguments)
+
         usage = model.get("usage")
         if usage:
             self.add_usage_units(usage)
@@ -379,7 +392,7 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
                 try:
                     enc = tiktoken.get_encoding("o200k_base") # type: ignore
                 except Exception:
-                    self._instrumentor._logger.warning("Error getting encoding for fallback o200k_base")
+                    self._instrumentor._logger.info("OpenAI skipping vision token calc, could not load o200k_base")
                     enc = None
             
             if enc:
@@ -411,6 +424,22 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
         response: Any,
         log_prompt_and_response: bool,
         kwargs: Any) -> Any:
+
+        response_dict = model_to_dict(response)
+        choices = response_dict.get("choices", [])
+        if choices:
+            for choice in choices:
+                function = choice.get("message", {}).get("function_call", {})
+
+                if not function:
+                    continue
+
+                name = function.get("name", None)
+                arguments = function.get("arguments", None)
+
+                if name:
+                    self.add_synchronous_function_call(name=name, arguments=arguments)
+
         return self.process_synchronous_response_worker(response, log_prompt_and_response)
 
 class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
@@ -431,6 +460,16 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
             response_id = response.get("id", None)
             if response_id:
                 self._ingest["provider_response_id"] = response_id
+
+        type = model.get("type", "")
+        if type and type == "response.output_item.done":
+            item = model.get("item", {})
+            if item and item.get("type", "") == "function_call":
+                name = item.get("name", None)
+                arguments = item.get("arguments", None)
+
+                if name:
+                    self.add_synchronous_function_call(name=name, arguments=arguments)
 
         usage = response.get("usage")
         if usage:
@@ -459,7 +498,7 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
             try:
                 enc = tiktoken.get_encoding("o200k_base") # type: ignore
             except Exception:
-                self._instrumentor._logger.warning("Error getting encoding for fallback o200k_base")
+                self._instrumentor._logger.info("OpenAI skipping vision token calc, could not load o200k_base")
                 enc = None
         
         # find each content..type="input_text" and count tokens
@@ -498,6 +537,21 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
         response: Any,
         log_prompt_and_response: bool,
         kwargs: Any) -> Any:
+
+        response_dict = model_to_dict(response)
+        output = response_dict.get("output", [])
+        if output:
+            for o in output:
+                type = o.get("type", "")
+                if type != "function_call":
+                    continue
+
+                name = o.get("name", None)
+                arguments = o.get("arguments", None)
+
+                if name:
+                    self.add_synchronous_function_call(name=name, arguments=arguments)
+
         return self.process_synchronous_response_worker(response, log_prompt_and_response)
 
 def model_to_dict(model: Any) -> Any:

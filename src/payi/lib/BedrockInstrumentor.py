@@ -1,6 +1,6 @@
 import os
 import json
-from typing import Any, Sequence
+from typing import Any, Optional, Sequence
 from functools import wraps
 from typing_extensions import override
 
@@ -132,15 +132,32 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
                 log_prompt_and_response=False, # will evaluate logging later
                 assign_id=False)
 
-        elif resource.startswith("meta.llama3"):
-            input = response['prompt_token_count']
-            output = response['generation_token_count']
+        elif self._request._is_meta:
+            input = response.get('prompt_token_count', 0)
+            output = response.get('generation_token_count', 0)
             units["text"] = Units(input=input, output=output)
+
+        elif self._request._is_nova:
+            usage = response.get("usage", {})
+
+            input = usage.get("inputTokens", 0)
+            output = usage.get("outputTokens", 0)
+            units["text"] = Units(input=input, output=output)
+
+            text_cache_read = usage.get("cacheReadInputTokenCount", None)
+            if text_cache_read:
+                units["text_cache_read"] = text_cache_read
+
+            text_cache_write = usage.get("cacheWriteInputTokenCount", None)
+            if text_cache_write:
+                units["text_cache_write"] = text_cache_write
+
+            bedrock_converse_process_synchronous_function_call(self._request, response)
 
         if self._log_prompt_and_response:
             ingest["provider_response_json"] = data.decode('utf-8') # type: ignore
             
-        self._request._instrumentor._ingest_units(ingest)
+        self._request._instrumentor._ingest_units(self._request)
 
         return data # type: ignore
 
@@ -260,6 +277,8 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, model_id: str):
         super().__init__(instrumentor=instrumentor)
         self._is_anthropic: bool = 'anthropic' in model_id
+        self._is_nova: bool = 'nova' in model_id
+        self._is_meta: bool = 'meta' in model_id
 
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
@@ -280,24 +299,35 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
 
     @override
     def process_chunk(self, chunk: Any) -> _ChunkResult:
+        chunk_dict = json.loads(chunk)
+
         if self._is_anthropic:
-            return self.process_invoke_streaming_anthropic_chunk(chunk)
-        else:
-            return self.process_invoke_streaming_llama_chunk(chunk)
-
-    def process_invoke_streaming_anthropic_chunk(self, chunk: str) -> _ChunkResult:
-        from .AnthropicInstrumentor import anthropic_process_chunk
+            from .AnthropicInstrumentor import anthropic_process_chunk
+            return anthropic_process_chunk(self, chunk_dict, assign_id=False)
         
-        return anthropic_process_chunk(self, json.loads(chunk), assign_id=False)
+        if self._is_nova:
+            bedrock_converse_process_streaming_for_function_call(self, chunk_dict)
 
-    def process_invoke_streaming_llama_chunk(self, chunk: str) -> _ChunkResult:
+        # meta and nova
+        return self.process_invoke_other_provider_chunk(chunk_dict)
+
+    def process_invoke_other_provider_chunk(self, chunk_dict: 'dict[str, Any]') -> _ChunkResult:
         ingest = False
-        chunk_dict =  json.loads(chunk)
+
         metrics = chunk_dict.get("amazon-bedrock-invocationMetrics", {})
         if metrics:
             input = metrics.get("inputTokenCount", 0)
             output = metrics.get("outputTokenCount", 0)
             self._ingest["units"]["text"] = Units(input=input, output=output)
+
+            text_cache_read = metrics.get("cacheReadInputTokenCount", None)
+            if text_cache_read:
+                self._ingest["units"]["text_cache_read"] = text_cache_read
+
+            text_cache_write = metrics.get("cacheWriteInputTokenCount", None)
+            if text_cache_write:
+                self._ingest["units"]["text_cache_write"] = text_cache_write
+
             ingest = True
 
         return _ChunkResult(send_chunk_to_caller=True, ingest=ingest)    
@@ -356,7 +386,9 @@ class _BedrockConverseProviderRequest(_BedrockProviderRequest):
             response_without_metadata.pop("ResponseMetadata", None)
             self._ingest["provider_response_json"] = json.dumps(response_without_metadata)
 
-        return None    
+        bedrock_converse_process_synchronous_function_call(self, response)
+
+        return None
 
     @override
     def process_chunk(self, chunk: 'dict[str, Any]') -> _ChunkResult:
@@ -371,4 +403,46 @@ class _BedrockConverseProviderRequest(_BedrockProviderRequest):
 
             ingest = True
 
+        bedrock_converse_process_streaming_for_function_call(self, chunk)
+
         return _ChunkResult(send_chunk_to_caller=True, ingest=ingest)
+
+def bedrock_converse_process_streaming_for_function_call(request: _ProviderRequest, chunk: 'dict[str, Any]') -> None:  
+    contentBlockStart = chunk.get("contentBlockStart", {})
+    tool_use = contentBlockStart.get("start", {}).get("toolUse", {})
+    if tool_use:
+        index = contentBlockStart.get("contentBlockIndex", None)
+        name = tool_use.get("name", "")
+
+        if name and index is not None:
+            request.add_streaming_function_call(index=index, name=name, arguments=None)
+        
+        return
+
+    contentBlockDelta = chunk.get("contentBlockDelta", {})
+    tool_use = contentBlockDelta.get("delta", {}).get("toolUse", {})
+    if tool_use:
+        index = contentBlockDelta.get("contentBlockIndex", None)
+        input = tool_use.get("input", "")
+
+        if input and index is not None:
+            request.add_streaming_function_call(index=index, name=None, arguments=input)
+
+        return
+
+def bedrock_converse_process_synchronous_function_call(request: _ProviderRequest, response: 'dict[str, Any]') -> None:
+    content = response.get("output", {}).get("message", {}).get("content", [])
+    if content:
+        for item in content:
+            tool_use = item.get("toolUse", {})
+            if tool_use:
+                name = tool_use.get("name", "")
+                input = tool_use.get("input", {})
+                arguments: Optional[str] = None
+
+                if input and isinstance(input, dict):
+                    arguments = json.dumps(input)
+                
+                if name:
+                    request.add_synchronous_function_call(name=name, arguments=arguments)
+
