@@ -6,8 +6,6 @@ PAYI_BASE_URL = "https://api.pay-i.com"
 class PayiHeaderNames:
     limit_ids:str  = "xProxy-Limit-IDs"
     request_tags:str = "xProxy-Request-Tags"
-    experience_id:str = "xProxy-Experience-ID"
-    experience_name:str = "xProxy-Experience-Name"
     use_case_id:str = "xProxy-UseCase-ID"
     use_case_name:str = "xProxy-UseCase-Name"
     use_case_version:str = "xProxy-UseCase-Version"
@@ -46,8 +44,6 @@ def create_headers(
     limit_ids: Union[List[str], None] = None,
     request_tags: Union[List[str], None] = None,
     user_id: Union[str, None] = None,
-    experience_id: Union[str, None] = None,
-    experience_name: Union[str, None] = None,
     use_case_id: Union[str, None] = None,
     use_case_name: Union[str, None] = None,
     use_case_version: Union[int, None] = None,
@@ -64,10 +60,6 @@ def create_headers(
         headers.update(create_request_header_from_tags(request_tags))
     if user_id:
         headers.update({ PayiHeaderNames.user_id: user_id})
-    if experience_id:
-        headers.update({ PayiHeaderNames.experience_id: experience_id})
-    if experience_name:
-        headers.update({ PayiHeaderNames.experience_name: experience_name})
     if use_case_id:
         headers.update({ PayiHeaderNames.use_case_id: use_case_id})
     if use_case_name:
