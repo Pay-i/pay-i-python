@@ -138,6 +138,7 @@ class PayiInstrumentConfig(TypedDict, total=False):
     use_case_id: Optional[str]
     use_case_version: Optional[int]
     user_id: Optional[str]
+    request_tags: Optional["list[str]"]
 
 class _Context(TypedDict, total=False):
     proxy: Optional[bool]
@@ -246,8 +247,17 @@ class _PayiInstrumentor:
                     self._logger.error(f"Error creating default use case definition based on file name {caller_filename}: {e}")
 
             self.__enter__()
+
             # _init_current_context will update the currrent context stack location
-            self._init_current_context(**global_config) # type: ignore
+            context: _Context = {}
+            # Copy allowed keys from global_config into context
+            # Dynamically use keys from _Context TypedDict
+            context_keys = list(_Context.__annotations__.keys()) if hasattr(_Context, '__annotations__') else []
+            for key in context_keys:
+                if key in global_config:
+                    context[key] = global_config[key] # type: ignore
+
+            self._init_current_context(**context) 
 
     def _instrument_all(self) -> None:
         self._instrument_openai()
@@ -567,10 +577,22 @@ class _PayiInstrumentor:
         else:
             context["user_id"] = user_id
 
+        parent_request_tags = parent_context.get("request_tags", None)
+        if request_tags is not None:
+            if len(request_tags) == 0:
+                context["request_tags"] = None
+            else:
+                if parent_request_tags:
+                    # union of new and parent lists if the parent context contains request tags
+                    context["request_tags"] = list(set(request_tags) | set(parent_request_tags))
+                else:
+                    context["request_tags"] = request_tags
+        elif parent_request_tags:
+            # use the parent request_tags if it exists
+            context["request_tags"] = parent_request_tags
+
         if use_case_step and (context["use_case_name"] or context["use_case_id"]):
             context["use_case_step"] = use_case_step
-        if request_tags:
-            context["request_tags"] = request_tags
         if price_as_category:
             context["price_as_category"] = price_as_category
         if price_as_resource:
@@ -587,6 +609,7 @@ class _PayiInstrumentor:
         use_case_id: Optional[str],
         use_case_version: Optional[int],        
         user_id: Optional[str],
+        request_tags: Optional["list[str]"] = None,
         *args: Any,
         **kwargs: Any,
     ) -> Any:
@@ -597,7 +620,8 @@ class _PayiInstrumentor:
                 use_case_name=use_case_name,
                 use_case_id=use_case_id,
                 use_case_version=use_case_version,
-                user_id=user_id)
+                user_id=user_id,
+                request_tags=request_tags)
             return await func(*args, **kwargs)
 
     def _call_func(
@@ -609,6 +633,7 @@ class _PayiInstrumentor:
         use_case_id: Optional[str],
         use_case_version: Optional[int],        
         user_id: Optional[str],
+        request_tags: Optional["list[str]"] = None,
         *args: Any,
         **kwargs: Any,
     ) -> Any:
@@ -619,7 +644,8 @@ class _PayiInstrumentor:
                 use_case_name=use_case_name,
                 use_case_id=use_case_id,
                 use_case_version=use_case_version,
-                user_id=user_id)
+                user_id=user_id,
+                request_tags=request_tags)
             return func(*args, **kwargs)
 
     def __enter__(self) -> Any:
@@ -1475,6 +1501,7 @@ def track(
     use_case_id: Optional[str] = None,
     use_case_version: Optional[int] = None,
     user_id: Optional[str] = None,
+    request_tags: Optional["list[str]"] = None,
     proxy: Optional[bool] = None,
 ) -> Any:
 
@@ -1496,6 +1523,7 @@ def track(
                     use_case_id,
                     use_case_version,
                     user_id,
+                    request_tags,
                     *args,
                     **kwargs,
                 )
@@ -1516,6 +1544,7 @@ def track(
                     use_case_id,
                     use_case_version,
                     user_id,
+                    request_tags,
                     *args,
                     **kwargs,
                 )
