@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.89 (2025-06-17)
+
+Full Changelog: [v0.1.0-alpha.88...v0.1.0-alpha.89](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.88...v0.1.0-alpha.89)
+
+### Features
+
+* request tags at [@track](https://github.com/track) and payi_instrument() scope ([#327](https://github.com/Pay-i/pay-i-python/issues/327)) ([4323d25](https://github.com/Pay-i/pay-i-python/commit/4323d25f50694e6daa97b0933fd97ae1da940284))
+
 ## 0.1.0-alpha.88 (2025-06-16)
 
 Full Changelog: [v0.1.0-alpha.87...v0.1.0-alpha.88](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.87...v0.1.0-alpha.88)
