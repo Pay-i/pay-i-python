@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.1.0-alpha.90 (2025-06-23)
+
+Full Changelog: [v0.1.0-alpha.89...v0.1.0-alpha.90](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.89...v0.1.0-alpha.90)
+
+### Features
+
+* **client:** add support for aiohttp ([e875663](https://github.com/Pay-i/pay-i-python/commit/e87566399607c87091b4a83f855910b78107e31b))
+
+
+### Bug Fixes
+
+* **client:** correctly parse binary response | stream ([6bb78c4](https://github.com/Pay-i/pay-i-python/commit/6bb78c4488dc3af5d556c1a063372be6ae018342))
+* **tests:** fix: tests which call HTTP endpoints directly with the example parameters ([eb727c7](https://github.com/Pay-i/pay-i-python/commit/eb727c742f8f6ac0c9487d7ff4e6e7698afacd0d))
+
+
+### Chores
+
+* **ci:** enable for pull requests ([e999e4e](https://github.com/Pay-i/pay-i-python/commit/e999e4ee3a05ea8dcb8518eaba1e6ea5f3f958e0))
+* **internal:** update conftest.py ([d668101](https://github.com/Pay-i/pay-i-python/commit/d66810199d9394852f8c5783801fc055745a3ef2))
+* **internal:** version bump ([5616a6a](https://github.com/Pay-i/pay-i-python/commit/5616a6a1147d94e8ca69350dd5b21a211b9eed75))
+* **internal:** version bump ([d93bffd](https://github.com/Pay-i/pay-i-python/commit/d93bffd3f408fc6ec34bf4071dddcc2e55653fcc))
+* **internal:** version bump ([d2022a7](https://github.com/Pay-i/pay-i-python/commit/d2022a710955c9bbf6683a96bc3e2fd46a14c3e7))
+* **readme:** update badges ([5219fd7](https://github.com/Pay-i/pay-i-python/commit/5219fd70ef3c88f114f6b69e89caabcf0d5a39e0))
+* **tests:** add tests for httpx client instantiation & proxies ([bafbfd1](https://github.com/Pay-i/pay-i-python/commit/bafbfd154aba87811edb87bf375d8d9242b6a14e))
+* **tests:** run tests in parallel ([6bdbcdd](https://github.com/Pay-i/pay-i-python/commit/6bdbcddb8a4465cc79fee2e0ba66168079a24490))
+
+
+### Documentation
+
+* **client:** fix httpx.Timeout documentation reference ([60d1b01](https://github.com/Pay-i/pay-i-python/commit/60d1b01aae900736dfe0345aa8250b67fa1ba704))
+
 ## 0.1.0-alpha.89 (2025-06-17)
 
 Full Changelog: [v0.1.0-alpha.88...v0.1.0-alpha.89](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.88...v0.1.0-alpha.89)
