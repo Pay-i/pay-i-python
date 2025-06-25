@@ -301,15 +301,37 @@ class _OpenAiProviderRequest(_ProviderRequest):
         units["text"] = Units(input=input, output=output)
 
     @staticmethod
-    def has_image_and_get_texts(encoding: tiktoken.Encoding, content: Union[str, 'list[Any]'], image_type: str = "image_url", text_type:str = "text") -> 'tuple[bool, int]':
+    def has_image_and_get_texts(encoding: tiktoken.Encoding, content: Union[str, 'list[Any]'], image_type: str, text_type: str) -> 'tuple[bool, int]':
         if isinstance(content, list): # type: ignore
-            has_image = any(item.get("type") == image_type for item in content)
+            has_image = any(item.get("type", "") == image_type for item in content)
             if has_image is False:
                 return has_image, 0
             
             token_count = sum(len(encoding.encode(item.get("text", ""))) for item in content if item.get("type") == text_type)
             return has_image, token_count
         return False, 0
+
+    @staticmethod
+    def post_process_request_prompt(content: Union[str, 'list[Any]'], image_type: str, url_subkey: bool) -> bool:
+        modified = False
+        if isinstance(content, list): # type: ignore
+            for item in content:
+                type = item.get("type", "")
+                if type != image_type:
+                    continue
+
+                if url_subkey:
+                    url = item.get("image_url", {}).get("url", "")
+                    if url.startswith("data:"):
+                        item["image_url"]["url"] = _PayiInstrumentor._not_instrumented
+                        modified = True
+                else:
+                    url = item.get("image_url", "")
+                    if url.startswith("data:"):
+                        item["image_url"] = _PayiInstrumentor._not_instrumented
+                        modified = True
+
+        return modified
 
 class _OpenAiEmbeddingsProviderRequest(_OpenAiProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor):
@@ -397,7 +419,7 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
             
             if enc:
                 for message in messages:
-                    msg_has_image, msg_prompt_tokens = self.has_image_and_get_texts(enc, message.get('content', ''))
+                    msg_has_image, msg_prompt_tokens = self.has_image_and_get_texts(enc, message.get('content', ''), image_type="image_url", text_type="text")
                     if msg_has_image:
                         has_image = True
                         estimated_token_count += msg_prompt_tokens
@@ -417,6 +439,13 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
                     kwargs['stream_options'] = {"include_usage": True}
                     self._include_usage_added = True
         return True
+
+    @override
+    def remove_inline_data(self, prompt: 'dict[str, Any]') -> bool:
+        messages = prompt.get("messages", None)
+        if not messages:
+            return False
+        return self.post_process_request_prompt(messages, image_type="image_url", url_subkey=True)
 
     @override
     def process_synchronous_response(
@@ -530,6 +559,21 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
                 self._estimated_prompt_tokens = estimated_token_count
 
         return True
+
+    @override
+    def remove_inline_data(self, prompt: 'dict[str, Any]') -> bool:
+        modified = False
+        input = prompt.get("input", [])
+        for item in input:
+            if not isinstance(item, dict):
+                continue
+
+            for key, value in item.items(): # type: ignore
+                if key == "content":
+                    if isinstance(value, list):
+                        modified = self.post_process_request_prompt(value, image_type="input_image", url_subkey=False) | modified # type: ignore
+
+        return modified
 
     @override
     def process_synchronous_response(

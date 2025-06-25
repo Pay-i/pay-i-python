@@ -67,6 +67,9 @@ class _ProviderRequest:
     def process_initial_stream_response(self, response: Any) -> None:
         pass
 
+    def remove_inline_data(self, prompt: 'dict[str, Any]') -> bool:# noqa: ARG002
+        return False
+
     @property
     def is_aws_client(self) -> bool:
         return self._is_aws_client if self._is_aws_client is not None else False
@@ -133,6 +136,7 @@ class _ProviderRequest:
 class PayiInstrumentConfig(TypedDict, total=False):
     proxy: bool
     global_instrumentation: bool
+    instrument_inline_data: bool
     limit_ids: Optional["list[str]"]
     use_case_name: Optional[str]
     use_case_id: Optional[str]
@@ -183,6 +187,8 @@ class _TrackContext:
             _instrumentor.__exit__(exc_type, exc_val, exc_tb)
 
 class _PayiInstrumentor:
+    _not_instrumented: str = "<not_instrumented>"
+
     def __init__(
         self,
         payi: Optional[Payi],
@@ -218,6 +224,8 @@ class _PayiInstrumentor:
 
         # default is instrument and ingest metrics
         self._proxy_default: bool = global_config.get("proxy", False)
+
+        self._instrument_inline_data: bool = global_config.get("instrument_inline_data", False)
 
         global_instrumentation = global_config.pop("global_instrumentation", True)
 
@@ -344,6 +352,18 @@ class _PayiInstrumentor:
         if request._function_call_builder:
             # convert the function call builder to a list of function calls
             ingest_units["provider_response_function_calls"] = list(request._function_call_builder.values())
+
+        request_json = ingest_units.get('provider_request_json', "")
+        if request_json and self._instrument_inline_data is False:
+            try:
+                prompt_dict = json.loads(request_json)
+                if request.remove_inline_data(prompt_dict):
+                    self._logger.debug(f"Removed inline data from provider_request_json")
+                    # store the modified dict back as JSON string
+                    ingest_units['provider_request_json'] = json.dumps(prompt_dict)
+
+            except Exception as e:
+                self._logger.error(f"Error serializing provider_request_json: {e}")
 
         if int(ingest_units.get("http_status_code") or 0) < 400:
             units = ingest_units.get("units", {})

@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.91 (2025-06-25)
+
+Full Changelog: [v0.1.0-alpha.90...v0.1.0-alpha.91](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.90...v0.1.0-alpha.91)
+
+### Features
+
+* do not instrument inline base64 image data by default ([#331](https://github.com/Pay-i/pay-i-python/issues/331)) ([8b0455d](https://github.com/Pay-i/pay-i-python/commit/8b0455d24cda3060bc2170b05e5438c72885bf1a))
+
+
+### Chores
+
+* **tests:** skip some failing tests on the latest python versions ([1856b99](https://github.com/Pay-i/pay-i-python/commit/1856b99b5802dc02e4f536818f1a205d9da708c2))
+
 ## 0.1.0-alpha.90 (2025-06-23)
 
 Full Changelog: [v0.1.0-alpha.89...v0.1.0-alpha.90](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.89...v0.1.0-alpha.90)
