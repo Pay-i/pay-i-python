@@ -173,9 +173,14 @@ class _AnthropicProviderRequest(_ProviderRequest):
 
         messages = kwargs.get("messages")
         if messages:
+
             anthropic_has_image_and_get_texts(self, messages)
 
         return True
+
+    @override
+    def remove_inline_data(self, prompt: 'dict[str, Any]') -> bool:
+        return anthropic_remove_inline_data(prompt)
 
     @override
     def process_exception(self, exception: Exception, kwargs: Any, ) -> bool:
@@ -353,3 +358,29 @@ def has_image_and_get_texts(encoding: tiktoken.Encoding, content: Union[str, 'li
         return has_image, token_count
     
     return False, 0
+
+def anthropic_remove_inline_data(prompt: 'dict[str, Any]') -> bool:# noqa: ARG002
+    messages = prompt.get("messages", [])
+    if not messages:
+        return False
+
+    modified = False
+    for message in messages:
+        content = message.get('content', Any)
+        if not content or not isinstance(content, list):
+            continue
+
+        for item in content: # type: ignore
+            if not isinstance(item, dict):
+                continue
+            # item: dict[str, Any]
+            type = item.get("type", "") # type: ignore
+            if type != "image":
+                continue
+
+            source = item.get("source", {}) # type: ignore
+            if source.get("type", "") == "base64": # type: ignore
+                source["data"] = _PayiInstrumentor._not_instrumented
+                modified = True
+
+    return modified

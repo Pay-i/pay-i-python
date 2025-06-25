@@ -1,6 +1,7 @@
 import json
 import math
 from typing import Any, Optional
+from typing_extensions import override
 
 from payi.lib.helpers import PayiCategories
 from payi.types.ingest_units_params import Units
@@ -62,7 +63,22 @@ class _VertexRequest(_ProviderRequest): # type: ignore
             ingest = True
 
         return _ChunkResult(send_chunk_to_caller=True, ingest=ingest)
-    
+
+    @override
+    def remove_inline_data(self, prompt: 'dict[str, Any]') -> bool:
+        modified = False
+
+        parts: list[dict[str, Any]] = prompt["contents"].get("parts", []) 
+        for part in parts:
+            inline_data = part.get("inline_data", {})
+            if not isinstance(inline_data, dict):
+                continue
+            if "data" in inline_data:
+                inline_data["data"] = _PayiInstrumentor._not_instrumented
+                modified = True
+
+        return modified
+
     def process_response_part_for_function_call(self, part: 'dict[str, Any]') -> None:
         function = part.get("function_call", {})
         if not function:

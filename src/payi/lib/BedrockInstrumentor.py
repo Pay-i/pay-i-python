@@ -356,6 +356,24 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
 
         return response
 
+    @override
+    def remove_inline_data(self, prompt: 'dict[str, Any]') -> bool:# noqa: ARG002
+        if not self._is_anthropic:
+            return False
+
+        from .AnthropicInstrumentor import anthropic_remove_inline_data
+        body = prompt.get("body", "")
+        if not body:
+            return False
+        
+        body_json = json.loads(body)
+        
+        if anthropic_remove_inline_data(body_json):
+            prompt["body"] = json.dumps(body_json)
+            return True
+
+        return False
+
 class _BedrockConverseProviderRequest(_BedrockProviderRequest):
     @override
     def process_synchronous_response(
