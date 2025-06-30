@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import uuid
 import asyncio
 import inspect
@@ -14,7 +15,7 @@ from dataclasses import dataclass
 import nest_asyncio  # type: ignore
 from wrapt import ObjectProxy  # type: ignore
 
-from payi import Payi, AsyncPayi, __version__ as _payi_version
+from payi import Payi, AsyncPayi, APIConnectionError, __version__ as _payi_version
 from payi.types import IngestUnitsParams
 from payi.lib.helpers import PayiHeaderNames
 from payi.types.ingest_response import IngestResponse
@@ -137,6 +138,7 @@ class PayiInstrumentConfig(TypedDict, total=False):
     proxy: bool
     global_instrumentation: bool
     instrument_inline_data: bool
+    connection_error_logging_window: int
     limit_ids: Optional["list[str]"]
     use_case_name: Optional[str]
     use_case_id: Optional[str]
@@ -221,6 +223,12 @@ class _PayiInstrumentor:
 
         self._blocked_limits: set[str] = set()
         self._exceeded_limits: set[str] = set()
+
+        self._api_connection_error_last_log_time: Optional[float] = None
+        self._api_connection_error_count: int = 0
+        self._api_connection_error_window: int = global_config.get("connection_error_logging_window", 180)
+        if self._api_connection_error_window < 0:
+            raise ValueError("connection_error_logging_window must be a non-negative integer")
 
         # default is instrument and ingest metrics
         self._proxy_default: bool = global_config.get("proxy", False)
@@ -353,6 +361,9 @@ class _PayiInstrumentor:
             # convert the function call builder to a list of function calls
             ingest_units["provider_response_function_calls"] = list(request._function_call_builder.values())
 
+        if 'resource' not in ingest_units or len(ingest_units['resource']) == 0:
+            ingest_units['resource'] = "system.unknown_model"  # type: ignore[unreachable]
+
         request_json = ingest_units.get('provider_request_json', "")
         if request_json and self._instrument_inline_data is False:
             try:
@@ -402,6 +413,26 @@ class _PayiInstrumentor:
                 if removeBlockedId:
                     self._blocked_limits.discard(limit_id)
 
+    def _process_ingest_connection_error(self, e: APIConnectionError, ingest_units: IngestUnitsParams) -> None:
+        now = time.time()
+
+        last = self._api_connection_error_last_log_time
+        count = self._api_connection_error_count
+
+        if last is None or (now - last) > self._api_connection_error_window:
+            # If previous window had suppressed errors, log the count
+            append = ""
+            if count > 0:
+                append = f", {count} APIConnectionError exceptions in the last {self._api_connection_error_window} seconds"
+
+            # Log the current error
+            self._logger.error(f"Error Pay-i ingesting: connection exception {e}, request {ingest_units}{append}")
+            self._api_connection_error_last_log_time = now
+            self._api_connection_error_count = 0
+        else:
+            # Suppress and count
+            self._api_connection_error_count += 1
+
     async def _aingest_units(self, request: _ProviderRequest) -> Optional[IngestResponse]:
         ingest_response: Optional[IngestResponse] = None
         ingest_units = request._ingest
@@ -437,7 +468,10 @@ class _PayiInstrumentor:
 
             return ingest_response
         except Exception as e:
-            self._logger.error(f"Error Pay-i async ingesting: exception {e}, request {ingest_units}")
+            if isinstance(e, APIConnectionError) and self._api_connection_error_window > 0:
+                self._process_ingest_connection_error(e, ingest_units)
+            else:
+                self._logger.error(f"Error Pay-i async ingesting: exception {e}, request {ingest_units}")
     
         return None         
     
@@ -513,7 +547,10 @@ class _PayiInstrumentor:
                 self._logger.error("No payi instance to ingest units")
 
         except Exception as e:
-            self._logger.error(f"Error Pay-i ingesting: exception {e}, request {ingest_units}")
+            if isinstance(e, APIConnectionError) and self._api_connection_error_window > 0:
+                self._process_ingest_connection_error(e, ingest_units)
+            else:
+                self._logger.error(f"Error Pay-i ingesting: exception {e}, request {ingest_units}")
         
         return None
 
