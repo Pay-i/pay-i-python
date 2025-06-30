@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.0-alpha.92 (2025-06-30)
+
+Full Changelog: [v0.1.0-alpha.91...v0.1.0-alpha.92](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.91...v0.1.0-alpha.92)
+
+### Bug Fixes
+
+* **ci:** correct conditional ([b1b1775](https://github.com/Pay-i/pay-i-python/commit/b1b17750b13111f2eb5a7d76fa84134f07575e3b))
+* **ci:** release-doctor — report correct token name ([48fc8a1](https://github.com/Pay-i/pay-i-python/commit/48fc8a1381674b1506518c149c483a518d693ffd))
+
+
+### Chores
+
+* **ci:** only run for pushes and fork pull requests ([ba502ab](https://github.com/Pay-i/pay-i-python/commit/ba502aba39af4a8aca8b64c90b1cb8d323926f93))
+
 ## 0.1.0-alpha.91 (2025-06-25)
 
 Full Changelog: [v0.1.0-alpha.90...v0.1.0-alpha.91](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.90...v0.1.0-alpha.91)
