@@ -226,7 +226,7 @@ class _PayiInstrumentor:
 
         self._api_connection_error_last_log_time: Optional[float] = None
         self._api_connection_error_count: int = 0
-        self._api_connection_error_window: int = global_config.get("connection_error_logging_window", 180)
+        self._api_connection_error_window: int = global_config.get("connection_error_logging_window", 60)
         if self._api_connection_error_window < 0:
             raise ValueError("connection_error_logging_window must be a non-negative integer")
 
