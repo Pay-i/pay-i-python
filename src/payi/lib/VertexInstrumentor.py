@@ -88,7 +88,6 @@ class _GoogleVertexRequest(_VertexRequest):
             )
         self._prompt_character_count = 0
         self._candidates_character_count = 0
-        self._model_name: Optional[str] = None
 
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
@@ -100,7 +99,7 @@ class _GoogleVertexRequest(_VertexRequest):
             if model and isinstance(model, str):
                 # Extract the model name after the last slash
                 self._model_name = model.split('/')[-1]
-        
+
         if not args:
             return True
         
