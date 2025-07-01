@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.93 (2025-07-01)
+
+Full Changelog: [v0.1.0-alpha.92...v0.1.0-alpha.93](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.92...v0.1.0-alpha.93)
+
+### Features
+
+* limit connection error log messages ([#333](https://github.com/Pay-i/pay-i-python/issues/333)) ([f454006](https://github.com/Pay-i/pay-i-python/commit/f454006c80beaf09dfe92eba98e4aaeae0e017fd))
+
 ## 0.1.0-alpha.92 (2025-06-30)
 
 Full Changelog: [v0.1.0-alpha.91...v0.1.0-alpha.92](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.91...v0.1.0-alpha.92)
