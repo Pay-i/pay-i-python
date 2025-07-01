@@ -224,7 +224,7 @@ class _PayiInstrumentor:
         self._blocked_limits: set[str] = set()
         self._exceeded_limits: set[str] = set()
 
-        self._api_connection_error_last_log_time: Optional[float] = None
+        self._api_connection_error_last_log_time: float = time.time()
         self._api_connection_error_count: int = 0
         self._api_connection_error_window: int = global_config.get("connection_error_logging_window", 60)
         if self._api_connection_error_window < 0:
@@ -416,14 +416,11 @@ class _PayiInstrumentor:
     def _process_ingest_connection_error(self, e: APIConnectionError, ingest_units: IngestUnitsParams) -> None:
         now = time.time()
 
-        last = self._api_connection_error_last_log_time
-        count = self._api_connection_error_count
-
-        if last is None or (now - last) > self._api_connection_error_window:
+        if (now - self._api_connection_error_last_log_time) > self._api_connection_error_window:
             # If previous window had suppressed errors, log the count
             append = ""
-            if count > 0:
-                append = f", {count} APIConnectionError exceptions in the last {self._api_connection_error_window} seconds"
+            if self._api_connection_error_count > 0:
+                append = f", {self._api_connection_error_count} APIConnectionError exceptions in the last {self._api_connection_error_window} seconds"
 
             # Log the current error
             self._logger.error(f"Error Pay-i ingesting: connection exception {e}, request {ingest_units}{append}")
