@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.94 (2025-07-02)
+
+Full Changelog: [v0.1.0-alpha.93...v0.1.0-alpha.94](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.93...v0.1.0-alpha.94)
+
+### Chores
+
+* **ci:** change upload type ([9646d10](https://github.com/Pay-i/pay-i-python/commit/9646d106009da1fe89c14b77d9bba23a1195a8ab))
+
 ## 0.1.0-alpha.93 (2025-07-01)
 
 Full Changelog: [v0.1.0-alpha.92...v0.1.0-alpha.93](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.92...v0.1.0-alpha.93)
