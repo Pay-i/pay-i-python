@@ -1,4 +1,4 @@
-configured_endpoints: 42
+configured_endpoints: 43
 openapi_spec_url: https://storage.googleapis.com/stainless-sdk-openapi-specs/pay-i%2Fpayi-8426e298b2cf7fa4c9fad7105f12f7cfa5f9396cf27b4105ab0c12a024b62ff2.yml
 openapi_spec_hash: 832ec542639017aaf12d7a8ecec34ce1
-config_hash: 04467276a5e05a939501f92a021d4f4e
+config_hash: 76d010279c71da234a242bbf28b23b6b

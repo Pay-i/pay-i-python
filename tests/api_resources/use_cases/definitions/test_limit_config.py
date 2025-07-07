@@ -70,6 +70,44 @@ class TestLimitConfig:
                 max=0,
             )
 
+    @parametrize
+    def test_method_delete(self, client: Payi) -> None:
+        limit_config = client.use_cases.definitions.limit_config.delete(
+            "use_case_name",
+        )
+        assert_matches_type(UseCaseDefinition, limit_config, path=["response"])
+
+    @parametrize
+    def test_raw_response_delete(self, client: Payi) -> None:
+        response = client.use_cases.definitions.limit_config.with_raw_response.delete(
+            "use_case_name",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        limit_config = response.parse()
+        assert_matches_type(UseCaseDefinition, limit_config, path=["response"])
+
+    @parametrize
+    def test_streaming_response_delete(self, client: Payi) -> None:
+        with client.use_cases.definitions.limit_config.with_streaming_response.delete(
+            "use_case_name",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            limit_config = response.parse()
+            assert_matches_type(UseCaseDefinition, limit_config, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @parametrize
+    def test_path_params_delete(self, client: Payi) -> None:
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `use_case_name` but received ''"):
+            client.use_cases.definitions.limit_config.with_raw_response.delete(
+                "",
+            )
+
 
 class TestAsyncLimitConfig:
     parametrize = pytest.mark.parametrize(
@@ -127,4 +165,42 @@ class TestAsyncLimitConfig:
             await async_client.use_cases.definitions.limit_config.with_raw_response.create(
                 use_case_name="",
                 max=0,
+            )
+
+    @parametrize
+    async def test_method_delete(self, async_client: AsyncPayi) -> None:
+        limit_config = await async_client.use_cases.definitions.limit_config.delete(
+            "use_case_name",
+        )
+        assert_matches_type(UseCaseDefinition, limit_config, path=["response"])
+
+    @parametrize
+    async def test_raw_response_delete(self, async_client: AsyncPayi) -> None:
+        response = await async_client.use_cases.definitions.limit_config.with_raw_response.delete(
+            "use_case_name",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        limit_config = await response.parse()
+        assert_matches_type(UseCaseDefinition, limit_config, path=["response"])
+
+    @parametrize
+    async def test_streaming_response_delete(self, async_client: AsyncPayi) -> None:
+        async with async_client.use_cases.definitions.limit_config.with_streaming_response.delete(
+            "use_case_name",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            limit_config = await response.parse()
+            assert_matches_type(UseCaseDefinition, limit_config, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @parametrize
+    async def test_path_params_delete(self, async_client: AsyncPayi) -> None:
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `use_case_name` but received ''"):
+            await async_client.use_cases.definitions.limit_config.with_raw_response.delete(
+                "",
             )

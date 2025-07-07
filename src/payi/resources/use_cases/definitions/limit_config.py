@@ -90,6 +90,39 @@ class LimitConfigResource(SyncAPIResource):
             cast_to=UseCaseDefinition,
         )
 
+    def delete(
+        self,
+        use_case_name: str,
+        *,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+    ) -> UseCaseDefinition:
+        """
+        Delete a Use Case default limit configuration
+
+        Args:
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        if not use_case_name:
+            raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
+        return self._delete(
+            f"/api/v1/use_cases/definitions/{use_case_name}/limit_config",
+            options=make_request_options(
+                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+            ),
+            cast_to=UseCaseDefinition,
+        )
+
 
 class AsyncLimitConfigResource(AsyncAPIResource):
     @cached_property
@@ -157,6 +190,39 @@ class AsyncLimitConfigResource(AsyncAPIResource):
             cast_to=UseCaseDefinition,
         )
 
+    async def delete(
+        self,
+        use_case_name: str,
+        *,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+    ) -> UseCaseDefinition:
+        """
+        Delete a Use Case default limit configuration
+
+        Args:
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        if not use_case_name:
+            raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
+        return await self._delete(
+            f"/api/v1/use_cases/definitions/{use_case_name}/limit_config",
+            options=make_request_options(
+                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+            ),
+            cast_to=UseCaseDefinition,
+        )
+
 
 class LimitConfigResourceWithRawResponse:
     def __init__(self, limit_config: LimitConfigResource) -> None:
@@ -164,6 +230,9 @@ class LimitConfigResourceWithRawResponse:
 
         self.create = to_raw_response_wrapper(
             limit_config.create,
+        )
+        self.delete = to_raw_response_wrapper(
+            limit_config.delete,
         )
 
 
@@ -174,6 +243,9 @@ class AsyncLimitConfigResourceWithRawResponse:
         self.create = async_to_raw_response_wrapper(
             limit_config.create,
         )
+        self.delete = async_to_raw_response_wrapper(
+            limit_config.delete,
+        )
 
 
 class LimitConfigResourceWithStreamingResponse:
@@ -183,6 +255,9 @@ class LimitConfigResourceWithStreamingResponse:
         self.create = to_streamed_response_wrapper(
             limit_config.create,
         )
+        self.delete = to_streamed_response_wrapper(
+            limit_config.delete,
+        )
 
 
 class AsyncLimitConfigResourceWithStreamingResponse:
@@ -191,4 +266,7 @@ class AsyncLimitConfigResourceWithStreamingResponse:
 
         self.create = async_to_streamed_response_wrapper(
             limit_config.create,
+        )
+        self.delete = async_to_streamed_response_wrapper(
+            limit_config.delete,
         )
