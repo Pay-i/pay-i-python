@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.96 (2025-07-07)
+
+Full Changelog: [v0.1.0-alpha.95...v0.1.0-alpha.96](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.95...v0.1.0-alpha.96)
+
+### Features
+
+* **api:** manual updates ([4419663](https://github.com/Pay-i/pay-i-python/commit/4419663a981ee2f427d25ff6e7ea7e440e63bc75))
+
 ## 0.1.0-alpha.95 (2025-07-07)
 
 Full Changelog: [v0.1.0-alpha.94...v0.1.0-alpha.95](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.94...v0.1.0-alpha.95)
