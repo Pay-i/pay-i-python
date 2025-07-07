@@ -64,6 +64,7 @@ httpx-aiohttp==0.1.8
 idna==3.4
     # via anyio
     # via httpx
+    # via requests
     # via yarl
 importlib-metadata==7.0.0
 iniconfig==2.0.0

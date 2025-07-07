@@ -86,7 +86,6 @@ class IngestResource(SyncAPIResource):
         self,
         *,
         category: str,
-        resource: str,
         units: Dict[str, IngestUnits],
         end_to_end_latency_ms: Optional[int] | NotGiven = NOT_GIVEN,
         event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
@@ -101,6 +100,7 @@ class IngestResource(SyncAPIResource):
         provider_response_id: Optional[str] | NotGiven = NOT_GIVEN,
         provider_response_json: Union[str, List[str], None] | NotGiven = NOT_GIVEN,
         provider_uri: Optional[str] | NotGiven = NOT_GIVEN,
+        resource: Optional[str] | NotGiven = NOT_GIVEN,
         time_to_first_completion_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
         time_to_first_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
         use_case_properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
@@ -233,7 +233,6 @@ class IngestResource(SyncAPIResource):
             body=maybe_transform(
                 {
                     "category": category,
-                    "resource": resource,
                     "units": units,
                     "end_to_end_latency_ms": end_to_end_latency_ms,
                     "event_timestamp": event_timestamp,
@@ -247,6 +246,7 @@ class IngestResource(SyncAPIResource):
                     "provider_response_id": provider_response_id,
                     "provider_response_json": provider_response_json,
                     "provider_uri": provider_uri,
+                    "resource": resource,
                     "time_to_first_completion_token_ms": time_to_first_completion_token_ms,
                     "time_to_first_token_ms": time_to_first_token_ms,
                     "use_case_properties": use_case_properties,
@@ -316,7 +316,6 @@ class AsyncIngestResource(AsyncAPIResource):
         self,
         *,
         category: str,
-        resource: str,
         units: Dict[str, IngestUnits],
         end_to_end_latency_ms: Optional[int] | NotGiven = NOT_GIVEN,
         event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
@@ -331,6 +330,7 @@ class AsyncIngestResource(AsyncAPIResource):
         provider_response_id: Optional[str] | NotGiven = NOT_GIVEN,
         provider_response_json: Union[str, List[str], None] | NotGiven = NOT_GIVEN,
         provider_uri: Optional[str] | NotGiven = NOT_GIVEN,
+        resource: Optional[str] | NotGiven = NOT_GIVEN,
         time_to_first_completion_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
         time_to_first_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
         use_case_properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
@@ -461,7 +461,6 @@ class AsyncIngestResource(AsyncAPIResource):
             body=await async_maybe_transform(
                 {
                     "category": category,
-                    "resource": resource,
                     "units": units,
                     "end_to_end_latency_ms": end_to_end_latency_ms,
                     "event_timestamp": event_timestamp,
@@ -475,6 +474,7 @@ class AsyncIngestResource(AsyncAPIResource):
                     "provider_response_id": provider_response_id,
                     "provider_response_json": provider_response_json,
                     "provider_uri": provider_uri,
+                    "resource": resource,
                     "time_to_first_completion_token_ms": time_to_first_completion_token_ms,
                     "time_to_first_token_ms": time_to_first_token_ms,
                     "use_case_properties": use_case_properties,

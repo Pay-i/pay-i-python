@@ -16,8 +16,6 @@ __all__ = ["IngestUnitsParams", "ProviderResponseFunctionCall"]
 class IngestUnitsParams(TypedDict, total=False):
     category: Required[str]
 
-    resource: Required[str]
-
     units: Required[Dict[str, IngestUnits]]
 
     end_to_end_latency_ms: Optional[int]
@@ -43,6 +41,8 @@ class IngestUnitsParams(TypedDict, total=False):
     provider_response_json: Union[str, List[str], None]
 
     provider_uri: Optional[str]
+
+    resource: Optional[str]
 
     time_to_first_completion_token_ms: Optional[int]
 

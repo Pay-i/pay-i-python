@@ -38,9 +38,7 @@ from .definitions.definitions import (
     DefinitionsResourceWithStreamingResponse,
     AsyncDefinitionsResourceWithStreamingResponse,
 )
-from ...types.use_case_create_response import UseCaseCreateResponse
-from ...types.use_case_delete_response import UseCaseDeleteResponse
-from ...types.use_case_retrieve_response import UseCaseRetrieveResponse
+from ...types.use_case_instance_response import UseCaseInstanceResponse
 
 __all__ = ["UseCasesResource", "AsyncUseCasesResource"]
 
@@ -87,7 +85,7 @@ class UseCasesResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> UseCaseCreateResponse:
+    ) -> UseCaseInstanceResponse:
         """
         Create a Use Case instance
 
@@ -107,7 +105,7 @@ class UseCasesResource(SyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=UseCaseCreateResponse,
+            cast_to=UseCaseInstanceResponse,
         )
 
     def retrieve(
@@ -120,7 +118,7 @@ class UseCasesResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> UseCaseRetrieveResponse:
+    ) -> UseCaseInstanceResponse:
         """
         Get a Use Case instance details
 
@@ -140,7 +138,7 @@ class UseCasesResource(SyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=UseCaseRetrieveResponse,
+            cast_to=UseCaseInstanceResponse,
         )
 
     def delete(
@@ -153,7 +151,7 @@ class UseCasesResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> UseCaseDeleteResponse:
+    ) -> UseCaseInstanceResponse:
         """
         Delete a Use Case instance
 
@@ -173,7 +171,7 @@ class UseCasesResource(SyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=UseCaseDeleteResponse,
+            cast_to=UseCaseInstanceResponse,
         )
 
 
@@ -219,7 +217,7 @@ class AsyncUseCasesResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> UseCaseCreateResponse:
+    ) -> UseCaseInstanceResponse:
         """
         Create a Use Case instance
 
@@ -239,7 +237,7 @@ class AsyncUseCasesResource(AsyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=UseCaseCreateResponse,
+            cast_to=UseCaseInstanceResponse,
         )
 
     async def retrieve(
@@ -252,7 +250,7 @@ class AsyncUseCasesResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> UseCaseRetrieveResponse:
+    ) -> UseCaseInstanceResponse:
         """
         Get a Use Case instance details
 
@@ -272,7 +270,7 @@ class AsyncUseCasesResource(AsyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=UseCaseRetrieveResponse,
+            cast_to=UseCaseInstanceResponse,
         )
 
     async def delete(
@@ -285,7 +283,7 @@ class AsyncUseCasesResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> UseCaseDeleteResponse:
+    ) -> UseCaseInstanceResponse:
         """
         Delete a Use Case instance
 
@@ -305,7 +303,7 @@ class AsyncUseCasesResource(AsyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=UseCaseDeleteResponse,
+            cast_to=UseCaseInstanceResponse,
         )
 
 

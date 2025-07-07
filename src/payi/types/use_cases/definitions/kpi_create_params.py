@@ -10,8 +10,8 @@ __all__ = ["KpiCreateParams"]
 class KpiCreateParams(TypedDict, total=False):
     description: Required[str]
 
+    goal: Required[float]
+
+    kpi_type: Required[Literal["boolean", "number", "percentage", "likert5", "likert7", "likert10"]]
+
     name: Required[str]
-
-    goal: float
-
-    kpi_type: Literal["boolean", "number", "percentage", "likert5", "likert7", "likert10"]

@@ -51,9 +51,9 @@ class TestKpis:
         response = client.use_cases.definitions.kpis.with_raw_response.create(
             use_case_name="use_case_name",
             description="x",
-            name="x",
             goal=0,
             kpi_type="boolean",
+            name="x",
         )
 
         assert response.is_closed is True
@@ -66,9 +66,9 @@ class TestKpis:
         with client.use_cases.definitions.kpis.with_streaming_response.create(
             use_case_name="use_case_name",
             description="x",
-            name="x",
             goal=0,
             kpi_type="boolean",
+            name="x",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -84,6 +84,8 @@ class TestKpis:
             client.use_cases.definitions.kpis.with_raw_response.create(
                 use_case_name="",
                 description="x",
+                goal=0,
+                kpi_type="boolean",
                 name="x",
             )
 
@@ -323,9 +325,9 @@ class TestAsyncKpis:
         response = await async_client.use_cases.definitions.kpis.with_raw_response.create(
             use_case_name="use_case_name",
             description="x",
-            name="x",
             goal=0,
             kpi_type="boolean",
+            name="x",
         )
 
         assert response.is_closed is True
@@ -338,9 +340,9 @@ class TestAsyncKpis:
         async with async_client.use_cases.definitions.kpis.with_streaming_response.create(
             use_case_name="use_case_name",
             description="x",
-            name="x",
             goal=0,
             kpi_type="boolean",
+            name="x",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -356,6 +358,8 @@ class TestAsyncKpis:
             await async_client.use_cases.definitions.kpis.with_raw_response.create(
                 use_case_name="",
                 description="x",
+                goal=0,
+                kpi_type="boolean",
                 name="x",
             )
 

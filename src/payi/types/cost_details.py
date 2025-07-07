@@ -10,6 +10,4 @@ __all__ = ["CostDetails"]
 class CostDetails(BaseModel):
     base: float
 
-    overage_base: Optional[float] = None
-
     overrun_base: Optional[float] = None

@@ -13,10 +13,6 @@ class LimitCreateParams(TypedDict, total=False):
 
     max: Required[float]
 
-    billing_model_id: Optional[str]
-
-    limit_basis: Literal["base", "billed"]
-
     limit_id: Optional[str]
 
     limit_tags: Optional[List[str]]

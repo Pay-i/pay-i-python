@@ -51,15 +51,16 @@ httpx-aiohttp==0.1.8
 idna==3.4
     # via anyio
     # via httpx
+    # via requests
     # via yarl
 multidict==6.4.4
     # via aiohttp
     # via yarl
+nest-asyncio==1.6.0
+    # via payi
 propcache==0.3.1
     # via aiohttp
     # via yarl
-nest-asyncio==1.6.0
-    # via payi
 pydantic==2.10.3
     # via payi
 pydantic-core==2.27.1
