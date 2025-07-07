@@ -18,7 +18,7 @@ from ..._response import (
 )
 from ..._base_client import make_request_options
 from ...types.use_cases import property_create_params
-from ...types.use_case_instance_response import UseCaseInstanceResponse
+from ...types.use_cases.property_create_response import PropertyCreateResponse
 
 __all__ = ["PropertiesResource", "AsyncPropertiesResource"]
 
@@ -54,7 +54,7 @@ class PropertiesResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> UseCaseInstanceResponse:
+    ) -> PropertyCreateResponse:
         """
         Update a Use Case instance properties
 
@@ -75,7 +75,7 @@ class PropertiesResource(SyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=UseCaseInstanceResponse,
+            cast_to=PropertyCreateResponse,
         )
 
 
@@ -110,7 +110,7 @@ class AsyncPropertiesResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> UseCaseInstanceResponse:
+    ) -> PropertyCreateResponse:
         """
         Update a Use Case instance properties
 
@@ -131,7 +131,7 @@ class AsyncPropertiesResource(AsyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=UseCaseInstanceResponse,
+            cast_to=PropertyCreateResponse,
         )
 
 

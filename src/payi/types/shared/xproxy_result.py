@@ -26,11 +26,11 @@ class Limits(BaseModel):
 
 
 class XproxyResult(BaseModel):
-    account_name: Optional[str] = None
-
     blocked_limit_ids: Optional[List[str]] = None
 
     cost: Optional[Cost] = None
+
+    experience_id: Optional[str] = None
 
     limits: Optional[Dict[str, Limits]] = None
 

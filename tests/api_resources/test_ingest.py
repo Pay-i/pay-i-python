@@ -29,15 +29,19 @@ class TestIngest:
             events=[
                 {
                     "category": "x",
+                    "resource": "x",
                     "units": {
                         "foo": {
                             "input": 0,
                             "output": 0,
                         }
                     },
-                    "account_name": "account_name",
                     "end_to_end_latency_ms": 0,
                     "event_timestamp": parse_datetime("2019-12-27T18:11:19.117Z"),
+                    "experience_id": "experience_id",
+                    "experience_name": "experience_name",
+                    "experience_properties": {"foo": "string"},
+                    "experience_version": 0,
                     "http_status_code": 0,
                     "limit_ids": ["string"],
                     "properties": {"foo": "string"},
@@ -65,7 +69,6 @@ class TestIngest:
                     "provider_response_json": "string",
                     "provider_uri": "provider_uri",
                     "request_tags": ["string"],
-                    "resource": "resource",
                     "time_to_first_completion_token_ms": 0,
                     "time_to_first_token_ms": 0,
                     "use_case_id": "use_case_id",
@@ -103,6 +106,7 @@ class TestIngest:
     def test_method_units(self, client: Payi) -> None:
         ingest = client.ingest.units(
             category="x",
+            resource="x",
             units={"foo": {}},
         )
         assert_matches_type(IngestResponse, ingest, path=["response"])
@@ -111,6 +115,7 @@ class TestIngest:
     def test_method_units_with_all_params(self, client: Payi) -> None:
         ingest = client.ingest.units(
             category="x",
+            resource="x",
             units={
                 "foo": {
                     "input": 0,
@@ -119,6 +124,7 @@ class TestIngest:
             },
             end_to_end_latency_ms=0,
             event_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
+            experience_properties={"foo": "string"},
             http_status_code=0,
             properties={"foo": "string"},
             provider_request_headers=[
@@ -144,7 +150,6 @@ class TestIngest:
             provider_response_id="provider_response_id",
             provider_response_json="string",
             provider_uri="provider_uri",
-            resource="resource",
             time_to_first_completion_token_ms=0,
             time_to_first_token_ms=0,
             use_case_properties={"foo": "string"},
@@ -164,6 +169,7 @@ class TestIngest:
     def test_raw_response_units(self, client: Payi) -> None:
         response = client.ingest.with_raw_response.units(
             category="x",
+            resource="x",
             units={"foo": {}},
         )
 
@@ -176,6 +182,7 @@ class TestIngest:
     def test_streaming_response_units(self, client: Payi) -> None:
         with client.ingest.with_streaming_response.units(
             category="x",
+            resource="x",
             units={"foo": {}},
         ) as response:
             assert not response.is_closed
@@ -203,15 +210,19 @@ class TestAsyncIngest:
             events=[
                 {
                     "category": "x",
+                    "resource": "x",
                     "units": {
                         "foo": {
                             "input": 0,
                             "output": 0,
                         }
                     },
-                    "account_name": "account_name",
                     "end_to_end_latency_ms": 0,
                     "event_timestamp": parse_datetime("2019-12-27T18:11:19.117Z"),
+                    "experience_id": "experience_id",
+                    "experience_name": "experience_name",
+                    "experience_properties": {"foo": "string"},
+                    "experience_version": 0,
                     "http_status_code": 0,
                     "limit_ids": ["string"],
                     "properties": {"foo": "string"},
@@ -239,7 +250,6 @@ class TestAsyncIngest:
                     "provider_response_json": "string",
                     "provider_uri": "provider_uri",
                     "request_tags": ["string"],
-                    "resource": "resource",
                     "time_to_first_completion_token_ms": 0,
                     "time_to_first_token_ms": 0,
                     "use_case_id": "use_case_id",
@@ -277,6 +287,7 @@ class TestAsyncIngest:
     async def test_method_units(self, async_client: AsyncPayi) -> None:
         ingest = await async_client.ingest.units(
             category="x",
+            resource="x",
             units={"foo": {}},
         )
         assert_matches_type(IngestResponse, ingest, path=["response"])
@@ -285,6 +296,7 @@ class TestAsyncIngest:
     async def test_method_units_with_all_params(self, async_client: AsyncPayi) -> None:
         ingest = await async_client.ingest.units(
             category="x",
+            resource="x",
             units={
                 "foo": {
                     "input": 0,
@@ -293,6 +305,7 @@ class TestAsyncIngest:
             },
             end_to_end_latency_ms=0,
             event_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
+            experience_properties={"foo": "string"},
             http_status_code=0,
             properties={"foo": "string"},
             provider_request_headers=[
@@ -318,7 +331,6 @@ class TestAsyncIngest:
             provider_response_id="provider_response_id",
             provider_response_json="string",
             provider_uri="provider_uri",
-            resource="resource",
             time_to_first_completion_token_ms=0,
             time_to_first_token_ms=0,
             use_case_properties={"foo": "string"},
@@ -338,6 +350,7 @@ class TestAsyncIngest:
     async def test_raw_response_units(self, async_client: AsyncPayi) -> None:
         response = await async_client.ingest.with_raw_response.units(
             category="x",
+            resource="x",
             units={"foo": {}},
         )
 
@@ -350,6 +363,7 @@ class TestAsyncIngest:
     async def test_streaming_response_units(self, async_client: AsyncPayi) -> None:
         async with async_client.ingest.with_streaming_response.units(
             category="x",
+            resource="x",
             units={"foo": {}},
         ) as response:
             assert not response.is_closed

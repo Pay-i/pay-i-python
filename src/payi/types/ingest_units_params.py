@@ -16,11 +16,15 @@ __all__ = ["IngestUnitsParams", "ProviderResponseFunctionCall"]
 class IngestUnitsParams(TypedDict, total=False):
     category: Required[str]
 
+    resource: Required[str]
+
     units: Required[Dict[str, IngestUnits]]
 
     end_to_end_latency_ms: Optional[int]
 
     event_timestamp: Annotated[Union[str, datetime, None], PropertyInfo(format="iso8601")]
+
+    experience_properties: Optional[Dict[str, str]]
 
     http_status_code: Optional[int]
 
@@ -41,8 +45,6 @@ class IngestUnitsParams(TypedDict, total=False):
     provider_response_json: Union[str, List[str], None]
 
     provider_uri: Optional[str]
-
-    resource: Optional[str]
 
     time_to_first_completion_token_ms: Optional[int]
 

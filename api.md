@@ -119,14 +119,14 @@ Methods:
 Types:
 
 ```python
-from payi.types import UseCaseInstanceResponse
+from payi.types import UseCaseCreateResponse, UseCaseRetrieveResponse, UseCaseDeleteResponse
 ```
 
 Methods:
 
-- <code title="post /api/v1/use_cases/instances/{use_case_name}">client.use_cases.<a href="./src/payi/resources/use_cases/use_cases.py">create</a>(use_case_name) -> <a href="./src/payi/types/use_case_instance_response.py">UseCaseInstanceResponse</a></code>
-- <code title="get /api/v1/use_cases/instances/{use_case_id}">client.use_cases.<a href="./src/payi/resources/use_cases/use_cases.py">retrieve</a>(use_case_id) -> <a href="./src/payi/types/use_case_instance_response.py">UseCaseInstanceResponse</a></code>
-- <code title="delete /api/v1/use_cases/instances/{use_case_id}">client.use_cases.<a href="./src/payi/resources/use_cases/use_cases.py">delete</a>(use_case_id) -> <a href="./src/payi/types/use_case_instance_response.py">UseCaseInstanceResponse</a></code>
+- <code title="post /api/v1/use_cases/instances/{use_case_name}">client.use_cases.<a href="./src/payi/resources/use_cases/use_cases.py">create</a>(use_case_name) -> <a href="./src/payi/types/use_case_create_response.py">UseCaseCreateResponse</a></code>
+- <code title="get /api/v1/use_cases/instances/{use_case_id}">client.use_cases.<a href="./src/payi/resources/use_cases/use_cases.py">retrieve</a>(use_case_id) -> <a href="./src/payi/types/use_case_retrieve_response.py">UseCaseRetrieveResponse</a></code>
+- <code title="delete /api/v1/use_cases/instances/{use_case_id}">client.use_cases.<a href="./src/payi/resources/use_cases/use_cases.py">delete</a>(use_case_id) -> <a href="./src/payi/types/use_case_delete_response.py">UseCaseDeleteResponse</a></code>
 
 ## Kpis
 
@@ -184,7 +184,6 @@ Methods:
 Methods:
 
 - <code title="post /api/v1/use_cases/definitions/{use_case_name}/limit_config">client.use_cases.definitions.limit_config.<a href="./src/payi/resources/use_cases/definitions/limit_config.py">create</a>(use_case_name, \*\*<a href="src/payi/types/use_cases/definitions/limit_config_create_params.py">params</a>) -> <a href="./src/payi/types/use_cases/use_case_definition.py">UseCaseDefinition</a></code>
-- <code title="delete /api/v1/use_cases/definitions/{use_case_name}/limit_config">client.use_cases.definitions.limit_config.<a href="./src/payi/resources/use_cases/definitions/limit_config.py">delete</a>(use_case_name) -> <a href="./src/payi/types/use_cases/use_case_definition.py">UseCaseDefinition</a></code>
 
 ### Version
 
@@ -194,9 +193,15 @@ Methods:
 
 ## Properties
 
+Types:
+
+```python
+from payi.types.use_cases import PropertyCreateResponse
+```
+
 Methods:
 
-- <code title="post /api/v1/use_cases/instances/{use_case_id}/properties">client.use_cases.properties.<a href="./src/payi/resources/use_cases/properties.py">create</a>(use_case_id, \*\*<a href="src/payi/types/use_cases/property_create_params.py">params</a>) -> <a href="./src/payi/types/use_case_instance_response.py">UseCaseInstanceResponse</a></code>
+- <code title="post /api/v1/use_cases/instances/{use_case_id}/properties">client.use_cases.properties.<a href="./src/payi/resources/use_cases/properties.py">create</a>(use_case_id, \*\*<a href="src/payi/types/use_cases/property_create_params.py">params</a>) -> <a href="./src/payi/types/use_cases/property_create_response.py">PropertyCreateResponse</a></code>
 
 # Requests
 

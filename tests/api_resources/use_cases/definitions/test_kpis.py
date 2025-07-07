@@ -29,9 +29,18 @@ class TestKpis:
         kpi = client.use_cases.definitions.kpis.create(
             use_case_name="use_case_name",
             description="x",
+            name="x",
+        )
+        assert_matches_type(KpiCreateResponse, kpi, path=["response"])
+
+    @parametrize
+    def test_method_create_with_all_params(self, client: Payi) -> None:
+        kpi = client.use_cases.definitions.kpis.create(
+            use_case_name="use_case_name",
+            description="x",
+            name="x",
             goal=0,
             kpi_type="boolean",
-            name="x",
         )
         assert_matches_type(KpiCreateResponse, kpi, path=["response"])
 
@@ -40,8 +49,6 @@ class TestKpis:
         response = client.use_cases.definitions.kpis.with_raw_response.create(
             use_case_name="use_case_name",
             description="x",
-            goal=0,
-            kpi_type="boolean",
             name="x",
         )
 
@@ -55,8 +62,6 @@ class TestKpis:
         with client.use_cases.definitions.kpis.with_streaming_response.create(
             use_case_name="use_case_name",
             description="x",
-            goal=0,
-            kpi_type="boolean",
             name="x",
         ) as response:
             assert not response.is_closed
@@ -73,8 +78,6 @@ class TestKpis:
             client.use_cases.definitions.kpis.with_raw_response.create(
                 use_case_name="",
                 description="x",
-                goal=0,
-                kpi_type="boolean",
                 name="x",
             )
 
@@ -292,9 +295,18 @@ class TestAsyncKpis:
         kpi = await async_client.use_cases.definitions.kpis.create(
             use_case_name="use_case_name",
             description="x",
+            name="x",
+        )
+        assert_matches_type(KpiCreateResponse, kpi, path=["response"])
+
+    @parametrize
+    async def test_method_create_with_all_params(self, async_client: AsyncPayi) -> None:
+        kpi = await async_client.use_cases.definitions.kpis.create(
+            use_case_name="use_case_name",
+            description="x",
+            name="x",
             goal=0,
             kpi_type="boolean",
-            name="x",
         )
         assert_matches_type(KpiCreateResponse, kpi, path=["response"])
 
@@ -303,8 +315,6 @@ class TestAsyncKpis:
         response = await async_client.use_cases.definitions.kpis.with_raw_response.create(
             use_case_name="use_case_name",
             description="x",
-            goal=0,
-            kpi_type="boolean",
             name="x",
         )
 
@@ -318,8 +328,6 @@ class TestAsyncKpis:
         async with async_client.use_cases.definitions.kpis.with_streaming_response.create(
             use_case_name="use_case_name",
             description="x",
-            goal=0,
-            kpi_type="boolean",
             name="x",
         ) as response:
             assert not response.is_closed
@@ -336,8 +344,6 @@ class TestAsyncKpis:
             await async_client.use_cases.definitions.kpis.with_raw_response.create(
                 use_case_name="",
                 description="x",
-                goal=0,
-                kpi_type="boolean",
                 name="x",
             )
 

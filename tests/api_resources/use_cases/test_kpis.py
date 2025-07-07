@@ -31,7 +31,7 @@ class TestKpis:
         kpi = client.use_cases.kpis.update(
             kpi_name="kpi_name",
             use_case_id="use_case_id",
-            score=True,
+            score=0,
         )
         assert kpi is None
 
@@ -143,7 +143,7 @@ class TestAsyncKpis:
         kpi = await async_client.use_cases.kpis.update(
             kpi_name="kpi_name",
             use_case_id="use_case_id",
-            score=True,
+            score=0,
         )
         assert kpi is None
 

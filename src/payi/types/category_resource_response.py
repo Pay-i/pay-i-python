@@ -27,13 +27,9 @@ class CategoryResourceResponse(BaseModel):
 
     units: Dict[str, Units]
 
-    character_billing: Optional[bool] = None
-
     cost_per_hour: Optional[float] = None
 
     deprecated_timestamp: Optional[datetime] = None
-
-    large_context_threshold: Optional[int] = None
 
     max_input_units: Optional[int] = None
 
