@@ -19,63 +19,6 @@ class TestKpis:
     parametrize = pytest.mark.parametrize("client", [False, True], indirect=True, ids=["loose", "strict"])
 
     @parametrize
-    def test_method_create(self, client: Payi) -> None:
-        kpi = client.use_cases.kpis.create(
-            kpi_name="kpi_name",
-            use_case_id="use_case_id",
-        )
-        assert kpi is None
-
-    @parametrize
-    def test_method_create_with_all_params(self, client: Payi) -> None:
-        kpi = client.use_cases.kpis.create(
-            kpi_name="kpi_name",
-            use_case_id="use_case_id",
-            score=0,
-        )
-        assert kpi is None
-
-    @parametrize
-    def test_raw_response_create(self, client: Payi) -> None:
-        response = client.use_cases.kpis.with_raw_response.create(
-            kpi_name="kpi_name",
-            use_case_id="use_case_id",
-        )
-
-        assert response.is_closed is True
-        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-        kpi = response.parse()
-        assert kpi is None
-
-    @parametrize
-    def test_streaming_response_create(self, client: Payi) -> None:
-        with client.use_cases.kpis.with_streaming_response.create(
-            kpi_name="kpi_name",
-            use_case_id="use_case_id",
-        ) as response:
-            assert not response.is_closed
-            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-
-            kpi = response.parse()
-            assert kpi is None
-
-        assert cast(Any, response.is_closed) is True
-
-    @parametrize
-    def test_path_params_create(self, client: Payi) -> None:
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `use_case_id` but received ''"):
-            client.use_cases.kpis.with_raw_response.create(
-                kpi_name="kpi_name",
-                use_case_id="",
-            )
-
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `kpi_name` but received ''"):
-            client.use_cases.kpis.with_raw_response.create(
-                kpi_name="",
-                use_case_id="use_case_id",
-            )
-
-    @parametrize
     def test_method_update(self, client: Payi) -> None:
         kpi = client.use_cases.kpis.update(
             kpi_name="kpi_name",
@@ -88,7 +31,7 @@ class TestKpis:
         kpi = client.use_cases.kpis.update(
             kpi_name="kpi_name",
             use_case_id="use_case_id",
-            score=0,
+            score=True,
         )
         assert kpi is None
 
@@ -181,116 +124,11 @@ class TestKpis:
                 use_case_id="",
             )
 
-    @parametrize
-    def test_method_delete(self, client: Payi) -> None:
-        kpi = client.use_cases.kpis.delete(
-            kpi_name="kpi_name",
-            use_case_id="use_case_id",
-        )
-        assert kpi is None
-
-    @parametrize
-    def test_raw_response_delete(self, client: Payi) -> None:
-        response = client.use_cases.kpis.with_raw_response.delete(
-            kpi_name="kpi_name",
-            use_case_id="use_case_id",
-        )
-
-        assert response.is_closed is True
-        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-        kpi = response.parse()
-        assert kpi is None
-
-    @parametrize
-    def test_streaming_response_delete(self, client: Payi) -> None:
-        with client.use_cases.kpis.with_streaming_response.delete(
-            kpi_name="kpi_name",
-            use_case_id="use_case_id",
-        ) as response:
-            assert not response.is_closed
-            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-
-            kpi = response.parse()
-            assert kpi is None
-
-        assert cast(Any, response.is_closed) is True
-
-    @parametrize
-    def test_path_params_delete(self, client: Payi) -> None:
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `use_case_id` but received ''"):
-            client.use_cases.kpis.with_raw_response.delete(
-                kpi_name="kpi_name",
-                use_case_id="",
-            )
-
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `kpi_name` but received ''"):
-            client.use_cases.kpis.with_raw_response.delete(
-                kpi_name="",
-                use_case_id="use_case_id",
-            )
-
 
 class TestAsyncKpis:
     parametrize = pytest.mark.parametrize(
         "async_client", [False, True, {"http_client": "aiohttp"}], indirect=True, ids=["loose", "strict", "aiohttp"]
     )
-
-    @parametrize
-    async def test_method_create(self, async_client: AsyncPayi) -> None:
-        kpi = await async_client.use_cases.kpis.create(
-            kpi_name="kpi_name",
-            use_case_id="use_case_id",
-        )
-        assert kpi is None
-
-    @parametrize
-    async def test_method_create_with_all_params(self, async_client: AsyncPayi) -> None:
-        kpi = await async_client.use_cases.kpis.create(
-            kpi_name="kpi_name",
-            use_case_id="use_case_id",
-            score=0,
-        )
-        assert kpi is None
-
-    @parametrize
-    async def test_raw_response_create(self, async_client: AsyncPayi) -> None:
-        response = await async_client.use_cases.kpis.with_raw_response.create(
-            kpi_name="kpi_name",
-            use_case_id="use_case_id",
-        )
-
-        assert response.is_closed is True
-        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-        kpi = await response.parse()
-        assert kpi is None
-
-    @parametrize
-    async def test_streaming_response_create(self, async_client: AsyncPayi) -> None:
-        async with async_client.use_cases.kpis.with_streaming_response.create(
-            kpi_name="kpi_name",
-            use_case_id="use_case_id",
-        ) as response:
-            assert not response.is_closed
-            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-
-            kpi = await response.parse()
-            assert kpi is None
-
-        assert cast(Any, response.is_closed) is True
-
-    @parametrize
-    async def test_path_params_create(self, async_client: AsyncPayi) -> None:
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `use_case_id` but received ''"):
-            await async_client.use_cases.kpis.with_raw_response.create(
-                kpi_name="kpi_name",
-                use_case_id="",
-            )
-
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `kpi_name` but received ''"):
-            await async_client.use_cases.kpis.with_raw_response.create(
-                kpi_name="",
-                use_case_id="use_case_id",
-            )
 
     @parametrize
     async def test_method_update(self, async_client: AsyncPayi) -> None:
@@ -305,7 +143,7 @@ class TestAsyncKpis:
         kpi = await async_client.use_cases.kpis.update(
             kpi_name="kpi_name",
             use_case_id="use_case_id",
-            score=0,
+            score=True,
         )
         assert kpi is None
 
@@ -396,52 +234,4 @@ class TestAsyncKpis:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `use_case_id` but received ''"):
             await async_client.use_cases.kpis.with_raw_response.list(
                 use_case_id="",
-            )
-
-    @parametrize
-    async def test_method_delete(self, async_client: AsyncPayi) -> None:
-        kpi = await async_client.use_cases.kpis.delete(
-            kpi_name="kpi_name",
-            use_case_id="use_case_id",
-        )
-        assert kpi is None
-
-    @parametrize
-    async def test_raw_response_delete(self, async_client: AsyncPayi) -> None:
-        response = await async_client.use_cases.kpis.with_raw_response.delete(
-            kpi_name="kpi_name",
-            use_case_id="use_case_id",
-        )
-
-        assert response.is_closed is True
-        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-        kpi = await response.parse()
-        assert kpi is None
-
-    @parametrize
-    async def test_streaming_response_delete(self, async_client: AsyncPayi) -> None:
-        async with async_client.use_cases.kpis.with_streaming_response.delete(
-            kpi_name="kpi_name",
-            use_case_id="use_case_id",
-        ) as response:
-            assert not response.is_closed
-            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-
-            kpi = await response.parse()
-            assert kpi is None
-
-        assert cast(Any, response.is_closed) is True
-
-    @parametrize
-    async def test_path_params_delete(self, async_client: AsyncPayi) -> None:
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `use_case_id` but received ''"):
-            await async_client.use_cases.kpis.with_raw_response.delete(
-                kpi_name="kpi_name",
-                use_case_id="",
-            )
-
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `kpi_name` but received ''"):
-            await async_client.use_cases.kpis.with_raw_response.delete(
-                kpi_name="",
-                use_case_id="use_case_id",
             )

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Union
 from typing_extensions import Required, TypedDict
 
 __all__ = ["KpiUpdateParams"]
@@ -10,4 +11,4 @@ __all__ = ["KpiUpdateParams"]
 class KpiUpdateParams(TypedDict, total=False):
     use_case_id: Required[str]
 
-    score: float
+    score: Union[bool, float, None]

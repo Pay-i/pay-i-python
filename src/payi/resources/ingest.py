@@ -86,11 +86,9 @@ class IngestResource(SyncAPIResource):
         self,
         *,
         category: str,
-        resource: str,
         units: Dict[str, IngestUnits],
         end_to_end_latency_ms: Optional[int] | NotGiven = NOT_GIVEN,
         event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
-        experience_properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
         http_status_code: Optional[int] | NotGiven = NOT_GIVEN,
         properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
         provider_request_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | NotGiven = NOT_GIVEN,
@@ -102,19 +100,19 @@ class IngestResource(SyncAPIResource):
         provider_response_id: Optional[str] | NotGiven = NOT_GIVEN,
         provider_response_json: Union[str, List[str], None] | NotGiven = NOT_GIVEN,
         provider_uri: Optional[str] | NotGiven = NOT_GIVEN,
+        resource: Optional[str] | NotGiven = NOT_GIVEN,
         time_to_first_completion_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
         time_to_first_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
         use_case_properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
         limit_ids: Optional[list[str]] | NotGiven = NOT_GIVEN,
         request_tags: Optional[list[str]] | NotGiven = NOT_GIVEN,
-        experience_id: Optional[str] | NotGiven = NOT_GIVEN,
-        experience_name: Optional[str] | NotGiven = NOT_GIVEN,
         use_case_id: Optional[str] | NotGiven = NOT_GIVEN,
         use_case_name: Optional[str] | NotGiven = NOT_GIVEN,
         use_case_step: Optional[str] | NotGiven = NOT_GIVEN,
         use_case_version: Optional[int] | NotGiven = NOT_GIVEN,
         user_id: Optional[str] | NotGiven = NOT_GIVEN,
         resource_scope: Optional[str] | NotGiven = NOT_GIVEN,
+        account_name: Optional[str] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -140,10 +138,6 @@ class IngestResource(SyncAPIResource):
 
           request_tags (list[str], optional): The request tags to associate with the request. Defaults to None.
 
-          experience_name (str, optional): DEPRECATED, replaced with use_case_name. 
-
-          experience_id (str, optional): DEPRECATED, replaced with use_case_id.
-
           use_case_name (str, optional): The use case name
 
           use_case_id (str, optional): The use case instance id
@@ -155,6 +149,8 @@ class IngestResource(SyncAPIResource):
           user_id (str, optional): The user id
           
           resource_scope(str, optional): The scope of the resource
+
+          account_name (str, optional): The account name
 
           extra_headers (Dict[str, str], optional): Additional headers for the request. Defaults to None.
 
@@ -186,12 +182,6 @@ class IngestResource(SyncAPIResource):
             valid_tags = [tag.strip() for tag in request_tags if tag.strip()]
             valid_tags_str = ",".join(valid_tags) if valid_tags else NOT_GIVEN
 
-        if experience_name is None or isinstance(experience_name, NotGiven):
-            experience_name = NOT_GIVEN
-
-        if experience_id is None or isinstance(experience_id, NotGiven):
-            experience_id = NOT_GIVEN
-
         if use_case_name is None or isinstance(use_case_name, NotGiven):
             use_case_name = NOT_GIVEN
 
@@ -212,11 +202,12 @@ class IngestResource(SyncAPIResource):
         if resource_scope is None or isinstance(resource_scope, NotGiven):
             resource_scope = NOT_GIVEN
 
+        if account_name is None or isinstance(account_name, NotGiven):
+            account_name = NOT_GIVEN
+
         extra_headers = {
             **strip_not_given(
                 {
-                    "xProxy-Experience-ID": experience_id,
-                    "xProxy-Experience-Name": experience_name,
                     "xProxy-Limit-IDs": valid_ids_str,
                     "xProxy-Request-Tags": valid_tags_str,
                     "xProxy-UseCase-ID": use_case_id,
@@ -227,6 +218,7 @@ class IngestResource(SyncAPIResource):
                     else NOT_GIVEN,
                     "xProxy-User-ID": user_id,
                     "xProxy-Resource-Scope": resource_scope,
+                    "xProxy-Account-Name": account_name,
                 }
             ),
             **(extra_headers or {}),
@@ -237,11 +229,9 @@ class IngestResource(SyncAPIResource):
             body=maybe_transform(
                 {
                     "category": category,
-                    "resource": resource,
                     "units": units,
                     "end_to_end_latency_ms": end_to_end_latency_ms,
                     "event_timestamp": event_timestamp,
-                    "experience_properties": experience_properties,
                     "http_status_code": http_status_code,
                     "properties": properties,
                     "provider_request_headers": provider_request_headers,
@@ -252,6 +242,7 @@ class IngestResource(SyncAPIResource):
                     "provider_response_id": provider_response_id,
                     "provider_response_json": provider_response_json,
                     "provider_uri": provider_uri,
+                    "resource": resource,
                     "time_to_first_completion_token_ms": time_to_first_completion_token_ms,
                     "time_to_first_token_ms": time_to_first_token_ms,
                     "use_case_properties": use_case_properties,
@@ -321,11 +312,9 @@ class AsyncIngestResource(AsyncAPIResource):
         self,
         *,
         category: str,
-        resource: str,
         units: Dict[str, IngestUnits],
         end_to_end_latency_ms: Optional[int] | NotGiven = NOT_GIVEN,
         event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
-        experience_properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
         http_status_code: Optional[int] | NotGiven = NOT_GIVEN,
         properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
         provider_request_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | NotGiven = NOT_GIVEN,
@@ -337,19 +326,19 @@ class AsyncIngestResource(AsyncAPIResource):
         provider_response_id: Optional[str] | NotGiven = NOT_GIVEN,
         provider_response_json: Union[str, List[str], None] | NotGiven = NOT_GIVEN,
         provider_uri: Optional[str] | NotGiven = NOT_GIVEN,
+        resource: Optional[str] | NotGiven = NOT_GIVEN,
         time_to_first_completion_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
         time_to_first_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
         use_case_properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
         limit_ids: Optional[list[str]] | NotGiven = NOT_GIVEN,
         request_tags: Optional[list[str]] | NotGiven = NOT_GIVEN,
-        experience_name: Optional[str] | NotGiven = NOT_GIVEN,
-        experience_id: Optional[str] | NotGiven = NOT_GIVEN,
         use_case_id: Optional[str] | NotGiven = NOT_GIVEN,
         use_case_name: Optional[str] | NotGiven = NOT_GIVEN,
         use_case_step: Optional[str] | NotGiven = NOT_GIVEN,
         use_case_version: Optional[int] | NotGiven = NOT_GIVEN,
         user_id: Optional[str] | NotGiven = NOT_GIVEN,
         resource_scope: Union[str, None] | NotGiven = NOT_GIVEN,
+        account_name: Optional[str] | NotGiven = NOT_GIVEN,
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
@@ -374,10 +363,6 @@ class AsyncIngestResource(AsyncAPIResource):
 
           request_tags (list[str], optional): The request tags to associate with the request. Defaults to None.
 
-          experience_name (str, optional): DEPRECATED, replaced with use_case_name. 
-
-          experience_id (str, optional): DEPRECATED, replaced with use_case_id.
-
           use_case_name (str, optional): The use case name
 
           use_case_step (str, optional): The use case step
@@ -389,6 +374,8 @@ class AsyncIngestResource(AsyncAPIResource):
           user_id (str, optional): The user id
           
           resource_scope (str, optional): The scope of the resource
+
+          account_name (str, optional): The account name
 
           extra_headers (Dict[str, str], optional): Additional headers for the request. Defaults to None.
 
@@ -420,12 +407,6 @@ class AsyncIngestResource(AsyncAPIResource):
             valid_tags = [tag.strip() for tag in request_tags if tag.strip()]
             valid_tags_str = ",".join(valid_tags) if valid_tags else NOT_GIVEN
 
-        if experience_name is None or isinstance(experience_name, NotGiven):
-            experience_name = NOT_GIVEN
-
-        if experience_id is None or isinstance(experience_id, NotGiven):
-            experience_id = NOT_GIVEN
-
         if use_case_name is None or isinstance(use_case_name, NotGiven):
             use_case_name = NOT_GIVEN
         
@@ -446,11 +427,13 @@ class AsyncIngestResource(AsyncAPIResource):
         if resource_scope is None or isinstance(resource_scope, NotGiven):
             resource_scope = NOT_GIVEN
 
+        if account_name is None or isinstance(account_name, NotGiven):
+            account_name = NOT_GIVEN
+
         extra_headers = {
             **strip_not_given(
                 {
-                    "xProxy-Experience-ID": experience_id,
-                    "xProxy-Experience-Name": experience_name,
+                    "xProxy-Account-Name": account_name,
                     "xProxy-Limit-IDs": valid_ids_str,
                     "xProxy-Request-Tags": valid_tags_str,
                     "xProxy-UseCase-ID": use_case_id,
@@ -470,11 +453,9 @@ class AsyncIngestResource(AsyncAPIResource):
             body=await async_maybe_transform(
                 {
                     "category": category,
-                    "resource": resource,
                     "units": units,
                     "end_to_end_latency_ms": end_to_end_latency_ms,
                     "event_timestamp": event_timestamp,
-                    "experience_properties": experience_properties,
                     "http_status_code": http_status_code,
                     "properties": properties,
                     "provider_request_headers": provider_request_headers,
@@ -485,6 +466,7 @@ class AsyncIngestResource(AsyncAPIResource):
                     "provider_response_id": provider_response_id,
                     "provider_response_json": provider_response_json,
                     "provider_uri": provider_uri,
+                    "resource": resource,
                     "time_to_first_completion_token_ms": time_to_first_completion_token_ms,
                     "time_to_first_token_ms": time_to_first_token_ms,
                     "use_case_properties": use_case_properties,

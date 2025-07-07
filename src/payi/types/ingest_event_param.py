@@ -22,21 +22,13 @@ class ProviderResponseFunctionCall(TypedDict, total=False):
 class IngestEventParam(TypedDict, total=False):
     category: Required[str]
 
-    resource: Required[str]
-
     units: Required[Dict[str, IngestUnits]]
+
+    account_name: Optional[str]
 
     end_to_end_latency_ms: Optional[int]
 
     event_timestamp: Annotated[Union[str, datetime, None], PropertyInfo(format="iso8601")]
-
-    experience_id: Optional[str]
-
-    experience_name: Optional[str]
-
-    experience_properties: Optional[Dict[str, str]]
-
-    experience_version: Optional[int]
 
     http_status_code: Optional[int]
 
@@ -61,6 +53,8 @@ class IngestEventParam(TypedDict, total=False):
     provider_uri: Optional[str]
 
     request_tags: Optional[List[str]]
+
+    resource: Optional[str]
 
     time_to_first_completion_token_ms: Optional[int]
 

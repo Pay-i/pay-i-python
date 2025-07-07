@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from .kpi_list_params import KpiListParams as KpiListParams
-from .kpi_create_params import KpiCreateParams as KpiCreateParams
 from .kpi_list_response import KpiListResponse as KpiListResponse
 from .kpi_update_params import KpiUpdateParams as KpiUpdateParams
 from .use_case_definition import UseCaseDefinition as UseCaseDefinition

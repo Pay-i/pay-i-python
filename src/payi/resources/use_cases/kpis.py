@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Union
+
 import httpx
 
 from ..._types import NOT_GIVEN, Body, Query, Headers, NoneType, NotGiven
@@ -16,7 +18,7 @@ from ..._response import (
 )
 from ...pagination import SyncCursorPage, AsyncCursorPage
 from ..._base_client import AsyncPaginator, make_request_options
-from ...types.use_cases import kpi_list_params, kpi_create_params, kpi_update_params
+from ...types.use_cases import kpi_list_params, kpi_update_params
 from ...types.use_cases.kpi_list_response import KpiListResponse
 
 __all__ = ["KpisResource", "AsyncKpisResource"]
@@ -42,51 +44,12 @@ class KpisResource(SyncAPIResource):
         """
         return KpisResourceWithStreamingResponse(self)
 
-    def create(
-        self,
-        kpi_name: str,
-        *,
-        use_case_id: str,
-        score: float | NotGiven = NOT_GIVEN,
-        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
-        # The extra values given here take precedence over values defined on the client or passed to this method.
-        extra_headers: Headers | None = None,
-        extra_query: Query | None = None,
-        extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> None:
-        """
-        Add a KPI to a Use Case instance
-
-        Args:
-          extra_headers: Send extra headers
-
-          extra_query: Add additional query parameters to the request
-
-          extra_body: Add additional JSON properties to the request
-
-          timeout: Override the client-level default timeout for this request, in seconds
-        """
-        if not use_case_id:
-            raise ValueError(f"Expected a non-empty value for `use_case_id` but received {use_case_id!r}")
-        if not kpi_name:
-            raise ValueError(f"Expected a non-empty value for `kpi_name` but received {kpi_name!r}")
-        extra_headers = {"Accept": "*/*", **(extra_headers or {})}
-        return self._post(
-            f"/api/v1/use_cases/instances/{use_case_id}/kpis/{kpi_name}",
-            body=maybe_transform({"score": score}, kpi_create_params.KpiCreateParams),
-            options=make_request_options(
-                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
-            ),
-            cast_to=NoneType,
-        )
-
     def update(
         self,
         kpi_name: str,
         *,
         use_case_id: str,
-        score: float | NotGiven = NOT_GIVEN,
+        score: Union[bool, float, None] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -170,43 +133,6 @@ class KpisResource(SyncAPIResource):
             model=KpiListResponse,
         )
 
-    def delete(
-        self,
-        kpi_name: str,
-        *,
-        use_case_id: str,
-        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
-        # The extra values given here take precedence over values defined on the client or passed to this method.
-        extra_headers: Headers | None = None,
-        extra_query: Query | None = None,
-        extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> None:
-        """
-        Delete a KPI from a Use Case instance
-
-        Args:
-          extra_headers: Send extra headers
-
-          extra_query: Add additional query parameters to the request
-
-          extra_body: Add additional JSON properties to the request
-
-          timeout: Override the client-level default timeout for this request, in seconds
-        """
-        if not use_case_id:
-            raise ValueError(f"Expected a non-empty value for `use_case_id` but received {use_case_id!r}")
-        if not kpi_name:
-            raise ValueError(f"Expected a non-empty value for `kpi_name` but received {kpi_name!r}")
-        extra_headers = {"Accept": "*/*", **(extra_headers or {})}
-        return self._delete(
-            f"/api/v1/use_cases/instances/{use_case_id}/kpis/{kpi_name}",
-            options=make_request_options(
-                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
-            ),
-            cast_to=NoneType,
-        )
-
 
 class AsyncKpisResource(AsyncAPIResource):
     @cached_property
@@ -228,51 +154,12 @@ class AsyncKpisResource(AsyncAPIResource):
         """
         return AsyncKpisResourceWithStreamingResponse(self)
 
-    async def create(
-        self,
-        kpi_name: str,
-        *,
-        use_case_id: str,
-        score: float | NotGiven = NOT_GIVEN,
-        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
-        # The extra values given here take precedence over values defined on the client or passed to this method.
-        extra_headers: Headers | None = None,
-        extra_query: Query | None = None,
-        extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> None:
-        """
-        Add a KPI to a Use Case instance
-
-        Args:
-          extra_headers: Send extra headers
-
-          extra_query: Add additional query parameters to the request
-
-          extra_body: Add additional JSON properties to the request
-
-          timeout: Override the client-level default timeout for this request, in seconds
-        """
-        if not use_case_id:
-            raise ValueError(f"Expected a non-empty value for `use_case_id` but received {use_case_id!r}")
-        if not kpi_name:
-            raise ValueError(f"Expected a non-empty value for `kpi_name` but received {kpi_name!r}")
-        extra_headers = {"Accept": "*/*", **(extra_headers or {})}
-        return await self._post(
-            f"/api/v1/use_cases/instances/{use_case_id}/kpis/{kpi_name}",
-            body=await async_maybe_transform({"score": score}, kpi_create_params.KpiCreateParams),
-            options=make_request_options(
-                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
-            ),
-            cast_to=NoneType,
-        )
-
     async def update(
         self,
         kpi_name: str,
         *,
         use_case_id: str,
-        score: float | NotGiven = NOT_GIVEN,
+        score: Union[bool, float, None] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -356,59 +243,16 @@ class AsyncKpisResource(AsyncAPIResource):
             model=KpiListResponse,
         )
 
-    async def delete(
-        self,
-        kpi_name: str,
-        *,
-        use_case_id: str,
-        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
-        # The extra values given here take precedence over values defined on the client or passed to this method.
-        extra_headers: Headers | None = None,
-        extra_query: Query | None = None,
-        extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> None:
-        """
-        Delete a KPI from a Use Case instance
-
-        Args:
-          extra_headers: Send extra headers
-
-          extra_query: Add additional query parameters to the request
-
-          extra_body: Add additional JSON properties to the request
-
-          timeout: Override the client-level default timeout for this request, in seconds
-        """
-        if not use_case_id:
-            raise ValueError(f"Expected a non-empty value for `use_case_id` but received {use_case_id!r}")
-        if not kpi_name:
-            raise ValueError(f"Expected a non-empty value for `kpi_name` but received {kpi_name!r}")
-        extra_headers = {"Accept": "*/*", **(extra_headers or {})}
-        return await self._delete(
-            f"/api/v1/use_cases/instances/{use_case_id}/kpis/{kpi_name}",
-            options=make_request_options(
-                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
-            ),
-            cast_to=NoneType,
-        )
-
 
 class KpisResourceWithRawResponse:
     def __init__(self, kpis: KpisResource) -> None:
         self._kpis = kpis
 
-        self.create = to_raw_response_wrapper(
-            kpis.create,
-        )
         self.update = to_raw_response_wrapper(
             kpis.update,
         )
         self.list = to_raw_response_wrapper(
             kpis.list,
-        )
-        self.delete = to_raw_response_wrapper(
-            kpis.delete,
         )
 
 
@@ -416,17 +260,11 @@ class AsyncKpisResourceWithRawResponse:
     def __init__(self, kpis: AsyncKpisResource) -> None:
         self._kpis = kpis
 
-        self.create = async_to_raw_response_wrapper(
-            kpis.create,
-        )
         self.update = async_to_raw_response_wrapper(
             kpis.update,
         )
         self.list = async_to_raw_response_wrapper(
             kpis.list,
-        )
-        self.delete = async_to_raw_response_wrapper(
-            kpis.delete,
         )
 
 
@@ -434,17 +272,11 @@ class KpisResourceWithStreamingResponse:
     def __init__(self, kpis: KpisResource) -> None:
         self._kpis = kpis
 
-        self.create = to_streamed_response_wrapper(
-            kpis.create,
-        )
         self.update = to_streamed_response_wrapper(
             kpis.update,
         )
         self.list = to_streamed_response_wrapper(
             kpis.list,
-        )
-        self.delete = to_streamed_response_wrapper(
-            kpis.delete,
         )
 
 
@@ -452,15 +284,9 @@ class AsyncKpisResourceWithStreamingResponse:
     def __init__(self, kpis: AsyncKpisResource) -> None:
         self._kpis = kpis
 
-        self.create = async_to_streamed_response_wrapper(
-            kpis.create,
-        )
         self.update = async_to_streamed_response_wrapper(
             kpis.update,
         )
         self.list = async_to_streamed_response_wrapper(
             kpis.list,
-        )
-        self.delete = async_to_streamed_response_wrapper(
-            kpis.delete,
         )
