@@ -56,10 +56,6 @@ class IngestUnitsParams(TypedDict, total=False):
 
     request_tags: Annotated[Union[list[str], None], PropertyInfo(alias="xProxy-Request-Tags")]
 
-    experience_name: Annotated[Union[str, None], PropertyInfo(alias="xProxy-Experience-Name")]
-
-    experience_id: Annotated[Union[str, None], PropertyInfo(alias="xProxy-Experience-ID")]
-
     use_case_name: Annotated[Union[str, None], PropertyInfo(alias="xProxy-UseCase-Name")]
 
     use_case_id: Annotated[Union[str, None], PropertyInfo(alias="xProxy-UseCase-ID")]
@@ -71,6 +67,8 @@ class IngestUnitsParams(TypedDict, total=False):
     use_case_step: Annotated[Union[str, None], PropertyInfo(alias="xProxy-UseCase-Step")]
 
     user_id: Annotated[Union[str, None], PropertyInfo(alias="xProxy-User-ID")]
+
+    account_name: Annotated[str, PropertyInfo(alias="xProxy-Account-Name")]
 
 class ProviderResponseFunctionCall(TypedDict, total=False):
     name: Required[str]

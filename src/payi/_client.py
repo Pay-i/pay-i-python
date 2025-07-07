@@ -33,7 +33,6 @@ from .resources.limits import limits
 from .resources.requests import requests
 from .resources.use_cases import use_cases
 from .resources.categories import categories
-from .resources.experiences import experiences
 
 __all__ = ["Timeout", "Transport", "ProxiesTypes", "RequestOptions", "Payi", "AsyncPayi", "Client", "AsyncClient"]
 
@@ -42,7 +41,6 @@ class Payi(SyncAPIClient):
     limits: limits.LimitsResource
     ingest: ingest.IngestResource
     categories: categories.CategoriesResource
-    experiences: experiences.ExperiencesResource
     use_cases: use_cases.UseCasesResource
     requests: requests.RequestsResource
     with_raw_response: PayiWithRawResponse
@@ -105,7 +103,6 @@ class Payi(SyncAPIClient):
         self.limits = limits.LimitsResource(self)
         self.ingest = ingest.IngestResource(self)
         self.categories = categories.CategoriesResource(self)
-        self.experiences = experiences.ExperiencesResource(self)
         self.use_cases = use_cases.UseCasesResource(self)
         self.requests = requests.RequestsResource(self)
         self.with_raw_response = PayiWithRawResponse(self)
@@ -220,7 +217,6 @@ class AsyncPayi(AsyncAPIClient):
     limits: limits.AsyncLimitsResource
     ingest: ingest.AsyncIngestResource
     categories: categories.AsyncCategoriesResource
-    experiences: experiences.AsyncExperiencesResource
     use_cases: use_cases.AsyncUseCasesResource
     requests: requests.AsyncRequestsResource
     with_raw_response: AsyncPayiWithRawResponse
@@ -283,7 +279,6 @@ class AsyncPayi(AsyncAPIClient):
         self.limits = limits.AsyncLimitsResource(self)
         self.ingest = ingest.AsyncIngestResource(self)
         self.categories = categories.AsyncCategoriesResource(self)
-        self.experiences = experiences.AsyncExperiencesResource(self)
         self.use_cases = use_cases.AsyncUseCasesResource(self)
         self.requests = requests.AsyncRequestsResource(self)
         self.with_raw_response = AsyncPayiWithRawResponse(self)
@@ -399,7 +394,6 @@ class PayiWithRawResponse:
         self.limits = limits.LimitsResourceWithRawResponse(client.limits)
         self.ingest = ingest.IngestResourceWithRawResponse(client.ingest)
         self.categories = categories.CategoriesResourceWithRawResponse(client.categories)
-        self.experiences = experiences.ExperiencesResourceWithRawResponse(client.experiences)
         self.use_cases = use_cases.UseCasesResourceWithRawResponse(client.use_cases)
         self.requests = requests.RequestsResourceWithRawResponse(client.requests)
 
@@ -409,7 +403,6 @@ class AsyncPayiWithRawResponse:
         self.limits = limits.AsyncLimitsResourceWithRawResponse(client.limits)
         self.ingest = ingest.AsyncIngestResourceWithRawResponse(client.ingest)
         self.categories = categories.AsyncCategoriesResourceWithRawResponse(client.categories)
-        self.experiences = experiences.AsyncExperiencesResourceWithRawResponse(client.experiences)
         self.use_cases = use_cases.AsyncUseCasesResourceWithRawResponse(client.use_cases)
         self.requests = requests.AsyncRequestsResourceWithRawResponse(client.requests)
 
@@ -419,7 +412,6 @@ class PayiWithStreamedResponse:
         self.limits = limits.LimitsResourceWithStreamingResponse(client.limits)
         self.ingest = ingest.IngestResourceWithStreamingResponse(client.ingest)
         self.categories = categories.CategoriesResourceWithStreamingResponse(client.categories)
-        self.experiences = experiences.ExperiencesResourceWithStreamingResponse(client.experiences)
         self.use_cases = use_cases.UseCasesResourceWithStreamingResponse(client.use_cases)
         self.requests = requests.RequestsResourceWithStreamingResponse(client.requests)
 
@@ -429,7 +421,6 @@ class AsyncPayiWithStreamedResponse:
         self.limits = limits.AsyncLimitsResourceWithStreamingResponse(client.limits)
         self.ingest = ingest.AsyncIngestResourceWithStreamingResponse(client.ingest)
         self.categories = categories.AsyncCategoriesResourceWithStreamingResponse(client.categories)
-        self.experiences = experiences.AsyncExperiencesResourceWithStreamingResponse(client.experiences)
         self.use_cases = use_cases.AsyncUseCasesResourceWithStreamingResponse(client.use_cases)
         self.requests = requests.AsyncRequestsResourceWithStreamingResponse(client.requests)
 

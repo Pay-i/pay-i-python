@@ -37,6 +37,8 @@ class TestLimits:
         limit = client.limits.create(
             limit_name="x",
             max=1,
+            billing_model_id="billing_model_id",
+            limit_basis="base",
             limit_id="limit_id",
             limit_tags=["tag1", "tag2"],
             limit_type="block",
@@ -293,6 +295,8 @@ class TestAsyncLimits:
         limit = await async_client.limits.create(
             limit_name="x",
             max=1,
+            billing_model_id="billing_model_id",
+            limit_basis="base",
             limit_id="limit_id",
             limit_tags=["tag1", "tag2"],
             limit_type="block",

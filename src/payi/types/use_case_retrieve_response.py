@@ -4,10 +4,10 @@ from typing import Optional
 
 from .._models import BaseModel
 
-__all__ = ["UseCaseInstanceResponse"]
+__all__ = ["UseCaseRetrieveResponse"]
 
 
-class UseCaseInstanceResponse(BaseModel):
+class UseCaseRetrieveResponse(BaseModel):
     use_case_id: str
 
     limit_id: Optional[str] = None

@@ -361,8 +361,8 @@ class _PayiInstrumentor:
             # convert the function call builder to a list of function calls
             ingest_units["provider_response_function_calls"] = list(request._function_call_builder.values())
 
-        if 'resource' not in ingest_units or len(ingest_units['resource']) == 0:
-            ingest_units['resource'] = "system.unknown_model"  # type: ignore[unreachable]
+        if 'resource' not in ingest_units or ingest_units['resource'] == '':
+            ingest_units['resource'] = "system.unknown_model"
 
         request_json = ingest_units.get('provider_request_json', "")
         if request_json and self._instrument_inline_data is False:

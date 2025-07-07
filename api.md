@@ -114,62 +114,19 @@ Methods:
 
 - <code title="post /api/v1/categories/{category}/fixed_cost_resources/{resource}">client.categories.fixed_cost_resources.<a href="./src/payi/resources/categories/fixed_cost_resources.py">create</a>(resource, \*, category, \*\*<a href="src/payi/types/categories/fixed_cost_resource_create_params.py">params</a>) -> <a href="./src/payi/types/category_resource_response.py">CategoryResourceResponse</a></code>
 
-# Experiences
-
-Types:
-
-```python
-from payi.types import ExperienceInstanceResponse
-```
-
-Methods:
-
-- <code title="post /api/v1/experiences/instances/{experience_name}">client.experiences.<a href="./src/payi/resources/experiences/experiences.py">create</a>(experience_name) -> <a href="./src/payi/types/experience_instance_response.py">ExperienceInstanceResponse</a></code>
-- <code title="get /api/v1/experiences/instances/{experience_id}">client.experiences.<a href="./src/payi/resources/experiences/experiences.py">retrieve</a>(experience_id) -> <a href="./src/payi/types/experience_instance_response.py">ExperienceInstanceResponse</a></code>
-- <code title="delete /api/v1/experiences/instances/{experience_id}">client.experiences.<a href="./src/payi/resources/experiences/experiences.py">delete</a>(experience_id) -> <a href="./src/payi/types/experience_instance_response.py">ExperienceInstanceResponse</a></code>
-
-## Types
-
-Types:
-
-```python
-from payi.types.experiences import ExperienceType
-```
-
-Methods:
-
-- <code title="post /api/v1/experiences/types">client.experiences.types.<a href="./src/payi/resources/experiences/types/types.py">create</a>(\*\*<a href="src/payi/types/experiences/type_create_params.py">params</a>) -> <a href="./src/payi/types/experiences/experience_type.py">ExperienceType</a></code>
-- <code title="get /api/v1/experiences/types/{experience_name}">client.experiences.types.<a href="./src/payi/resources/experiences/types/types.py">retrieve</a>(experience_name) -> <a href="./src/payi/types/experiences/experience_type.py">ExperienceType</a></code>
-- <code title="put /api/v1/experiences/types/{experience_name}">client.experiences.types.<a href="./src/payi/resources/experiences/types/types.py">update</a>(experience_name, \*\*<a href="src/payi/types/experiences/type_update_params.py">params</a>) -> <a href="./src/payi/types/experiences/experience_type.py">ExperienceType</a></code>
-- <code title="get /api/v1/experiences/types">client.experiences.types.<a href="./src/payi/resources/experiences/types/types.py">list</a>(\*\*<a href="src/payi/types/experiences/type_list_params.py">params</a>) -> <a href="./src/payi/types/experiences/experience_type.py">SyncCursorPage[ExperienceType]</a></code>
-- <code title="delete /api/v1/experiences/types/{experience_name}">client.experiences.types.<a href="./src/payi/resources/experiences/types/types.py">delete</a>(experience_name) -> <a href="./src/payi/types/experiences/experience_type.py">ExperienceType</a></code>
-
-### LimitConfig
-
-Methods:
-
-- <code title="post /api/v1/experiences/types/{experience_name}/limit_config">client.experiences.types.limit_config.<a href="./src/payi/resources/experiences/types/limit_config.py">create</a>(experience_name, \*\*<a href="src/payi/types/experiences/types/limit_config_create_params.py">params</a>) -> <a href="./src/payi/types/experiences/experience_type.py">ExperienceType</a></code>
-- <code title="delete /api/v1/experiences/types/{experience_name}/limit_config">client.experiences.types.limit_config.<a href="./src/payi/resources/experiences/types/limit_config.py">delete</a>(experience_name) -> <a href="./src/payi/types/experiences/experience_type.py">ExperienceType</a></code>
-
-## Properties
-
-Methods:
-
-- <code title="post /api/v1/experiences/instances/{experience_id}/properties">client.experiences.properties.<a href="./src/payi/resources/experiences/properties.py">create</a>(experience_id, \*\*<a href="src/payi/types/experiences/property_create_params.py">params</a>) -> <a href="./src/payi/types/experience_instance_response.py">ExperienceInstanceResponse</a></code>
-
 # UseCases
 
 Types:
 
 ```python
-from payi.types import UseCaseInstanceResponse
+from payi.types import UseCaseCreateResponse, UseCaseRetrieveResponse, UseCaseDeleteResponse
 ```
 
 Methods:
 
-- <code title="post /api/v1/use_cases/instances/{use_case_name}">client.use_cases.<a href="./src/payi/resources/use_cases/use_cases.py">create</a>(use_case_name) -> <a href="./src/payi/types/use_case_instance_response.py">UseCaseInstanceResponse</a></code>
-- <code title="get /api/v1/use_cases/instances/{use_case_id}">client.use_cases.<a href="./src/payi/resources/use_cases/use_cases.py">retrieve</a>(use_case_id) -> <a href="./src/payi/types/use_case_instance_response.py">UseCaseInstanceResponse</a></code>
-- <code title="delete /api/v1/use_cases/instances/{use_case_id}">client.use_cases.<a href="./src/payi/resources/use_cases/use_cases.py">delete</a>(use_case_id) -> <a href="./src/payi/types/use_case_instance_response.py">UseCaseInstanceResponse</a></code>
+- <code title="post /api/v1/use_cases/instances/{use_case_name}">client.use_cases.<a href="./src/payi/resources/use_cases/use_cases.py">create</a>(use_case_name) -> <a href="./src/payi/types/use_case_create_response.py">UseCaseCreateResponse</a></code>
+- <code title="get /api/v1/use_cases/instances/{use_case_id}">client.use_cases.<a href="./src/payi/resources/use_cases/use_cases.py">retrieve</a>(use_case_id) -> <a href="./src/payi/types/use_case_retrieve_response.py">UseCaseRetrieveResponse</a></code>
+- <code title="delete /api/v1/use_cases/instances/{use_case_id}">client.use_cases.<a href="./src/payi/resources/use_cases/use_cases.py">delete</a>(use_case_id) -> <a href="./src/payi/types/use_case_delete_response.py">UseCaseDeleteResponse</a></code>
 
 ## Kpis
 
@@ -181,10 +138,8 @@ from payi.types.use_cases import KpiListResponse
 
 Methods:
 
-- <code title="post /api/v1/use_cases/instances/{use_case_id}/kpis/{kpi_name}">client.use_cases.kpis.<a href="./src/payi/resources/use_cases/kpis.py">create</a>(kpi_name, \*, use_case_id, \*\*<a href="src/payi/types/use_cases/kpi_create_params.py">params</a>) -> None</code>
 - <code title="put /api/v1/use_cases/instances/{use_case_id}/kpis/{kpi_name}">client.use_cases.kpis.<a href="./src/payi/resources/use_cases/kpis.py">update</a>(kpi_name, \*, use_case_id, \*\*<a href="src/payi/types/use_cases/kpi_update_params.py">params</a>) -> None</code>
 - <code title="get /api/v1/use_cases/instances/{use_case_id}/kpis">client.use_cases.kpis.<a href="./src/payi/resources/use_cases/kpis.py">list</a>(use_case_id, \*\*<a href="src/payi/types/use_cases/kpi_list_params.py">params</a>) -> <a href="./src/payi/types/use_cases/kpi_list_response.py">SyncCursorPage[KpiListResponse]</a></code>
-- <code title="delete /api/v1/use_cases/instances/{use_case_id}/kpis/{kpi_name}">client.use_cases.kpis.<a href="./src/payi/resources/use_cases/kpis.py">delete</a>(kpi_name, \*, use_case_id) -> None</code>
 
 ## Definitions
 
@@ -239,9 +194,15 @@ Methods:
 
 ## Properties
 
+Types:
+
+```python
+from payi.types.use_cases import PropertyCreateResponse
+```
+
 Methods:
 
-- <code title="post /api/v1/use_cases/instances/{use_case_id}/properties">client.use_cases.properties.<a href="./src/payi/resources/use_cases/properties.py">create</a>(use_case_id, \*\*<a href="src/payi/types/use_cases/property_create_params.py">params</a>) -> <a href="./src/payi/types/use_case_instance_response.py">UseCaseInstanceResponse</a></code>
+- <code title="post /api/v1/use_cases/instances/{use_case_id}/properties">client.use_cases.properties.<a href="./src/payi/resources/use_cases/properties.py">create</a>(use_case_id, \*\*<a href="src/payi/types/use_cases/property_create_params.py">params</a>) -> <a href="./src/payi/types/use_cases/property_create_response.py">PropertyCreateResponse</a></code>
 
 # Requests
 

@@ -265,9 +265,8 @@ def anthropic_process_chunk(request: _ProviderRequest, chunk: 'dict[str, Any]', 
             request._ingest["provider_response_id"] = message.get('id', None)
 
         model = message.get('model', None)
-        if model:
+        if model and 'resource' in request._ingest:
             request._instrumentor._logger.debug(f"Anthropic streaming, reported model: {model}, instrumented model {request._ingest['resource']}")
-
 
         usage = message['usage']
         units = request._ingest["units"]

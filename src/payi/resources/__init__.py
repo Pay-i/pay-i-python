@@ -40,14 +40,6 @@ from .categories import (
     CategoriesResourceWithStreamingResponse,
     AsyncCategoriesResourceWithStreamingResponse,
 )
-from .experiences import (
-    ExperiencesResource,
-    AsyncExperiencesResource,
-    ExperiencesResourceWithRawResponse,
-    AsyncExperiencesResourceWithRawResponse,
-    ExperiencesResourceWithStreamingResponse,
-    AsyncExperiencesResourceWithStreamingResponse,
-)
 
 __all__ = [
     "LimitsResource",
@@ -68,12 +60,6 @@ __all__ = [
     "AsyncCategoriesResourceWithRawResponse",
     "CategoriesResourceWithStreamingResponse",
     "AsyncCategoriesResourceWithStreamingResponse",
-    "ExperiencesResource",
-    "AsyncExperiencesResource",
-    "ExperiencesResourceWithRawResponse",
-    "AsyncExperiencesResourceWithRawResponse",
-    "ExperiencesResourceWithStreamingResponse",
-    "AsyncExperiencesResourceWithStreamingResponse",
     "UseCasesResource",
     "AsyncUseCasesResource",
     "UseCasesResourceWithRawResponse",

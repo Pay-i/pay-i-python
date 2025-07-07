@@ -115,9 +115,9 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
 
         ingest = self._request._ingest
 
-        resource = ingest["resource"]
-        if not resource:
-            return
+        # resource = ingest["resource"]
+        # if not resource:
+        #     return
         
         input: int = 0
         output: int = 0
