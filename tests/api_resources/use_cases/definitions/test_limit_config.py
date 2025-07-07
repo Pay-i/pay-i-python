@@ -75,7 +75,7 @@ class TestLimitConfig:
         limit_config = client.use_cases.definitions.limit_config.delete(
             "use_case_name",
         )
-        assert limit_config is None
+        assert_matches_type(UseCaseDefinition, limit_config, path=["response"])
 
     @parametrize
     def test_raw_response_delete(self, client: Payi) -> None:
@@ -86,7 +86,7 @@ class TestLimitConfig:
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
         limit_config = response.parse()
-        assert limit_config is None
+        assert_matches_type(UseCaseDefinition, limit_config, path=["response"])
 
     @parametrize
     def test_streaming_response_delete(self, client: Payi) -> None:
@@ -97,7 +97,7 @@ class TestLimitConfig:
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
             limit_config = response.parse()
-            assert limit_config is None
+            assert_matches_type(UseCaseDefinition, limit_config, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
@@ -172,7 +172,7 @@ class TestAsyncLimitConfig:
         limit_config = await async_client.use_cases.definitions.limit_config.delete(
             "use_case_name",
         )
-        assert limit_config is None
+        assert_matches_type(UseCaseDefinition, limit_config, path=["response"])
 
     @parametrize
     async def test_raw_response_delete(self, async_client: AsyncPayi) -> None:
@@ -183,7 +183,7 @@ class TestAsyncLimitConfig:
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
         limit_config = await response.parse()
-        assert limit_config is None
+        assert_matches_type(UseCaseDefinition, limit_config, path=["response"])
 
     @parametrize
     async def test_streaming_response_delete(self, async_client: AsyncPayi) -> None:
@@ -194,7 +194,7 @@ class TestAsyncLimitConfig:
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
             limit_config = await response.parse()
-            assert limit_config is None
+            assert_matches_type(UseCaseDefinition, limit_config, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 

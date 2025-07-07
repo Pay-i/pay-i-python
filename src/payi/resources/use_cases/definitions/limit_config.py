@@ -7,7 +7,7 @@ from typing_extensions import Literal
 
 import httpx
 
-from ...._types import NOT_GIVEN, Body, Query, Headers, NoneType, NotGiven
+from ...._types import NOT_GIVEN, Body, Query, Headers, NotGiven
 from ...._utils import maybe_transform, async_maybe_transform
 from ...._compat import cached_property
 from ...._resource import SyncAPIResource, AsyncAPIResource
@@ -100,7 +100,7 @@ class LimitConfigResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> None:
+    ) -> UseCaseDefinition:
         """
         Delete a Use Case default limit configuration
 
@@ -115,13 +115,12 @@ class LimitConfigResource(SyncAPIResource):
         """
         if not use_case_name:
             raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
-        extra_headers = {"Accept": "*/*", **(extra_headers or {})}
         return self._delete(
             f"/api/v1/use_cases/definitions/{use_case_name}/limit_config",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=NoneType,
+            cast_to=UseCaseDefinition,
         )
 
 
@@ -201,7 +200,7 @@ class AsyncLimitConfigResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> None:
+    ) -> UseCaseDefinition:
         """
         Delete a Use Case default limit configuration
 
@@ -216,13 +215,12 @@ class AsyncLimitConfigResource(AsyncAPIResource):
         """
         if not use_case_name:
             raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
-        extra_headers = {"Accept": "*/*", **(extra_headers or {})}
         return await self._delete(
             f"/api/v1/use_cases/definitions/{use_case_name}/limit_config",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=NoneType,
+            cast_to=UseCaseDefinition,
         )
 
 

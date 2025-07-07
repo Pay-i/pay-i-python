@@ -184,7 +184,7 @@ Methods:
 Methods:
 
 - <code title="post /api/v1/use_cases/definitions/{use_case_name}/limit_config">client.use_cases.definitions.limit_config.<a href="./src/payi/resources/use_cases/definitions/limit_config.py">create</a>(use_case_name, \*\*<a href="src/payi/types/use_cases/definitions/limit_config_create_params.py">params</a>) -> <a href="./src/payi/types/use_cases/use_case_definition.py">UseCaseDefinition</a></code>
-- <code title="delete /api/v1/use_cases/definitions/{use_case_name}/limit_config">client.use_cases.definitions.limit_config.<a href="./src/payi/resources/use_cases/definitions/limit_config.py">delete</a>(use_case_name) -> None</code>
+- <code title="delete /api/v1/use_cases/definitions/{use_case_name}/limit_config">client.use_cases.definitions.limit_config.<a href="./src/payi/resources/use_cases/definitions/limit_config.py">delete</a>(use_case_name) -> <a href="./src/payi/types/use_cases/use_case_definition.py">UseCaseDefinition</a></code>
 
 ### Version
 
