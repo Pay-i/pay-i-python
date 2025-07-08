@@ -15,11 +15,13 @@ from dataclasses import dataclass
 import nest_asyncio  # type: ignore
 from wrapt import ObjectProxy  # type: ignore
 
-from payi import Payi, AsyncPayi, APIConnectionError, __version__ as _payi_version
+from payi import Payi, AsyncPayi, APIStatusError, APIConnectionError, __version__ as _payi_version
 from payi.types import IngestUnitsParams
 from payi.lib.helpers import PayiHeaderNames
+from payi.types.shared import XproxyResult
 from payi.types.ingest_response import IngestResponse
 from payi.types.ingest_units_params import Units, ProviderResponseFunctionCall
+from payi.types.shared.xproxy_error import XproxyError
 from payi.types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
 from .helpers import PayiCategories
@@ -146,6 +148,19 @@ class PayiInstrumentConfig(TypedDict, total=False):
     user_id: Optional[str]
     request_tags: Optional["list[str]"]
 
+class PayiContext(TypedDict, total=False):
+    use_case_name: Optional[str]
+    use_case_id: Optional[str]
+    use_case_version: Optional[int]
+    use_case_step: Optional[str]
+    limit_ids: Optional['list[str]']
+    user_id: Optional[str]
+    request_tags: Optional["list[str]"]
+    price_as_category: Optional[str]
+    price_as_resource: Optional[str]
+    resource_scope: Optional[str]
+    last_result: Optional[Union[XproxyResult, XproxyError]]
+
 class _Context(TypedDict, total=False):
     proxy: Optional[bool]
     use_case_name: Optional[str]
@@ -169,7 +184,7 @@ class _StreamingType(Enum):
     iterator = 1
     stream_manager = 2
 
-class _TrackContext:
+class _InternalTrackContext:
     def __init__(
         self,
         context: _Context,
@@ -234,6 +249,8 @@ class _PayiInstrumentor:
         self._proxy_default: bool = global_config.get("proxy", False)
 
         self._instrument_inline_data: bool = global_config.get("instrument_inline_data", False)
+
+        self._last_result: Optional[Union[XproxyResult, XproxyError]] = None
 
         global_instrumentation = global_config.pop("global_instrumentation", True)
 
@@ -354,7 +371,7 @@ class _PayiInstrumentor:
 
         return log_ingest_units
         
-    def _process_ingest_units(self, request: _ProviderRequest, log_data: 'dict[str, str]') -> bool:
+    def _process_ingest_units(self, request: _ProviderRequest, log_data: 'dict[str, str]') -> None:
         ingest_units = request._ingest
 
         if request._function_call_builder:
@@ -394,8 +411,6 @@ class _PayiInstrumentor:
             if stack_trace is not None:
                 log_data["stack_trace"] = stack_trace
 
-        return True
-
     def _process_ingest_units_response(self, ingest_response: IngestResponse) -> None:
         if ingest_response.xproxy_result.limits:
             for limit_id, state in ingest_response.xproxy_result.limits.items():
@@ -413,7 +428,7 @@ class _PayiInstrumentor:
                 if removeBlockedId:
                     self._blocked_limits.discard(limit_id)
 
-    def _process_ingest_connection_error(self, e: APIConnectionError, ingest_units: IngestUnitsParams) -> None:
+    def _process_ingest_connection_error(self, e: APIConnectionError, ingest_units: IngestUnitsParams) -> XproxyError:
         now = time.time()
 
         if (now - self._api_connection_error_last_log_time) > self._api_connection_error_window:
@@ -430,7 +445,9 @@ class _PayiInstrumentor:
             # Suppress and count
             self._api_connection_error_count += 1
 
-    async def _aingest_units(self, request: _ProviderRequest) -> Optional[IngestResponse]:
+        return XproxyError(code="api_connection_error", message=str(e))
+
+    async def _aingest_units_worker(self, request: _ProviderRequest) -> Optional[Union[XproxyResult, XproxyError]]:
         ingest_response: Optional[IngestResponse] = None
         ingest_units = request._ingest
 
@@ -438,9 +455,8 @@ class _PayiInstrumentor:
 
         # return early if there are no units to ingest and on a successul ingest request
         log_data: 'dict[str,str]' = {}
-        if not self._process_ingest_units(request, log_data):
-            self._logger.debug(f"_aingest_units: exit early")
-            return None
+
+        self._process_ingest_units(request, log_data)
 
         try:
             if self._logger.isEnabledFor(logging.DEBUG):
@@ -452,7 +468,7 @@ class _PayiInstrumentor:
                 ingest_response = self._payi.ingest.units(**ingest_units)
             else:
                 self._logger.error("No payi instance to ingest units")
-                return None         
+                return XproxyError(code="configuration_error", message="No Payi or AsyncPayi instance configured for ingesting units")
 
             self._logger.debug(f"_aingest_units: success ({ingest_response})")
 
@@ -463,15 +479,21 @@ class _PayiInstrumentor:
                     request_id = ingest_response.xproxy_result.request_id
                     self._prompt_and_response_logger(request_id, log_data)  # type: ignore
 
-            return ingest_response
-        except Exception as e:
-            if isinstance(e, APIConnectionError) and self._api_connection_error_window > 0:
-                self._process_ingest_connection_error(e, ingest_units)
-            else:
-                self._logger.error(f"Error Pay-i async ingesting: exception {e}, request {ingest_units}")
+            return ingest_response.xproxy_result
+
+        except APIConnectionError as api_ex:
+            return self._process_ingest_connection_error(api_ex, ingest_units)
+
+        except APIStatusError as api_status_ex:
+            return self._process_api_status_error(api_status_ex)      
+
+        except Exception as ex:
+            self._logger.error(f"Error Pay-i async ingesting: exception {ex}, request {ingest_units}")
+            return XproxyError(code="unknown_error", message=str(ex))
     
-        return None         
-    
+    async def _aingest_units(self, request: _ProviderRequest) -> Optional[Union[XproxyResult, XproxyError]]:
+        return self.set_xproxy_result(await self._aingest_units_worker(request))
+
     def _call_async_use_case_definition_create(self, use_case_name: str, use_case_description: str) -> None:
         if not self._apayi:
             return
@@ -491,7 +513,7 @@ class _PayiInstrumentor:
         except Exception as e:
             self._logger.error(f"Error calling async use_cases.definitions.create synchronously: {e}")
 
-    def _call_aingest_sync(self, request: _ProviderRequest) -> Optional[IngestResponse]:
+    def _call_aingest_sync(self, request: _ProviderRequest) -> Optional[Union[XproxyResult, XproxyError]]:
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:
@@ -500,7 +522,7 @@ class _PayiInstrumentor:
         try:
             if loop and loop.is_running():
                 nest_asyncio.apply(loop) # type: ignore
-                return asyncio.run(self._aingest_units(request))                
+                return asyncio.run(self._aingest_units(request))
             else:
                 # When there's no running loop, create a new one
                 return asyncio.run(self._aingest_units(request))
@@ -508,7 +530,41 @@ class _PayiInstrumentor:
             self._logger.error(f"Error calling aingest_units synchronously: {e}")
         return None
         
-    def _ingest_units(self, request: _ProviderRequest) -> Optional[IngestResponse]:
+    def _process_api_status_error(self, e: APIStatusError) -> Optional[XproxyError]:
+        try:
+            body_dict: dict[str, Any] = {}
+
+            # Try to get the response body as JSON
+            body = e.body
+            if body is None:
+                self._logger.error("APIStatusError response has no body attribute")
+                return XproxyError(code="unknown_error", message=str(e))
+
+            # If body is bytes, decode to string
+            if isinstance(body, bytes):
+                body = body.decode("utf-8")
+            if isinstance(body, dict):
+                body_dict = body # type: ignore
+            else:
+                body = str(body)
+
+            if not body_dict:
+                try:
+                    body_dict = json.loads(body)  # type: ignore
+                except Exception as json_ex:
+                    self._logger.error(f"Failed to parse response body as JSON: {json_ex}")
+                    return XproxyError(code="invalid_json", message=str(e))
+
+            xproxy_error = body_dict.get("xproxy_error", {})
+            code = xproxy_error.get("code", "unknown_error")
+            message = xproxy_error.get("message", str(e))
+            return XproxyError(code=code, message=message)
+
+        except Exception as ex:
+            self._logger.error(f"Exception in _process_api_status_error: {ex}")
+            return XproxyError(code="exception", message=str(ex))
+
+    def _ingest_units_worker(self, request: _ProviderRequest) -> Optional[Union[XproxyResult, XproxyError]]:
         ingest_response: Optional[IngestResponse] = None
         ingest_units = request._ingest
 
@@ -516,9 +572,8 @@ class _PayiInstrumentor:
 
         # return early if there are no units to ingest and on a successul ingest request
         log_data: 'dict[str,str]' = {}
-        if not self._process_ingest_units(request, log_data):
-            self._logger.debug(f"_ingest_units: exit early")
-            return None
+
+        self._process_ingest_units(request, log_data)
 
         try:
             if self._payi:
@@ -534,22 +589,28 @@ class _PayiInstrumentor:
                     request_id = ingest_response.xproxy_result.request_id
                     self._prompt_and_response_logger(request_id, log_data)  # type: ignore
 
-                return ingest_response
+                return ingest_response.xproxy_result
             elif self._apayi:
                 # task runs async. aingest_units will invoke the callback and post process
-                ingest_response = self._call_aingest_sync(request)
-                self._logger.debug(f"_ingest_units: apayi success ({ingest_response})")
-                return ingest_response
+                sync_response = self._call_aingest_sync(request)
+                self._logger.debug(f"_ingest_units: apayi success ({sync_response})")
+                return sync_response
             else:
                 self._logger.error("No payi instance to ingest units")
+                return XproxyError(code="configuration_error", message="No Payi or AsyncPayi instance configured for ingesting units")
 
-        except Exception as e:
-            if isinstance(e, APIConnectionError) and self._api_connection_error_window > 0:
-                self._process_ingest_connection_error(e, ingest_units)
-            else:
-                self._logger.error(f"Error Pay-i ingesting: exception {e}, request {ingest_units}")
+        except APIConnectionError as api_ex:
+            return self._process_ingest_connection_error(api_ex, ingest_units)
+
+        except APIStatusError as api_status_ex:
+            return self._process_api_status_error(api_status_ex)      
+
+        except Exception as ex:
+            self._logger.error(f"Error Pay-i async ingesting: exception {ex}, request {ingest_units}")
+            return XproxyError(code="unknown_error", message=str(ex))
         
-        return None
+    def _ingest_units(self, request: _ProviderRequest) -> Optional[Union[XproxyResult, XproxyError]]:
+        return self.set_xproxy_result(self._ingest_units_worker(request))
 
     def _setup_call_func(
         self
@@ -1039,6 +1100,10 @@ class _PayiInstrumentor:
             self._update_extra_headers(context, extra_headers)
 
         return extra_headers
+
+    def set_xproxy_result(self, response: Optional[Union[XproxyResult, XproxyError]]) -> Optional[Union[XproxyResult, XproxyError]]:
+        self._last_result = response
+        return response
 
     @staticmethod
     def _update_extra_headers(
@@ -1617,7 +1682,7 @@ def track_context(
     price_as_resource: Optional[str] = None,
     resource_scope: Optional[str] = None,
     proxy: Optional[bool] = None,
-) -> _TrackContext:
+) -> _InternalTrackContext:
     # Create a new context for tracking
     context: _Context = {}
 
@@ -1637,4 +1702,22 @@ def track_context(
     context["price_as_resource"] = price_as_resource
     context["resource_scope"] = resource_scope
 
-    return _TrackContext(context)
+    return _InternalTrackContext(context)
+
+def get_context() -> PayiContext:
+    """
+    Returns the current tracking context from calls to @track and with track_context().
+    If no context is active, returns an empty context.
+    """
+    if not _instrumentor:
+        return PayiContext()
+    internal_context = _instrumentor.get_context() or {}
+
+    context_dict = {
+        key: value
+        for key, value in internal_context.items()
+        if key in PayiContext.__annotations__ and value is not None
+    }
+    if _instrumentor._last_result:
+        context_dict["last_result"] = _instrumentor._last_result
+    return PayiContext(**dict(context_dict))  # type: ignore

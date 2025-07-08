@@ -10,6 +10,8 @@ from .instrument import _ChunkResult, _StreamingType, _ProviderRequest, _PayiIns
 
 
 class _VertexRequest(_ProviderRequest): # type: ignore
+    KNOWN_MODALITIES = ("VIDEO", "AUDIO", "TEXT", "VISION", "IMAGE")
+
     def __init__(self, instrumentor: _PayiInstrumentor):
         super().__init__(
             instrumentor=instrumentor,
@@ -154,6 +156,7 @@ class _VertexRequest(_ProviderRequest): # type: ignore
 
         prompt_tokens_details: list[dict[str, Any]] = usage.get("prompt_tokens_details", [])
         candidates_tokens_details: list[dict[str, Any]] = usage.get("candidates_tokens_details", [])
+        cache_tokens_details: list[dict[str, Any]] = usage.get("cache_tokens_details", [])
 
         if not model:
             model = ""
@@ -214,27 +217,50 @@ class _VertexRequest(_ProviderRequest): # type: ignore
             if is_large_context_token_model(model, input):
                 large_context = "_large_context"
 
+            cache_details: dict[str, int] = {}
+
+            for details in cache_tokens_details:
+                modality = details.get("modality", "")
+                if not modality:
+                    continue
+
+                modality_token_count = details.get("token_count", 0)
+                
+                if modality == "IMAGE":
+                    modality = "VISION"
+
+                if modality in _VertexRequest.KNOWN_MODALITIES:
+                    cache_details[modality] = modality_token_count
+                    add_units(self, modality.lower() + "_cache_read" + large_context, input=modality_token_count)
+
             for details in prompt_tokens_details:
                 modality = details.get("modality", "")
                 if not modality:
                     continue
 
                 modality_token_count = details.get("token_count", 0)
+
                 if modality == "IMAGE":
-                    add_units(self, "vision"+large_context, input=modality_token_count)
-                elif modality in ("VIDEO", "AUDIO", "TEXT"):
-                    add_units(self, modality.lower()+large_context, input=modality_token_count)
+                    modality = "VISION"
+
+                if modality in _VertexRequest.KNOWN_MODALITIES:
+                    # Subtract cache_details value if modality is present, floor at zero
+                    if modality in cache_details:
+                        modality_token_count = max(0, modality_token_count - cache_details[modality])
+
+                    add_units(self, modality.lower() + large_context, input=modality_token_count)
+
             for details in candidates_tokens_details:
                 modality = details.get("modality", "")
                 if not modality:
                     continue
 
                 modality_token_count = details.get("token_count", 0)
-                if modality in ("VIDEO", "AUDIO", "TEXT", "IMAGE"):
-                    add_units(self, modality.lower()+large_context, output=modality_token_count)
+                if modality in _VertexRequest.KNOWN_MODALITIES:
+                    add_units(self, modality.lower() + large_context, output=modality_token_count)
 
             if thinking_token_count > 0:
-                add_units(self, "reasoning"+large_context, output=thinking_token_count)
+                add_units(self, "reasoning" + large_context, output=thinking_token_count)
 
         if not self._ingest["units"]:
             input = usage.get("prompt_token_count", 0)
