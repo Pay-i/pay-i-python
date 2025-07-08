@@ -1704,10 +1704,10 @@ def track_context(
 
     return _InternalTrackContext(context)
 
-def current_track_context() -> PayiContext:
+def get_context() -> PayiContext:
     """
-    Returns the current tracking context.
-    If no context is set, returns an empty context.
+    Returns the current tracking context from calls to @track and with track_context().
+    If no context is active, returns an empty context.
     """
     if not _instrumentor:
         return PayiContext()
