@@ -8,6 +8,7 @@ from payi.types.ingest_units_params import Units
 
 from .instrument import _ChunkResult, _StreamingType, _ProviderRequest, _PayiInstrumentor
 
+
 class _VertexRequest(_ProviderRequest): # type: ignore
     KNOWN_MODALITIES = ("VIDEO", "AUDIO", "TEXT", "VISION", "IMAGE")
 
