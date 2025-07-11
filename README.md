@@ -1,6 +1,7 @@
 # Payi Python API library
 
-[![PyPI version](<https://img.shields.io/pypi/v/payi.svg?label=pypi%20(stable)>)](https://pypi.org/project/payi/)
+<!-- prettier-ignore -->
+[![PyPI version](https://img.shields.io/pypi/v/payi.svg?label=pypi%20(stable))](https://pypi.org/project/payi/)
 
 The Payi Python library provides convenient access to the Payi REST API from any Python 3.8+
 application. The library includes type definitions for all request params and response fields,

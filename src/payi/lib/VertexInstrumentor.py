@@ -5,12 +5,18 @@ from wrapt import wrap_function_wrapper  # type: ignore
 
 from .instrument import _ChunkResult, _IsStreaming, _PayiInstrumentor
 from .VertexRequest import _VertexRequest
+from .version_helper import get_version_helper
 
 
 class VertexInstrumentor:
+    _module_name: str = "google-cloud-aiplatform"
+    _module_version: str = ""
+
     @staticmethod
     def instrument(instrumentor: _PayiInstrumentor) -> None:
         try:
+            VertexInstrumentor._module_version = get_version_helper(VertexInstrumentor._module_name)
+
             wrap_function_wrapper(
                 "vertexai.generative_models",
                 "GenerativeModel.generate_content",
@@ -85,6 +91,8 @@ class _GoogleVertexRequest(_VertexRequest):
     def __init__(self, instrumentor: _PayiInstrumentor):
         super().__init__(
             instrumentor=instrumentor,
+            module_name=VertexInstrumentor._module_name,
+            module_version=VertexInstrumentor._module_version,
             )
         self._prompt_character_count = 0
         self._candidates_character_count = 0

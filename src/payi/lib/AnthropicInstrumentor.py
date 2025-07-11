@@ -9,9 +9,13 @@ from payi.lib.helpers import PayiCategories
 from payi.types.ingest_units_params import Units
 
 from .instrument import _ChunkResult, _IsStreaming, _StreamingType, _ProviderRequest, _PayiInstrumentor
+from .version_helper import get_version_helper
 
 
 class AnthropicInstrumentor:
+    _module_name: str = "anthropic"
+    _module_version: str = ""
+
     @staticmethod
     def is_vertex(instance: Any) -> bool:
         from anthropic import AnthropicVertex, AsyncAnthropicVertex  # type: ignore # noqa: I001
@@ -27,7 +31,7 @@ class AnthropicInstrumentor:
     @staticmethod
     def instrument(instrumentor: _PayiInstrumentor) -> None:
         try:
-            import anthropic  # type: ignore #  noqa: F401  I001
+            AnthropicInstrumentor._module_version = get_version_helper(AnthropicInstrumentor._module_name)
 
             wrap_function_wrapper(
                 "anthropic.resources.messages",
@@ -149,6 +153,8 @@ class _AnthropicProviderRequest(_ProviderRequest):
             instrumentor=instrumentor,
             category=category,
             streaming_type=streaming_type,
+            module_name=AnthropicInstrumentor._module_name,
+            module_version=AnthropicInstrumentor._module_version,
             )
 
     @override

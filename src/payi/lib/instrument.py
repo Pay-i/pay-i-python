@@ -37,13 +37,18 @@ class _ChunkResult:
     
 class _ProviderRequest:
     def __init__(
-            self, instrumentor: '_PayiInstrumentor',
+            self, 
+            instrumentor: '_PayiInstrumentor',
             category: str,
             streaming_type: '_StreamingType',
+            module_name: str,
+            module_version: str,
             is_aws_client: Optional[bool] = None,
             is_google_vertex_or_genai_client: Optional[bool] = None,
             ) -> None:
         self._instrumentor: '_PayiInstrumentor' = instrumentor
+        self._module_name: str = module_name
+        self._module_version: str = module_version  
         self._estimated_prompt_tokens: Optional[int] = None
         self._category: str = category
         self._ingest: IngestUnitsParams = { "category": category, "units": {} } # type: ignore
@@ -205,6 +210,7 @@ class _InternalTrackContext:
 
 class _PayiInstrumentor:
     _not_instrumented: str = "<not_instrumented>"
+    _instrumented_module_header_name: str = "xProxy-Instrumented-Module"
 
     def __init__(
         self,
@@ -371,8 +377,14 @@ class _PayiInstrumentor:
 
         return log_ingest_units
         
-    def _process_ingest_units(self, request: _ProviderRequest, log_data: 'dict[str, str]') -> None:
+    def _process_ingest_units(
+            self,
+            request: _ProviderRequest, log_data: 'dict[str, str]',
+            extra_headers: 'dict[str, str]') -> None:
         ingest_units = request._ingest
+
+        if request._module_version:
+            extra_headers[_PayiInstrumentor._instrumented_module_header_name] = f'{request._module_name}/{request._module_version}'
 
         if request._function_call_builder:
             # convert the function call builder to a list of function calls
@@ -455,17 +467,18 @@ class _PayiInstrumentor:
 
         # return early if there are no units to ingest and on a successul ingest request
         log_data: 'dict[str,str]' = {}
+        extra_headers: 'dict[str, str]' = {}
 
-        self._process_ingest_units(request, log_data)
+        self._process_ingest_units(request, log_data=log_data, extra_headers=extra_headers)
 
         try:
             if self._logger.isEnabledFor(logging.DEBUG):
                 self._logger.debug(f"_aingest_units: sending ({self._create_logged_ingest_units(ingest_units)})")
 
             if self._apayi:    
-                ingest_response = await self._apayi.ingest.units(**ingest_units)
+                ingest_response = await self._apayi.ingest.units(**ingest_units, extra_headers=extra_headers)
             elif self._payi:
-                ingest_response = self._payi.ingest.units(**ingest_units)
+                ingest_response = self._payi.ingest.units(**ingest_units, extra_headers=extra_headers)
             else:
                 self._logger.error("No payi instance to ingest units")
                 return XproxyError(code="configuration_error", message="No Payi or AsyncPayi instance configured for ingesting units")
@@ -572,15 +585,15 @@ class _PayiInstrumentor:
 
         # return early if there are no units to ingest and on a successul ingest request
         log_data: 'dict[str,str]' = {}
-
-        self._process_ingest_units(request, log_data)
+        extra_headers: 'dict[str, str]' = {}
+        self._process_ingest_units(request, log_data=log_data, extra_headers=extra_headers)
 
         try:
             if self._payi:
                 if self._logger.isEnabledFor(logging.DEBUG):
                     self._logger.debug(f"_ingest_units: sending ({self._create_logged_ingest_units(ingest_units)})")
 
-                ingest_response = self._payi.ingest.units(**ingest_units)
+                ingest_response = self._payi.ingest.units(**ingest_units, extra_headers=extra_headers)
                 self._logger.debug(f"_ingest_units: success ({ingest_response})")
 
                 self._process_ingest_units_response(ingest_response)

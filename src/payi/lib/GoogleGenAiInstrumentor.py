@@ -5,12 +5,18 @@ from wrapt import wrap_function_wrapper  # type: ignore
 
 from .instrument import _ChunkResult, _IsStreaming, _PayiInstrumentor
 from .VertexRequest import _VertexRequest
+from .version_helper import get_version_helper
 
 
 class GoogleGenAiInstrumentor:
+    _module_name: str = "google-genai"
+    _module_version: str = ""
+
     @staticmethod
     def instrument(instrumentor: _PayiInstrumentor) -> None:
         try:
+            GoogleGenAiInstrumentor._module_version = get_version_helper(GoogleGenAiInstrumentor._module_name)
+
             wrap_function_wrapper(
                 "google.genai.models",
                 "Models.generate_content",
@@ -115,6 +121,8 @@ class _GoogleGenAiRequest(_VertexRequest):
     def __init__(self, instrumentor: _PayiInstrumentor):
         super().__init__(
             instrumentor=instrumentor,
+            module_name=GoogleGenAiInstrumentor._module_name,
+            module_version=GoogleGenAiInstrumentor._module_version,
             )
         self._prompt_character_count = 0
         self._candidates_character_count = 0

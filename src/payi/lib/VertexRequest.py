@@ -12,11 +12,18 @@ from .instrument import _ChunkResult, _StreamingType, _ProviderRequest, _PayiIns
 class _VertexRequest(_ProviderRequest): # type: ignore
     KNOWN_MODALITIES = ("VIDEO", "AUDIO", "TEXT", "VISION", "IMAGE")
 
-    def __init__(self, instrumentor: _PayiInstrumentor):
+    def __init__(
+            self,
+            instrumentor: _PayiInstrumentor,
+            module_name: str,
+            module_version: str
+            ) -> None:
         super().__init__(
             instrumentor=instrumentor,
             category=PayiCategories.google_vertex,
             streaming_type=_StreamingType.generator,
+            module_name=module_name,
+            module_version=module_version,
             is_google_vertex_or_genai_client=True,
             )
         self._prompt_character_count = 0
