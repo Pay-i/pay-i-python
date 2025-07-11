@@ -11,14 +11,20 @@ from payi.types.ingest_units_params import Units
 from payi.types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
 from .instrument import _ChunkResult, _IsStreaming, _StreamingType, _ProviderRequest, _PayiInstrumentor
+from .version_helper import get_version_helper
 
 
 class BedrockInstrumentor:
+    _module_name: str = "boto3"
+    _module_version: str = ""
+
     _instrumentor: _PayiInstrumentor
 
     @staticmethod
     def instrument(instrumentor: _PayiInstrumentor) -> None:
         BedrockInstrumentor._instrumentor = instrumentor
+
+        BedrockInstrumentor._module_version = get_version_helper(BedrockInstrumentor._module_name)
 
         try:
             wrap_function_wrapper(
@@ -234,6 +240,8 @@ class _BedrockProviderRequest(_ProviderRequest):
             instrumentor=instrumentor,
             category=PayiCategories.aws_bedrock,
             streaming_type=_StreamingType.iterator,
+            module_name=BedrockInstrumentor._module_name,
+            module_version=BedrockInstrumentor._module_version,
             is_aws_client=True,
             )
 

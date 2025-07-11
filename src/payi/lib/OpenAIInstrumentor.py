@@ -10,9 +10,13 @@ from payi.lib.helpers import PayiCategories, PayiHeaderNames
 from payi.types.ingest_units_params import Units
 
 from .instrument import _ChunkResult, _IsStreaming, _StreamingType, _ProviderRequest, _PayiInstrumentor
+from .version_helper import get_version_helper
 
 
 class OpenAiInstrumentor:
+    _module_name: str = "openai"
+    _module_version: str = ""
+
     @staticmethod
     def is_azure(instance: Any) -> bool:
         from openai import AzureOpenAI, AsyncAzureOpenAI # type: ignore # noqa: I001
@@ -22,6 +26,8 @@ class OpenAiInstrumentor:
     @staticmethod
     def instrument(instrumentor: _PayiInstrumentor) -> None:
         try:
+            OpenAiInstrumentor._module_version = get_version_helper(OpenAiInstrumentor._module_name)
+
             wrap_function_wrapper(
                 "openai.resources.chat.completions",
                 "Completions.create",
@@ -187,6 +193,8 @@ class _OpenAiProviderRequest(_ProviderRequest):
             instrumentor=instrumentor,
             category=PayiCategories.openai,
             streaming_type=_StreamingType.iterator,
+            module_name=OpenAiInstrumentor._module_name,
+            module_version=OpenAiInstrumentor._module_version,
             )
         self._input_tokens_key = input_tokens_key
         self._output_tokens_key = output_tokens_key
