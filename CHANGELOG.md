@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.1.0-alpha.98 (2025-07-11)
+
+Full Changelog: [v0.1.0-alpha.97...v0.1.0-alpha.98](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.97...v0.1.0-alpha.98)
+
+### Features
+
+* instrument provider module version ([9bc9596](https://github.com/Pay-i/pay-i-python/commit/9bc9596edb103b187dc468b9592d5e8a0c5f38f3))
+
+
+### Bug Fixes
+
+* **parsing:** correctly handle nested discriminated unions ([38be788](https://github.com/Pay-i/pay-i-python/commit/38be7889bf028750274f66a584e229a9578033eb))
+
+
+### Chores
+
+* **internal:** bump pinned h11 dep ([9a1ef2e](https://github.com/Pay-i/pay-i-python/commit/9a1ef2efb18e5bd7e2e66a8176feefdc1c22ea22))
+* **package:** mark python 3.13 as supported ([5ab6ac5](https://github.com/Pay-i/pay-i-python/commit/5ab6ac561585ffdc8ff1d07b06d873e0ef99a1ea))
+* **readme:** fix version rendering on pypi ([3f91efc](https://github.com/Pay-i/pay-i-python/commit/3f91efc050e6ffcf97617f2b727c2f68fd83d91f))
+
 ## 0.1.0-alpha.97 (2025-07-08)
 
 Full Changelog: [v0.1.0-alpha.96...v0.1.0-alpha.97](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.96...v0.1.0-alpha.97)
