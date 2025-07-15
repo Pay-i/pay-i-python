@@ -85,7 +85,6 @@ pip install --pre payi[aiohttp]
 Then you can enable it by instantiating the client with `http_client=DefaultAioHttpClient()`:
 
 ```python
-import os
 import asyncio
 from payi import DefaultAioHttpClient
 from payi import AsyncPayi
@@ -93,7 +92,7 @@ from payi import AsyncPayi
 
 async def main() -> None:
     async with AsyncPayi(
-        api_key=os.environ.get("PAYI_API_KEY"),  # This is the default and can be omitted
+        api_key="My API Key",
         http_client=DefaultAioHttpClient(),
     ) as client:
         use_case_definition = await client.use_cases.definitions.create(
