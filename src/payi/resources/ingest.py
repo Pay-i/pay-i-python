@@ -90,7 +90,6 @@ class IngestResource(SyncAPIResource):
         units: Dict[str, IngestUnits],
         end_to_end_latency_ms: Optional[int] | NotGiven = NOT_GIVEN,
         event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
-        experience_properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
         http_status_code: Optional[int] | NotGiven = NOT_GIVEN,
         properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
         provider_request_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | NotGiven = NOT_GIVEN,
@@ -133,11 +132,13 @@ class IngestResource(SyncAPIResource):
 
           output (int): The number of output units
 
-          event_timestamp: (str, datetime, None): The timestamp of the event. Defaults to None.
+          event_timestamp: (str, datetime, None): The timestamp of the event
 
-          limit_ids (list[str], optional): The limit IDs to associate with the request. Defaults to None.
+          limit_ids (list[str], optional): The limit IDs to associate with the request
 
-          request_tags (list[str], optional): The request tags to associate with the request. Defaults to None.
+          properties (Dict[str, str], optional): Properties to associate with the request
+
+          request_tags (list[str], optional): The request tags to associate with the request
 
           use_case_name (str, optional): The use case name
 
@@ -146,6 +147,8 @@ class IngestResource(SyncAPIResource):
           use_case_step (str, optional): The use case step
 
           use_case_version (int, optional): The use case instance version
+
+          use_case_properties (Dict[str, str], optional): The use case properties
 
           user_id (str, optional): The user id
           
@@ -234,7 +237,6 @@ class IngestResource(SyncAPIResource):
                     "units": units,
                     "end_to_end_latency_ms": end_to_end_latency_ms,
                     "event_timestamp": event_timestamp,
-                    "experience_properties": experience_properties,
                     "http_status_code": http_status_code,
                     "properties": properties,
                     "provider_request_headers": provider_request_headers,
@@ -318,7 +320,6 @@ class AsyncIngestResource(AsyncAPIResource):
         units: Dict[str, IngestUnits],
         end_to_end_latency_ms: Optional[int] | NotGiven = NOT_GIVEN,
         event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
-        experience_properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
         http_status_code: Optional[int] | NotGiven = NOT_GIVEN,
         properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
         provider_request_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | NotGiven = NOT_GIVEN,
@@ -360,11 +361,13 @@ class AsyncIngestResource(AsyncAPIResource):
 
           output (int): The number of output units
 
-          event_timestamp: (datetime, None): The timestamp of the event. Defaults to None.
+          event_timestamp: (datetime, None): The timestamp of the event
 
-          limit_ids (list[str], optional): The limit IDs to associate with the request. Defaults to None.
+          limit_ids (list[str], optional): The limit IDs to associate with the request 
 
-          request_tags (list[str], optional): The request tags to associate with the request. Defaults to None.
+          properties (Dict[str, str], optional): Properties to associate with the request 
+
+          request_tags (list[str], optional): The request tags to associate with the request
 
           use_case_name (str, optional): The use case name
 
@@ -373,6 +376,8 @@ class AsyncIngestResource(AsyncAPIResource):
           use_case_id (str, optional): The use case instance id
 
           use_case_version (int, optional): The use case instance version
+
+          use_case_properties (Dict[str, str], optional): The use case properties
 
           user_id (str, optional): The user id
           
@@ -460,7 +465,6 @@ class AsyncIngestResource(AsyncAPIResource):
                     "units": units,
                     "end_to_end_latency_ms": end_to_end_latency_ms,
                     "event_timestamp": event_timestamp,
-                    "experience_properties": experience_properties,
                     "http_status_code": http_status_code,
                     "properties": properties,
                     "provider_request_headers": provider_request_headers,
