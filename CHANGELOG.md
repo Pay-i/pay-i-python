@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.100 (2025-07-16)
+
+Full Changelog: [v0.1.0-alpha.99...v0.1.0-alpha.100](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.99...v0.1.0-alpha.100)
+
+### Features
+
+* use cases and request property bags ([#342](https://github.com/Pay-i/pay-i-python/issues/342)) ([985209e](https://github.com/Pay-i/pay-i-python/commit/985209e1ac179ac7338d3845bd6498aa3d08afc3))
+
 ## 0.1.0-alpha.99 (2025-07-15)
 
 Full Changelog: [v0.1.0-alpha.98...v0.1.0-alpha.99](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.98...v0.1.0-alpha.99)

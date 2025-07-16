@@ -40,7 +40,6 @@ class TestIngest:
                     "event_timestamp": parse_datetime("2019-12-27T18:11:19.117Z"),
                     "experience_id": "experience_id",
                     "experience_name": "experience_name",
-                    "experience_properties": {"foo": "string"},
                     "experience_version": 0,
                     "http_status_code": 0,
                     "limit_ids": ["string"],
@@ -124,7 +123,6 @@ class TestIngest:
             },
             end_to_end_latency_ms=0,
             event_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
-            experience_properties={"foo": "string"},
             http_status_code=0,
             properties={"foo": "string"},
             provider_request_headers=[
@@ -221,7 +219,6 @@ class TestAsyncIngest:
                     "event_timestamp": parse_datetime("2019-12-27T18:11:19.117Z"),
                     "experience_id": "experience_id",
                     "experience_name": "experience_name",
-                    "experience_properties": {"foo": "string"},
                     "experience_version": 0,
                     "http_status_code": 0,
                     "limit_ids": ["string"],
@@ -305,7 +302,6 @@ class TestAsyncIngest:
             },
             end_to_end_latency_ms=0,
             event_timestamp=parse_datetime("2019-12-27T18:11:19.117Z"),
-            experience_properties={"foo": "string"},
             http_status_code=0,
             properties={"foo": "string"},
             provider_request_headers=[

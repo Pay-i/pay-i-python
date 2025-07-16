@@ -24,8 +24,6 @@ class IngestUnitsParams(TypedDict, total=False):
 
     event_timestamp: Annotated[Union[str, datetime, None], PropertyInfo(format="iso8601")]
 
-    experience_properties: Optional[Dict[str, str]]
-
     http_status_code: Optional[int]
 
     properties: Optional[Dict[str, str]]
