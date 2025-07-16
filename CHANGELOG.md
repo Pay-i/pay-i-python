@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.99 (2025-07-15)
+
+Full Changelog: [v0.1.0-alpha.98...v0.1.0-alpha.99](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.98...v0.1.0-alpha.99)
+
+### Features
+
+* clean up environment call outs ([4ec3d02](https://github.com/Pay-i/pay-i-python/commit/4ec3d02fb19859e8f8fd4454bc88aa96755e0b15))
+
+
+### Bug Fixes
+
+* **client:** don't send Content-Type header on GET requests ([26a0c6b](https://github.com/Pay-i/pay-i-python/commit/26a0c6be48e8ab1d7542f17afe51a65b92388212))
+
 ## 0.1.0-alpha.98 (2025-07-11)
 
 Full Changelog: [v0.1.0-alpha.97...v0.1.0-alpha.98](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.97...v0.1.0-alpha.98)
