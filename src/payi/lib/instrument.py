@@ -1649,6 +1649,7 @@ global _instrumentor
 _instrumentor: Optional[_PayiInstrumentor] = None
 
 def payi_instrument(
+    *,
     payi: Optional[Union[Payi, AsyncPayi, 'list[Union[Payi, AsyncPayi]]']] = None,
     instruments: Optional[Set[str]] = None,
     log_prompt_and_response: bool = True,
@@ -1691,6 +1692,7 @@ def payi_instrument(
     )
 
 def track(
+    *,
     limit_ids: Optional["list[str]"] = None,
     use_case_name: Optional[str] = None,
     use_case_id: Optional[str] = None,
@@ -1753,6 +1755,7 @@ def track(
     return _track
 
 def track_context(
+    *,
     limit_ids: Optional["list[str]"] = None,
     use_case_name: Optional[str] = None,
     use_case_id: Optional[str] = None,
