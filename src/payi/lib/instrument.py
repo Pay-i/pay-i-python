@@ -112,11 +112,16 @@ class _ProviderRequest:
                 except Exception as _ex:
                     pass
  
-        properties: 'dict[str,str]' = { "system.failure": exception_str }
+        existing_properties = self._ingest.get("properties", None)
+        if not existing_properties:
+            existing_properties = {}
+
+        existing_properties['system.failure'] = exception_str
         if fields:
             failure_description = ",".join(fields)
-            properties["system.failure.description"] = failure_description[:128]
-        self._ingest["properties"] = properties
+            existing_properties["system.failure.description"] = failure_description[:128]
+
+        self._ingest["properties"] = existing_properties
 
         if "http_status_code" not in self._ingest:
             # use a non existent http status code so when presented to the user, the origin is clear
@@ -150,17 +155,21 @@ class PayiInstrumentConfig(TypedDict, total=False):
     use_case_name: Optional[str]
     use_case_id: Optional[str]
     use_case_version: Optional[int]
+    use_case_properties: Optional["dict[str, str]"]
     user_id: Optional[str]
     request_tags: Optional["list[str]"]
+    request_properties: Optional["dict[str, str]"]
 
 class PayiContext(TypedDict, total=False):
     use_case_name: Optional[str]
     use_case_id: Optional[str]
     use_case_version: Optional[int]
     use_case_step: Optional[str]
+    use_case_properties: Optional["dict[str, str]"]
     limit_ids: Optional['list[str]']
     user_id: Optional[str]
     request_tags: Optional["list[str]"]
+    request_properties: Optional["dict[str, str]"]
     price_as_category: Optional[str]
     price_as_resource: Optional[str]
     resource_scope: Optional[str]
@@ -172,9 +181,11 @@ class _Context(TypedDict, total=False):
     use_case_id: Optional[str]
     use_case_version: Optional[int]
     use_case_step: Optional[str]
+    use_case_properties: Optional["dict[str, str]"]
     limit_ids: Optional['list[str]']
     user_id: Optional[str]
     request_tags: Optional["list[str]"]
+    request_properties: Optional["dict[str, str]"]
     price_as_category: Optional[str]
     price_as_resource: Optional[str]
     resource_scope: Optional[str]
@@ -645,6 +656,8 @@ class _PayiInstrumentor:
         use_case_step: Optional[str]= None,
         user_id: Optional[str]= None,
         request_tags: Optional["list[str]"] = None,
+        request_properties: Optional["dict[str, str]"] = None,
+        use_case_properties: Optional["dict[str, str]"] = None,
         price_as_category: Optional[str] = None,
         price_as_resource: Optional[str] = None,
         resource_scope: Optional[str] = None,
@@ -719,6 +732,38 @@ class _PayiInstrumentor:
             # use the parent request_tags if it exists
             context["request_tags"] = parent_request_tags
 
+        parent_request_properties = parent_context.get("request_properties", None)
+        if request_properties is not None:
+            if not request_properties:
+                context["request_properties"] = None
+            else:
+                if parent_request_properties:
+                    # merge dictionaries, child overrides parent keys
+                    merged = parent_request_properties.copy()
+                    merged.update(request_properties)
+                    context["request_properties"] = merged
+                else:
+                    context["request_properties"] = request_properties
+        elif parent_request_properties:
+            # use the parent request_properties if it exists
+            context["request_properties"] = parent_request_properties
+
+        parent_use_case_properties = parent_context.get("use_case_properties", None)
+        if use_case_properties is not None:
+            if not use_case_properties:
+                context["use_case_properties"] = None
+            else:
+                if parent_use_case_properties:
+                    # merge dictionaries, child overrides parent keys
+                    merged = parent_use_case_properties.copy()
+                    merged.update(use_case_properties)
+                    context["use_case_properties"] = merged
+                else:
+                    context["use_case_properties"] = use_case_properties
+        elif parent_use_case_properties:
+            # use the parent use_case_properties if it exists
+            context["use_case_properties"] = parent_use_case_properties
+
         if use_case_step and (context["use_case_name"] or context["use_case_id"]):
             context["use_case_step"] = use_case_step
         if price_as_category:
@@ -738,6 +783,8 @@ class _PayiInstrumentor:
         use_case_version: Optional[int],        
         user_id: Optional[str],
         request_tags: Optional["list[str]"] = None,
+        request_properties: Optional["dict[str, str]"] = None,
+        use_case_properties: Optional["dict[str, str]"] = None,
         *args: Any,
         **kwargs: Any,
     ) -> Any:
@@ -749,7 +796,10 @@ class _PayiInstrumentor:
                 use_case_id=use_case_id,
                 use_case_version=use_case_version,
                 user_id=user_id,
-                request_tags=request_tags)
+                request_tags=request_tags,
+                request_properties=request_properties,
+                use_case_properties=use_case_properties
+            )
             return await func(*args, **kwargs)
 
     def _call_func(
@@ -762,6 +812,8 @@ class _PayiInstrumentor:
         use_case_version: Optional[int],        
         user_id: Optional[str],
         request_tags: Optional["list[str]"] = None,
+        request_properties: Optional["dict[str, str]"] = None,
+        use_case_properties: Optional["dict[str, str]"] = None,
         *args: Any,
         **kwargs: Any,
     ) -> Any:
@@ -773,7 +825,9 @@ class _PayiInstrumentor:
                 use_case_id=use_case_id,
                 use_case_version=use_case_version,
                 user_id=user_id,
-                request_tags=request_tags)
+                request_tags=request_tags,
+                request_properties=request_properties,
+                use_case_properties=use_case_properties)
             return func(*args, **kwargs)
 
     def __enter__(self) -> Any:
@@ -797,7 +851,8 @@ class _PayiInstrumentor:
     def _prepare_ingest(
         self,
         request: _ProviderRequest,
-        ingest_extra_headers: "dict[str, str]", # do not coflict potential kwargs["extra_headers"]
+        context: _Context,
+        ingest_extra_headers: "dict[str, str]", # do not conflict with potential kwargs["extra_headers"]
         args: Sequence[Any],
         kwargs: 'dict[str, Any]',
     ) -> None:
@@ -826,6 +881,14 @@ class _PayiInstrumentor:
             request._ingest["use_case_step"] = use_case_step
         if user_id:
             request._ingest["user_id"] = user_id
+
+        request_properties = context.get("request_properties", None)
+        if request_properties:
+            request._ingest["properties"] = request_properties
+
+        use_case_properties = context.get("use_case_properties", None)
+        if use_case_properties:
+            request._ingest["use_case_properties"] = use_case_properties
 
         if len(ingest_extra_headers) > 0:
             request._ingest["provider_request_headers"] = [PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) for k, v in ingest_extra_headers.items()]
@@ -909,7 +972,7 @@ class _PayiInstrumentor:
             stream = False
 
         try:
-            self._prepare_ingest(request, extra_headers, args, kwargs)
+            self._prepare_ingest(request, context, extra_headers, args, kwargs)
             self._logger.debug(f"async_invoke_wrapper: calling wrapped instance (stream={stream})")
 
             sw.start()
@@ -1032,7 +1095,7 @@ class _PayiInstrumentor:
             stream = False
 
         try:
-            self._prepare_ingest(request, extra_headers, args, kwargs)
+            self._prepare_ingest(request, context, extra_headers, args, kwargs)
             self._logger.debug(f"invoke_wrapper: calling wrapped instance (stream={stream})")
 
             sw.start()
@@ -1634,6 +1697,8 @@ def track(
     use_case_version: Optional[int] = None,
     user_id: Optional[str] = None,
     request_tags: Optional["list[str]"] = None,
+    request_properties: Optional["dict[str, str]"] = None,
+    use_case_properties: Optional["dict[str, str]"] = None,
     proxy: Optional[bool] = None,
 ) -> Any:
 
@@ -1656,6 +1721,8 @@ def track(
                     use_case_version,
                     user_id,
                     request_tags,
+                    request_properties,
+                    use_case_properties,
                     *args,
                     **kwargs,
                 )
@@ -1677,6 +1744,8 @@ def track(
                     use_case_version,
                     user_id,
                     request_tags,
+                    request_properties,
+                    use_case_properties,
                     *args,
                     **kwargs,
                 )
@@ -1691,6 +1760,8 @@ def track_context(
     use_case_step: Optional[str] = None,
     user_id: Optional[str] = None,
     request_tags: Optional["list[str]"] = None,
+    request_properties: Optional["dict[str, str]"] = None,
+    use_case_properties: Optional["dict[str, str]"] = None,
     price_as_category: Optional[str] = None,
     price_as_resource: Optional[str] = None,
     resource_scope: Optional[str] = None,
@@ -1714,6 +1785,9 @@ def track_context(
     context["price_as_category"] = price_as_category
     context["price_as_resource"] = price_as_resource
     context["resource_scope"] = resource_scope
+
+    context["request_properties"] = request_properties
+    context["use_case_properties"] = use_case_properties
 
     return _InternalTrackContext(context)
 
