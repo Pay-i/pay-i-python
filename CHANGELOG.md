@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.101 (2025-07-18)
+
+Full Changelog: [v0.1.0-alpha.100...v0.1.0-alpha.101](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.100...v0.1.0-alpha.101)
+
+### Bug Fixes
+
+* properly merge use case state with parent context ([#344](https://github.com/Pay-i/pay-i-python/issues/344)) ([2a001f8](https://github.com/Pay-i/pay-i-python/commit/2a001f8c49a815c08494f08e1393e67728c6da48))
+
 ## 0.1.0-alpha.100 (2025-07-16)
 
 Full Changelog: [v0.1.0-alpha.99...v0.1.0-alpha.100](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.99...v0.1.0-alpha.100)
