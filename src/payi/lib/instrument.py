@@ -694,8 +694,12 @@ class _PayiInstrumentor:
                 # Same use case name, use previous ID unless new one specified
                 context["use_case_name"] = use_case_name
             else:
-                # Different use case name, use specified ID or generate one
                 context["use_case_name"] = use_case_name
+
+                # Different use case name, use specified ID or generate one. 
+                # By assigning to a new value to parent_use_case_id we keep the assignment logic below simple and consistent with
+                # assign the caller's use_case_id if specified or the newly generated one. 
+                # The use case id stored in the parent context is not mutated.
                 parent_use_case_id = str(uuid.uuid4())
 
             assign_use_case_values = True
