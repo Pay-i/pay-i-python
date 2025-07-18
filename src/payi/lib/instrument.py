@@ -673,29 +673,54 @@ class _PayiInstrumentor:
         parent_use_case_name = parent_context.get("use_case_name", None)
         parent_use_case_id = parent_context.get("use_case_id", None)
         parent_use_case_version = parent_context.get("use_case_version", None)
+        parent_use_case_step = parent_context.get("use_case_step", None)
+
+        assign_use_case_values = False
 
         if use_case_name is None:
-            # If no use_case_name specified, use previous values
-            context["use_case_name"] = parent_use_case_name
-            context["use_case_id"] = parent_use_case_id
-            context["use_case_version"] = parent_use_case_version
+            if parent_use_case_name:
+                # If no use_case_name specified, use previous values
+                context["use_case_name"] = parent_use_case_name
+                assign_use_case_values = True
         elif len(use_case_name) == 0:
             # Empty string explicitly blocks inheriting from the parent state
             context["use_case_name"] = None
             context["use_case_id"] = None
             context["use_case_version"] = None
             context["use_case_step"] = None
+            context["use_case_properties"] = None
         else:
             if use_case_name == parent_use_case_name:
                 # Same use case name, use previous ID unless new one specified
                 context["use_case_name"] = use_case_name
-                context["use_case_id"] = use_case_id if use_case_id else parent_use_case_id
-                context["use_case_version"] = use_case_version if use_case_version else parent_use_case_version
             else:
                 # Different use case name, use specified ID or generate one
                 context["use_case_name"] = use_case_name
-                context["use_case_id"] = use_case_id if use_case_id else str(uuid.uuid4())
-                context["use_case_version"] = use_case_version if use_case_version else None
+                parent_use_case_id = str(uuid.uuid4())
+
+            assign_use_case_values = True
+
+        if assign_use_case_values:
+            context["use_case_id"] = use_case_id if use_case_id else parent_use_case_id
+            context["use_case_version"] = use_case_version if use_case_version else parent_use_case_version
+            context["use_case_step"] = use_case_step if use_case_step else parent_use_case_step
+
+            parent_use_case_properties = parent_context.get("use_case_properties", None)
+            if use_case_properties is not None:
+                if not use_case_properties:
+                    # an empty dictionary explicitly blocks inheriting from the parent state
+                    context["use_case_properties"] = None
+                else:
+                    if parent_use_case_properties:
+                        # merge dictionaries, child overrides parent keys
+                        merged = parent_use_case_properties.copy()
+                        merged.update(use_case_properties)
+                        context["use_case_properties"] = merged
+                    else:
+                        context["use_case_properties"] = use_case_properties.copy()
+            elif parent_use_case_properties:
+                # use the parent use_case_properties if it exists
+                context["use_case_properties"] = parent_use_case_properties.copy()
 
         parent_limit_ids = parent_context.get("limit_ids", None)
         if limit_ids is None:
@@ -706,7 +731,7 @@ class _PayiInstrumentor:
             context["limit_ids"] = None
         else:
             # union of new and parent lists if the parent context contains limit ids
-            context["limit_ids"] = list(set(limit_ids) | set(parent_limit_ids)) if parent_limit_ids else limit_ids
+            context["limit_ids"] = list(set(limit_ids) | set(parent_limit_ids)) if parent_limit_ids else limit_ids.copy()
 
         parent_user_id = parent_context.get("user_id", None)
         if user_id is None:
@@ -721,20 +746,22 @@ class _PayiInstrumentor:
         parent_request_tags = parent_context.get("request_tags", None)
         if request_tags is not None:
             if len(request_tags) == 0:
+                # caller passing an empty list explicitly blocks inheriting from the parent state
                 context["request_tags"] = None
             else:
                 if parent_request_tags:
                     # union of new and parent lists if the parent context contains request tags
                     context["request_tags"] = list(set(request_tags) | set(parent_request_tags))
                 else:
-                    context["request_tags"] = request_tags
+                    context["request_tags"] = request_tags.copy()
         elif parent_request_tags:
             # use the parent request_tags if it exists
-            context["request_tags"] = parent_request_tags
+            context["request_tags"] = parent_request_tags.copy()
 
         parent_request_properties = parent_context.get("request_properties", None)
         if request_properties is not None:
             if not request_properties:
+                # an empty dictionary explicitly blocks inheriting from the parent state
                 context["request_properties"] = None
             else:
                 if parent_request_properties:
@@ -743,29 +770,11 @@ class _PayiInstrumentor:
                     merged.update(request_properties)
                     context["request_properties"] = merged
                 else:
-                    context["request_properties"] = request_properties
+                    context["request_properties"] = request_properties.copy()
         elif parent_request_properties:
             # use the parent request_properties if it exists
-            context["request_properties"] = parent_request_properties
+            context["request_properties"] = parent_request_properties.copy()
 
-        parent_use_case_properties = parent_context.get("use_case_properties", None)
-        if use_case_properties is not None:
-            if not use_case_properties:
-                context["use_case_properties"] = None
-            else:
-                if parent_use_case_properties:
-                    # merge dictionaries, child overrides parent keys
-                    merged = parent_use_case_properties.copy()
-                    merged.update(use_case_properties)
-                    context["use_case_properties"] = merged
-                else:
-                    context["use_case_properties"] = use_case_properties
-        elif parent_use_case_properties:
-            # use the parent use_case_properties if it exists
-            context["use_case_properties"] = parent_use_case_properties
-
-        if use_case_step and (context["use_case_name"] or context["use_case_id"]):
-            context["use_case_step"] = use_case_step
         if price_as_category:
             context["price_as_category"] = price_as_category
         if price_as_resource:
