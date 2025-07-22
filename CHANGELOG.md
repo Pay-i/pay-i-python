@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.102 (2025-07-22)
+
+Full Changelog: [v0.1.0-alpha.101...v0.1.0-alpha.102](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.101...v0.1.0-alpha.102)
+
+### Bug Fixes
+
+* **parsing:** ignore empty metadata ([8599474](https://github.com/Pay-i/pay-i-python/commit/859947442835af355059aa132267284e465cee98))
+
 ## 0.1.0-alpha.101 (2025-07-18)
 
 Full Changelog: [v0.1.0-alpha.100...v0.1.0-alpha.101](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.100...v0.1.0-alpha.101)
