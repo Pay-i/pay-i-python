@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.103 (2025-07-23)
+
+Full Changelog: [v0.1.0-alpha.102...v0.1.0-alpha.103](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.102...v0.1.0-alpha.103)
+
+### Bug Fixes
+
+* **parsing:** parse extra field types ([75f6333](https://github.com/Pay-i/pay-i-python/commit/75f633331136621ecf3adf2e72b46f60b75d6d8e))
+
 ## 0.1.0-alpha.102 (2025-07-22)
 
 Full Changelog: [v0.1.0-alpha.101...v0.1.0-alpha.102](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.101...v0.1.0-alpha.102)
