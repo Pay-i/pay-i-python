@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.104 (2025-07-25)
+
+Full Changelog: [v0.1.0-alpha.103...v0.1.0-alpha.104](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.103...v0.1.0-alpha.104)
+
+### Chores
+
+* **project:** add settings file for vscode ([b3eb6f5](https://github.com/Pay-i/pay-i-python/commit/b3eb6f51668fbaa2c81fd0822e883d181c989df2))
+
 ## 0.1.0-alpha.103 (2025-07-23)
 
 Full Changelog: [v0.1.0-alpha.102...v0.1.0-alpha.103](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.102...v0.1.0-alpha.103)
