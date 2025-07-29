@@ -1,13 +1,5 @@
 # File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-from .result import (
-    ResultResource,
-    AsyncResultResource,
-    ResultResourceWithRawResponse,
-    AsyncResultResourceWithRawResponse,
-    ResultResourceWithStreamingResponse,
-    AsyncResultResourceWithStreamingResponse,
-)
 from .requests import (
     RequestsResource,
     AsyncRequestsResource,
@@ -16,28 +8,36 @@ from .requests import (
     RequestsResourceWithStreamingResponse,
     AsyncRequestsResourceWithStreamingResponse,
 )
-from .properties import (
-    PropertiesResource,
-    AsyncPropertiesResource,
-    PropertiesResourceWithRawResponse,
-    AsyncPropertiesResourceWithRawResponse,
-    PropertiesResourceWithStreamingResponse,
-    AsyncPropertiesResourceWithStreamingResponse,
+from .request_id import (
+    RequestIDResource,
+    AsyncRequestIDResource,
+    RequestIDResourceWithRawResponse,
+    AsyncRequestIDResourceWithRawResponse,
+    RequestIDResourceWithStreamingResponse,
+    AsyncRequestIDResourceWithStreamingResponse,
+)
+from .response_id import (
+    ResponseIDResource,
+    AsyncResponseIDResource,
+    ResponseIDResourceWithRawResponse,
+    AsyncResponseIDResourceWithRawResponse,
+    ResponseIDResourceWithStreamingResponse,
+    AsyncResponseIDResourceWithStreamingResponse,
 )
 
 __all__ = [
-    "PropertiesResource",
-    "AsyncPropertiesResource",
-    "PropertiesResourceWithRawResponse",
-    "AsyncPropertiesResourceWithRawResponse",
-    "PropertiesResourceWithStreamingResponse",
-    "AsyncPropertiesResourceWithStreamingResponse",
-    "ResultResource",
-    "AsyncResultResource",
-    "ResultResourceWithRawResponse",
-    "AsyncResultResourceWithRawResponse",
-    "ResultResourceWithStreamingResponse",
-    "AsyncResultResourceWithStreamingResponse",
+    "RequestIDResource",
+    "AsyncRequestIDResource",
+    "RequestIDResourceWithRawResponse",
+    "AsyncRequestIDResourceWithRawResponse",
+    "RequestIDResourceWithStreamingResponse",
+    "AsyncRequestIDResourceWithStreamingResponse",
+    "ResponseIDResource",
+    "AsyncResponseIDResource",
+    "ResponseIDResourceWithRawResponse",
+    "AsyncResponseIDResourceWithRawResponse",
+    "ResponseIDResourceWithStreamingResponse",
+    "AsyncResponseIDResourceWithStreamingResponse",
     "RequestsResource",
     "AsyncRequestsResource",
     "RequestsResourceWithRawResponse",
