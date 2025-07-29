@@ -18,16 +18,16 @@ class TestProperties:
     parametrize = pytest.mark.parametrize("client", [False, True], indirect=True, ids=["loose", "strict"])
 
     @parametrize
-    def test_method_create(self, client: Payi) -> None:
-        property = client.use_cases.properties.create(
+    def test_method_update(self, client: Payi) -> None:
+        property = client.use_cases.properties.update(
             use_case_id="use_case_id",
             properties={"foo": "string"},
         )
         assert_matches_type(PropertyCreateResponse, property, path=["response"])
 
     @parametrize
-    def test_raw_response_create(self, client: Payi) -> None:
-        response = client.use_cases.properties.with_raw_response.create(
+    def test_raw_response_update(self, client: Payi) -> None:
+        response = client.use_cases.properties.with_raw_response.update(
             use_case_id="use_case_id",
             properties={"foo": "string"},
         )
@@ -38,8 +38,8 @@ class TestProperties:
         assert_matches_type(PropertyCreateResponse, property, path=["response"])
 
     @parametrize
-    def test_streaming_response_create(self, client: Payi) -> None:
-        with client.use_cases.properties.with_streaming_response.create(
+    def test_streaming_response_update(self, client: Payi) -> None:
+        with client.use_cases.properties.with_streaming_response.update(
             use_case_id="use_case_id",
             properties={"foo": "string"},
         ) as response:
@@ -52,9 +52,9 @@ class TestProperties:
         assert cast(Any, response.is_closed) is True
 
     @parametrize
-    def test_path_params_create(self, client: Payi) -> None:
+    def test_path_params_update(self, client: Payi) -> None:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `use_case_id` but received ''"):
-            client.use_cases.properties.with_raw_response.create(
+            client.use_cases.properties.with_raw_response.update(
                 use_case_id="",
                 properties={"foo": "string"},
             )
@@ -66,16 +66,16 @@ class TestAsyncProperties:
     )
 
     @parametrize
-    async def test_method_create(self, async_client: AsyncPayi) -> None:
-        property = await async_client.use_cases.properties.create(
+    async def test_method_update(self, async_client: AsyncPayi) -> None:
+        property = await async_client.use_cases.properties.update(
             use_case_id="use_case_id",
             properties={"foo": "string"},
         )
         assert_matches_type(PropertyCreateResponse, property, path=["response"])
 
     @parametrize
-    async def test_raw_response_create(self, async_client: AsyncPayi) -> None:
-        response = await async_client.use_cases.properties.with_raw_response.create(
+    async def test_raw_response_update(self, async_client: AsyncPayi) -> None:
+        response = await async_client.use_cases.properties.with_raw_response.update(
             use_case_id="use_case_id",
             properties={"foo": "string"},
         )
@@ -86,8 +86,8 @@ class TestAsyncProperties:
         assert_matches_type(PropertyCreateResponse, property, path=["response"])
 
     @parametrize
-    async def test_streaming_response_create(self, async_client: AsyncPayi) -> None:
-        async with async_client.use_cases.properties.with_streaming_response.create(
+    async def test_streaming_response_update(self, async_client: AsyncPayi) -> None:
+        async with async_client.use_cases.properties.with_streaming_response.update(
             use_case_id="use_case_id",
             properties={"foo": "string"},
         ) as response:
@@ -100,9 +100,9 @@ class TestAsyncProperties:
         assert cast(Any, response.is_closed) is True
 
     @parametrize
-    async def test_path_params_create(self, async_client: AsyncPayi) -> None:
+    async def test_path_params_update(self, async_client: AsyncPayi) -> None:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `use_case_id` but received ''"):
-            await async_client.use_cases.properties.with_raw_response.create(
+            await async_client.use_cases.properties.with_raw_response.update(
                 use_case_id="",
                 properties={"foo": "string"},
             )

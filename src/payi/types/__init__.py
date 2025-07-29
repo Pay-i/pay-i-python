@@ -14,6 +14,7 @@ from .cost_data import CostData as CostData
 from .cost_details import CostDetails as CostDetails
 from .requests_data import RequestsData as RequestsData
 from .limit_response import LimitResponse as LimitResponse
+from .request_result import RequestResult as RequestResult
 from .ingest_response import IngestResponse as IngestResponse
 from .total_cost_data import TotalCostData as TotalCostData
 from .default_response import DefaultResponse as DefaultResponse

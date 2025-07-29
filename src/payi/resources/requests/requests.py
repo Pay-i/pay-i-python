@@ -2,36 +2,36 @@
 
 from __future__ import annotations
 
-from .result import (
-    ResultResource,
-    AsyncResultResource,
-    ResultResourceWithRawResponse,
-    AsyncResultResourceWithRawResponse,
-    ResultResourceWithStreamingResponse,
-    AsyncResultResourceWithStreamingResponse,
-)
 from ..._compat import cached_property
-from .properties import (
-    PropertiesResource,
-    AsyncPropertiesResource,
-    PropertiesResourceWithRawResponse,
-    AsyncPropertiesResourceWithRawResponse,
-    PropertiesResourceWithStreamingResponse,
-    AsyncPropertiesResourceWithStreamingResponse,
-)
 from ..._resource import SyncAPIResource, AsyncAPIResource
+from .request_id.request_id import (
+    RequestIDResource,
+    AsyncRequestIDResource,
+    RequestIDResourceWithRawResponse,
+    AsyncRequestIDResourceWithRawResponse,
+    RequestIDResourceWithStreamingResponse,
+    AsyncRequestIDResourceWithStreamingResponse,
+)
+from .response_id.response_id import (
+    ResponseIDResource,
+    AsyncResponseIDResource,
+    ResponseIDResourceWithRawResponse,
+    AsyncResponseIDResourceWithRawResponse,
+    ResponseIDResourceWithStreamingResponse,
+    AsyncResponseIDResourceWithStreamingResponse,
+)
 
 __all__ = ["RequestsResource", "AsyncRequestsResource"]
 
 
 class RequestsResource(SyncAPIResource):
     @cached_property
-    def properties(self) -> PropertiesResource:
-        return PropertiesResource(self._client)
+    def request_id(self) -> RequestIDResource:
+        return RequestIDResource(self._client)
 
     @cached_property
-    def result(self) -> ResultResource:
-        return ResultResource(self._client)
+    def response_id(self) -> ResponseIDResource:
+        return ResponseIDResource(self._client)
 
     @cached_property
     def with_raw_response(self) -> RequestsResourceWithRawResponse:
@@ -55,12 +55,12 @@ class RequestsResource(SyncAPIResource):
 
 class AsyncRequestsResource(AsyncAPIResource):
     @cached_property
-    def properties(self) -> AsyncPropertiesResource:
-        return AsyncPropertiesResource(self._client)
+    def request_id(self) -> AsyncRequestIDResource:
+        return AsyncRequestIDResource(self._client)
 
     @cached_property
-    def result(self) -> AsyncResultResource:
-        return AsyncResultResource(self._client)
+    def response_id(self) -> AsyncResponseIDResource:
+        return AsyncResponseIDResource(self._client)
 
     @cached_property
     def with_raw_response(self) -> AsyncRequestsResourceWithRawResponse:
@@ -87,12 +87,12 @@ class RequestsResourceWithRawResponse:
         self._requests = requests
 
     @cached_property
-    def properties(self) -> PropertiesResourceWithRawResponse:
-        return PropertiesResourceWithRawResponse(self._requests.properties)
+    def request_id(self) -> RequestIDResourceWithRawResponse:
+        return RequestIDResourceWithRawResponse(self._requests.request_id)
 
     @cached_property
-    def result(self) -> ResultResourceWithRawResponse:
-        return ResultResourceWithRawResponse(self._requests.result)
+    def response_id(self) -> ResponseIDResourceWithRawResponse:
+        return ResponseIDResourceWithRawResponse(self._requests.response_id)
 
 
 class AsyncRequestsResourceWithRawResponse:
@@ -100,12 +100,12 @@ class AsyncRequestsResourceWithRawResponse:
         self._requests = requests
 
     @cached_property
-    def properties(self) -> AsyncPropertiesResourceWithRawResponse:
-        return AsyncPropertiesResourceWithRawResponse(self._requests.properties)
+    def request_id(self) -> AsyncRequestIDResourceWithRawResponse:
+        return AsyncRequestIDResourceWithRawResponse(self._requests.request_id)
 
     @cached_property
-    def result(self) -> AsyncResultResourceWithRawResponse:
-        return AsyncResultResourceWithRawResponse(self._requests.result)
+    def response_id(self) -> AsyncResponseIDResourceWithRawResponse:
+        return AsyncResponseIDResourceWithRawResponse(self._requests.response_id)
 
 
 class RequestsResourceWithStreamingResponse:
@@ -113,12 +113,12 @@ class RequestsResourceWithStreamingResponse:
         self._requests = requests
 
     @cached_property
-    def properties(self) -> PropertiesResourceWithStreamingResponse:
-        return PropertiesResourceWithStreamingResponse(self._requests.properties)
+    def request_id(self) -> RequestIDResourceWithStreamingResponse:
+        return RequestIDResourceWithStreamingResponse(self._requests.request_id)
 
     @cached_property
-    def result(self) -> ResultResourceWithStreamingResponse:
-        return ResultResourceWithStreamingResponse(self._requests.result)
+    def response_id(self) -> ResponseIDResourceWithStreamingResponse:
+        return ResponseIDResourceWithStreamingResponse(self._requests.response_id)
 
 
 class AsyncRequestsResourceWithStreamingResponse:
@@ -126,9 +126,9 @@ class AsyncRequestsResourceWithStreamingResponse:
         self._requests = requests
 
     @cached_property
-    def properties(self) -> AsyncPropertiesResourceWithStreamingResponse:
-        return AsyncPropertiesResourceWithStreamingResponse(self._requests.properties)
+    def request_id(self) -> AsyncRequestIDResourceWithStreamingResponse:
+        return AsyncRequestIDResourceWithStreamingResponse(self._requests.request_id)
 
     @cached_property
-    def result(self) -> AsyncResultResourceWithStreamingResponse:
-        return AsyncResultResourceWithStreamingResponse(self._requests.result)
+    def response_id(self) -> AsyncResponseIDResourceWithStreamingResponse:
+        return AsyncResponseIDResourceWithStreamingResponse(self._requests.response_id)

@@ -8,8 +8,8 @@ from typing import Any, cast
 import pytest
 
 from payi import Payi, AsyncPayi
+from payi.types import RequestResult
 from tests.utils import assert_matches_type
-from payi.types.requests import RequestResult
 
 base_url = os.environ.get("TEST_API_BASE_URL", "http://127.0.0.1:4010")
 
@@ -19,17 +19,15 @@ class TestResult:
 
     @parametrize
     def test_method_retrieve(self, client: Payi) -> None:
-        result = client.requests.result.retrieve(
-            request_id="request_id",
-            category="category",
+        result = client.requests.request_id.result.retrieve(
+            "request_id",
         )
         assert_matches_type(RequestResult, result, path=["response"])
 
     @parametrize
     def test_raw_response_retrieve(self, client: Payi) -> None:
-        response = client.requests.result.with_raw_response.retrieve(
-            request_id="request_id",
-            category="category",
+        response = client.requests.request_id.result.with_raw_response.retrieve(
+            "request_id",
         )
 
         assert response.is_closed is True
@@ -39,9 +37,8 @@ class TestResult:
 
     @parametrize
     def test_streaming_response_retrieve(self, client: Payi) -> None:
-        with client.requests.result.with_streaming_response.retrieve(
-            request_id="request_id",
-            category="category",
+        with client.requests.request_id.result.with_streaming_response.retrieve(
+            "request_id",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -53,16 +50,9 @@ class TestResult:
 
     @parametrize
     def test_path_params_retrieve(self, client: Payi) -> None:
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `category` but received ''"):
-            client.requests.result.with_raw_response.retrieve(
-                request_id="request_id",
-                category="",
-            )
-
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `request_id` but received ''"):
-            client.requests.result.with_raw_response.retrieve(
-                request_id="",
-                category="category",
+            client.requests.request_id.result.with_raw_response.retrieve(
+                "",
             )
 
 
@@ -73,17 +63,15 @@ class TestAsyncResult:
 
     @parametrize
     async def test_method_retrieve(self, async_client: AsyncPayi) -> None:
-        result = await async_client.requests.result.retrieve(
-            request_id="request_id",
-            category="category",
+        result = await async_client.requests.request_id.result.retrieve(
+            "request_id",
         )
         assert_matches_type(RequestResult, result, path=["response"])
 
     @parametrize
     async def test_raw_response_retrieve(self, async_client: AsyncPayi) -> None:
-        response = await async_client.requests.result.with_raw_response.retrieve(
-            request_id="request_id",
-            category="category",
+        response = await async_client.requests.request_id.result.with_raw_response.retrieve(
+            "request_id",
         )
 
         assert response.is_closed is True
@@ -93,9 +81,8 @@ class TestAsyncResult:
 
     @parametrize
     async def test_streaming_response_retrieve(self, async_client: AsyncPayi) -> None:
-        async with async_client.requests.result.with_streaming_response.retrieve(
-            request_id="request_id",
-            category="category",
+        async with async_client.requests.request_id.result.with_streaming_response.retrieve(
+            "request_id",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -107,14 +94,7 @@ class TestAsyncResult:
 
     @parametrize
     async def test_path_params_retrieve(self, async_client: AsyncPayi) -> None:
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `category` but received ''"):
-            await async_client.requests.result.with_raw_response.retrieve(
-                request_id="request_id",
-                category="",
-            )
-
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `request_id` but received ''"):
-            await async_client.requests.result.with_raw_response.retrieve(
-                request_id="",
-                category="category",
+            await async_client.requests.request_id.result.with_raw_response.retrieve(
+                "",
             )

@@ -6,19 +6,19 @@ from typing import Dict
 
 import httpx
 
-from ..._types import NOT_GIVEN, Body, Query, Headers, NotGiven
-from ..._utils import maybe_transform, async_maybe_transform
-from ..._compat import cached_property
-from ..._resource import SyncAPIResource, AsyncAPIResource
-from ..._response import (
+from ...._types import NOT_GIVEN, Body, Query, Headers, NotGiven
+from ...._utils import maybe_transform, async_maybe_transform
+from ...._compat import cached_property
+from ...._resource import SyncAPIResource, AsyncAPIResource
+from ...._response import (
     to_raw_response_wrapper,
     to_streamed_response_wrapper,
     async_to_raw_response_wrapper,
     async_to_streamed_response_wrapper,
 )
-from ..._base_client import make_request_options
-from ...types.requests import property_create_params
-from ...types.shared.properties_response import PropertiesResponse
+from ...._base_client import make_request_options
+from ....types.requests.request_id import property_update_params
+from ....types.shared.properties_response import PropertiesResponse
 
 __all__ = ["PropertiesResource", "AsyncPropertiesResource"]
 
@@ -43,7 +43,7 @@ class PropertiesResource(SyncAPIResource):
         """
         return PropertiesResourceWithStreamingResponse(self)
 
-    def create(
+    def update(
         self,
         request_id: str,
         *,
@@ -69,9 +69,9 @@ class PropertiesResource(SyncAPIResource):
         """
         if not request_id:
             raise ValueError(f"Expected a non-empty value for `request_id` but received {request_id!r}")
-        return self._post(
+        return self._put(
             f"/api/v1/requests/{request_id}/properties",
-            body=maybe_transform({"properties": properties}, property_create_params.PropertyCreateParams),
+            body=maybe_transform({"properties": properties}, property_update_params.PropertyUpdateParams),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -99,7 +99,7 @@ class AsyncPropertiesResource(AsyncAPIResource):
         """
         return AsyncPropertiesResourceWithStreamingResponse(self)
 
-    async def create(
+    async def update(
         self,
         request_id: str,
         *,
@@ -125,9 +125,9 @@ class AsyncPropertiesResource(AsyncAPIResource):
         """
         if not request_id:
             raise ValueError(f"Expected a non-empty value for `request_id` but received {request_id!r}")
-        return await self._post(
+        return await self._put(
             f"/api/v1/requests/{request_id}/properties",
-            body=await async_maybe_transform({"properties": properties}, property_create_params.PropertyCreateParams),
+            body=await async_maybe_transform({"properties": properties}, property_update_params.PropertyUpdateParams),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -139,8 +139,8 @@ class PropertiesResourceWithRawResponse:
     def __init__(self, properties: PropertiesResource) -> None:
         self._properties = properties
 
-        self.create = to_raw_response_wrapper(
-            properties.create,
+        self.update = to_raw_response_wrapper(
+            properties.update,
         )
 
 
@@ -148,8 +148,8 @@ class AsyncPropertiesResourceWithRawResponse:
     def __init__(self, properties: AsyncPropertiesResource) -> None:
         self._properties = properties
 
-        self.create = async_to_raw_response_wrapper(
-            properties.create,
+        self.update = async_to_raw_response_wrapper(
+            properties.update,
         )
 
 
@@ -157,8 +157,8 @@ class PropertiesResourceWithStreamingResponse:
     def __init__(self, properties: PropertiesResource) -> None:
         self._properties = properties
 
-        self.create = to_streamed_response_wrapper(
-            properties.create,
+        self.update = to_streamed_response_wrapper(
+            properties.update,
         )
 
 
@@ -166,6 +166,6 @@ class AsyncPropertiesResourceWithStreamingResponse:
     def __init__(self, properties: AsyncPropertiesResource) -> None:
         self._properties = properties
 
-        self.create = async_to_streamed_response_wrapper(
-            properties.create,
+        self.update = async_to_streamed_response_wrapper(
+            properties.update,
         )

@@ -30,6 +30,8 @@ class TestKpis:
             use_case_name="use_case_name",
             description="x",
             name="x",
+            goal=0,
+            kpi_type="boolean",
         )
         assert_matches_type(KpiCreateResponse, kpi, path=["response"])
 
@@ -50,6 +52,8 @@ class TestKpis:
             use_case_name="use_case_name",
             description="x",
             name="x",
+            goal=0,
+            kpi_type="boolean",
         )
 
         assert response.is_closed is True
@@ -63,6 +67,8 @@ class TestKpis:
             use_case_name="use_case_name",
             description="x",
             name="x",
+            goal=0,
+            kpi_type="boolean",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -296,6 +302,8 @@ class TestAsyncKpis:
             use_case_name="use_case_name",
             description="x",
             name="x",
+            goal=0,
+            kpi_type="boolean",
         )
         assert_matches_type(KpiCreateResponse, kpi, path=["response"])
 
@@ -316,6 +324,8 @@ class TestAsyncKpis:
             use_case_name="use_case_name",
             description="x",
             name="x",
+            goal=0,
+            kpi_type="boolean",
         )
 
         assert response.is_closed is True
@@ -329,6 +339,8 @@ class TestAsyncKpis:
             use_case_name="use_case_name",
             description="x",
             name="x",
+            goal=0,
+            kpi_type="boolean",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"

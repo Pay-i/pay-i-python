@@ -7,7 +7,7 @@ from .kpi_list_response import KpiListResponse as KpiListResponse
 from .kpi_update_params import KpiUpdateParams as KpiUpdateParams
 from .use_case_definition import UseCaseDefinition as UseCaseDefinition
 from .definition_list_params import DefinitionListParams as DefinitionListParams
-from .property_create_params import PropertyCreateParams as PropertyCreateParams
+from .property_update_params import PropertyUpdateParams as PropertyUpdateParams
 from .definition_create_params import DefinitionCreateParams as DefinitionCreateParams
 from .definition_update_params import DefinitionUpdateParams as DefinitionUpdateParams
 from .property_create_response import PropertyCreateResponse as PropertyCreateResponse
