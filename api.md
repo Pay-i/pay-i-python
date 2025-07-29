@@ -202,24 +202,40 @@ from payi.types.use_cases import PropertyCreateResponse
 
 Methods:
 
-- <code title="post /api/v1/use_cases/instances/{use_case_id}/properties">client.use_cases.properties.<a href="./src/payi/resources/use_cases/properties.py">create</a>(use_case_id, \*\*<a href="src/payi/types/use_cases/property_create_params.py">params</a>) -> <a href="./src/payi/types/use_cases/property_create_response.py">PropertyCreateResponse</a></code>
+- <code title="put /api/v1/use_cases/instances/{use_case_id}/properties">client.use_cases.properties.<a href="./src/payi/resources/use_cases/properties.py">update</a>(use_case_id, \*\*<a href="src/payi/types/use_cases/property_update_params.py">params</a>) -> <a href="./src/payi/types/use_case_instance_response.py">UseCaseInstanceResponse</a></code>
 
 # Requests
-
-## Properties
-
-Methods:
-
-- <code title="post /api/v1/requests/{request_id}/properties">client.requests.properties.<a href="./src/payi/resources/requests/properties.py">create</a>(request_id, \*\*<a href="src/payi/types/requests/property_create_params.py">params</a>) -> <a href="./src/payi/types/shared/properties_response.py">PropertiesResponse</a></code>
-
-## Result
 
 Types:
 
 ```python
-from payi.types.requests import RequestResult
+from payi.types import RequestResult
 ```
+
+## RequestID
+
+### Result
 
 Methods:
 
-- <code title="get /api/v1/requests/result/{category}/{request_id}">client.requests.result.<a href="./src/payi/resources/requests/result.py">retrieve</a>(request_id, \*, category) -> <a href="./src/payi/types/requests/request_result.py">RequestResult</a></code>
+- <code title="get /api/v1/requests/{request_id}/result">client.requests.request_id.result.<a href="./src/payi/resources/requests/request_id/result.py">retrieve</a>(request_id) -> <a href="./src/payi/types/request_result.py">RequestResult</a></code>
+
+### Properties
+
+Methods:
+
+- <code title="put /api/v1/requests/{request_id}/properties">client.requests.request_id.properties.<a href="./src/payi/resources/requests/request_id/properties.py">update</a>(request_id, \*\*<a href="src/payi/types/requests/request_id/property_update_params.py">params</a>) -> <a href="./src/payi/types/shared/properties_response.py">PropertiesResponse</a></code>
+
+## ResponseID
+
+### Result
+
+Methods:
+
+- <code title="get /api/v1/requests/provider/{category}/{provider_response_id}/result">client.requests.response_id.result.<a href="./src/payi/resources/requests/response_id/result.py">retrieve</a>(provider_response_id, \*, category) -> <a href="./src/payi/types/request_result.py">RequestResult</a></code>
+
+### Properties
+
+Methods:
+
+- <code title="put /api/v1/requests/provider/{category}/{provider_response_id}/properties">client.requests.response_id.properties.<a href="./src/payi/resources/requests/response_id/properties.py">update</a>(provider_response_id, \*, category, \*\*<a href="src/payi/types/requests/response_id/property_update_params.py">params</a>) -> <a href="./src/payi/types/shared/properties_response.py">PropertiesResponse</a></code>
