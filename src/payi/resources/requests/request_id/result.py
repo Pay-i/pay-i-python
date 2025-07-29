@@ -2,61 +2,56 @@
 
 from __future__ import annotations
 
-from typing import Dict
-
 import httpx
 
-from ..._types import NOT_GIVEN, Body, Query, Headers, NotGiven
-from ..._utils import maybe_transform, async_maybe_transform
-from ..._compat import cached_property
-from ..._resource import SyncAPIResource, AsyncAPIResource
-from ..._response import (
+from ...._types import NOT_GIVEN, Body, Query, Headers, NotGiven
+from ...._compat import cached_property
+from ...._resource import SyncAPIResource, AsyncAPIResource
+from ...._response import (
     to_raw_response_wrapper,
     to_streamed_response_wrapper,
     async_to_raw_response_wrapper,
     async_to_streamed_response_wrapper,
 )
-from ..._base_client import make_request_options
-from ...types.use_cases import property_update_params
-from ...types.use_cases.property_create_response import PropertyCreateResponse
+from ...._base_client import make_request_options
+from ....types.request_result import RequestResult
 
-__all__ = ["PropertiesResource", "AsyncPropertiesResource"]
+__all__ = ["ResultResource", "AsyncResultResource"]
 
 
-class PropertiesResource(SyncAPIResource):
+class ResultResource(SyncAPIResource):
     @cached_property
-    def with_raw_response(self) -> PropertiesResourceWithRawResponse:
+    def with_raw_response(self) -> ResultResourceWithRawResponse:
         """
         This property can be used as a prefix for any HTTP method call to return
         the raw response object instead of the parsed content.
 
         For more information, see https://www.github.com/Pay-i/pay-i-python#accessing-raw-response-data-eg-headers
         """
-        return PropertiesResourceWithRawResponse(self)
+        return ResultResourceWithRawResponse(self)
 
     @cached_property
-    def with_streaming_response(self) -> PropertiesResourceWithStreamingResponse:
+    def with_streaming_response(self) -> ResultResourceWithStreamingResponse:
         """
         An alternative to `.with_raw_response` that doesn't eagerly read the response body.
 
         For more information, see https://www.github.com/Pay-i/pay-i-python#with_streaming_response
         """
-        return PropertiesResourceWithStreamingResponse(self)
+        return ResultResourceWithStreamingResponse(self)
 
-    def update(
+    def retrieve(
         self,
-        use_case_id: str,
+        request_id: str,
         *,
-        properties: Dict[str, str],
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> PropertyCreateResponse:
+    ) -> RequestResult:
         """
-        Update a Use Case instance properties
+        Get a Request results
 
         Args:
           extra_headers: Send extra headers
@@ -67,52 +62,50 @@ class PropertiesResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not use_case_id:
-            raise ValueError(f"Expected a non-empty value for `use_case_id` but received {use_case_id!r}")
-        return self._put(
-            f"/api/v1/use_cases/instances/{use_case_id}/properties",
-            body=maybe_transform({"properties": properties}, property_update_params.PropertyUpdateParams),
+        if not request_id:
+            raise ValueError(f"Expected a non-empty value for `request_id` but received {request_id!r}")
+        return self._get(
+            f"/api/v1/requests/{request_id}/result",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=PropertyCreateResponse,
+            cast_to=RequestResult,
         )
 
 
-class AsyncPropertiesResource(AsyncAPIResource):
+class AsyncResultResource(AsyncAPIResource):
     @cached_property
-    def with_raw_response(self) -> AsyncPropertiesResourceWithRawResponse:
+    def with_raw_response(self) -> AsyncResultResourceWithRawResponse:
         """
         This property can be used as a prefix for any HTTP method call to return
         the raw response object instead of the parsed content.
 
         For more information, see https://www.github.com/Pay-i/pay-i-python#accessing-raw-response-data-eg-headers
         """
-        return AsyncPropertiesResourceWithRawResponse(self)
+        return AsyncResultResourceWithRawResponse(self)
 
     @cached_property
-    def with_streaming_response(self) -> AsyncPropertiesResourceWithStreamingResponse:
+    def with_streaming_response(self) -> AsyncResultResourceWithStreamingResponse:
         """
         An alternative to `.with_raw_response` that doesn't eagerly read the response body.
 
         For more information, see https://www.github.com/Pay-i/pay-i-python#with_streaming_response
         """
-        return AsyncPropertiesResourceWithStreamingResponse(self)
+        return AsyncResultResourceWithStreamingResponse(self)
 
-    async def update(
+    async def retrieve(
         self,
-        use_case_id: str,
+        request_id: str,
         *,
-        properties: Dict[str, str],
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> PropertyCreateResponse:
+    ) -> RequestResult:
         """
-        Update a Use Case instance properties
+        Get a Request results
 
         Args:
           extra_headers: Send extra headers
@@ -123,49 +116,48 @@ class AsyncPropertiesResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not use_case_id:
-            raise ValueError(f"Expected a non-empty value for `use_case_id` but received {use_case_id!r}")
-        return await self._put(
-            f"/api/v1/use_cases/instances/{use_case_id}/properties",
-            body=await async_maybe_transform({"properties": properties}, property_update_params.PropertyUpdateParams),
+        if not request_id:
+            raise ValueError(f"Expected a non-empty value for `request_id` but received {request_id!r}")
+        return await self._get(
+            f"/api/v1/requests/{request_id}/result",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=PropertyCreateResponse,
+            cast_to=RequestResult,
         )
 
 
-class PropertiesResourceWithRawResponse:
-    def __init__(self, properties: PropertiesResource) -> None:
-        self._properties = properties
+class ResultResourceWithRawResponse:
+    def __init__(self, result: ResultResource) -> None:
+        self._result = result
 
-        self.update = to_raw_response_wrapper(
-            properties.update,
+        self.retrieve = to_raw_response_wrapper(
+            result.retrieve,
         )
 
 
-class AsyncPropertiesResourceWithRawResponse:
-    def __init__(self, properties: AsyncPropertiesResource) -> None:
-        self._properties = properties
+class AsyncResultResourceWithRawResponse:
+    def __init__(self, result: AsyncResultResource) -> None:
+        self._result = result
 
-        self.update = async_to_raw_response_wrapper(
-            properties.update,
+        self.retrieve = async_to_raw_response_wrapper(
+            result.retrieve,
         )
 
 
-class PropertiesResourceWithStreamingResponse:
-    def __init__(self, properties: PropertiesResource) -> None:
-        self._properties = properties
+class ResultResourceWithStreamingResponse:
+    def __init__(self, result: ResultResource) -> None:
+        self._result = result
 
-        self.update = to_streamed_response_wrapper(
-            properties.update,
+        self.retrieve = to_streamed_response_wrapper(
+            result.retrieve,
         )
 
 
-class AsyncPropertiesResourceWithStreamingResponse:
-    def __init__(self, properties: AsyncPropertiesResource) -> None:
-        self._properties = properties
+class AsyncResultResourceWithStreamingResponse:
+    def __init__(self, result: AsyncResultResource) -> None:
+        self._result = result
 
-        self.update = async_to_streamed_response_wrapper(
-            properties.update,
+        self.retrieve = async_to_streamed_response_wrapper(
+            result.retrieve,
         )

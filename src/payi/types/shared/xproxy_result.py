@@ -44,6 +44,8 @@ class XproxyResult(BaseModel):
 
     use_case_id: Optional[str] = None
 
+    use_case_name: Optional[str] = None
+
     use_case_step: Optional[str] = None
 
     user_id: Optional[str] = None
