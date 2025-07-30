@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.106 (2025-07-30)
+
+Full Changelog: [v0.1.0-alpha.105...v0.1.0-alpha.106](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.105...v0.1.0-alpha.106)
+
+### Features
+
+* ignore request tags ([c1a7479](https://github.com/Pay-i/pay-i-python/commit/c1a747945e5557cf5fe38b70edcd7cf16ddf138c))
+
 ## 0.1.0-alpha.105 (2025-07-29)
 
 Full Changelog: [v0.1.0-alpha.104...v0.1.0-alpha.105](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.104...v0.1.0-alpha.105)
