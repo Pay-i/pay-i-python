@@ -165,7 +165,7 @@ class IngestResource(SyncAPIResource):
           timeout (Union[float, None], optional): The timeout for the request in seconds. Defaults to None.
         """
         valid_ids_str: str | NotGiven = NOT_GIVEN
-        valid_tags_str: str | NotGiven = NOT_GIVEN
+        _valid_tags_str: str | NotGiven = NOT_GIVEN
         use_case_version_str: str | NotGiven = NOT_GIVEN
 
         if limit_ids is None or isinstance(limit_ids, NotGiven):
@@ -178,13 +178,13 @@ class IngestResource(SyncAPIResource):
             valid_ids_str = ",".join(valid_ids) if valid_ids else NOT_GIVEN
 
         if request_tags is None or isinstance(request_tags, NotGiven):
-            valid_tags_str = NOT_GIVEN
+            _valid_tags_str = NOT_GIVEN
         elif not isinstance(request_tags, list):  # type: ignore
             raise TypeError("request_tags must be a list")
         else:
             # Proceed with the list comprehension if request_tags is not NotGiven
             valid_tags = [tag.strip() for tag in request_tags if tag.strip()]
-            valid_tags_str = ",".join(valid_tags) if valid_tags else NOT_GIVEN
+            _valid_tags_str = ",".join(valid_tags) if valid_tags else NOT_GIVEN
 
         if use_case_name is None or isinstance(use_case_name, NotGiven):
             use_case_name = NOT_GIVEN
@@ -213,7 +213,7 @@ class IngestResource(SyncAPIResource):
             **strip_not_given(
                 {
                     "xProxy-Limit-IDs": valid_ids_str,
-                    "xProxy-Request-Tags": valid_tags_str,
+                    "xProxy-Request-Tags": NOT_GIVEN, # _valid_tags_str
                     "xProxy-UseCase-ID": use_case_id,
                     "xProxy-UseCase-Name": use_case_name,
                     "xProxy-UseCase-Step": use_case_step,
@@ -394,7 +394,7 @@ class AsyncIngestResource(AsyncAPIResource):
           timeout (Union[float, None], optional): The timeout for the request in seconds. Defaults to None.
         """
         valid_ids_str: str | NotGiven = NOT_GIVEN
-        valid_tags_str: str | NotGiven = NOT_GIVEN
+        _valid_tags_str: str | NotGiven = NOT_GIVEN
         use_case_version_str: str | NotGiven = NOT_GIVEN
 
         if limit_ids is None or isinstance(limit_ids, NotGiven):
@@ -407,13 +407,13 @@ class AsyncIngestResource(AsyncAPIResource):
             valid_ids_str = ",".join(valid_ids) if valid_ids else NOT_GIVEN
 
         if request_tags is None or isinstance(request_tags, NotGiven):
-            valid_tags_str = NOT_GIVEN
+            _valid_tags_str = NOT_GIVEN
         elif not isinstance(request_tags, list):  # type: ignore
             raise TypeError("request_tags must be a list")
         else:
             # Proceed with the list comprehension if request_tags is not NotGiven
             valid_tags = [tag.strip() for tag in request_tags if tag.strip()]
-            valid_tags_str = ",".join(valid_tags) if valid_tags else NOT_GIVEN
+            _valid_tags_str = ",".join(valid_tags) if valid_tags else NOT_GIVEN
 
         if use_case_name is None or isinstance(use_case_name, NotGiven):
             use_case_name = NOT_GIVEN
@@ -443,7 +443,7 @@ class AsyncIngestResource(AsyncAPIResource):
                 {
                     "xProxy-Account-Name": account_name,
                     "xProxy-Limit-IDs": valid_ids_str,
-                    "xProxy-Request-Tags": valid_tags_str,
+                    "xProxy-Request-Tags": NOT_GIVEN, # _valid_tags_str,
                     "xProxy-UseCase-ID": use_case_id,
                     "xProxy-UseCase-Name": use_case_name,
                     "xProxy-UseCase-Step": use_case_step,
