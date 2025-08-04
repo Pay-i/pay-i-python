@@ -11,6 +11,7 @@ class PayiHeaderNames:
     use_case_version:str = "xProxy-UseCase-Version"
     use_case_step:str = "xProxy-UseCase-Step"
     user_id:str = "xProxy-User-ID"
+    account_name:str = "xProxy-Account-Name"
     price_as_category:str = "xProxy-PriceAs-Category"
     price_as_resource:str = "xProxy-PriceAs-Resource"
     provider_base_uri = "xProxy-Provider-BaseUri"
@@ -44,6 +45,7 @@ def create_headers(
     limit_ids: Union[List[str], None] = None,
     request_tags: Union[List[str], None] = None,
     user_id: Union[str, None] = None,
+    account_name: Union[str, None] = None,
     use_case_id: Union[str, None] = None,
     use_case_name: Union[str, None] = None,
     use_case_version: Union[int, None] = None,
@@ -60,6 +62,8 @@ def create_headers(
         headers.update(create_request_header_from_tags(request_tags))
     if user_id:
         headers.update({ PayiHeaderNames.user_id: user_id})
+    if account_name:
+        headers.update({ PayiHeaderNames.account_name: account_name})
     if use_case_id:
         headers.update({ PayiHeaderNames.use_case_id: use_case_id})
     if use_case_name:
