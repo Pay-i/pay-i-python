@@ -25,7 +25,7 @@ class PayiCategories:
     aws_bedrock:str = "system.aws.bedrock"
     google_vertex:str = "system.google.vertex"
 
-def create_limit_header_from_ids(limit_ids: List[str]) -> Dict[str, str]:
+def create_limit_header_from_ids(*, limit_ids: List[str]) -> Dict[str, str]:
     if not isinstance(limit_ids, list):  # type: ignore
         raise TypeError("limit_ids must be a list")
 
@@ -33,7 +33,7 @@ def create_limit_header_from_ids(limit_ids: List[str]) -> Dict[str, str]:
 
     return { PayiHeaderNames.limit_ids: ",".join(valid_ids) } if valid_ids else {}
 
-def create_request_header_from_tags(request_tags: List[str]) -> Dict[str, str]:
+def create_request_header_from_tags(*, request_tags: List[str]) -> Dict[str, str]:
     if not isinstance(request_tags, list):  # type: ignore
         raise TypeError("request_tags must be a list")
 
@@ -42,6 +42,7 @@ def create_request_header_from_tags(request_tags: List[str]) -> Dict[str, str]:
     return { PayiHeaderNames.request_tags: ",".join(valid_tags) } if valid_tags else {}
 
 def create_headers(
+    *,
     limit_ids: Union[List[str], None] = None,
     request_tags: Union[List[str], None] = None,
     user_id: Union[str, None] = None,
@@ -57,9 +58,9 @@ def create_headers(
     headers: Dict[str, str] = {}
 
     if limit_ids:
-        headers.update(create_limit_header_from_ids(limit_ids))
+        headers.update(create_limit_header_from_ids(limit_ids=limit_ids))
     if request_tags:
-        headers.update(create_request_header_from_tags(request_tags))
+        headers.update(create_request_header_from_tags(request_tags=request_tags))
     if user_id:
         headers.update({ PayiHeaderNames.user_id: user_id})
     if account_name:
