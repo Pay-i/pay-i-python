@@ -157,6 +157,7 @@ class PayiInstrumentConfig(TypedDict, total=False):
     use_case_version: Optional[int]
     use_case_properties: Optional["dict[str, str]"]
     user_id: Optional[str]
+    account_name: Optional[str]
     request_tags: Optional["list[str]"]
     request_properties: Optional["dict[str, str]"]
 
@@ -168,6 +169,7 @@ class PayiContext(TypedDict, total=False):
     use_case_properties: Optional["dict[str, str]"]
     limit_ids: Optional['list[str]']
     user_id: Optional[str]
+    account_name: Optional[str]
     request_tags: Optional["list[str]"]
     request_properties: Optional["dict[str, str]"]
     price_as_category: Optional[str]
@@ -184,6 +186,7 @@ class _Context(TypedDict, total=False):
     use_case_properties: Optional["dict[str, str]"]
     limit_ids: Optional['list[str]']
     user_id: Optional[str]
+    account_name: Optional[str]
     request_tags: Optional["list[str]"]
     request_properties: Optional["dict[str, str]"]
     price_as_category: Optional[str]
@@ -655,6 +658,7 @@ class _PayiInstrumentor:
         use_case_version: Optional[int]= None,
         use_case_step: Optional[str]= None,
         user_id: Optional[str]= None,
+        account_name: Optional[str]= None,
         request_tags: Optional["list[str]"] = None,
         request_properties: Optional["dict[str, str]"] = None,
         use_case_properties: Optional["dict[str, str]"] = None,
@@ -747,6 +751,16 @@ class _PayiInstrumentor:
         else:
             context["user_id"] = user_id
 
+        parent_account_name = parent_context.get("account_name", None)
+        if account_name is None:
+            # use the parent account_name if it exists
+            context["account_name"] = parent_account_name
+        elif len(account_name) == 0:
+            # caller passing an empty string explicitly blocks inheriting from the parent state
+            context["account_name"] = None
+        else:
+            context["account_name"] = account_name
+
         parent_request_tags = parent_context.get("request_tags", None)
         if request_tags is not None:
             if len(request_tags) == 0:
@@ -795,6 +809,7 @@ class _PayiInstrumentor:
         use_case_id: Optional[str],
         use_case_version: Optional[int],        
         user_id: Optional[str],
+        account_name: Optional[str],
         request_tags: Optional["list[str]"] = None,
         request_properties: Optional["dict[str, str]"] = None,
         use_case_properties: Optional["dict[str, str]"] = None,
@@ -809,6 +824,7 @@ class _PayiInstrumentor:
                 use_case_id=use_case_id,
                 use_case_version=use_case_version,
                 user_id=user_id,
+                account_name=account_name,
                 request_tags=request_tags,
                 request_properties=request_properties,
                 use_case_properties=use_case_properties
@@ -824,6 +840,7 @@ class _PayiInstrumentor:
         use_case_id: Optional[str],
         use_case_version: Optional[int],        
         user_id: Optional[str],
+        account_name: Optional[str],
         request_tags: Optional["list[str]"] = None,
         request_properties: Optional["dict[str, str]"] = None,
         use_case_properties: Optional["dict[str, str]"] = None,
@@ -838,6 +855,7 @@ class _PayiInstrumentor:
                 use_case_id=use_case_id,
                 use_case_version=use_case_version,
                 user_id=user_id,
+                account_name=account_name,
                 request_tags=request_tags,
                 request_properties=request_properties,
                 use_case_properties=use_case_properties)
@@ -879,6 +897,7 @@ class _PayiInstrumentor:
         use_case_step = ingest_extra_headers.pop(PayiHeaderNames.use_case_step, None)
 
         user_id = ingest_extra_headers.pop(PayiHeaderNames.user_id, None)
+        account_name = ingest_extra_headers.pop(PayiHeaderNames.account_name, None)
 
         if limit_ids:
             request._ingest["limit_ids"] = limit_ids.split(",")
@@ -894,6 +913,8 @@ class _PayiInstrumentor:
             request._ingest["use_case_step"] = use_case_step
         if user_id:
             request._ingest["user_id"] = user_id
+        if account_name:
+            request._ingest["account_name"] = account_name
 
         request_properties = context.get("request_properties", None)
         if request_properties:
@@ -1207,6 +1228,7 @@ class _PayiInstrumentor:
         context_use_case_step: Optional[str] = context.get("use_case_step")
 
         context_user_id: Optional[str] = context.get("user_id")
+        context_account_name: Optional[str] = context.get("account_name")
         context_request_tags: Optional[list[str]] = context.get("request_tags")
 
         context_price_as_category: Optional[str] = context.get("price_as_category")
@@ -1238,6 +1260,17 @@ class _PayiInstrumentor:
                 ...
         elif context_user_id:
             extra_headers[PayiHeaderNames.user_id] = context_user_id
+
+        if PayiHeaderNames.account_name in extra_headers:
+            headers_account_name = extra_headers.get(PayiHeaderNames.account_name, None)
+            if headers_account_name is None or len(headers_account_name) == 0:
+                # headers_account_name is empty, remove it from extra_headers
+                extra_headers.pop(PayiHeaderNames.account_name, None)
+            else:
+                # leave the value in extra_headers
+                ...
+        elif context_account_name:
+            extra_headers[PayiHeaderNames.account_name] = context_account_name
 
         if PayiHeaderNames.use_case_name in extra_headers:
             headers_use_case_name = extra_headers.get(PayiHeaderNames.use_case_name, None)
@@ -1711,6 +1744,7 @@ def track(
     use_case_id: Optional[str] = None,
     use_case_version: Optional[int] = None,
     user_id: Optional[str] = None,
+    account_name: Optional[str] = None,
     request_tags: Optional["list[str]"] = None,
     request_properties: Optional["dict[str, str]"] = None,
     use_case_properties: Optional["dict[str, str]"] = None,
@@ -1735,6 +1769,7 @@ def track(
                     use_case_id,
                     use_case_version,
                     user_id,
+                    account_name,
                     request_tags,
                     request_properties,
                     use_case_properties,
@@ -1748,7 +1783,7 @@ def track(
                     _g_logger.debug(f"track: no instrumentor!")
                     return func(*args, **kwargs)
 
-                _instrumentor._logger.debug(f"track: call sync function (proxy={proxy}, limit_ids={limit_ids}, use_case_name={use_case_name}, use_case_id={use_case_id}, use_case_version={use_case_version}, user_id={user_id})")
+                _instrumentor._logger.debug(f"track: call sync function (proxy={proxy}, limit_ids={limit_ids}, use_case_name={use_case_name}, use_case_id={use_case_id}, use_case_version={use_case_version}, user_id={user_id}, account_name={account_name})")
 
                 return _instrumentor._call_func(
                     func,
@@ -1758,6 +1793,7 @@ def track(
                     use_case_id,
                     use_case_version,
                     user_id,
+                    account_name,
                     request_tags,
                     request_properties,
                     use_case_properties,
@@ -1775,6 +1811,7 @@ def track_context(
     use_case_version: Optional[int] = None,
     use_case_step: Optional[str] = None,
     user_id: Optional[str] = None,
+    account_name: Optional[str] = None,
     request_tags: Optional["list[str]"] = None,
     request_properties: Optional["dict[str, str]"] = None,
     use_case_properties: Optional["dict[str, str]"] = None,
@@ -1796,6 +1833,7 @@ def track_context(
     context["use_case_step"] = use_case_step
 
     context["user_id"] = user_id
+    context["account_name"] = account_name
     context["request_tags"] = request_tags
 
     context["price_as_category"] = price_as_category
