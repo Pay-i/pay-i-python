@@ -8,8 +8,8 @@ from typing import Any, cast
 import pytest
 
 from payi import Payi, AsyncPayi
+from payi.types import UseCaseInstanceResponse
 from tests.utils import assert_matches_type
-from payi.types.use_cases import PropertyCreateResponse
 
 base_url = os.environ.get("TEST_API_BASE_URL", "http://127.0.0.1:4010")
 
@@ -23,7 +23,7 @@ class TestProperties:
             use_case_id="use_case_id",
             properties={"foo": "string"},
         )
-        assert_matches_type(PropertyCreateResponse, property, path=["response"])
+        assert_matches_type(UseCaseInstanceResponse, property, path=["response"])
 
     @parametrize
     def test_raw_response_update(self, client: Payi) -> None:
@@ -35,7 +35,7 @@ class TestProperties:
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
         property = response.parse()
-        assert_matches_type(PropertyCreateResponse, property, path=["response"])
+        assert_matches_type(UseCaseInstanceResponse, property, path=["response"])
 
     @parametrize
     def test_streaming_response_update(self, client: Payi) -> None:
@@ -47,7 +47,7 @@ class TestProperties:
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
             property = response.parse()
-            assert_matches_type(PropertyCreateResponse, property, path=["response"])
+            assert_matches_type(UseCaseInstanceResponse, property, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
@@ -71,7 +71,7 @@ class TestAsyncProperties:
             use_case_id="use_case_id",
             properties={"foo": "string"},
         )
-        assert_matches_type(PropertyCreateResponse, property, path=["response"])
+        assert_matches_type(UseCaseInstanceResponse, property, path=["response"])
 
     @parametrize
     async def test_raw_response_update(self, async_client: AsyncPayi) -> None:
@@ -83,7 +83,7 @@ class TestAsyncProperties:
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
         property = await response.parse()
-        assert_matches_type(PropertyCreateResponse, property, path=["response"])
+        assert_matches_type(UseCaseInstanceResponse, property, path=["response"])
 
     @parametrize
     async def test_streaming_response_update(self, async_client: AsyncPayi) -> None:
@@ -95,7 +95,7 @@ class TestAsyncProperties:
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
             property = await response.parse()
-            assert_matches_type(PropertyCreateResponse, property, path=["response"])
+            assert_matches_type(UseCaseInstanceResponse, property, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 

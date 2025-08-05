@@ -54,9 +54,9 @@ class KpisResource(SyncAPIResource):
         use_case_name: str,
         *,
         description: str,
+        goal: float,
+        kpi_type: Literal["boolean", "number", "percentage", "likert5", "likert7", "likert10"],
         name: str,
-        goal: float | NotGiven = NOT_GIVEN,
-        kpi_type: Literal["boolean", "number", "percentage", "likert5", "likert7", "likert10"] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -65,7 +65,7 @@ class KpisResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> KpiCreateResponse:
         """
-        Create a new Use Case KPI definition
+        Create a new KPI definition for a Use Case
 
         Args:
           extra_headers: Send extra headers
@@ -83,9 +83,9 @@ class KpisResource(SyncAPIResource):
             body=maybe_transform(
                 {
                     "description": description,
-                    "name": name,
                     "goal": goal,
                     "kpi_type": kpi_type,
+                    "name": name,
                 },
                 kpi_create_params.KpiCreateParams,
             ),
@@ -146,7 +146,7 @@ class KpisResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> KpiUpdateResponse:
         """
-        Update a Use Case KPI definition
+        Update a KPI definition for a Use Case
 
         Args:
           extra_headers: Send extra headers
@@ -239,7 +239,7 @@ class KpisResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> KpiDeleteResponse:
         """
-        Delete a Use Case KPI definition
+        Delete a KPI definition for a Use Case
 
         Args:
           extra_headers: Send extra headers
@@ -288,9 +288,9 @@ class AsyncKpisResource(AsyncAPIResource):
         use_case_name: str,
         *,
         description: str,
+        goal: float,
+        kpi_type: Literal["boolean", "number", "percentage", "likert5", "likert7", "likert10"],
         name: str,
-        goal: float | NotGiven = NOT_GIVEN,
-        kpi_type: Literal["boolean", "number", "percentage", "likert5", "likert7", "likert10"] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -299,7 +299,7 @@ class AsyncKpisResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> KpiCreateResponse:
         """
-        Create a new Use Case KPI definition
+        Create a new KPI definition for a Use Case
 
         Args:
           extra_headers: Send extra headers
@@ -317,9 +317,9 @@ class AsyncKpisResource(AsyncAPIResource):
             body=await async_maybe_transform(
                 {
                     "description": description,
-                    "name": name,
                     "goal": goal,
                     "kpi_type": kpi_type,
+                    "name": name,
                 },
                 kpi_create_params.KpiCreateParams,
             ),
@@ -380,7 +380,7 @@ class AsyncKpisResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> KpiUpdateResponse:
         """
-        Update a Use Case KPI definition
+        Update a KPI definition for a Use Case
 
         Args:
           extra_headers: Send extra headers
@@ -473,7 +473,7 @@ class AsyncKpisResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> KpiDeleteResponse:
         """
-        Delete a Use Case KPI definition
+        Delete a KPI definition for a Use Case
 
         Args:
           extra_headers: Send extra headers
