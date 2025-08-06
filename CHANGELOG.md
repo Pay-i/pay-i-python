@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.109 (2025-08-06)
+
+Full Changelog: [v0.1.0-alpha.108...v0.1.0-alpha.109](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.108...v0.1.0-alpha.109)
+
+### Chores
+
+* **internal:** fix ruff target version ([e6299f0](https://github.com/Pay-i/pay-i-python/commit/e6299f02beafe98b848e1853b1ac9e8f27a51b43))
+
 ## 0.1.0-alpha.108 (2025-08-05)
 
 Full Changelog: [v0.1.0-alpha.107...v0.1.0-alpha.108](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.107...v0.1.0-alpha.108)
