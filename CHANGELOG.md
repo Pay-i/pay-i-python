@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-alpha.110 (2025-08-09)
+
+Full Changelog: [v0.1.0-alpha.109...v0.1.0-alpha.110](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.109...v0.1.0-alpha.110)
+
+### Chores
+
+* **internal:** update comment in script ([62f3d00](https://github.com/Pay-i/pay-i-python/commit/62f3d00cbe71bc217f13b9e354a53b9d42dd8c27))
+* update @stainless-api/prism-cli to v5.15.0 ([87fc0ef](https://github.com/Pay-i/pay-i-python/commit/87fc0ef32878b5ba1c4003d4c392ce31f8cfde86))
+
 ## 0.1.0-alpha.109 (2025-08-06)
 
 Full Changelog: [v0.1.0-alpha.108...v0.1.0-alpha.109](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.108...v0.1.0-alpha.109)
