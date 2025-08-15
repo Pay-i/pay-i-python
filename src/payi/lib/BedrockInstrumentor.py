@@ -2,6 +2,7 @@ import os
 import json
 from typing import Any, Optional, Sequence
 from functools import wraps
+from tokenizers import Tokenizer
 from typing_extensions import override
 
 from wrapt import ObjectProxy, wrap_function_wrapper  # type: ignore
@@ -102,6 +103,8 @@ def _redirect_to_payi(request: Any, event_name: str, **_: 'dict[str, Any]') -> N
 
 
 class InvokeResponseWrapper(ObjectProxy): # type: ignore
+    _cohere_embed_english_v3_tokenizer: Optional[Tokenizer] = None
+
     def __init__(
         self,
         response: Any,
@@ -159,6 +162,25 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
                 units["text_cache_write"] = text_cache_write
 
             bedrock_converse_process_synchronous_function_call(self._request, response)
+
+        elif self._request._is_amazon_titan_embed_text_v1:
+            input = response.get('inputTextTokenCount', 0)
+            units["text"] = Units(input=input, output=0)
+
+        elif self._request._is_cohere_embed_english_v3:
+            texts: list[str] = response.get("texts", [])
+            if texts and len(texts) > 0:
+                text = " ".join(texts)
+
+                if self._cohere_embed_english_v3_tokenizer is None:
+                    current_dir = os.path.dirname(os.path.abspath(__file__))
+                    tokenizer_path = os.path.join(current_dir, "data", "cohere_embed_english_v3.json")
+                    self._cohere_embed_english_v3_tokenizer = Tokenizer.from_file(tokenizer_path) # type: ignore
+
+                tokens: list = self._cohere_embed_english_v3_tokenizer.encode(text, add_special_tokens=False).tokens # type: ignore
+
+                if tokens and isinstance(tokens, list):
+                    units["text"] = Units(input=len(tokens), output=0) # type: ignore
 
         if self._log_prompt_and_response:
             ingest["provider_response_json"] = data.decode('utf-8') # type: ignore
@@ -287,6 +309,8 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
         self._is_anthropic: bool = 'anthropic' in model_id
         self._is_nova: bool = 'nova' in model_id
         self._is_meta: bool = 'meta' in model_id
+        self._is_amazon_titan_embed_text_v1: bool = 'amazon.titan-embed-text-v1' == model_id
+        self._is_cohere_embed_english_v3: bool = 'cohere.embed-english-v3' == model_id
 
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
@@ -302,7 +326,17 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
                     anthropic_has_image_and_get_texts(self, messages)
             except Exception as e:
                 self._instrumentor._logger.debug(f"Bedrock invoke error processing request body: {e}")
-
+        elif self._is_cohere_embed_english_v3:
+            try:
+                body = json.loads( kwargs.get("body", ""))
+                input_type = body.get("input_type", "")
+                if input_type == 'image':
+                    images = body.get("images", [])
+                    if (len(images) > 0):
+                        # only supports one image according to docs
+                        self._ingest["units"]["vision"] = Units(input=1, output=0)
+            except Exception as e:
+                self._instrumentor._logger.debug(f"Bedrock invoke error processing request body: {e}")
         return True
 
     @override
