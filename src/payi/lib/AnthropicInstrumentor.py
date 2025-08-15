@@ -46,6 +46,18 @@ class AnthropicInstrumentor:
             )
 
             wrap_function_wrapper(
+                "anthropic.resources.beta.messages",
+                "Messages.create",
+                messages_wrapper(instrumentor),
+            )
+
+            wrap_function_wrapper(
+                "anthropic.resources.beta.messages",
+                "Messages.stream",
+                stream_messages_wrapper(instrumentor),
+            )
+
+            wrap_function_wrapper(
                 "anthropic.resources.messages",
                 "AsyncMessages.create",
                 amessages_wrapper(instrumentor),
@@ -53,6 +65,18 @@ class AnthropicInstrumentor:
 
             wrap_function_wrapper(
                 "anthropic.resources.messages",
+                "AsyncMessages.stream",
+                astream_messages_wrapper(instrumentor),
+            )
+
+            wrap_function_wrapper(
+                "anthropic.resources.beta.messages",
+                "AsyncMessages.create",
+                amessages_wrapper(instrumentor),
+            )
+
+            wrap_function_wrapper(
+                "anthropic.resources.beta.messages",
                 "AsyncMessages.stream",
                 astream_messages_wrapper(instrumentor),
             )
