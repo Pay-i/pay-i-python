@@ -2,10 +2,10 @@ import os
 import json
 from typing import Any, Optional, Sequence
 from functools import wraps
-from tokenizers import Tokenizer
 from typing_extensions import override
 
 from wrapt import ObjectProxy, wrap_function_wrapper  # type: ignore
+from tokenizers import Tokenizer  # type: ignore
 
 from payi.lib.helpers import PayiCategories, PayiHeaderNames, payi_aws_bedrock_url
 from payi.types.ingest_units_params import Units
