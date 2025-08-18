@@ -172,6 +172,7 @@ class _VertexRequest(_ProviderRequest): # type: ignore
 
         if is_character_billing_model(model):
             if input > 128000: 
+                self._is_large_context = True
                 large_context = "_large_context"
 
             # gemini 1.0 and 1.5 units are reported in characters, per second, per image, etc...
@@ -222,6 +223,7 @@ class _VertexRequest(_ProviderRequest): # type: ignore
             thinking_token_count = usage.get("thoughts_token_count", 0)
 
             if is_large_context_token_model(model, input):
+                self._is_large_context = True
                 large_context = "_large_context"
 
             cache_details: dict[str, int] = {}

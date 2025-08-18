@@ -58,6 +58,7 @@ class _ProviderRequest:
         self._function_call_builder: Optional[dict[int, ProviderResponseFunctionCall]] = None
         self._building_function_response: bool = False
         self._function_calls: Optional[list[ProviderResponseFunctionCall]] = None
+        self._is_large_context: bool = False
 
     def process_chunk(self, _chunk: Any) -> _ChunkResult:
         return _ChunkResult(send_chunk_to_caller=True)
@@ -1305,11 +1306,12 @@ class _PayiInstrumentor:
             extra_headers[PayiHeaderNames.resource_scope] = context_resource_scope
 
     @staticmethod
-    def update_for_vision(input: int, units: 'dict[str, Units]', estimated_prompt_tokens: Optional[int]) -> int:
+    def update_for_vision(input: int, units: 'dict[str, Units]', estimated_prompt_tokens: Optional[int], is_large_context: bool = False) -> int:
         if estimated_prompt_tokens:
             vision = input - estimated_prompt_tokens
             if (vision > 0):
-                units["vision"] = Units(input=vision, output=0)
+                key = "vision_large_context" if is_large_context else "vision"
+                units[key] = Units(input=vision, output=0)
                 input = estimated_prompt_tokens
         
         return input
