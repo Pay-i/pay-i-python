@@ -46,6 +46,18 @@ class AnthropicInstrumentor:
             )
 
             wrap_function_wrapper(
+                "anthropic.resources.beta.messages",
+                "Messages.create",
+                messages_wrapper(instrumentor),
+            )
+
+            wrap_function_wrapper(
+                "anthropic.resources.beta.messages",
+                "Messages.stream",
+                stream_messages_wrapper(instrumentor),
+            )
+
+            wrap_function_wrapper(
                 "anthropic.resources.messages",
                 "AsyncMessages.create",
                 amessages_wrapper(instrumentor),
@@ -53,6 +65,18 @@ class AnthropicInstrumentor:
 
             wrap_function_wrapper(
                 "anthropic.resources.messages",
+                "AsyncMessages.stream",
+                astream_messages_wrapper(instrumentor),
+            )
+
+            wrap_function_wrapper(
+                "anthropic.resources.beta.messages",
+                "AsyncMessages.create",
+                amessages_wrapper(instrumentor),
+            )
+
+            wrap_function_wrapper(
+                "anthropic.resources.beta.messages",
                 "AsyncMessages.stream",
                 astream_messages_wrapper(instrumentor),
             )
@@ -220,23 +244,52 @@ class _AnthropicProviderRequest(_ProviderRequest):
 
         return True
 
-def anthropic_process_synchronous_response(request: _ProviderRequest, response: 'dict[str, Any]', log_prompt_and_response: bool, assign_id: bool) -> Any:
-    usage = response['usage']
+def anthropic_process_compute_input_cost(request: _ProviderRequest, usage: 'dict[str, Any]') -> int:
     input = usage['input_tokens']
-    output = usage['output_tokens']
     units: dict[str, Units] = request._ingest["units"]
 
     cache_creation_input_tokens = usage.get("cache_creation_input_tokens", 0)
-    if cache_creation_input_tokens > 0:
-        units["text_cache_write"] = Units(input=cache_creation_input_tokens, output=0)
+    cache_read_input_tokens = usage.get("cache_read_input_tokens", 0)
+
+    total_input_tokens = input + cache_creation_input_tokens + cache_read_input_tokens
+
+    request._is_large_context = total_input_tokens > 200000
+    large_context = "_large_context" if request._is_large_context else ""
+
+    cache_creation: dict[str, int] = usage.get("cache_creation", {})
+    ephemeral_5m_input_tokens: Optional[int] = None
+    ephemeral_1h_input_tokens: Optional[int] = None
+    textCacheWriteAdded = False
+
+    if cache_creation:
+        ephemeral_5m_input_tokens = cache_creation.get("ephemeral_5m_input_tokens", 0)
+        if ephemeral_5m_input_tokens > 0:
+            textCacheWriteAdded = True
+            units["text_cache_write"+large_context] = Units(input=ephemeral_5m_input_tokens, output=0)
+
+        ephemeral_1h_input_tokens = cache_creation.get("ephemeral_1h_input_tokens", 0)
+        if ephemeral_1h_input_tokens > 0:
+            textCacheWriteAdded = True
+            units["text_cache_write_1h"+large_context] = Units(input=ephemeral_1h_input_tokens, output=0)
+
+    if textCacheWriteAdded is False and cache_creation_input_tokens > 0:
+        units["text_cache_write"+large_context] = Units(input=cache_creation_input_tokens, output=0)
 
     cache_read_input_tokens = usage.get("cache_read_input_tokens", 0)
     if cache_read_input_tokens > 0:
-        units["text_cache_read"] = Units(input=cache_read_input_tokens, output=0)
+        units["text_cache_read"+large_context] = Units(input=cache_read_input_tokens, output=0)
 
-    input = _PayiInstrumentor.update_for_vision(input, units, request._estimated_prompt_tokens)
+    return _PayiInstrumentor.update_for_vision(input, units, request._estimated_prompt_tokens, is_large_context=request._is_large_context)
 
-    units["text"] = Units(input=input, output=output)
+def anthropic_process_synchronous_response(request: _ProviderRequest, response: 'dict[str, Any]', log_prompt_and_response: bool, assign_id: bool) -> Any:
+    usage = response['usage']
+    units: dict[str, Units] = request._ingest["units"]
+
+    input_tokens = anthropic_process_compute_input_cost(request, usage)
+    output = usage['output_tokens']
+
+    large_context = "_large_context" if request._is_large_context else ""
+    units["text"+large_context] = Units(input=input_tokens, output=output)
 
     content = response.get('content', [])
     if content:
@@ -277,31 +330,25 @@ def anthropic_process_chunk(request: _ProviderRequest, chunk: 'dict[str, Any]', 
         usage = message['usage']
         units = request._ingest["units"]
 
-        input = _PayiInstrumentor.update_for_vision(usage['input_tokens'], units, request._estimated_prompt_tokens)
+        input = anthropic_process_compute_input_cost(request, usage)
 
-        units["text"] = Units(input=input, output=0)
-
-        text_cache_write: int = usage.get("cache_creation_input_tokens", 0)
-        if text_cache_write > 0:
-            units["text_cache_write"] = Units(input=text_cache_write, output=0)
-
-        text_cache_read: int = usage.get("cache_read_input_tokens", 0)
-        if text_cache_read > 0:
-            units["text_cache_read"] = Units(input=text_cache_read, output=0)
+        large_context = "_large_context" if request._is_large_context else ""
+        units["text"+large_context] = Units(input=input, output=0)
 
         request._instrumentor._logger.debug(f"Anthropic streaming captured {input} input tokens, ")
 
     elif type == "message_delta":
         usage = chunk.get('usage', {})
         ingest = True
+        large_context = "_large_context" if request._is_large_context else ""
 
         # Web search will return an updated input tokens value at the end of streaming
         input_tokens = usage.get('input_tokens', None)
         if input_tokens is not None:
             request._instrumentor._logger.debug(f"Anthropic streaming finished, updated input tokens: {input_tokens}")
-            request._ingest["units"]["text"]["input"] = input_tokens
+            request._ingest["units"]["text"+large_context]["input"] = input_tokens
 
-        request._ingest["units"]["text"]["output"] = usage.get('output_tokens', 0)
+        request._ingest["units"]["text"+large_context]["output"] = usage.get('output_tokens', 0)
 
         request._instrumentor._logger.debug(f"Anthropic streaming finished: output tokens {usage.get('output_tokens', 0)} ")
 
