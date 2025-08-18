@@ -148,7 +148,7 @@ class _VertexRequest(_ProviderRequest): # type: ignore
             return model.startswith("gemini-1.")
 
         def is_large_context_token_model(model: str, input_tokens: int) -> bool:
-            return model.startswith("gemini-2.5-pro") and input_tokens > 200_000
+            return model.startswith("gemini-2.5-pro") and input_tokens > 200000
 
         def add_units(request: _ProviderRequest, key: str, input: Optional[int] = None, output: Optional[int] = None) -> None:
             if key not in request._ingest["units"]:
