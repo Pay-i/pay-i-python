@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.111 (2025-08-18)
+
+Full Changelog: [v0.1.0-alpha.110...v0.1.0-alpha.111](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.110...v0.1.0-alpha.111)
+
+### Features
+
+* anthropic large context, cohere english v3 embed, amazon titan v1 text embed ([#356](https://github.com/Pay-i/pay-i-python/issues/356)) ([9a3549e](https://github.com/Pay-i/pay-i-python/commit/9a3549e1abd284d1647d7c63fa3cdff01ac14a98))
+
 ## 0.1.0-alpha.110 (2025-08-09)
 
 Full Changelog: [v0.1.0-alpha.109...v0.1.0-alpha.110](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.109...v0.1.0-alpha.110)
