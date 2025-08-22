@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.112 (2025-08-22)
+
+Full Changelog: [v0.1.0-alpha.111...v0.1.0-alpha.112](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.111...v0.1.0-alpha.112)
+
+### Chores
+
+* update github action ([002abfa](https://github.com/Pay-i/pay-i-python/commit/002abfad147184c2e07454f8c5078387d0f88d56))
+
 ## 0.1.0-alpha.111 (2025-08-18)
 
 Full Changelog: [v0.1.0-alpha.110...v0.1.0-alpha.111](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.110...v0.1.0-alpha.111)
