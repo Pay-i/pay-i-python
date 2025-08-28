@@ -245,7 +245,7 @@ class _AnthropicProviderRequest(_ProviderRequest):
         return True
 
 def anthropic_process_compute_input_cost(request: _ProviderRequest, usage: 'dict[str, Any]') -> int:
-    input = usage['input_tokens']
+    input = usage.get('input_tokens', 0)
     units: dict[str, Units] = request._ingest["units"]
 
     cache_creation_input_tokens = usage.get("cache_creation_input_tokens", 0)
@@ -282,11 +282,11 @@ def anthropic_process_compute_input_cost(request: _ProviderRequest, usage: 'dict
     return _PayiInstrumentor.update_for_vision(input, units, request._estimated_prompt_tokens, is_large_context=request._is_large_context)
 
 def anthropic_process_synchronous_response(request: _ProviderRequest, response: 'dict[str, Any]', log_prompt_and_response: bool, assign_id: bool) -> Any:
-    usage = response['usage']
+    usage = response.get('usage', {})
     units: dict[str, Units] = request._ingest["units"]
 
     input_tokens = anthropic_process_compute_input_cost(request, usage)
-    output = usage['output_tokens']
+    output = usage.get('output_tokens', 0)
 
     large_context = "_large_context" if request._is_large_context else ""
     units["text"+large_context] = Units(input=input_tokens, output=output)
@@ -327,7 +327,7 @@ def anthropic_process_chunk(request: _ProviderRequest, chunk: 'dict[str, Any]', 
         if model and 'resource' in request._ingest:
             request._instrumentor._logger.debug(f"Anthropic streaming, reported model: {model}, instrumented model {request._ingest['resource']}")
 
-        usage = message['usage']
+        usage = message.get('usage', {})
         units = request._ingest["units"]
 
         input = anthropic_process_compute_input_cost(request, usage)

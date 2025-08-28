@@ -424,10 +424,10 @@ class _BedrockConverseProviderRequest(_BedrockProviderRequest):
         log_prompt_and_response: bool,
         kwargs: Any) -> Any:
 
-        usage = response["usage"]
-        input = usage["inputTokens"]
-        output = usage["outputTokens"]
-        
+        usage = response.get("usage", {})
+        input = usage.get("inputTokens", 0)
+        output = usage.get("outputTokens", 0)
+
         units: dict[str, Units] = self._ingest["units"]
         units["text"] = Units(input=input, output=output)
 
@@ -456,9 +456,9 @@ class _BedrockConverseProviderRequest(_BedrockProviderRequest):
         metadata = chunk.get("metadata", {})
 
         if metadata:
-            usage = metadata['usage']
-            input = usage["inputTokens"]
-            output = usage["outputTokens"]
+            usage = metadata.get('usage', {})
+            input = usage.get("inputTokens", 0)
+            output = usage.get("outputTokens", 0)
             self._ingest["units"]["text"] = Units(input=input, output=output)
 
             ingest = True
