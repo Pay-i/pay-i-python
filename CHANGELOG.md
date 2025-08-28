@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.0-alpha.113 (2025-08-27)
+
+Full Changelog: [v0.1.0-alpha.112...v0.1.0-alpha.113](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.112...v0.1.0-alpha.113)
+
+### Bug Fixes
+
+* avoid newer type syntax ([4f10599](https://github.com/Pay-i/pay-i-python/commit/4f10599eb1cfb46a2f758914d812fa80ed233bbe))
+
+
+### Chores
+
+* **internal:** change ci workflow machines ([ff1ef13](https://github.com/Pay-i/pay-i-python/commit/ff1ef13c9d19b02f456467a3d3b8c0b47b3ce9f9))
+* **internal:** update pyright exclude list ([e0c2ad1](https://github.com/Pay-i/pay-i-python/commit/e0c2ad17071ca681fccb8fb435508f2e8780cff6))
+
 ## 0.1.0-alpha.112 (2025-08-22)
 
 Full Changelog: [v0.1.0-alpha.111...v0.1.0-alpha.112](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.111...v0.1.0-alpha.112)
