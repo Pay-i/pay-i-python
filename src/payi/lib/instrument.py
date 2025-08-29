@@ -59,6 +59,7 @@ class _ProviderRequest:
         self._building_function_response: bool = False
         self._function_calls: Optional[list[ProviderResponseFunctionCall]] = None
         self._is_large_context: bool = False
+        self._internal_request_properties: dict[str, str] = {}
 
     def process_chunk(self, _chunk: Any) -> _ChunkResult:
         return _ChunkResult(send_chunk_to_caller=True)
@@ -99,6 +100,9 @@ class _ProviderRequest:
     def streaming_type(self) -> '_StreamingType':
         return self._streaming_type
 
+    def add_internal_request_property(self, key: str, value: str) -> None:
+        self._internal_request_properties[key] = value
+
     def exception_to_semantic_failure(self, e: Exception) -> None:
         exception_str = f"{type(e).__name__}"
     
@@ -113,16 +117,10 @@ class _ProviderRequest:
                 except Exception as _ex:
                     pass
  
-        existing_properties = self._ingest.get("properties", None)
-        if not existing_properties:
-            existing_properties = {}
-
-        existing_properties['system.failure'] = exception_str
+        self.add_internal_request_property('system.failure', exception_str)
         if fields:
             failure_description = ",".join(fields)
-            existing_properties["system.failure.description"] = failure_description[:128]
-
-        self._ingest["properties"] = existing_properties
+            self.add_internal_request_property("system.failure.description", failure_description)
 
         if "http_status_code" not in self._ingest:
             # use a non existent http status code so when presented to the user, the origin is clear
@@ -393,9 +391,10 @@ class _PayiInstrumentor:
         return log_ingest_units
         
     def _process_ingest_units(
-            self,
-            request: _ProviderRequest, log_data: 'dict[str, str]',
-            extra_headers: 'dict[str, str]') -> None:
+        self,
+        request: _ProviderRequest,
+        log_data: 'dict[str, str]',
+        extra_headers: 'dict[str, str]') -> None:
         ingest_units = request._ingest
 
         if request._module_version:
@@ -407,6 +406,9 @@ class _PayiInstrumentor:
 
         if 'resource' not in ingest_units or ingest_units['resource'] == '':
             ingest_units['resource'] = "system.unknown_model"
+
+        if request._internal_request_properties:
+            ingest_units["properties"] = request._internal_request_properties
 
         request_json = ingest_units.get('provider_request_json', "")
         if request_json and self._instrument_inline_data is False:
@@ -924,6 +926,15 @@ class _PayiInstrumentor:
         use_case_properties = context.get("use_case_properties", None)
         if use_case_properties:
             request._ingest["use_case_properties"] = use_case_properties
+
+        if request._internal_request_properties:
+            if "properties" in request._ingest and request._ingest["properties"] is not None:
+                # Merge internal request properties, but don't override existing keys
+                for key, value in request._internal_request_properties.items():
+                    if key not in request._ingest["properties"]:
+                        request._ingest["properties"][key] = value
+            else:
+                request._ingest["properties"] = request._internal_request_properties # Assign
 
         if len(ingest_extra_headers) > 0:
             request._ingest["provider_request_headers"] = [PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) for k, v in ingest_extra_headers.items()]
