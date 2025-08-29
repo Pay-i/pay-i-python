@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.114 (2025-08-28)
+
+Full Changelog: [v0.1.0-alpha.113...v0.1.0-alpha.114](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.113...v0.1.0-alpha.114)
+
+### Bug Fixes
+
+* all response dict key access with get() ([#360](https://github.com/Pay-i/pay-i-python/issues/360)) ([83bd564](https://github.com/Pay-i/pay-i-python/commit/83bd564c909daf73660f898e00aa49157a1ba5db))
+
 ## 0.1.0-alpha.113 (2025-08-27)
 
 Full Changelog: [v0.1.0-alpha.112...v0.1.0-alpha.113](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.112...v0.1.0-alpha.113)
