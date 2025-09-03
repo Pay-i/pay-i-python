@@ -470,6 +470,7 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
         # record both as a semantic failure and guardrail action so it is discoverable through both properties
         if action == "INTERVENED":
             self.add_internal_request_property('system.failure', action)
+            self.add_internal_request_property('system.failure.description', "Guardrail intervened")
             self.add_internal_request_property(GUARDRAIL_ACTION, action)
 
     @override
@@ -571,6 +572,7 @@ class _BedrockConverseProviderRequest(_BedrockProviderRequest):
         if reason == "guardrail_intervened":
             # record both as a semantic failure and guardrail action so it is discoverable through both properties
             self.add_internal_request_property('system.failure', reason)
+            self.add_internal_request_property('system.failure.description', "Guardrail intervened")
             self.add_internal_request_property(GUARDRAIL_ACTION, reason)
 
 def bedrock_converse_process_streaming_for_function_call(request: _ProviderRequest, chunk: 'dict[str, Any]') -> None:  
