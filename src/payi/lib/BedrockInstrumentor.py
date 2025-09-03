@@ -14,6 +14,9 @@ from payi.types.pay_i_common_models_api_router_header_info_param import PayIComm
 from .instrument import _ChunkResult, _IsStreaming, _StreamingType, _ProviderRequest, _PayiInstrumentor
 from .version_helper import get_version_helper
 
+GUARDRAIL_ID = "system.aws.bedrock.guardrail_id"
+GUARDRAIL_VERSION = "system.aws.bedrock.guardrail_version"
+GUARDRAIL_ACTION = "system.aws.bedrock.guardrail_action"
 
 class BedrockInstrumentor:
     _module_name: str = "boto3"
@@ -188,9 +191,7 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
         guardrails = response.get("amazon-bedrock-trace", {}).get("guardrail", {}).get("input", {})
         self._request.process_guardrails(guardrails)
 
-        guardrail_action = response.get("amazon-bedrock-guardrailAction", "")
-        if guardrail_action:
-            self._request.add_internal_request_property("guardrail_action", guardrail_action)
+        self._request.process_stop_action(response.get("amazon-bedrock-guardrailAction", ""))
 
         self._request._instrumentor._ingest_units(self._request)
 
@@ -264,6 +265,7 @@ def wrap_converse_stream(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
     return invoke_wrapper
 
 class _BedrockProviderRequest(_ProviderRequest):
+
     def __init__(self, instrumentor: _PayiInstrumentor):
         super().__init__(
             instrumentor=instrumentor,
@@ -313,6 +315,7 @@ class _BedrockProviderRequest(_ProviderRequest):
     def process_guardrails(self, guardrails: 'dict[str, Any]') -> None:
         units = self._ingest["units"]
 
+        # while we iterate over the entire dict, only one guardrail is expected and supported
         for _, value in guardrails.items():
             # _ (key) is the guardrail id
             if not isinstance(value, dict):
@@ -371,11 +374,11 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
     
         guardrail_id = kwargs.get("guardrailIdentifier", "")
         if guardrail_id:
-            self.add_internal_request_property("guardrail_id", guardrail_id)
+            self.add_internal_request_property(GUARDRAIL_ID, guardrail_id)
 
         guardrail_version = kwargs.get("guardrailVersion", "")
         if guardrail_version:
-            self.add_internal_request_property("guardrail_version", guardrail_version)
+            self.add_internal_request_property(GUARDRAIL_VERSION, guardrail_version)
 
         if self._is_anthropic:
             try:
@@ -405,10 +408,8 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
         guardrails = chunk_dict.get("amazon-bedrock-trace", {}).get("guardrail", {}).get("input", {})
         if guardrails:
             self.process_guardrails(guardrails)
-
-        guardrail_action = chunk_dict.get("amazon-bedrock-guardrailAction", "")
-        if guardrail_action:
-            self.add_internal_request_property("guardrail_action", guardrail_action)
+    
+        self.process_stop_action(chunk_dict.get("amazon-bedrock-guardrailAction", ""))
 
         if self._is_anthropic:
             from .AnthropicInstrumentor import anthropic_process_chunk
@@ -465,6 +466,12 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
 
         return response
 
+    def process_stop_action(self, action: str) -> None:
+        # record both as a semantic failure and guardrail action so it is discoverable through both properties
+        if action == "INTERVENED":
+            self.add_internal_request_property('system.failure', action)
+            self.add_internal_request_property(GUARDRAIL_ACTION, action)
+
     @override
     def remove_inline_data(self, prompt: 'dict[str, Any]') -> bool:# noqa: ARG002
         if not self._is_anthropic:
@@ -490,11 +497,11 @@ class _BedrockConverseProviderRequest(_BedrockProviderRequest):
         if guardrail_config:
             guardrailIdentifier = guardrail_config.get("guardrailIdentifier", "")
             if guardrailIdentifier:
-                self.add_internal_request_property("guardrail_id", guardrailIdentifier)
-            
+                self.add_internal_request_property(GUARDRAIL_ID, guardrailIdentifier)
+
             guardrailVersion = guardrail_config.get("guardrailVersion", "")
             if guardrailVersion:
-                self.add_internal_request_property("guardrail_version", guardrailVersion)
+                self.add_internal_request_property(GUARDRAIL_VERSION, guardrailVersion)
 
         return True
 
@@ -533,7 +540,8 @@ class _BedrockConverseProviderRequest(_BedrockProviderRequest):
         if guardrails:
             self.process_guardrails(guardrails)
 
-        # response.get("stopReason", "") == "guardrail_intervened"
+        self.process_stop_reason(response.get("stopReason", ""))
+
         return None
 
     @override
@@ -553,15 +561,17 @@ class _BedrockConverseProviderRequest(_BedrockProviderRequest):
 
             ingest = True
 
-        #   {
-        #     "messageStop": {
-        #       "stopReason": "guardrail_intervened"
-        #     }
-        #   },
+        self.process_stop_reason(chunk.get("messageStop", {}).get("stopReason", ""))
 
         bedrock_converse_process_streaming_for_function_call(self, chunk)
 
         return _ChunkResult(send_chunk_to_caller=True, ingest=ingest)
+
+    def process_stop_reason(self, reason: str) -> None:
+        if reason == "guardrail_intervened":
+            # record both as a semantic failure and guardrail action so it is discoverable through both properties
+            self.add_internal_request_property('system.failure', reason)
+            self.add_internal_request_property(GUARDRAIL_ACTION, reason)
 
 def bedrock_converse_process_streaming_for_function_call(request: _ProviderRequest, chunk: 'dict[str, Any]') -> None:  
     contentBlockStart = chunk.get("contentBlockStart", {})
