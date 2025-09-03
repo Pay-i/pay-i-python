@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Dict, List, Union, Iterable, Optional
+from typing import Dict, Union, Iterable, Optional
 from datetime import datetime
 from typing_extensions import Required, Annotated, TypedDict
 
+from .._types import SequenceNotStr
 from .._utils import PropertyInfo
 from .shared_params.ingest_units import IngestUnits
 from .pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
@@ -32,7 +33,7 @@ class IngestEventParam(TypedDict, total=False):
 
     http_status_code: Optional[int]
 
-    limit_ids: Optional[List[str]]
+    limit_ids: Optional[SequenceNotStr[str]]
 
     properties: Optional[Dict[str, str]]
 
@@ -48,11 +49,11 @@ class IngestEventParam(TypedDict, total=False):
 
     provider_response_id: Optional[str]
 
-    provider_response_json: Union[str, List[str], None]
+    provider_response_json: Union[str, SequenceNotStr[str], None]
 
     provider_uri: Optional[str]
 
-    request_tags: Optional[List[str]]
+    request_tags: Optional[SequenceNotStr[str]]
 
     resource: Optional[str]
 
