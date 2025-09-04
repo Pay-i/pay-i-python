@@ -335,7 +335,7 @@ class _BedrockProviderRequest(_ProviderRequest):
 
             wordPolicyUnits = usage.get("wordPolicyUnits", 0) # type: ignore    
             if wordPolicyUnits > 0:
-                units["guardrail_word"] = Units(input=wordPolicyUnits, output=0) # type: ignore
+                units["guardrail_word_free"] = Units(input=wordPolicyUnits, output=0) # type: ignore
 
             automatedReasoningPolicyUnits = usage.get("automatedReasoningPolicyUnits", 0) # type: ignore
             if automatedReasoningPolicyUnits > 0:
