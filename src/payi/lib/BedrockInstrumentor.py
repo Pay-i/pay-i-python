@@ -21,9 +21,11 @@ from .instrument import (
 )
 from .version_helper import get_version_helper
 
-GUARDRAIL_ID = "system.aws.bedrock.guardrail_id"
-GUARDRAIL_VERSION = "system.aws.bedrock.guardrail_version"
-GUARDRAIL_ACTION = "system.aws.bedrock.guardrail_action"
+GUARDRAIL_ID = "system.aws.bedrock.guardrail.id"
+GUARDRAIL_VERSION = "system.aws.bedrock.guardrail.version"
+GUARDRAIL_ACTION = "system.aws.bedrock.guardrail.action"
+
+GUARDRAIL_SEMANTIC_FAILURE_DESCRIPTION = "Bedrock Guardrails intervened"
 
 class BedrockInstrumentor:
     _module_name: str = "boto3"
@@ -487,7 +489,7 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
         # record both as a semantic failure and guardrail action so it is discoverable through both properties
         if action == "INTERVENED":
             self.add_internal_request_property('system.failure', action)
-            self.add_internal_request_property('system.failure.description', "Guardrail intervened")
+            self.add_internal_request_property('system.failure.description', GUARDRAIL_SEMANTIC_FAILURE_DESCRIPTION)
             self.add_internal_request_property(GUARDRAIL_ACTION, action)
 
     @override
@@ -594,7 +596,7 @@ class _BedrockConverseProviderRequest(_BedrockProviderRequest):
         if reason == "guardrail_intervened":
             # record both as a semantic failure and guardrail action so it is discoverable through both properties
             self.add_internal_request_property('system.failure', reason)
-            self.add_internal_request_property('system.failure.description', "Guardrail intervened")
+            self.add_internal_request_property('system.failure.description', GUARDRAIL_SEMANTIC_FAILURE_DESCRIPTION)
             self.add_internal_request_property(GUARDRAIL_ACTION, reason)
 
 def bedrock_converse_process_streaming_for_function_call(request: _ProviderRequest, chunk: 'dict[str, Any]') -> None:  
