@@ -11,7 +11,14 @@ from payi.lib.helpers import PayiCategories, PayiHeaderNames, payi_aws_bedrock_u
 from payi.types.ingest_units_params import Units
 from payi.types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
-from .instrument import _ChunkResult, _IsStreaming, _StreamingType, _ProviderRequest, _PayiInstrumentor
+from .instrument import (
+    PayiInstrumentAwsBedrockConfig,
+    _ChunkResult,
+    _IsStreaming,
+    _StreamingType,
+    _ProviderRequest,
+    _PayiInstrumentor,
+)
 from .version_helper import get_version_helper
 
 GUARDRAIL_ID = "system.aws.bedrock.guardrail_id"
@@ -24,8 +31,10 @@ class BedrockInstrumentor:
 
     _instrumentor: _PayiInstrumentor
 
+    _guardrail_trace: bool = True
+
     @staticmethod
-    def instrument(instrumentor: _PayiInstrumentor) -> None:
+    def instrument(instrumentor: _PayiInstrumentor, aws_config: Optional[PayiInstrumentAwsBedrockConfig]) -> None:
         BedrockInstrumentor._instrumentor = instrumentor
 
         BedrockInstrumentor._module_version = get_version_helper(BedrockInstrumentor._module_name)
@@ -46,6 +55,9 @@ class BedrockInstrumentor:
         except Exception as e:
             instrumentor._logger.debug(f"Error instrumenting bedrock: {e}")
             return
+
+        if aws_config:
+            BedrockInstrumentor._guardrail_trace = aws_config.get("guardrail_trace", True)
 
 @_PayiInstrumentor.payi_wrapper
 def create_client_wrapper(instrumentor: _PayiInstrumentor, wrapped: Any, instance: Any, *args: Any, **kwargs: Any) -> Any: #  noqa: ARG001
@@ -380,6 +392,11 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
         if guardrail_version:
             self.add_internal_request_property(GUARDRAIL_VERSION, guardrail_version)
 
+        if guardrail_id and guardrail_version and BedrockInstrumentor._guardrail_trace:
+            trace = kwargs.get("trace", None)
+            if not trace:
+                kwargs["trace"] = "ENABLED"
+
         if self._is_anthropic:
             try:
                 body = json.loads(kwargs.get("body", ""))
@@ -503,6 +520,11 @@ class _BedrockConverseProviderRequest(_BedrockProviderRequest):
             guardrailVersion = guardrail_config.get("guardrailVersion", "")
             if guardrailVersion:
                 self.add_internal_request_property(GUARDRAIL_VERSION, guardrailVersion)
+
+            if guardrailIdentifier and guardrailVersion and BedrockInstrumentor._guardrail_trace:
+                trace = guardrail_config.get("trace", None)
+                if not trace:
+                    guardrail_config["trace"] = "enabled"
 
         return True
 

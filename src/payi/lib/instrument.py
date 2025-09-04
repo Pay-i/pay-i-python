@@ -145,6 +145,9 @@ class _ProviderRequest:
             self._ingest["provider_response_function_calls"] = self._function_calls
         self._function_calls.append(ProviderResponseFunctionCall(name=name, arguments=arguments))
 
+class PayiInstrumentAwsBedrockConfig(TypedDict, total=False):
+    guardrail_trace: bool
+
 class PayiInstrumentConfig(TypedDict, total=False):
     proxy: bool
     global_instrumentation: bool
@@ -159,6 +162,7 @@ class PayiInstrumentConfig(TypedDict, total=False):
     account_name: Optional[str]
     request_tags: Optional["list[str]"]
     request_properties: Optional["dict[str, str]"]
+    aws_config: Optional[PayiInstrumentAwsBedrockConfig]
 
 class PayiContext(TypedDict, total=False):
     use_case_name: Optional[str]
@@ -274,9 +278,9 @@ class _PayiInstrumentor:
         global_instrumentation = global_config.pop("global_instrumentation", True)
 
         if instruments is None or "*" in instruments:
-            self._instrument_all()
+            self._instrument_all(global_config=global_config)
         else:
-            self._instrument_specific(instruments)
+            self._instrument_specific(instruments=instruments, global_config=global_config)
 
         if global_instrumentation:
             if "proxy" not in global_config:
@@ -311,20 +315,20 @@ class _PayiInstrumentor:
 
             self._init_current_context(**context) 
 
-    def _instrument_all(self) -> None:
+    def _instrument_all(self, global_config: PayiInstrumentConfig) -> None:
         self._instrument_openai()
         self._instrument_anthropic()
-        self._instrument_aws_bedrock()
+        self._instrument_aws_bedrock(global_config.get("aws_config", None))
         self._instrument_google_vertex()
         self._instrument_google_genai()
 
-    def _instrument_specific(self, instruments: Set[str]) -> None:
+    def _instrument_specific(self, instruments: Set[str], global_config: PayiInstrumentConfig) -> None:
         if PayiCategories.openai in instruments or PayiCategories.azure_openai in instruments:
             self._instrument_openai()
         if PayiCategories.anthropic in instruments:
             self._instrument_anthropic()
         if PayiCategories.aws_bedrock in instruments:
-            self._instrument_aws_bedrock()
+            self._instrument_aws_bedrock(global_config.get("aws_config", None))
         if PayiCategories.google_vertex in instruments:
             self._instrument_google_vertex()
             self._instrument_google_genai()
@@ -347,11 +351,11 @@ class _PayiInstrumentor:
         except Exception as e:
             self._logger.error(f"Error instrumenting Anthropic: {e}")
 
-    def _instrument_aws_bedrock(self) -> None:
+    def _instrument_aws_bedrock(self, aws_config: Optional[PayiInstrumentAwsBedrockConfig]) -> None:
         from .BedrockInstrumentor import BedrockInstrumentor
 
         try:
-            BedrockInstrumentor.instrument(self)
+            BedrockInstrumentor.instrument(self, aws_config=aws_config)
 
         except Exception as e:
             self._logger.error(f"Error instrumenting AWS bedrock: {e}")
