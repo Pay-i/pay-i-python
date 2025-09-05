@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.0-alpha.115 (2025-09-05)
+
+Full Changelog: [v0.1.0-alpha.114...v0.1.0-alpha.115](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.114...v0.1.0-alpha.115)
+
+### Features
+
+* improve future compat with pydantic v3 ([4eed721](https://github.com/Pay-i/pay-i-python/commit/4eed7215f87395b4597e3ede506e32b2c37b6c3c))
+* **types:** replace List[str] with SequenceNotStr in params ([7c0db43](https://github.com/Pay-i/pay-i-python/commit/7c0db435c169460566096441e24a87fdf2c9e6c8))
+
+
+### Chores
+
+* **internal:** add Sequence related utils ([9797684](https://github.com/Pay-i/pay-i-python/commit/979768499fe48ef1b580082266dfbc6541016b6c))
+* **internal:** move mypy configurations to `pyproject.toml` file ([aa61c96](https://github.com/Pay-i/pay-i-python/commit/aa61c96c8b8c4b493fe09c5bd4a259d5823936a8))
+
 ## 0.1.0-alpha.114 (2025-08-28)
 
 Full Changelog: [v0.1.0-alpha.113...v0.1.0-alpha.114](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.113...v0.1.0-alpha.114)
