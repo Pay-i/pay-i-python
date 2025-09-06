@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from typing import List, Union
+from typing import Union
 from datetime import datetime
 from typing_extensions import Required, Annotated, TypedDict
 
+from ..._types import SequenceNotStr
 from ..._utils import PropertyInfo
 
 __all__ = ["FixedCostResourceCreateParams"]
@@ -14,7 +15,7 @@ __all__ = ["FixedCostResourceCreateParams"]
 class FixedCostResourceCreateParams(TypedDict, total=False):
     category: Required[str]
 
-    units: Required[List[str]]
+    units: Required[SequenceNotStr[str]]
 
     cost_per_hour: float
 

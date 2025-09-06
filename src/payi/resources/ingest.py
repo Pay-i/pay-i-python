@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, List, Union, Iterable, Optional
+from typing import Dict, Union, Iterable, Optional
 from datetime import datetime
 
 import httpx
@@ -10,7 +10,7 @@ import httpx
 from payi._utils._utils import is_given
 
 from ..types import ingest_units_params
-from .._types import NOT_GIVEN, Body, Query, Headers, NotGiven
+from .._types import NOT_GIVEN, Body, Query, Headers, NotGiven, SequenceNotStr
 from .._utils import maybe_transform, strip_not_given, async_maybe_transform
 from .._compat import cached_property
 from .._resource import SyncAPIResource, AsyncAPIResource
@@ -98,7 +98,7 @@ class IngestResource(SyncAPIResource):
         | NotGiven = NOT_GIVEN,
         provider_response_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | NotGiven = NOT_GIVEN,
         provider_response_id: Optional[str] | NotGiven = NOT_GIVEN,
-        provider_response_json: Union[str, List[str], None] | NotGiven = NOT_GIVEN,
+        provider_response_json: Union[str, SequenceNotStr[str], None] | NotGiven = NOT_GIVEN,
         provider_uri: Optional[str] | NotGiven = NOT_GIVEN,
         resource: Optional[str] | NotGiven = NOT_GIVEN,
         time_to_first_completion_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
@@ -328,7 +328,7 @@ class AsyncIngestResource(AsyncAPIResource):
         | NotGiven = NOT_GIVEN,
         provider_response_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | NotGiven = NOT_GIVEN,
         provider_response_id: Optional[str] | NotGiven = NOT_GIVEN,
-        provider_response_json: Union[str, List[str], None] | NotGiven = NOT_GIVEN,
+        provider_response_json: Union[str, SequenceNotStr[str], None] | NotGiven = NOT_GIVEN,
         provider_uri: Optional[str] | NotGiven = NOT_GIVEN,
         resource: Optional[str] | NotGiven = NOT_GIVEN,
         time_to_first_completion_token_ms: Optional[int] | NotGiven = NOT_GIVEN,

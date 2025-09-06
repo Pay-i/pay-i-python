@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Optional
 from typing_extensions import Literal
 
 import httpx
 
-from ...._types import NOT_GIVEN, Body, Query, Headers, NotGiven
+from ...._types import NOT_GIVEN, Body, Query, Headers, NotGiven, SequenceNotStr
 from ...._utils import maybe_transform, async_maybe_transform
 from ...._compat import cached_property
 from ...._resource import SyncAPIResource, AsyncAPIResource
@@ -49,7 +49,7 @@ class LimitConfigResource(SyncAPIResource):
         use_case_name: str,
         *,
         max: float,
-        limit_tags: Optional[List[str]] | NotGiven = NOT_GIVEN,
+        limit_tags: Optional[SequenceNotStr[str]] | NotGiven = NOT_GIVEN,
         limit_type: Literal["block", "allow"] | NotGiven = NOT_GIVEN,
         threshold: Optional[float] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
@@ -149,7 +149,7 @@ class AsyncLimitConfigResource(AsyncAPIResource):
         use_case_name: str,
         *,
         max: float,
-        limit_tags: Optional[List[str]] | NotGiven = NOT_GIVEN,
+        limit_tags: Optional[SequenceNotStr[str]] | NotGiven = NOT_GIVEN,
         limit_type: Literal["block", "allow"] | NotGiven = NOT_GIVEN,
         threshold: Optional[float] | NotGiven = NOT_GIVEN,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
