@@ -59,6 +59,7 @@ class _ProviderRequest:
         self._building_function_response: bool = False
         self._function_calls: Optional[list[ProviderResponseFunctionCall]] = None
         self._is_large_context: bool = False
+        self._internal_request_properties: dict[str, str] = {}
 
     def process_chunk(self, _chunk: Any) -> _ChunkResult:
         return _ChunkResult(send_chunk_to_caller=True)
@@ -99,6 +100,9 @@ class _ProviderRequest:
     def streaming_type(self) -> '_StreamingType':
         return self._streaming_type
 
+    def add_internal_request_property(self, key: str, value: str) -> None:
+        self._internal_request_properties[key] = value
+
     def exception_to_semantic_failure(self, e: Exception) -> None:
         exception_str = f"{type(e).__name__}"
     
@@ -113,16 +117,10 @@ class _ProviderRequest:
                 except Exception as _ex:
                     pass
  
-        existing_properties = self._ingest.get("properties", None)
-        if not existing_properties:
-            existing_properties = {}
-
-        existing_properties['system.failure'] = exception_str
+        self.add_internal_request_property('system.failure', exception_str)
         if fields:
             failure_description = ",".join(fields)
-            existing_properties["system.failure.description"] = failure_description[:128]
-
-        self._ingest["properties"] = existing_properties
+            self.add_internal_request_property("system.failure.description", failure_description)
 
         if "http_status_code" not in self._ingest:
             # use a non existent http status code so when presented to the user, the origin is clear
@@ -147,6 +145,9 @@ class _ProviderRequest:
             self._ingest["provider_response_function_calls"] = self._function_calls
         self._function_calls.append(ProviderResponseFunctionCall(name=name, arguments=arguments))
 
+class PayiInstrumentAwsBedrockConfig(TypedDict, total=False):
+    guardrail_trace: bool
+
 class PayiInstrumentConfig(TypedDict, total=False):
     proxy: bool
     global_instrumentation: bool
@@ -161,6 +162,7 @@ class PayiInstrumentConfig(TypedDict, total=False):
     account_name: Optional[str]
     request_tags: Optional["list[str]"]
     request_properties: Optional["dict[str, str]"]
+    aws_config: Optional[PayiInstrumentAwsBedrockConfig]
 
 class PayiContext(TypedDict, total=False):
     use_case_name: Optional[str]
@@ -276,9 +278,9 @@ class _PayiInstrumentor:
         global_instrumentation = global_config.pop("global_instrumentation", True)
 
         if instruments is None or "*" in instruments:
-            self._instrument_all()
+            self._instrument_all(global_config=global_config)
         else:
-            self._instrument_specific(instruments)
+            self._instrument_specific(instruments=instruments, global_config=global_config)
 
         if global_instrumentation:
             if "proxy" not in global_config:
@@ -313,20 +315,20 @@ class _PayiInstrumentor:
 
             self._init_current_context(**context) 
 
-    def _instrument_all(self) -> None:
+    def _instrument_all(self, global_config: PayiInstrumentConfig) -> None:
         self._instrument_openai()
         self._instrument_anthropic()
-        self._instrument_aws_bedrock()
+        self._instrument_aws_bedrock(global_config.get("aws_config", None))
         self._instrument_google_vertex()
         self._instrument_google_genai()
 
-    def _instrument_specific(self, instruments: Set[str]) -> None:
+    def _instrument_specific(self, instruments: Set[str], global_config: PayiInstrumentConfig) -> None:
         if PayiCategories.openai in instruments or PayiCategories.azure_openai in instruments:
             self._instrument_openai()
         if PayiCategories.anthropic in instruments:
             self._instrument_anthropic()
         if PayiCategories.aws_bedrock in instruments:
-            self._instrument_aws_bedrock()
+            self._instrument_aws_bedrock(global_config.get("aws_config", None))
         if PayiCategories.google_vertex in instruments:
             self._instrument_google_vertex()
             self._instrument_google_genai()
@@ -349,11 +351,11 @@ class _PayiInstrumentor:
         except Exception as e:
             self._logger.error(f"Error instrumenting Anthropic: {e}")
 
-    def _instrument_aws_bedrock(self) -> None:
+    def _instrument_aws_bedrock(self, aws_config: Optional[PayiInstrumentAwsBedrockConfig]) -> None:
         from .BedrockInstrumentor import BedrockInstrumentor
 
         try:
-            BedrockInstrumentor.instrument(self)
+            BedrockInstrumentor.instrument(self, aws_config=aws_config)
 
         except Exception as e:
             self._logger.error(f"Error instrumenting AWS bedrock: {e}")
@@ -393,9 +395,10 @@ class _PayiInstrumentor:
         return log_ingest_units
         
     def _process_ingest_units(
-            self,
-            request: _ProviderRequest, log_data: 'dict[str, str]',
-            extra_headers: 'dict[str, str]') -> None:
+        self,
+        request: _ProviderRequest,
+        log_data: 'dict[str, str]',
+        extra_headers: 'dict[str, str]') -> None:
         ingest_units = request._ingest
 
         if request._module_version:
@@ -407,6 +410,9 @@ class _PayiInstrumentor:
 
         if 'resource' not in ingest_units or ingest_units['resource'] == '':
             ingest_units['resource'] = "system.unknown_model"
+
+        if request._internal_request_properties:
+            ingest_units["properties"] = request._internal_request_properties
 
         request_json = ingest_units.get('provider_request_json', "")
         if request_json and self._instrument_inline_data is False:
@@ -924,6 +930,15 @@ class _PayiInstrumentor:
         use_case_properties = context.get("use_case_properties", None)
         if use_case_properties:
             request._ingest["use_case_properties"] = use_case_properties
+
+        if request._internal_request_properties:
+            if "properties" in request._ingest and request._ingest["properties"] is not None:
+                # Merge internal request properties, but don't override existing keys
+                for key, value in request._internal_request_properties.items():
+                    if key not in request._ingest["properties"]:
+                        request._ingest["properties"][key] = value
+            else:
+                request._ingest["properties"] = request._internal_request_properties # Assign
 
         if len(ingest_extra_headers) > 0:
             request._ingest["provider_request_headers"] = [PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) for k, v in ingest_extra_headers.items()]
