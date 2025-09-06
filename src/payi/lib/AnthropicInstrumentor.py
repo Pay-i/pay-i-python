@@ -253,7 +253,7 @@ def anthropic_process_compute_input_cost(request: _ProviderRequest, usage: 'dict
 
     total_input_tokens = input + cache_creation_input_tokens + cache_read_input_tokens
 
-    request._is_large_context = total_input_tokens > 200000
+    request._is_large_context = total_input_tokens >= 200000
     large_context = "_large_context" if request._is_large_context else ""
 
     cache_creation: dict[str, int] = usage.get("cache_creation", {})

@@ -11,9 +11,21 @@ from payi.lib.helpers import PayiCategories, PayiHeaderNames, payi_aws_bedrock_u
 from payi.types.ingest_units_params import Units
 from payi.types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
-from .instrument import _ChunkResult, _IsStreaming, _StreamingType, _ProviderRequest, _PayiInstrumentor
+from .instrument import (
+    PayiInstrumentAwsBedrockConfig,
+    _ChunkResult,
+    _IsStreaming,
+    _StreamingType,
+    _ProviderRequest,
+    _PayiInstrumentor,
+)
 from .version_helper import get_version_helper
 
+GUARDRAIL_ID = "system.aws.bedrock.guardrail.id"
+GUARDRAIL_VERSION = "system.aws.bedrock.guardrail.version"
+GUARDRAIL_ACTION = "system.aws.bedrock.guardrail.action"
+
+GUARDRAIL_SEMANTIC_FAILURE_DESCRIPTION = "Bedrock Guardrails intervened"
 
 class BedrockInstrumentor:
     _module_name: str = "boto3"
@@ -21,8 +33,10 @@ class BedrockInstrumentor:
 
     _instrumentor: _PayiInstrumentor
 
+    _guardrail_trace: bool = True
+
     @staticmethod
-    def instrument(instrumentor: _PayiInstrumentor) -> None:
+    def instrument(instrumentor: _PayiInstrumentor, aws_config: Optional[PayiInstrumentAwsBedrockConfig]) -> None:
         BedrockInstrumentor._instrumentor = instrumentor
 
         BedrockInstrumentor._module_version = get_version_helper(BedrockInstrumentor._module_name)
@@ -43,6 +57,9 @@ class BedrockInstrumentor:
         except Exception as e:
             instrumentor._logger.debug(f"Error instrumenting bedrock: {e}")
             return
+
+        if aws_config:
+            BedrockInstrumentor._guardrail_trace = aws_config.get("guardrail_trace", True)
 
 @_PayiInstrumentor.payi_wrapper
 def create_client_wrapper(instrumentor: _PayiInstrumentor, wrapped: Any, instance: Any, *args: Any, **kwargs: Any) -> Any: #  noqa: ARG001
@@ -184,7 +201,12 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
 
         if self._log_prompt_and_response:
             ingest["provider_response_json"] = data.decode('utf-8') # type: ignore
-            
+
+        guardrails = response.get("amazon-bedrock-trace", {}).get("guardrail", {}).get("input", {})
+        self._request.process_guardrails(guardrails)
+
+        self._request.process_stop_action(response.get("amazon-bedrock-guardrailAction", ""))
+
         self._request._instrumentor._ingest_units(self._request)
 
         return data # type: ignore
@@ -257,6 +279,7 @@ def wrap_converse_stream(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
     return invoke_wrapper
 
 class _BedrockProviderRequest(_ProviderRequest):
+
     def __init__(self, instrumentor: _PayiInstrumentor):
         super().__init__(
             instrumentor=instrumentor,
@@ -303,6 +326,51 @@ class _BedrockProviderRequest(_ProviderRequest):
             self._instrumentor._logger.debug(f"Error processing exception: {e}")
             return False
 
+    def process_guardrails(self, guardrails: 'dict[str, Any]') -> None:
+        units = self._ingest["units"]
+
+        # while we iterate over the entire dict, only one guardrail is expected and supported
+        for _, value in guardrails.items():
+            # _ (key) is the guardrail id
+            if not isinstance(value, dict):
+                continue
+
+            usage: dict[str, int] = value.get("invocationMetrics", {}).get("usage", {}) # type: ignore
+            if not usage:
+                continue
+
+            topicPolicyUnits: int  = usage.get("topicPolicyUnits", 0) # type: ignore
+            if topicPolicyUnits > 0:
+                units["guardrail_topic"] = Units(input=topicPolicyUnits, output=0) # type: ignore
+
+            contentPolicyUnits = usage.get("contentPolicyUnits", 0) # type: ignore
+            if contentPolicyUnits > 0:
+                units["guardrail_content"] = Units(input=contentPolicyUnits, output=0) # type: ignore
+
+            wordPolicyUnits = usage.get("wordPolicyUnits", 0) # type: ignore    
+            if wordPolicyUnits > 0:
+                units["guardrail_word_free"] = Units(input=wordPolicyUnits, output=0) # type: ignore
+
+            automatedReasoningPolicyUnits = usage.get("automatedReasoningPolicyUnits", 0) # type: ignore
+            if automatedReasoningPolicyUnits > 0:
+                units["guardrail_automated_reasoning"] = Units(input=automatedReasoningPolicyUnits, output=0) # type: ignore
+
+            sensitiveInformationPolicyUnits = usage.get("sensitiveInformationPolicyUnits", 0) # type: ignore
+            if sensitiveInformationPolicyUnits > 0:
+                units["guardrail_sensitive_information"] = Units(input=sensitiveInformationPolicyUnits, output=0) # type: ignore
+
+            sensitiveInformationPolicyFreeUnits = usage.get("sensitiveInformationPolicyFreeUnits", 0) # type: ignore
+            if sensitiveInformationPolicyFreeUnits > 0:
+                units["guardrail_sensitive_information_free"] = Units(input=sensitiveInformationPolicyFreeUnits, output=0) # type: ignore
+
+            contextualGroundingPolicyUnits = usage.get("contextualGroundingPolicyUnits", 0) # type: ignore
+            if contextualGroundingPolicyUnits > 0:
+                units["guardrail_contextual_grounding"] = Units(input=contextualGroundingPolicyUnits, output=0) # type: ignore
+
+            contentPolicyImageUnits = usage.get("contentPolicyImageUnits", 0) # type: ignore
+            if contentPolicyImageUnits > 0:
+                units["guardrail_content_image"] = Units(input=contentPolicyImageUnits, output=0) # type: ignore
+
 class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, model_id: str):
         super().__init__(instrumentor=instrumentor)
@@ -318,9 +386,22 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
 
         super().process_request(instance, extra_headers, args, kwargs)
     
+        guardrail_id = kwargs.get("guardrailIdentifier", "")
+        if guardrail_id:
+            self.add_internal_request_property(GUARDRAIL_ID, guardrail_id)
+
+        guardrail_version = kwargs.get("guardrailVersion", "")
+        if guardrail_version:
+            self.add_internal_request_property(GUARDRAIL_VERSION, guardrail_version)
+
+        if guardrail_id and guardrail_version and BedrockInstrumentor._guardrail_trace:
+            trace = kwargs.get("trace", None)
+            if not trace:
+                kwargs["trace"] = "ENABLED"
+
         if self._is_anthropic:
             try:
-                body = json.loads( kwargs.get("body", ""))
+                body = json.loads(kwargs.get("body", ""))
                 messages = body.get("messages", {})
                 if messages:
                     anthropic_has_image_and_get_texts(self, messages)
@@ -328,7 +409,7 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
                 self._instrumentor._logger.debug(f"Bedrock invoke error processing request body: {e}")
         elif self._is_cohere_embed_english_v3:
             try:
-                body = json.loads( kwargs.get("body", ""))
+                body = json.loads(kwargs.get("body", ""))
                 input_type = body.get("input_type", "")
                 if input_type == 'image':
                     images = body.get("images", [])
@@ -342,6 +423,12 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
     @override
     def process_chunk(self, chunk: Any) -> _ChunkResult:
         chunk_dict = json.loads(chunk)
+
+        guardrails = chunk_dict.get("amazon-bedrock-trace", {}).get("guardrail", {}).get("input", {})
+        if guardrails:
+            self.process_guardrails(guardrails)
+    
+        self.process_stop_action(chunk_dict.get("amazon-bedrock-guardrailAction", ""))
 
         if self._is_anthropic:
             from .AnthropicInstrumentor import anthropic_process_chunk
@@ -398,6 +485,13 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
 
         return response
 
+    def process_stop_action(self, action: str) -> None:
+        # record both as a semantic failure and guardrail action so it is discoverable through both properties
+        if action == "INTERVENED":
+            self.add_internal_request_property('system.failure', action)
+            self.add_internal_request_property('system.failure.description', GUARDRAIL_SEMANTIC_FAILURE_DESCRIPTION)
+            self.add_internal_request_property(GUARDRAIL_ACTION, action)
+
     @override
     def remove_inline_data(self, prompt: 'dict[str, Any]') -> bool:# noqa: ARG002
         if not self._is_anthropic:
@@ -417,6 +511,25 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
         return False
 
 class _BedrockConverseProviderRequest(_BedrockProviderRequest):
+    @override
+    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
+        guardrail_config = kwargs.get("guardrailConfig", {})
+        if guardrail_config:
+            guardrailIdentifier = guardrail_config.get("guardrailIdentifier", "")
+            if guardrailIdentifier:
+                self.add_internal_request_property(GUARDRAIL_ID, guardrailIdentifier)
+
+            guardrailVersion = guardrail_config.get("guardrailVersion", "")
+            if guardrailVersion:
+                self.add_internal_request_property(GUARDRAIL_VERSION, guardrailVersion)
+
+            if guardrailIdentifier and guardrailVersion and BedrockInstrumentor._guardrail_trace:
+                trace = guardrail_config.get("trace", None)
+                if not trace:
+                    guardrail_config["trace"] = "enabled"
+
+        return True
+
     @override
     def process_synchronous_response(
         self,
@@ -448,6 +561,12 @@ class _BedrockConverseProviderRequest(_BedrockProviderRequest):
 
         bedrock_converse_process_synchronous_function_call(self, response)
 
+        guardrails = response.get("trace", {}).get("guardrail", {}).get("inputAssessment", {})
+        if guardrails:
+            self.process_guardrails(guardrails)
+
+        self.process_stop_reason(response.get("stopReason", ""))
+
         return None
 
     @override
@@ -461,11 +580,24 @@ class _BedrockConverseProviderRequest(_BedrockProviderRequest):
             output = usage.get("outputTokens", 0)
             self._ingest["units"]["text"] = Units(input=input, output=output)
 
+            guardrail = metadata.get("trace", {}).get("guardrail", {}).get("inputAssessment", {})
+            if guardrail:
+                self.process_guardrails(guardrail)
+
             ingest = True
+
+        self.process_stop_reason(chunk.get("messageStop", {}).get("stopReason", ""))
 
         bedrock_converse_process_streaming_for_function_call(self, chunk)
 
         return _ChunkResult(send_chunk_to_caller=True, ingest=ingest)
+
+    def process_stop_reason(self, reason: str) -> None:
+        if reason == "guardrail_intervened":
+            # record both as a semantic failure and guardrail action so it is discoverable through both properties
+            self.add_internal_request_property('system.failure', reason)
+            self.add_internal_request_property('system.failure.description', GUARDRAIL_SEMANTIC_FAILURE_DESCRIPTION)
+            self.add_internal_request_property(GUARDRAIL_ACTION, reason)
 
 def bedrock_converse_process_streaming_for_function_call(request: _ProviderRequest, chunk: 'dict[str, Any]') -> None:  
     contentBlockStart = chunk.get("contentBlockStart", {})

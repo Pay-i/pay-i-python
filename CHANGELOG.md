@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.116 (2025-09-06)
+
+Full Changelog: [v0.1.0-alpha.115...v0.1.0-alpha.116](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.115...v0.1.0-alpha.116)
+
+### Features
+
+* aws bedrock guardians ([#363](https://github.com/Pay-i/pay-i-python/issues/363)) ([08d74c8](https://github.com/Pay-i/pay-i-python/commit/08d74c8d49368cc0e8ae0b8d0f9a94458e7be0fa))
+
 ## 0.1.0-alpha.115 (2025-09-05)
 
 Full Changelog: [v0.1.0-alpha.114...v0.1.0-alpha.115](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.114...v0.1.0-alpha.115)
