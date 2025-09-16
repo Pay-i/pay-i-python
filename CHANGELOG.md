@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.120 (2025-09-16)
+
+Full Changelog: [v0.1.0-alpha.119...v0.1.0-alpha.120](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.119...v0.1.0-alpha.120)
+
+### Bug Fixes
+
+* ingest exception logging ([647f9e7](https://github.com/Pay-i/pay-i-python/commit/647f9e74a7bc9973539329de306db1d2bf4a8db0))
+
 ## 0.1.0-alpha.119 (2025-09-16)
 
 Full Changelog: [v0.1.0-alpha.118...v0.1.0-alpha.119](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.118...v0.1.0-alpha.119)
