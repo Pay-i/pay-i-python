@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.117 (2025-09-16)
+
+Full Changelog: [v0.1.0-alpha.116...v0.1.0-alpha.117](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.116...v0.1.0-alpha.117)
+
+### Chores
+
+* **tests:** simplify `get_platform` test ([9aeaba6](https://github.com/Pay-i/pay-i-python/commit/9aeaba6c83b4cdcd6bb348609a9e22ad86b14b7a))
+
 ## 0.1.0-alpha.116 (2025-09-06)
 
 Full Changelog: [v0.1.0-alpha.115...v0.1.0-alpha.116](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.115...v0.1.0-alpha.116)
