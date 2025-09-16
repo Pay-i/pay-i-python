@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.118 (2025-09-16)
+
+Full Changelog: [v0.1.0-alpha.117...v0.1.0-alpha.118](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.117...v0.1.0-alpha.118)
+
+### Bug Fixes
+
+* bedrock resource, copy extra_headers ([#366](https://github.com/Pay-i/pay-i-python/issues/366)) ([8e0d188](https://github.com/Pay-i/pay-i-python/commit/8e0d1889bd48b398f27c5ea69b3cab5db23e31fa))
+
 ## 0.1.0-alpha.117 (2025-09-16)
 
 Full Changelog: [v0.1.0-alpha.116...v0.1.0-alpha.117](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.116...v0.1.0-alpha.117)
