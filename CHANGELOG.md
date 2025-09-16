@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.119 (2025-09-16)
+
+Full Changelog: [v0.1.0-alpha.118...v0.1.0-alpha.119](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.118...v0.1.0-alpha.119)
+
+### Bug Fixes
+
+* log APIStatusError exception processing as warning ([64aca26](https://github.com/Pay-i/pay-i-python/commit/64aca26e4139d9aebb02a0ab386e4a11978005a6))
+
 ## 0.1.0-alpha.118 (2025-09-16)
 
 Full Changelog: [v0.1.0-alpha.117...v0.1.0-alpha.118](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.117...v0.1.0-alpha.118)
