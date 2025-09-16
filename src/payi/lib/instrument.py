@@ -571,7 +571,7 @@ class _PayiInstrumentor:
             # Try to get the response body as JSON
             body = e.body
             if body is None:
-                self._logger.warning(f"Pay-i connection exception {e} has no body")
+                self._logger.warning(f"Pay-i ingest exception {e}, status {e.status_code} has no body")
                 return XproxyError(code="unknown_error", message=str(e))
 
             # If body is bytes, decode to string
@@ -587,7 +587,7 @@ class _PayiInstrumentor:
                     body_dict = json.loads(body)  # type: ignore
                 except Exception:
                     body_type = type(body).__name__ # type: ignore
-                    self._logger.warning(f"Pay-i connection exception {e} cannot parse response JSON body for body type {body_type}")
+                    self._logger.warning(f"Pay-i ingest exception {e}, status {e.status_code} cannot parse response JSON body for body type {body_type}")
                     return XproxyError(code="invalid_json", message=str(e))
 
             xproxy_error = body_dict.get("xproxy_error", {})
@@ -596,7 +596,7 @@ class _PayiInstrumentor:
             return XproxyError(code=code, message=message)
 
         except Exception as ex:
-            self._logger.warning(f"Pay-i connection exception {e}  _process_api_status_error handled exception {ex}")
+            self._logger.warning(f"Pay-i ingest exception {e}, status {e.status_code} processing handled exception {ex}")
             return XproxyError(code="exception", message=str(ex))
 
     def _ingest_units_worker(self, request: _ProviderRequest) -> Optional[Union[XproxyResult, XproxyError]]:
