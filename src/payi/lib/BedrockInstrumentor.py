@@ -513,6 +513,8 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
 class _BedrockConverseProviderRequest(_BedrockProviderRequest):
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
+        super().process_request(instance, extra_headers, args, kwargs)
+        
         guardrail_config = kwargs.get("guardrailConfig", {})
         if guardrail_config:
             guardrailIdentifier = guardrail_config.get("guardrailIdentifier", "")
