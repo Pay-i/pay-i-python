@@ -989,12 +989,14 @@ class _PayiInstrumentor:
 
         # after _udpate_headers, all metadata to add to ingest is in extra_headers, keyed by the xproxy-xxx header name
         extra_headers: Optional[dict[str, str]] = kwargs.get("extra_headers")
-        if extra_headers is None:
-            extra_headers = {}
+        extra_headers = (extra_headers or {}).copy()
         self._update_extra_headers(context, extra_headers)
 
         if context.get("proxy", self._proxy_default):
-            if "extra_headers" not in kwargs and extra_headers:
+            if not request.supports_extra_headers:
+                kwargs.pop("extra_headers", None)
+            elif extra_headers:
+                # Pass the copy to the wrapped function. Assumes anthropic and openai clients
                 kwargs["extra_headers"] = extra_headers
 
             self._logger.debug(f"async_invoke_wrapper: sending proxy request")
@@ -1024,6 +1026,10 @@ class _PayiInstrumentor:
         try:
             self._prepare_ingest(request, context, extra_headers, args, kwargs)
             self._logger.debug(f"async_invoke_wrapper: calling wrapped instance (stream={stream})")
+
+            if "extra_headers" in kwargs:
+                # replace the original extra_headers with the updated copy which has all of the Pay-i headers removed
+                kwargs["extra_headers"] = extra_headers
 
             sw.start()
             response = await wrapped(*args, **kwargs)
@@ -1109,15 +1115,14 @@ class _PayiInstrumentor:
 
         # after _udpate_headers, all metadata to add to ingest is in extra_headers, keyed by the xproxy-xxx header name
         extra_headers: Optional[dict[str, str]] = kwargs.get("extra_headers")
-        if extra_headers is None:
-            extra_headers = {}
+        extra_headers = (extra_headers or {}).copy()
         self._update_extra_headers(context, extra_headers)
 
         if context.get("proxy", self._proxy_default):
             if not request.supports_extra_headers:
                 kwargs.pop("extra_headers", None)
-            elif "extra_headers" not in kwargs and extra_headers:
-                # assumes anthropic and openai clients
+            elif extra_headers:
+                # Pass the copy to the wrapped function. Assumes anthropic and openai clients
                 kwargs["extra_headers"] = extra_headers
 
             self._logger.debug(f"invoke_wrapper: sending proxy request")
@@ -1147,6 +1152,10 @@ class _PayiInstrumentor:
         try:
             self._prepare_ingest(request, context, extra_headers, args, kwargs)
             self._logger.debug(f"invoke_wrapper: calling wrapped instance (stream={stream})")
+
+            if "extra_headers" in kwargs:
+                # replace the original extra_headers with the updated copy which has all of the Pay-i headers removed
+                kwargs["extra_headers"] = extra_headers
 
             sw.start()
             response = wrapped(*args, **kwargs)
