@@ -574,9 +574,41 @@ class _AzureAiFoundryRunProviderRequest(_AzureAiFoundryProviderRequest):
     def process_synchronous_response(self, response: Any, log_prompt_and_response: bool, kwargs: Any) -> Any:
         response_dict = self._model_to_dict(response)
 
-        status = response_dict.get("status", "")
-        if status.lower() != "completed":
-            # by returning response, we short circuit ingestion as the run is not complete
+        status = response_dict.get("status", "").lower()
+
+        if status == "requires_action":
+            run_id = response_dict.get("id", "")
+            if run_id:
+                self._ingest["provider_response_id"] = run_id
+
+            required_action = response_dict.get("required_action", {})
+            tool_calls = required_action.get("submit_tool_outputs", {}).get("tool_calls", [])
+            functionCallAdded = False
+            for tool_call in tool_calls:
+                toolType = tool_call.get("type", "")
+                if toolType != "function":
+                    continue
+
+                function = tool_call.get("function", {})
+                name = function.get("name", "")
+                arguments = function.get("arguments", "")
+                
+                if name:
+                    self.add_synchronous_function_call(name=name, arguments=arguments)
+                    functionCallAdded = True
+
+            if functionCallAdded:
+                if log_prompt_and_response:
+                    self._ingest["provider_response_json"] = json.dumps(response_dict)
+
+                self.add_internal_request_property("system.use_case_step", "agent.tool_call()")
+
+                return True
+            else:
+                return None  # Do not ingest with no function calls
+
+        if status != "completed":
+            # by returning None we do not ingest this response
             return None
 
         started_at = response_dict.get("started_at", 0)
@@ -607,18 +639,6 @@ class _AzureAiFoundryRunProviderRequest(_AzureAiFoundryProviderRequest):
         if usage:
             self._add_usage_units(usage)
             
-        # Check for tool calls in required_action
-        required_action = response_dict.get("required_action", {})
-        if required_action:
-            tool_calls = required_action.get("submit_tool_outputs", {}).get("tool_calls", [])
-            for tool_call in tool_calls:
-                function = tool_call.get("function", {})
-                name = function.get("name", "")
-                arguments = function.get("arguments", "")
-                
-                if name:
-                    self.add_synchronous_function_call(name=name, arguments=arguments)
-
         if log_prompt_and_response:
             self._ingest["provider_response_json"] = json.dumps(response_dict)
 
