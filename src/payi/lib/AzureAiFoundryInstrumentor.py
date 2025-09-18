@@ -579,6 +579,15 @@ class _AzureAiFoundryRunProviderRequest(_AzureAiFoundryProviderRequest):
             # by returning response, we short circuit ingestion as the run is not complete
             return None
 
+        started_at = response_dict.get("started_at", 0)
+        completed_at = response_dict.get("completed_at", 0)
+
+        # Since we are wrapping the constructor, the timestamp that the generic instrumentor computes will be zero so use the
+        # reported timestamps from the agent service. Both values are expressed in seconds
+        if started_at > 0 and completed_at > 0 and completed_at >= started_at:
+            duration = (completed_at - started_at) * 1000  # Convert seconds to milliseconds
+            self._ingest["end_to_end_latency_ms"] = duration
+
         thread_id = response_dict.get("thread_id", "")
         assistant_id = response_dict.get("assistant_id", "")
 
