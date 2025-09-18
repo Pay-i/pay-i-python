@@ -42,16 +42,22 @@ class AzureAiFoundryInstrumentor:
 
             # Instrument run operations - this is where the main AI interaction happens
             wrap_function_wrapper(
-                "azure.ai.agents.operations",
-                "RunsOperations.create",
-                run_create_wrapper(instrumentor),
+                "azure.ai.agents.models",
+                "ThreadRun.__init__",
+                run_init_wrapper(instrumentor),
             )
 
-            wrap_function_wrapper(
-                "azure.ai.agents.operations",
-                "RunsOperations.create_and_process",
-                run_create_and_process_wrapper(instrumentor),
-            )
+            # wrap_function_wrapper(
+            #     "azure.ai.agents.operations",
+            #     "RunsOperations.create",
+            #     run_create_wrapper(instrumentor),
+            # )
+
+            # wrap_function_wrapper(
+            #     "azure.ai.agents.operations",
+            #     "RunsOperations.create_and_process",
+            #     run_create_and_process_wrapper(instrumentor),
+            # )
 
             # TODO
             wrap_function_wrapper(
@@ -187,6 +193,24 @@ def message_create_wrapper(
         kwargs,
     )
 
+
+@_PayiInstrumentor.payi_wrapper
+def run_init_wrapper(
+    instrumentor: _PayiInstrumentor,
+    wrapped: Any,
+    instance: Any,
+    *args: Any,
+    **kwargs: Any,
+) -> Any:
+    instrumentor._logger.debug("Azure AI Foundry Run create wrapper")
+    return instrumentor.invoke_wrapper(
+        _AzureAiFoundryRunProviderRequest(instrumentor, class_constructor=True),
+        _IsStreaming.false,
+        wrapped,
+        instance,
+        args,
+        kwargs,
+    )
 
 @_PayiInstrumentor.payi_wrapper
 def run_create_wrapper(
@@ -447,9 +471,10 @@ class _AzureAiFoundryMessageProviderRequest(_AzureAiFoundryProviderRequest):
 
 
 class _AzureAiFoundryRunProviderRequest(_AzureAiFoundryProviderRequest):
-    def __init__(self, instrumentor: _PayiInstrumentor):
+    def __init__(self, instrumentor: _PayiInstrumentor, class_constructor: bool = False):
         super().__init__(instrumentor=instrumentor, streaming_type=_StreamingType.iterator)
         self._run_completed = False
+        self._class_constructor = class_constructor
 
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
@@ -552,7 +577,7 @@ class _AzureAiFoundryRunProviderRequest(_AzureAiFoundryProviderRequest):
         status = response_dict.get("status", "")
         if status.lower() != "completed":
             # by returning response, we short circuit ingestion as the run is not complete
-            return response
+            return None
 
         run_id = response_dict.get("id", "")
         if run_id:
@@ -577,7 +602,7 @@ class _AzureAiFoundryRunProviderRequest(_AzureAiFoundryProviderRequest):
         if log_prompt_and_response:
             self._ingest["provider_response_json"] = json.dumps(response_dict)
 
-        return None
+        return True
 
     def _add_usage_units(self, usage: 'dict[str, Any]') -> None:
         units = self._ingest["units"]

@@ -60,6 +60,7 @@ class _ProviderRequest:
         self._function_calls: Optional[list[ProviderResponseFunctionCall]] = None
         self._is_large_context: bool = False
         self._internal_request_properties: dict[str, str] = {}
+        self._class_constructor: bool = False
 
     def process_chunk(self, _chunk: Any) -> _ChunkResult:
         return _ChunkResult(send_chunk_to_caller=True)
@@ -1113,7 +1114,7 @@ class _PayiInstrumentor:
         args: Sequence[Any],
         kwargs: 'dict[str, Any]',
     ) -> Any:
-        self._logger.debug(f"invoke_wrapper: instance {instance}, category {request._category}")
+        # self._logger.debug(f"invoke_wrapper: instance {instance}, category {request._category}")
 
         context = self.get_context()
 
@@ -1171,7 +1172,15 @@ class _PayiInstrumentor:
                 kwargs["extra_headers"] = extra_headers
 
             sw.start()
-            response = wrapped(*args, **kwargs)
+
+            # Check if this is a constructor call
+            if request._class_constructor:
+                # For constructor calls, pass all arguments including self
+                wrapped(*args, **kwargs)
+                # The constructed instance is args[0] (self)
+                response = instance
+            else:
+                response = wrapped(*args, **kwargs)
             
         except Exception as e:  # pylint: disable=broad-except
             sw.stop()
@@ -1230,6 +1239,12 @@ class _PayiInstrumentor:
             response=response,
             log_prompt_and_response=self._log_prompt_and_response,
             kwargs=kwargs)
+ 
+        if request._class_constructor:
+            if return_result:
+                self._ingest_units(request)
+            return None
+ 
         if return_result:
             self._logger.debug(f"invoke_wrapper: process sync response return")
             return return_result
