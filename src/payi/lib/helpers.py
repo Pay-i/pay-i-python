@@ -22,9 +22,10 @@ class PayiCategories:
     anthropic:str  = "system.anthropic"
     openai:str = "system.openai"
     azure_openai:str = "system.azureopenai"
-    azure_ai_foundry:str = "system.azure.ai.foundry"
     aws_bedrock:str = "system.aws.bedrock"
     google_vertex:str = "system.google.vertex"
+    
+_AZURE_AI_FOUNDRY:str = "system.azureaifoundry"
 
 def create_limit_header_from_ids(*, limit_ids: List[str]) -> Dict[str, str]:
     if not isinstance(limit_ids, list):  # type: ignore

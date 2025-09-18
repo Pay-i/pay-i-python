@@ -24,7 +24,7 @@ from payi.types.ingest_units_params import Units, ProviderResponseFunctionCall
 from payi.types.shared.xproxy_error import XproxyError
 from payi.types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
-from .helpers import PayiCategories
+from .helpers import _AZURE_AI_FOUNDRY, PayiCategories
 from .Stopwatch import Stopwatch
 
 global _g_logger
@@ -334,7 +334,7 @@ class _PayiInstrumentor:
         if PayiCategories.google_vertex in instruments:
             self._instrument_google_vertex()
             self._instrument_google_genai()
-        if PayiCategories.azure_ai_foundry in instruments:
+        if _AZURE_AI_FOUNDRY in instruments:
             self._instrument_azure_ai_foundry()
 
     def _instrument_openai(self) -> None:

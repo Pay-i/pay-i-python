@@ -4,12 +4,20 @@ from typing_extensions import override
 
 from wrapt import wrap_function_wrapper  # type: ignore
 
-from payi.lib.helpers import PayiCategories, PayiHeaderNames
+from payi.lib.helpers import PayiHeaderNames
 from payi.types.ingest_units_params import Units
 
 from .instrument import _ChunkResult, _IsStreaming, _StreamingType, _ProviderRequest, _PayiInstrumentor
 from .version_helper import get_version_helper
 
+AZURE_AI_FOUNDRY_CATEGORY = "azure.ai.foundry.agent"
+AZURE_AI_FOUNDRY_RESOURCE = "builder"
+
+UNIT_AGENT_CREATE = "agent_create"
+UNIT_MESSAGE_CREATE = "message_create"
+UNIT_TOOL_CALL = "tool_call"
+UNIT_TOOL_CALL_OUTPUT = "tool_call_output"
+UNIT_MESSAGE_RESPONSE = "message_response"
 
 class AzureAiFoundryInstrumentor:
     _module_name: str = "azure-ai-projects"
@@ -21,11 +29,11 @@ class AzureAiFoundryInstrumentor:
             AzureAiFoundryInstrumentor._module_version = get_version_helper(AzureAiFoundryInstrumentor._module_name)
 
             # Instrument agent operations
-            # wrap_function_wrapper(
-            #     "azure.ai.agents",
-            #     "AgentsClient.create_agent",
-            #     agent_create_wrapper(instrumentor),
-            # )
+            wrap_function_wrapper(
+                "azure.ai.agents",
+                "AgentsClient.create_agent",
+                agent_create_wrapper(instrumentor),
+            )
 
             # Instrument thread operations
             # wrap_function_wrapper(
@@ -34,11 +42,17 @@ class AzureAiFoundryInstrumentor:
             #     thread_create_wrapper(instrumentor),
             # )
 
-            # wrap_function_wrapper(
-            #     "azure.ai.agents.operations",
-            #     "MessagesOperations.create",
-            #     message_create_wrapper(instrumentor),
-            # )
+            wrap_function_wrapper(
+                "azure.ai.agents.operations",
+                "MessagesOperations.create",
+                message_create_wrapper(instrumentor),
+            )
+
+            wrap_function_wrapper(
+                "azure.ai.agents.models",
+                "ThreadMessage.__init__",
+                thread_message_init_wrapper(instrumentor),
+            )
 
             # Instrument run operations - this is where the main AI interaction happens
             wrap_function_wrapper(
@@ -61,18 +75,18 @@ class AzureAiFoundryInstrumentor:
 
             # TODO
             wrap_function_wrapper(
-                "azure.ai.agents",
-                "AgentsClient.submit_tool_outputs_to_run",
+                "azure.ai.agents.operations",
+                "RunsOperations.submit_tool_outputs",
                 tool_outputs_wrapper(instrumentor),
             )
 
             # TODO
             # Stream operations
-            wrap_function_wrapper(
-                "azure.ai.agents",
-                "AgentsClient.create_run_stream",
-                run_stream_wrapper(instrumentor),
-            )
+            # wrap_function_wrapper(
+            #     "azure.ai.agents",
+            #     "AgentsClient.create_run_stream",
+            #     run_stream_wrapper(instrumentor),
+            # )
 
             # Instrument agent operations
             # wrap_function_wrapper(
@@ -115,23 +129,23 @@ class AzureAiFoundryInstrumentor:
             # )
 
             # Async versions
-            wrap_function_wrapper(
-                "azure.ai.projects.aio",
-                "AIProjectsClient.agents.create_run",
-                arun_create_wrapper(instrumentor),
-            )
+            # wrap_function_wrapper(
+            #     "azure.ai.projects.aio",
+            #     "AIProjectsClient.agents.create_run",
+            #     arun_create_wrapper(instrumentor),
+            # )
 
-            wrap_function_wrapper(
-                "azure.ai.projects.aio",
-                "AIProjectsClient.agents.create_run_stream",
-                arun_stream_wrapper(instrumentor),
-            )
+            # wrap_function_wrapper(
+            #     "azure.ai.projects.aio",
+            #     "AIProjectsClient.agents.create_run_stream",
+            #     arun_stream_wrapper(instrumentor),
+            # )
 
-            wrap_function_wrapper(
-                "azure.ai.projects.aio",
-                "AIProjectsClient.agents.submit_tool_outputs_to_run",
-                atool_outputs_wrapper(instrumentor),
-            )
+            # wrap_function_wrapper(
+            #     "azure.ai.projects.aio",
+            #     "AIProjectsClient.agents.submit_tool_outputs_to_run",
+            #     atool_outputs_wrapper(instrumentor),
+            # )
 
         except Exception as e:
             instrumentor._logger.debug(f"Error instrumenting azure-ai-projects: {e}")
@@ -193,6 +207,23 @@ def message_create_wrapper(
         kwargs,
     )
 
+@_PayiInstrumentor.payi_wrapper
+def thread_message_init_wrapper(
+    instrumentor: _PayiInstrumentor,
+    wrapped: Any,
+    instance: Any,
+    *args: Any,
+    **kwargs: Any,
+) -> Any:
+    instrumentor._logger.debug("Azure AI Foundry Thread Message init wrapper")
+    return instrumentor.invoke_wrapper(
+        _AzureAiFoundryThreadMessageInitProviderRequest(instrumentor),
+        _IsStreaming.false,
+        wrapped,
+        instance,
+        args,
+        kwargs,
+    )
 
 @_PayiInstrumentor.payi_wrapper
 def run_init_wrapper(
@@ -348,7 +379,7 @@ class _AzureAiFoundryProviderRequest(_ProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, streaming_type: _StreamingType = _StreamingType.iterator):
         super().__init__(
             instrumentor=instrumentor,
-            category=PayiCategories.azure_ai_foundry,
+            category=AZURE_AI_FOUNDRY_CATEGORY,
             streaming_type=streaming_type,
             module_name=AzureAiFoundryInstrumentor._module_name,
             module_version=AzureAiFoundryInstrumentor._module_version,
@@ -356,13 +387,26 @@ class _AzureAiFoundryProviderRequest(_ProviderRequest):
 
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
-        # Extract model information from kwargs if available
-        model = kwargs.get("model", "")
-        if not model and hasattr(instance, "_model"):
-            model = getattr(instance, "_model", "")
+        # # Extract model information from kwargs if available
+        # model = kwargs.get("model", "")
+        # if not model and hasattr(instance, "_model"):
+        #     model = getattr(instance, "_model", "")
         
-        self._ingest["resource"] = model or "azure.ai.foundry.agent"
+        # self._ingest["resource"] = model or "azure.ai.foundry.agent"
         return True
+
+    @override
+    def process_synchronous_response(self, response: Any, log_prompt_and_response: bool, kwargs: Any) -> Any:
+        super().process_synchronous_response(response, log_prompt_and_response, kwargs)
+        response_dict = self._model_to_dict(response)
+        
+        if "id" in response_dict:
+            self._ingest["provider_response_id"] = response_dict["id"]
+
+        if log_prompt_and_response:
+            self._ingest["provider_response_json"] = json.dumps(response_dict)
+
+        return None
 
     @override
     def process_exception(self, exception: Exception, kwargs: Any) -> bool:
@@ -402,27 +446,45 @@ class _AzureAiFoundryAgentProviderRequest(_AzureAiFoundryProviderRequest):
 
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
-        model = kwargs.get("model", "")
-        self._ingest["resource"] = model or "azure.ai.foundry.agent"
-        
-        # Capture agent creation parameters
-        instructions = kwargs.get("instructions", "")
-        if instructions and self._instrumentor._log_prompt_and_response:
-            self.add_internal_request_property("agent.instructions", instructions)
-            
+        super().process_request(instance, extra_headers, args, kwargs)
+        self._ingest["resource"] = AZURE_AI_FOUNDRY_RESOURCE
+        self.add_internal_request_property("system.use_case_step", "agent.create()")
+        self._ingest["units"][UNIT_AGENT_CREATE] = Units(input=1, output=0)
         return True
-
+    
     @override
-    def process_synchronous_response(self, response: Any, log_prompt_and_response: bool, kwargs: Any) -> Any:
-        response_dict = self._model_to_dict(response)
-        if "id" in response_dict:
-            self._ingest["provider_response_id"] = response_dict["id"]
+    def process_request_prompt(self, prompt: 'dict[str, Any]', args: Sequence[Any], kwargs: 'dict[str, Any]') -> None:
+        if not self._instrumentor._log_prompt_and_response:
+            return
 
-        if log_prompt_and_response:
-            self._ingest["provider_response_json"] = json.dumps(response_dict)
+        tools = kwargs.get("tools", [])
+        tools_prompt: list[dict[str, Any]] = []
+        for tool in tools:
+            if isinstance(tool, dict):
+                tools_prompt.append(tool)  # type: ignore
+            elif hasattr(tool, "as_dict"):
+                tools_prompt.append(tool.as_dict())
 
-        return None
+        if tools_prompt:
+            prompt["tools"] = tools_prompt
 
+        tool_resources = kwargs.get("tool_resources", [])
+        tool_resources_prompt: list[dict[str, Any]] = []
+        for tool_resource in tool_resources:
+            if isinstance(tool_resource, dict):
+                tool_resources_prompt.append(tool_resource)  # type: ignore
+            elif hasattr(tool_resource, "as_dict"):
+                tool_resources_prompt.append(tool_resource.as_dict())
+
+        if tool_resources_prompt:
+            prompt["tool_resources"] = tool_resources_prompt
+
+        toolset = kwargs.get("toolset", None)
+        if toolset:
+            if isinstance(toolset, dict):
+                prompt["toolset"] = toolset
+            elif hasattr(toolset, "as_dict"):
+                prompt["toolset"] = toolset.as_dict()
 
 class _AzureAiFoundryThreadProviderRequest(_AzureAiFoundryProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor):
@@ -430,15 +492,7 @@ class _AzureAiFoundryThreadProviderRequest(_AzureAiFoundryProviderRequest):
 
     @override
     def process_synchronous_response(self, response: Any, log_prompt_and_response: bool, kwargs: Any) -> Any:
-        response_dict = self._model_to_dict(response)
-        
-        if "id" in response_dict:
-            self._ingest["provider_response_id"] = response_dict["id"]
-
-        if log_prompt_and_response:
-            self._ingest["provider_response_json"] = json.dumps(response_dict)
-
-        return None
+        return super().process_synchronous_response(response, log_prompt_and_response, kwargs)
 
 
 class _AzureAiFoundryMessageProviderRequest(_AzureAiFoundryProviderRequest):
@@ -448,27 +502,45 @@ class _AzureAiFoundryMessageProviderRequest(_AzureAiFoundryProviderRequest):
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
         super().process_request(instance, extra_headers, args, kwargs)
-        
-        # Capture message content
-        content = kwargs.get("content", "")
-        if content:
-            # This is user input we want to track
-            self._instrumentor._logger.debug(f"Azure AI Foundry message content captured: {len(content)} characters")
+        self._ingest["resource"] = AZURE_AI_FOUNDRY_RESOURCE
+        self.add_internal_request_property("system.use_case_step", "agent.message()")
+    
+        self._ingest["units"][UNIT_MESSAGE_CREATE] = Units(input=1, output=0)
+
+        # # Capture message content
+        # content = kwargs.get("content", "")
+        # if content:
+        #     # This is user input we want to track
+        #     self._instrumentor._logger.debug(f"Azure AI Foundry message content captured: {len(content)} characters")
             
         return True
 
+class _AzureAiFoundryThreadMessageInitProviderRequest(_AzureAiFoundryProviderRequest):
+    def __init__(self, instrumentor: _PayiInstrumentor):
+        super().__init__(instrumentor=instrumentor, streaming_type=_StreamingType.iterator)
+        self._class_constructor = True
+
     @override
     def process_synchronous_response(self, response: Any, log_prompt_and_response: bool, kwargs: Any) -> Any:
-        response_dict = self._model_to_dict(response)
-        
-        if "id" in response_dict:
-            self._ingest["provider_response_id"] = response_dict["id"]
+        response_dict = response.as_dict()
+        run_id = response_dict.get("run_id", None)
+        if not run_id:
+            # client is constructing a message, do not ingest as it is not a message created post run
+            return None
+
+        id = response_dict.get("id", "")
+        if id:
+            self._ingest["provider_response_id"] = id
 
         if log_prompt_and_response:
             self._ingest["provider_response_json"] = json.dumps(response_dict)
 
-        return None
+        self.add_internal_request_property("system.use_case_step", "agent.get_message()")
 
+        self._ingest["resource"] = AZURE_AI_FOUNDRY_RESOURCE
+        self._ingest["units"][UNIT_MESSAGE_RESPONSE] = Units(input=0, output=1)
+
+        return True
 
 class _AzureAiFoundryRunProviderRequest(_AzureAiFoundryProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, class_constructor: bool = False):
@@ -583,7 +655,7 @@ class _AzureAiFoundryRunProviderRequest(_AzureAiFoundryProviderRequest):
 
             required_action = response_dict.get("required_action", {})
             tool_calls = required_action.get("submit_tool_outputs", {}).get("tool_calls", [])
-            functionCallAdded = False
+            functionCallsAdded = 0
             for tool_call in tool_calls:
                 toolType = tool_call.get("type", "")
                 if toolType != "function":
@@ -595,14 +667,18 @@ class _AzureAiFoundryRunProviderRequest(_AzureAiFoundryProviderRequest):
                 
                 if name:
                     self.add_synchronous_function_call(name=name, arguments=arguments)
-                    functionCallAdded = True
+                    functionCallsAdded += 1
 
-            if functionCallAdded:
+            if functionCallsAdded:
                 if log_prompt_and_response:
                     self._ingest["provider_response_json"] = json.dumps(response_dict)
 
                 self.add_internal_request_property("system.use_case_step", "agent.tool_call()")
 
+                # Override the default configuration of the run telemetry to report on the completed response which incurs LLM cost
+                self._ingest["category"] = AZURE_AI_FOUNDRY_CATEGORY
+                self._ingest["resource"] = AZURE_AI_FOUNDRY_RESOURCE
+                self._ingest["units"][UNIT_TOOL_CALL] = Units(input=0, output=functionCallsAdded)
                 return True
             else:
                 return None  # Do not ingest with no function calls
@@ -673,23 +749,46 @@ class _AzureAiFoundryToolOutputsProviderRequest(_AzureAiFoundryProviderRequest):
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
         super().process_request(instance, extra_headers, args, kwargs)
+        self._ingest["resource"] = AZURE_AI_FOUNDRY_RESOURCE        
+        self.add_internal_request_property("system.use_case_step", "agent.tool_outputs()")
         
+        # if self._instrumentor._log_prompt_and_response:
         # Capture tool outputs being submitted
         tool_outputs = kwargs.get("tool_outputs", [])
         
-        if tool_outputs and self._instrumentor._log_prompt_and_response:
+        if tool_outputs:
+            self._ingest["units"][UNIT_TOOL_CALL_OUTPUT] = Units(input=len(tool_outputs), output=0)
             self.add_internal_request_property("tool_outputs_count", str(len(tool_outputs)))
 
+        tool_approvals = kwargs.get("tool_approvals", [])
+        if tool_approvals:
+            self.add_internal_request_property("tool_approvals_count", str(len(tool_approvals)))
         return True
-
+    
     @override
-    def process_synchronous_response(self, response: Any, log_prompt_and_response: bool, kwargs: Any) -> Any:
-        response_dict = self._model_to_dict(response)
-        
-        if "id" in response_dict:
-            self._ingest["provider_response_id"] = response_dict["id"]
+    def process_request_prompt(self, prompt: 'dict[str, Any]', args: Sequence[Any], kwargs: 'dict[str, Any]') -> None:
+        super().process_request_prompt(prompt, args, kwargs)
+        if not self._instrumentor._log_prompt_and_response:
+            return
 
-        if log_prompt_and_response:
-            self._ingest["provider_response_json"] = json.dumps(response_dict)
+        tool_outputs = kwargs.get("tool_outputs", [])
+        tool_outputs_list: list[dict[str, Any]] = []
+        for output in tool_outputs:
+            if isinstance(output, dict):
+                tool_outputs_list.append(output)  # type: ignore
+            elif hasattr(output, "as_dict"):
+                tool_outputs_list.append(output.as_dict())
 
-        return None
+        if tool_outputs_list:
+            prompt["tool_outputs"] = tool_outputs_list
+
+        tool_approvals = kwargs.get("tool_approvals", [])
+        tool_approvals_list: list[dict[str, Any]] = []
+        for approval in tool_approvals:
+            if isinstance(approval, dict):
+                tool_approvals_list.append(approval)  # type: ignore
+            elif hasattr(approval, "as_dict"):
+                tool_approvals_list.append(approval.as_dict())
+
+        if tool_approvals_list:
+            prompt["tool_approvals"] = tool_approvals_list
