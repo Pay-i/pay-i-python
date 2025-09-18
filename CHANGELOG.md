@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.122 (2025-09-18)
+
+Full Changelog: [v0.1.0-alpha.121...v0.1.0-alpha.122](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.121...v0.1.0-alpha.122)
+
+### Bug Fixes
+
+* merge properties properly ([#371](https://github.com/Pay-i/pay-i-python/issues/371)) ([66d16d6](https://github.com/Pay-i/pay-i-python/commit/66d16d6e5c62ddc610a1c7e70c21947267da04bf))
+
 ## 0.1.0-alpha.121 (2025-09-17)
 
 Full Changelog: [v0.1.0-alpha.120...v0.1.0-alpha.121](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.120...v0.1.0-alpha.121)
