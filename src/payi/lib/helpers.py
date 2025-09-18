@@ -22,6 +22,7 @@ class PayiCategories:
     anthropic:str  = "system.anthropic"
     openai:str = "system.openai"
     azure_openai:str = "system.azureopenai"
+    azure_ai_foundry:str = "system.azure.ai.foundry"
     aws_bedrock:str = "system.aws.bedrock"
     google_vertex:str = "system.google.vertex"
 

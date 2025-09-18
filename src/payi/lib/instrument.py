@@ -321,6 +321,7 @@ class _PayiInstrumentor:
         self._instrument_aws_bedrock(global_config.get("aws_config", None))
         self._instrument_google_vertex()
         self._instrument_google_genai()
+        self._instrument_azure_ai_foundry()
 
     def _instrument_specific(self, instruments: Set[str], global_config: PayiInstrumentConfig) -> None:
         if PayiCategories.openai in instruments or PayiCategories.azure_openai in instruments:
@@ -332,6 +333,8 @@ class _PayiInstrumentor:
         if PayiCategories.google_vertex in instruments:
             self._instrument_google_vertex()
             self._instrument_google_genai()
+        if PayiCategories.azure_ai_foundry in instruments:
+            self._instrument_azure_ai_foundry()
 
     def _instrument_openai(self) -> None:
         from .OpenAIInstrumentor import OpenAiInstrumentor
@@ -377,6 +380,15 @@ class _PayiInstrumentor:
 
         except Exception as e:
             self._logger.error(f"Error instrumenting Google GenAi: {e}")
+
+    def _instrument_azure_ai_foundry(self) -> None:
+        from .AzureAiFoundryInstrumentor import AzureAiFoundryInstrumentor
+
+        try:
+            AzureAiFoundryInstrumentor.instrument(self)
+
+        except Exception as e:
+            self._logger.error(f"Error instrumenting Azure AI Foundry: {e}")
 
     @staticmethod
     def _create_logged_ingest_units(
