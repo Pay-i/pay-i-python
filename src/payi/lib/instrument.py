@@ -425,7 +425,11 @@ class _PayiInstrumentor:
             ingest_units['resource'] = "system.unknown_model"
 
         if request._internal_request_properties:
-            ingest_units["properties"] = request._internal_request_properties
+            properties = ingest_units.get("properties") or {}
+            ingest_units["properties"] = properties
+            for key, value in request._internal_request_properties.items():
+                if key not in properties:
+                    properties[key] = value
 
         request_json = ingest_units.get('provider_request_json', "")
         if request_json and self._instrument_inline_data is False:

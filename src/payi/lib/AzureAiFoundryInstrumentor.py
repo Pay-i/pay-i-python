@@ -579,6 +579,17 @@ class _AzureAiFoundryRunProviderRequest(_AzureAiFoundryProviderRequest):
             # by returning response, we short circuit ingestion as the run is not complete
             return None
 
+        thread_id = response_dict.get("thread_id", "")
+        assistant_id = response_dict.get("assistant_id", "")
+
+        self.add_internal_request_property("system.use_case_step", "agent.run()")
+
+        if thread_id:
+            self.add_internal_request_property("thread_id", thread_id)
+            
+        if assistant_id:
+            self.add_internal_request_property("assistant_id", assistant_id)
+
         run_id = response_dict.get("id", "")
         if run_id:
             self._ingest["provider_response_id"] = run_id
