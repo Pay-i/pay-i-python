@@ -7,7 +7,7 @@ from datetime import datetime
 
 import httpx
 
-from ..._types import NOT_GIVEN, Body, Query, Headers, NotGiven
+from ..._types import Body, Omit, Query, Headers, NotGiven, omit, not_given
 from ..._utils import maybe_transform, async_maybe_transform
 from ..._compat import cached_property
 from ..._resource import SyncAPIResource, AsyncAPIResource
@@ -51,16 +51,16 @@ class ResourcesResource(SyncAPIResource):
         *,
         category: str,
         units: Dict[str, resource_create_params.Units],
-        max_input_units: Optional[int] | NotGiven = NOT_GIVEN,
-        max_output_units: Optional[int] | NotGiven = NOT_GIVEN,
-        max_total_units: Optional[int] | NotGiven = NOT_GIVEN,
-        start_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
+        max_input_units: Optional[int] | Omit = omit,
+        max_output_units: Optional[int] | Omit = omit,
+        max_total_units: Optional[int] | Omit = omit,
+        start_timestamp: Union[str, datetime, None] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> CategoryResourceResponse:
         """
         Create a Resource
@@ -107,7 +107,7 @@ class ResourcesResource(SyncAPIResource):
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> CategoryResourceResponse:
         """
         Get a Resource version details
@@ -140,15 +140,15 @@ class ResourcesResource(SyncAPIResource):
         resource: str,
         *,
         category: str,
-        cursor: str | NotGiven = NOT_GIVEN,
-        limit: int | NotGiven = NOT_GIVEN,
-        sort_ascending: bool | NotGiven = NOT_GIVEN,
+        cursor: str | Omit = omit,
+        limit: int | Omit = omit,
+        sort_ascending: bool | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> SyncCursorPage[CategoryResourceResponse]:
         """
         Get a list of versions of a Resource
@@ -197,7 +197,7 @@ class ResourcesResource(SyncAPIResource):
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> CategoryResourceResponse:
         """
         Delete a version of the Resource
@@ -252,16 +252,16 @@ class AsyncResourcesResource(AsyncAPIResource):
         *,
         category: str,
         units: Dict[str, resource_create_params.Units],
-        max_input_units: Optional[int] | NotGiven = NOT_GIVEN,
-        max_output_units: Optional[int] | NotGiven = NOT_GIVEN,
-        max_total_units: Optional[int] | NotGiven = NOT_GIVEN,
-        start_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
+        max_input_units: Optional[int] | Omit = omit,
+        max_output_units: Optional[int] | Omit = omit,
+        max_total_units: Optional[int] | Omit = omit,
+        start_timestamp: Union[str, datetime, None] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> CategoryResourceResponse:
         """
         Create a Resource
@@ -308,7 +308,7 @@ class AsyncResourcesResource(AsyncAPIResource):
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> CategoryResourceResponse:
         """
         Get a Resource version details
@@ -341,15 +341,15 @@ class AsyncResourcesResource(AsyncAPIResource):
         resource: str,
         *,
         category: str,
-        cursor: str | NotGiven = NOT_GIVEN,
-        limit: int | NotGiven = NOT_GIVEN,
-        sort_ascending: bool | NotGiven = NOT_GIVEN,
+        cursor: str | Omit = omit,
+        limit: int | Omit = omit,
+        sort_ascending: bool | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> AsyncPaginator[CategoryResourceResponse, AsyncCursorPage[CategoryResourceResponse]]:
         """
         Get a list of versions of a Resource
@@ -398,7 +398,7 @@ class AsyncResourcesResource(AsyncAPIResource):
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> CategoryResourceResponse:
         """
         Delete a version of the Resource

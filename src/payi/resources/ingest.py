@@ -10,7 +10,7 @@ import httpx
 from payi._utils._utils import is_given
 
 from ..types import ingest_units_params
-from .._types import NOT_GIVEN, Body, Query, Headers, NotGiven, SequenceNotStr
+from .._types import Body, Omit, Query, Headers, NotGiven, SequenceNotStr, omit, not_given
 from .._utils import maybe_transform, strip_not_given, async_maybe_transform
 from .._compat import cached_property
 from .._resource import SyncAPIResource, AsyncAPIResource
@@ -53,13 +53,13 @@ class IngestResource(SyncAPIResource):
     def bulk(
         self,
         *,
-        events: Iterable[IngestEventParam] | NotGiven = NOT_GIVEN,
+        events: Iterable[IngestEventParam] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> BulkIngestResponse:
         """
         Bulk Ingest
@@ -87,13 +87,13 @@ class IngestResource(SyncAPIResource):
         *,
         category: str,
         units: Dict[str, IngestUnits],
-        end_to_end_latency_ms: Optional[int] | NotGiven = NOT_GIVEN,
-        event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
-        http_status_code: Optional[int] | NotGiven = NOT_GIVEN,
-        properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
-        provider_request_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | NotGiven = NOT_GIVEN,
-        provider_request_json: Optional[str] | NotGiven = NOT_GIVEN,
-        provider_request_reasoning_json: Optional[str] | NotGiven = NOT_GIVEN,
+        end_to_end_latency_ms: Optional[int] | Omit = omit,
+        event_timestamp: Union[str, datetime, None] | Omit = omit,
+        http_status_code: Optional[int] | Omit = omit,
+        properties: Optional[Dict[str, str]] | Omit = omit,
+        provider_request_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | Omit = omit,
+        provider_request_json: Optional[str] | Omit = omit,
+        provider_request_reasoning_json: Optional[str] | Omit = omit,
         provider_response_function_calls: Optional[Iterable[ingest_units_params.ProviderResponseFunctionCall]]
         | NotGiven = NOT_GIVEN,
         provider_response_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | NotGiven = NOT_GIVEN,
@@ -118,7 +118,7 @@ class IngestResource(SyncAPIResource):
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> IngestResponse:
         """
         Ingest an Event
@@ -219,7 +219,7 @@ class IngestResource(SyncAPIResource):
                     "xProxy-UseCase-Step": use_case_step,
                     "xProxy-UseCase-Version": use_case_version_str
                     if is_given(use_case_version)
-                    else NOT_GIVEN,
+                    else omit,
                     "xProxy-User-ID": user_id,
                     "xProxy-Resource-Scope": resource_scope,
                     "xProxy-Account-Name": account_name,
@@ -283,13 +283,13 @@ class AsyncIngestResource(AsyncAPIResource):
     async def bulk(
         self,
         *,
-        events: Iterable[IngestEventParam] | NotGiven = NOT_GIVEN,
+        events: Iterable[IngestEventParam] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> BulkIngestResponse:
         """
         Bulk Ingest
@@ -317,13 +317,13 @@ class AsyncIngestResource(AsyncAPIResource):
         *,
         category: str,
         units: Dict[str, IngestUnits],
-        end_to_end_latency_ms: Optional[int] | NotGiven = NOT_GIVEN,
-        event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
-        http_status_code: Optional[int] | NotGiven = NOT_GIVEN,
-        properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
-        provider_request_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | NotGiven = NOT_GIVEN,
-        provider_request_json: Optional[str] | NotGiven = NOT_GIVEN,
-        provider_request_reasoning_json: Optional[str] | NotGiven = NOT_GIVEN,
+        end_to_end_latency_ms: Optional[int] | Omit = omit,
+        event_timestamp: Union[str, datetime, None] | Omit = omit,
+        http_status_code: Optional[int] | Omit = omit,
+        properties: Optional[Dict[str, str]] | Omit = omit,
+        provider_request_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | Omit = omit,
+        provider_request_json: Optional[str] | Omit = omit,
+        provider_request_reasoning_json: Optional[str] | Omit = omit,
         provider_response_function_calls: Optional[Iterable[ingest_units_params.ProviderResponseFunctionCall]]
         | NotGiven = NOT_GIVEN,
         provider_response_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | NotGiven = NOT_GIVEN,
@@ -347,7 +347,7 @@ class AsyncIngestResource(AsyncAPIResource):
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> IngestResponse:
         """
         Ingest an Event
@@ -449,7 +449,7 @@ class AsyncIngestResource(AsyncAPIResource):
                     "xProxy-UseCase-Step": use_case_step,
                     "xProxy-UseCase-Version": use_case_version_str
                     if is_given(use_case_version)
-                    else NOT_GIVEN,
+                    else omit,
                     "xProxy-User-ID": user_id,
                     "xProxy-Resource-Scope": resource_scope,
                 }
