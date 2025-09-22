@@ -1,10 +1,13 @@
 import json
+import asyncio
 from typing import Any, Sequence
 from typing_extensions import override
 
+import nest_asyncio  # type: ignore
 from wrapt import wrap_function_wrapper  # type: ignore
 
 from payi.lib.helpers import PayiHeaderNames
+from payi.types.categories import resource_create_params
 from payi.types.ingest_units_params import Units
 
 from .instrument import _ChunkResult, _IsStreaming, _StreamingType, _ProviderRequest, _PayiInstrumentor
@@ -35,13 +38,7 @@ class AzureAiFoundryInstrumentor:
                 agent_create_wrapper(instrumentor),
             )
 
-            # Instrument thread operations
-            # wrap_function_wrapper(
-            #     "azure.ai.agents.operations",
-            #     "ThreadsOperations.create",
-            #     thread_create_wrapper(instrumentor),
-            # )
-
+            # instrument __init__ to temporarily simplify messages.create() and message.list() instrumentation
             wrap_function_wrapper(
                 "azure.ai.agents.operations",
                 "MessagesOperations.create",
@@ -54,102 +51,50 @@ class AzureAiFoundryInstrumentor:
                 thread_message_init_wrapper(instrumentor),
             )
 
-            # Instrument run operations - this is where the main AI interaction happens
+            # instrument __init__ as the run object is created within API calls
             wrap_function_wrapper(
                 "azure.ai.agents.models",
                 "ThreadRun.__init__",
                 run_init_wrapper(instrumentor),
             )
 
-            # wrap_function_wrapper(
-            #     "azure.ai.agents.operations",
-            #     "RunsOperations.create",
-            #     run_create_wrapper(instrumentor),
-            # )
-
-            # wrap_function_wrapper(
-            #     "azure.ai.agents.operations",
-            #     "RunsOperations.create_and_process",
-            #     run_create_and_process_wrapper(instrumentor),
-            # )
-
-            # TODO
             wrap_function_wrapper(
                 "azure.ai.agents.operations",
                 "RunsOperations.submit_tool_outputs",
                 tool_outputs_wrapper(instrumentor),
             )
 
-            # TODO
-            # Stream operations
-            # wrap_function_wrapper(
-            #     "azure.ai.agents",
-            #     "AgentsClient.create_run_stream",
-            #     run_stream_wrapper(instrumentor),
-            # )
-
-            # Instrument agent operations
-            # wrap_function_wrapper(
-            #     "azure.ai.projects",
-            #     "AIProjectsClient.agents.create_agent",
-            #     agent_create_wrapper(instrumentor),
-            # )
-
-            # # Instrument thread operations
-            # wrap_function_wrapper(
-            #     "azure.ai.projects",
-            #     "AIProjectsClient.agents.create_thread",
-            #     thread_create_wrapper(instrumentor),
-            # )
-
-            # wrap_function_wrapper(
-            #     "azure.ai.projects",
-            #     "AIProjectsClient.agents.create_message",
-            #     message_create_wrapper(instrumentor),
-            # )
-
-            # # Instrument run operations - this is where the main AI interaction happens
-            # wrap_function_wrapper(
-            #     "azure.ai.projects",
-            #     "AIProjectsClient.agents.create_run",
-            #     run_create_wrapper(instrumentor),
-            # )
-
-            # wrap_function_wrapper(
-            #     "azure.ai.projects",
-            #     "AIProjectsClient.agents.submit_tool_outputs_to_run",
-            #     tool_outputs_wrapper(instrumentor),
-            # )
-
-            # # Stream operations
-            # wrap_function_wrapper(
-            #     "azure.ai.projects",
-            #     "AIProjectsClient.agents.create_run_stream",
-            #     run_stream_wrapper(instrumentor),
-            # )
-
-            # Async versions
-            # wrap_function_wrapper(
-            #     "azure.ai.projects.aio",
-            #     "AIProjectsClient.agents.create_run",
-            #     arun_create_wrapper(instrumentor),
-            # )
-
-            # wrap_function_wrapper(
-            #     "azure.ai.projects.aio",
-            #     "AIProjectsClient.agents.create_run_stream",
-            #     arun_stream_wrapper(instrumentor),
-            # )
-
-            # wrap_function_wrapper(
-            #     "azure.ai.projects.aio",
-            #     "AIProjectsClient.agents.submit_tool_outputs_to_run",
-            #     atool_outputs_wrapper(instrumentor),
-            # )
+            units = {
+                "agent_create":  resource_create_params.Units(input_price=0, output_price=0),
+                "message_create": resource_create_params.Units(input_price=0, output_price=0),
+                "tool_call": resource_create_params.Units(input_price=0, output_price=0),
+                "tool_call_output": resource_create_params.Units(input_price=0, output_price=0),
+                "message_response": resource_create_params.Units(input_price=0, output_price=0),
+            }
+            if instrumentor._payi:
+                instrumentor._payi.categories.resources.create(resource=AZURE_AI_FOUNDRY_RESOURCE, category=AZURE_AI_FOUNDRY_CATEGORY, units=units)
+            elif instrumentor._apayi:
+                _call_async_resource_create(instrumentor, units)
 
         except Exception as e:
             instrumentor._logger.debug(f"Error instrumenting azure-ai-projects: {e}")
 
+def _call_async_resource_create(instrumentor: _PayiInstrumentor, units: 'dict[str, resource_create_params.Units]') -> None:
+    if not instrumentor._apayi:
+        return
+
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+    
+    try:
+        if loop and loop.is_running():
+            nest_asyncio.apply(loop) # type: ignore
+        asyncio.run(instrumentor._apayi.categories.resources.create(resource=AZURE_AI_FOUNDRY_RESOURCE, category=AZURE_AI_FOUNDRY_CATEGORY, units=units))
+
+    except Exception as e:
+        instrumentor._logger.error(f"Error calling async categories.resources.create synchronously: {e}")
 
 @_PayiInstrumentor.payi_wrapper
 def agent_create_wrapper(
@@ -169,7 +114,6 @@ def agent_create_wrapper(
         kwargs,
     )
 
-
 @_PayiInstrumentor.payi_wrapper
 def thread_create_wrapper(
     instrumentor: _PayiInstrumentor,
@@ -187,7 +131,6 @@ def thread_create_wrapper(
         args,
         kwargs,
     )
-
 
 @_PayiInstrumentor.payi_wrapper
 def message_create_wrapper(
@@ -279,7 +222,6 @@ def run_create_and_process_wrapper(
         kwargs,
     )
 
-
 @_PayiInstrumentor.payi_wrapper
 def run_stream_wrapper(
     instrumentor: _PayiInstrumentor,
@@ -297,7 +239,6 @@ def run_stream_wrapper(
         args,
         kwargs,
     )
-
 
 @_PayiInstrumentor.payi_wrapper
 def tool_outputs_wrapper(
@@ -317,7 +258,6 @@ def tool_outputs_wrapper(
         kwargs,
     )
 
-
 @_PayiInstrumentor.payi_awrapper
 async def arun_create_wrapper(
     instrumentor: _PayiInstrumentor,
@@ -335,7 +275,6 @@ async def arun_create_wrapper(
         args,
         kwargs,
     )
-
 
 @_PayiInstrumentor.payi_awrapper
 async def arun_stream_wrapper(
@@ -355,7 +294,6 @@ async def arun_stream_wrapper(
         kwargs,
     )
 
-
 @_PayiInstrumentor.payi_awrapper
 async def atool_outputs_wrapper(
     instrumentor: _PayiInstrumentor,
@@ -374,7 +312,6 @@ async def atool_outputs_wrapper(
         kwargs,
     )
 
-
 class _AzureAiFoundryProviderRequest(_ProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, streaming_type: _StreamingType = _StreamingType.iterator):
         super().__init__(
@@ -387,12 +324,6 @@ class _AzureAiFoundryProviderRequest(_ProviderRequest):
 
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
-        # # Extract model information from kwargs if available
-        # model = kwargs.get("model", "")
-        # if not model and hasattr(instance, "_model"):
-        #     model = getattr(instance, "_model", "")
-        
-        # self._ingest["resource"] = model or "azure.ai.foundry.agent"
         return True
 
     @override
@@ -507,12 +438,6 @@ class _AzureAiFoundryMessageProviderRequest(_AzureAiFoundryProviderRequest):
     
         self._ingest["units"][UNIT_MESSAGE_CREATE] = Units(input=1, output=0)
 
-        # # Capture message content
-        # content = kwargs.get("content", "")
-        # if content:
-        #     # This is user input we want to track
-        #     self._instrumentor._logger.debug(f"Azure AI Foundry message content captured: {len(content)} characters")
-            
         return True
 
 class _AzureAiFoundryThreadMessageInitProviderRequest(_AzureAiFoundryProviderRequest):
@@ -690,7 +615,7 @@ class _AzureAiFoundryRunProviderRequest(_AzureAiFoundryProviderRequest):
         started_at = response_dict.get("started_at", 0)
         completed_at = response_dict.get("completed_at", 0)
 
-        # Since we are wrapping the constructor, the timestamp that the generic instrumentor computes will be zero so use the
+        # Since we are wrapping the constructor, the timestamp that the instrumentor computes will be zero so use the
         # reported timestamps from the agent service. Both values are expressed in seconds
         if started_at > 0 and completed_at > 0 and completed_at >= started_at:
             duration = (completed_at - started_at) * 1000  # Convert seconds to milliseconds

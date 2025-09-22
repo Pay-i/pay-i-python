@@ -557,10 +557,8 @@ class _PayiInstrumentor:
         try:
             if loop and loop.is_running():
                 nest_asyncio.apply(loop) # type: ignore
-                asyncio.run(self._apayi.use_cases.definitions.create(name=use_case_name, description=use_case_description))                
-            else:
-                # When there's no running loop, create a new one
-                asyncio.run(self._apayi.use_cases.definitions.create(name=use_case_name, description=use_case_description))
+            asyncio.run(self._apayi.use_cases.definitions.create(name=use_case_name, description=use_case_description))                
+
         except Exception as e:
             self._logger.error(f"Error calling async use_cases.definitions.create synchronously: {e}")
 
