@@ -71,9 +71,9 @@ packaging==25.0
 propcache==0.3.1
     # via aiohttp
     # via yarl
-pydantic==2.10.3
+pydantic==2.11.9
     # via payi
-pydantic-core==2.27.1
+pydantic-core==2.33.2
     # via pydantic
 pyyaml==6.0.2
     # via huggingface-hub
@@ -98,6 +98,9 @@ typing-extensions==4.12.2
     # via payi
     # via pydantic
     # via pydantic-core
+    # via typing-inspection
+typing-inspection==0.4.1
+    # via pydantic
 urllib3==2.3.0
     # via requests
 wrapt==1.17.2
