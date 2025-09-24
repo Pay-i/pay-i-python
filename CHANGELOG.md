@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-alpha.124 (2025-09-24)
+
+Full Changelog: [v0.1.0-alpha.123...v0.1.0-alpha.124](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.123...v0.1.0-alpha.124)
+
+### Chores
+
+* do not install brew dependencies in ./scripts/bootstrap by default ([7b5100c](https://github.com/Pay-i/pay-i-python/commit/7b5100c5e554f0bd186c8075ef6a41aec82373cb))
+* **types:** change optional parameter type from NotGiven to Omit ([1cef789](https://github.com/Pay-i/pay-i-python/commit/1cef789e7b927c1f7a153bd466e7ff232dfca19d))
+
 ## 0.1.0-alpha.123 (2025-09-24)
 
 Full Changelog: [v0.1.0-alpha.122...v0.1.0-alpha.123](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.122...v0.1.0-alpha.123)
