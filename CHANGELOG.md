@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-alpha.123 (2025-09-24)
+
+Full Changelog: [v0.1.0-alpha.122...v0.1.0-alpha.123](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.122...v0.1.0-alpha.123)
+
+### Chores
+
+* **internal:** update pydantic dependency ([fb48d11](https://github.com/Pay-i/pay-i-python/commit/fb48d111c97e54ec3f63b9f3887cb41446dc7ec3))
+* **types:** change optional parameter type from NotGiven to Omit ([1bb17c3](https://github.com/Pay-i/pay-i-python/commit/1bb17c32a90ae1398d38cb66e46746bc6ab7ea46))
+
 ## 0.1.0-alpha.122 (2025-09-18)
 
 Full Changelog: [v0.1.0-alpha.121...v0.1.0-alpha.122](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.121...v0.1.0-alpha.122)
