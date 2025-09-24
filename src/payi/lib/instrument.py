@@ -288,9 +288,7 @@ class _PayiInstrumentor:
                 global_config["proxy"] = self._proxy_default
 
             # Use default clients if not provided for global ingest instrumentation
-            if not self._payi and not self._apayi:
-                self._payi = Payi()
-                self._apayi = AsyncPayi()
+            self._ensure_payi_clients()
 
             if "use_case_name" not in global_config and caller_filename:
                 description = f"Default use case for {caller_filename}.py"
@@ -315,6 +313,11 @@ class _PayiInstrumentor:
                     context[key] = global_config[key] # type: ignore
 
             self._init_current_context(**context) 
+
+    def _ensure_payi_clients(self) -> None:
+        if not self._payi and not self._apayi:
+            self._payi = Payi()
+            self._apayi = AsyncPayi()
 
     def _instrument_all(self, global_config: PayiInstrumentConfig) -> None:
         self._instrument_openai()

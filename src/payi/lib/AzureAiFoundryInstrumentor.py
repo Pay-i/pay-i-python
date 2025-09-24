@@ -71,6 +71,9 @@ class AzureAiFoundryInstrumentor:
                 "tool_call_output": resource_create_params.Units(input_price=0, output_price=0),
                 "message_response": resource_create_params.Units(input_price=0, output_price=0),
             }
+
+            instrumentor._ensure_payi_clients()
+
             if instrumentor._payi:
                 instrumentor._payi.categories.resources.create(resource=AZURE_AI_FOUNDRY_RESOURCE, category=AZURE_AI_FOUNDRY_CATEGORY, units=units)
             elif instrumentor._apayi:
