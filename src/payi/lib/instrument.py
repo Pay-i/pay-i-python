@@ -285,7 +285,7 @@ class _PayiInstrumentor:
             self._offline_instrumentation_file_name = self._offline_instrumentation.get("file_name", f"payi_instrumentation_{timestamp}.json")
             
             # Register exit handler to write packets when process exits
-            atexit.register(self._write_offline_ingest_packets)
+            atexit.register(lambda: self._write_offline_ingest_packets())
 
         global_instrumentation = global_config.pop("global_instrumentation", True)
 
@@ -416,7 +416,7 @@ class _PayiInstrumentor:
                 serializable_packets.append(serializable_packet)
             
             with open(self._offline_instrumentation_file_name, 'w', encoding='utf-8') as f:
-                json.dump(serializable_packets, f, indent=2, ensure_ascii=False)
+                json.dump(serializable_packets, f)
                 
             self._logger.debug(f"Written {len(self._offline_ingest_packets)} ingest packets to {self._offline_instrumentation_file_name}")
             
