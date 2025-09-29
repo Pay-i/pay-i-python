@@ -1,11 +1,10 @@
 import os
 import json
-from typing import Any, Optional, Sequence
+from typing import TYPE_CHECKING, Any, Optional, Sequence
 from functools import wraps
 from typing_extensions import override
 
 from wrapt import ObjectProxy, wrap_function_wrapper  # type: ignore
-from tokenizers import Tokenizer  # type: ignore
 
 from payi.lib.helpers import PayiCategories, PayiHeaderNames, payi_aws_bedrock_url
 from payi.types.ingest_units_params import Units
@@ -20,6 +19,11 @@ from .instrument import (
     _PayiInstrumentor,
 )
 from .version_helper import get_version_helper
+
+if TYPE_CHECKING:
+    from tokenizers import Tokenizer  # type: ignore
+else:
+    Tokenizer = None  
 
 GUARDRAIL_ID = "system.aws.bedrock.guardrail.id"
 GUARDRAIL_VERSION = "system.aws.bedrock.guardrail.version"
@@ -118,9 +122,8 @@ def _redirect_to_payi(request: Any, event_name: str, **_: 'dict[str, Any]') -> N
     for key, value in extra_headers.items():
         request.headers[key] = value
 
-
 class InvokeResponseWrapper(ObjectProxy): # type: ignore
-    _cohere_embed_english_v3_tokenizer: Optional[Tokenizer] = None
+    _cohere_embed_english_v3_tokenizer: Optional['Tokenizer'] = None
 
     def __init__(
         self,
@@ -189,15 +192,26 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
             if texts and len(texts) > 0:
                 text = " ".join(texts)
 
-                if self._cohere_embed_english_v3_tokenizer is None:
-                    current_dir = os.path.dirname(os.path.abspath(__file__))
-                    tokenizer_path = os.path.join(current_dir, "data", "cohere_embed_english_v3.json")
-                    self._cohere_embed_english_v3_tokenizer = Tokenizer.from_file(tokenizer_path) # type: ignore
+                try:
+                    from tokenizers import Tokenizer  # type: ignore
 
-                tokens: list = self._cohere_embed_english_v3_tokenizer.encode(text, add_special_tokens=False).tokens # type: ignore
+                    if self._cohere_embed_english_v3_tokenizer is None: # type: ignore
+                        current_dir = os.path.dirname(os.path.abspath(__file__))
+                        tokenizer_path = os.path.join(current_dir, "data", "cohere_embed_english_v3.json")
+                        self._cohere_embed_english_v3_tokenizer = Tokenizer.from_file(tokenizer_path) # type: ignore
 
-                if tokens and isinstance(tokens, list):
-                    units["text"] = Units(input=len(tokens), output=0) # type: ignore
+                    if self._cohere_embed_english_v3_tokenizer is not None and isinstance(self._cohere_embed_english_v3_tokenizer, Tokenizer): # type: ignore
+                        tokens: list = self._cohere_embed_english_v3_tokenizer.encode(text, add_special_tokens=False).tokens # type: ignore
+
+                        if tokens and isinstance(tokens, list):
+                            units["text"] = Units(input=len(tokens), output=0) # type: ignore
+
+                except ImportError:
+                    self._request._instrumentor._logger.warning("tokenizers module not found, caller must install the tokenizers module. Cannot record text tokens for Cohere embed english v3")
+                    pass
+                except Exception as e:
+                    self._request._instrumentor._logger.warning(f"Error processing Cohere embed english v3 response: {e}")
+                    pass
 
         if self._log_prompt_and_response:
             ingest["provider_response_json"] = data.decode('utf-8') # type: ignore
