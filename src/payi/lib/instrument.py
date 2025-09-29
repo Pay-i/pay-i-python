@@ -2,13 +2,14 @@ import os
 import json
 import time
 import uuid
+import atexit
 import asyncio
 import inspect
 import logging
 import traceback
 from abc import abstractmethod
 from enum import Enum
-from typing import Any, Set, Union, Callable, Optional, Sequence, TypedDict
+from typing import Any, Set, Union, Optional, Sequence, TypedDict
 from datetime import datetime, timezone
 from dataclasses import dataclass
 
@@ -148,6 +149,9 @@ class _ProviderRequest:
 class PayiInstrumentAwsBedrockConfig(TypedDict, total=False):
     guardrail_trace: bool
 
+class PayiInstrumentOfflineInstrumentationConfig(TypedDict, total=False):
+    file_name: str
+
 class PayiInstrumentConfig(TypedDict, total=False):
     proxy: bool
     global_instrumentation: bool
@@ -163,6 +167,7 @@ class PayiInstrumentConfig(TypedDict, total=False):
     request_tags: Optional["list[str]"]
     request_properties: Optional["dict[str, str]"]
     aws_config: Optional[PayiInstrumentAwsBedrockConfig]
+    offline_instrumentation: Optional[PayiInstrumentOfflineInstrumentationConfig]
 
 class PayiContext(TypedDict, total=False):
     use_case_name: Optional[str]
@@ -236,9 +241,6 @@ class _PayiInstrumentor:
         instruments: Union[Set[str], None] = None,
         log_prompt_and_response: bool = True,
         logger: Optional[logging.Logger] = None,
-        prompt_and_response_logger: Optional[
-            Callable[[str, "dict[str, str]"], None]
-        ] = None,  # (request id, dict of data to store) -> None
         global_config: PayiInstrumentConfig = {},
         caller_filename: str = ""
     ):
@@ -257,7 +259,6 @@ class _PayiInstrumentor:
 
         self._context_stack: list[_Context] = []  # Stack of context dictionaries
         self._log_prompt_and_response: bool = log_prompt_and_response
-        self._prompt_and_response_logger: Optional[Callable[[str, dict[str, str]], None]] = prompt_and_response_logger
 
         self._blocked_limits: set[str] = set()
         self._exceeded_limits: set[str] = set()
@@ -275,6 +276,17 @@ class _PayiInstrumentor:
 
         self._last_result: Optional[Union[XproxyResult, XproxyError]] = None
 
+        self._offline_instrumentation = global_config.pop("offline_instrumentation", None)
+        self._offline_ingest_packets: list[IngestUnitsParams] = []
+        self._offline_instrumentation_file_name: Optional[str] = None
+        
+        if self._offline_instrumentation is not None:
+            timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+            self._offline_instrumentation_file_name = self._offline_instrumentation.get("file_name", f"payi_instrumentation_{timestamp}.json")
+            
+            # Register exit handler to write packets when process exits
+            atexit.register(self._write_offline_ingest_packets)
+
         global_instrumentation = global_config.pop("global_instrumentation", True)
 
         if instruments is None or "*" in instruments:
@@ -287,9 +299,7 @@ class _PayiInstrumentor:
                 global_config["proxy"] = self._proxy_default
 
             # Use default clients if not provided for global ingest instrumentation
-            if not self._payi and not self._apayi:
-                self._payi = Payi()
-                self._apayi = AsyncPayi()
+            self._ensure_payi_clients()
 
             if "use_case_name" not in global_config and caller_filename:
                 description = f"Default use case for {caller_filename}.py"
@@ -298,6 +308,9 @@ class _PayiInstrumentor:
                         self._payi.use_cases.definitions.create(name=caller_filename, description=description)
                     elif self._apayi:
                         self._call_async_use_case_definition_create(use_case_name=caller_filename, use_case_description=description)
+                    else:
+                        # in the case of _local_instrumentation is not None
+                        pass
                     global_config["use_case_name"] = caller_filename
                 except Exception as e:
                     self._logger.error(f"Error creating default use case definition based on file name {caller_filename}: {e}")
@@ -314,6 +327,14 @@ class _PayiInstrumentor:
                     context[key] = global_config[key] # type: ignore
 
             self._init_current_context(**context) 
+
+    def _ensure_payi_clients(self) -> None:
+        if self._offline_instrumentation is not None:
+            return
+
+        if not self._payi and not self._apayi:
+            self._payi = Payi()
+            self._apayi = AsyncPayi()
 
     def _instrument_all(self, global_config: PayiInstrumentConfig) -> None:
         self._instrument_openai()
@@ -378,6 +399,30 @@ class _PayiInstrumentor:
         except Exception as e:
             self._logger.error(f"Error instrumenting Google GenAi: {e}")
 
+    def _write_offline_ingest_packets(self) -> None:
+        if not self._offline_instrumentation_file_name or not self._offline_ingest_packets:
+            return
+            
+        try:
+            # Convert datetime objects to ISO strings for JSON serialization
+            serializable_packets: list[IngestUnitsParams] = []
+            for packet in self._offline_ingest_packets:
+                serializable_packet = packet.copy()
+                
+                # Convert datetime fields to ISO format strings
+                if 'event_timestamp' in serializable_packet and isinstance(serializable_packet['event_timestamp'], datetime):
+                    serializable_packet['event_timestamp'] = serializable_packet['event_timestamp'].isoformat()
+                    
+                serializable_packets.append(serializable_packet)
+            
+            with open(self._offline_instrumentation_file_name, 'w', encoding='utf-8') as f:
+                json.dump(serializable_packets, f, indent=2, ensure_ascii=False)
+                
+            self._logger.debug(f"Written {len(self._offline_ingest_packets)} ingest packets to {self._offline_instrumentation_file_name}")
+            
+        except Exception as e:
+            self._logger.error(f"Error writing offline ingest packets to {self._offline_instrumentation_file_name}: {e}")
+
     @staticmethod
     def _create_logged_ingest_units(
         ingest_units: IngestUnitsParams,
@@ -397,7 +442,6 @@ class _PayiInstrumentor:
     def _process_ingest_units(
         self,
         request: _ProviderRequest,
-        log_data: 'dict[str, str]',
         extra_headers: 'dict[str, str]') -> None:
         ingest_units = request._ingest
 
@@ -434,19 +478,6 @@ class _PayiInstrumentor:
             units = ingest_units.get("units", {})
             if not units or all(unit.get("input", 0) == 0 and unit.get("output", 0) == 0 for unit in units.values()):
                 self._logger.info('ingesting with no token counts')
-
-        if self._log_prompt_and_response and self._prompt_and_response_logger:
-            response_json = ingest_units.pop("provider_response_json", None)
-            request_json = ingest_units.pop("provider_request_json", None)
-            stack_trace = ingest_units.get("properties", {}).pop("system.stack_trace", None)  # type: ignore
-
-            if response_json is not None:
-                # response_json is a list of strings, convert a single json string
-                log_data["provider_response_json"] = json.dumps(response_json)
-            if request_json is not None:
-                log_data["provider_request_json"] = request_json
-            if stack_trace is not None:
-                log_data["stack_trace"] = stack_trace
 
     def _process_ingest_units_response(self, ingest_response: IngestResponse) -> None:
         if ingest_response.xproxy_result.limits:
@@ -490,11 +521,8 @@ class _PayiInstrumentor:
 
         self._logger.debug(f"_aingest_units")
 
-        # return early if there are no units to ingest and on a successul ingest request
-        log_data: 'dict[str,str]' = {}
         extra_headers: 'dict[str, str]' = {}
-
-        self._process_ingest_units(request, log_data=log_data, extra_headers=extra_headers)
+        self._process_ingest_units(request, extra_headers=extra_headers)
 
         try:
             if self._logger.isEnabledFor(logging.DEBUG):
@@ -504,6 +532,18 @@ class _PayiInstrumentor:
                 ingest_response = await self._apayi.ingest.units(**ingest_units, extra_headers=extra_headers)
             elif self._payi:
                 ingest_response = self._payi.ingest.units(**ingest_units, extra_headers=extra_headers)
+            elif self._offline_instrumentation is not None:
+                self._offline_ingest_packets.append(ingest_units.copy())
+
+                # simulate a successful ingest for local instrumentation
+                now=datetime.now(timezone.utc)
+                ingest_response = IngestResponse(
+                    event_timestamp=now,
+                    ingest_timestamp=now,
+                    request_id="local_instrumentation",
+                    xproxy_result=XproxyResult(request_id="local_instrumentation"))
+                pass
+                
             else:
                 self._logger.error("No payi instance to ingest units")
                 return XproxyError(code="configuration_error", message="No Payi or AsyncPayi instance configured for ingesting units")
@@ -512,10 +552,6 @@ class _PayiInstrumentor:
 
             if ingest_response:
                 self._process_ingest_units_response(ingest_response)
-
-                if ingest_response and self._log_prompt_and_response and self._prompt_and_response_logger:
-                    request_id = ingest_response.xproxy_result.request_id
-                    self._prompt_and_response_logger(request_id, log_data)  # type: ignore
 
             return ingest_response.xproxy_result
 
@@ -609,10 +645,8 @@ class _PayiInstrumentor:
 
         self._logger.debug(f"_ingest_units")
 
-        # return early if there are no units to ingest and on a successul ingest request
-        log_data: 'dict[str,str]' = {}
         extra_headers: 'dict[str, str]' = {}
-        self._process_ingest_units(request, log_data=log_data, extra_headers=extra_headers)
+        self._process_ingest_units(request, extra_headers=extra_headers)
 
         try:
             if self._payi:
@@ -624,16 +658,18 @@ class _PayiInstrumentor:
 
                 self._process_ingest_units_response(ingest_response)
 
-                if self._log_prompt_and_response and self._prompt_and_response_logger:
-                    request_id = ingest_response.xproxy_result.request_id
-                    self._prompt_and_response_logger(request_id, log_data)  # type: ignore
-
                 return ingest_response.xproxy_result
             elif self._apayi:
                 # task runs async. aingest_units will invoke the callback and post process
                 sync_response = self._call_aingest_sync(request)
                 self._logger.debug(f"_ingest_units: apayi success ({sync_response})")
                 return sync_response
+            elif self._offline_instrumentation is not None:
+                self._offline_ingest_packets.append(ingest_units.copy())
+
+                # simulate a successful ingest for local instrumentation
+                return XproxyResult(request_id="local_instrumentation")
+
             else:
                 self._logger.error("No payi instance to ingest units")
                 return XproxyError(code="configuration_error", message="No Payi or AsyncPayi instance configured for ingesting units")
@@ -1730,7 +1766,6 @@ def payi_instrument(
     payi: Optional[Union[Payi, AsyncPayi, 'list[Union[Payi, AsyncPayi]]']] = None,
     instruments: Optional[Set[str]] = None,
     log_prompt_and_response: bool = True,
-    prompt_and_response_logger: Optional[Callable[[str, "dict[str, str]"], None]] = None,
     config: Optional[PayiInstrumentConfig] = None,
     logger: Optional[logging.Logger] = None,
 ) -> None:
@@ -1763,7 +1798,6 @@ def payi_instrument(
         instruments=instruments,
         log_prompt_and_response=log_prompt_and_response,
         logger=logger,
-        prompt_and_response_logger=prompt_and_response_logger,
         global_config=config if config else PayiInstrumentConfig(),
         caller_filename=caller_filename
     )
