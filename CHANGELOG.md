@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.125 (2025-09-30)
+
+Full Changelog: [v0.1.0-alpha.124...v0.1.0-alpha.125](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.124...v0.1.0-alpha.125)
+
+### Bug Fixes
+
+* do not set headers with default to omit ([addd6f4](https://github.com/Pay-i/pay-i-python/commit/addd6f4231c95270ba83d5d651b68a34ec89de1b))
+
 ## 0.1.0-alpha.124 (2025-09-24)
 
 Full Changelog: [v0.1.0-alpha.123...v0.1.0-alpha.124](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.123...v0.1.0-alpha.124)
