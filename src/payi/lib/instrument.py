@@ -18,7 +18,7 @@ from wrapt import ObjectProxy  # type: ignore
 
 from payi import Payi, AsyncPayi, APIStatusError, APIConnectionError, __version__ as _payi_version
 from payi.types import IngestUnitsParams
-from payi.lib.helpers import PayiHeaderNames
+from payi.lib.helpers import PayiHeaderNames, PayiPropertyNames
 from payi.types.shared import XproxyResult
 from payi.types.ingest_response import IngestResponse
 from payi.types.ingest_units_params import Units, ProviderResponseFunctionCall
@@ -118,10 +118,10 @@ class _ProviderRequest:
                 except Exception as _ex:
                     pass
  
-        self.add_internal_request_property('system.failure', exception_str)
+        self.add_internal_request_property(PayiPropertyNames.failure, exception_str)
         if fields:
             failure_description = ",".join(fields)
-            self.add_internal_request_property("system.failure.description", failure_description)
+            self.add_internal_request_property(PayiPropertyNames.failure_description, failure_description)
 
         if "http_status_code" not in self._ingest:
             # use a non existent http status code so when presented to the user, the origin is clear
