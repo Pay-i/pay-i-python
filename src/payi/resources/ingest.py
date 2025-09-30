@@ -210,7 +210,7 @@ class IngestResource(SyncAPIResource):
                     "xProxy-UseCase-Step": use_case_step,
                     "xProxy-UseCase-Version": use_case_version_str
                     if is_given(use_case_version)
-                    else omit,
+                    else not_given,
                     "xProxy-User-ID": user_id,
                     "xProxy-Resource-Scope": resource_scope,
                     "xProxy-Account-Name": account_name,
@@ -431,7 +431,7 @@ class AsyncIngestResource(AsyncAPIResource):
                     "xProxy-UseCase-Step": use_case_step,
                     "xProxy-UseCase-Version": use_case_version_str
                     if is_given(use_case_version)
-                    else omit,
+                    else not_given,
                     "xProxy-User-ID": user_id,
                     "xProxy-Resource-Scope": resource_scope,
                 }
