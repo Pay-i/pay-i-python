@@ -451,6 +451,9 @@ class _PayiInstrumentor:
             # convert the function call builder to a list of function calls
             ingest_units["provider_response_function_calls"] = list(request._function_call_builder.values())
 
+        if "provider_response_id" not in ingest_units or not ingest_units["provider_response_id"]:
+            ingest_units["provider_response_id"] = f"payi_{uuid.uuid4()}"
+
         if 'resource' not in ingest_units or ingest_units['resource'] == '':
             ingest_units['resource'] = "system.unknown_model"
 
@@ -1315,7 +1318,7 @@ class _PayiInstrumentor:
             if context_use_case_version is not None:
                 extra_headers[PayiHeaderNames.use_case_version] = str(context_use_case_version)
             if context_use_case_step is not None:
-                extra_headers[PayiHeaderNames.use_case_step] = str(context_use_case_step)
+                extra_headers[PayiHeaderNames.use_case_step] = context_use_case_step
 
         if PayiHeaderNames.price_as_category not in extra_headers and context_price_as_category:
             extra_headers[PayiHeaderNames.price_as_category] = context_price_as_category
