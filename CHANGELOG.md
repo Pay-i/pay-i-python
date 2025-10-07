@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.126 (2025-10-07)
+
+Full Changelog: [v0.1.0-alpha.125...v0.1.0-alpha.126](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.125...v0.1.0-alpha.126)
+
+### Features
+
+* offline instrumentation ([#378](https://github.com/Pay-i/pay-i-python/issues/378)) ([ae6a60f](https://github.com/Pay-i/pay-i-python/commit/ae6a60f5992f10bccbdaaf56a0097b2661e70643))
+
 ## 0.1.0-alpha.125 (2025-09-30)
 
 Full Changelog: [v0.1.0-alpha.124...v0.1.0-alpha.125](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.124...v0.1.0-alpha.125)

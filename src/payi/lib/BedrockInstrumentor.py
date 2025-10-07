@@ -1,13 +1,12 @@
 import os
 import json
-from typing import Any, Optional, Sequence
+from typing import TYPE_CHECKING, Any, Optional, Sequence
 from functools import wraps
 from typing_extensions import override
 
 from wrapt import ObjectProxy, wrap_function_wrapper  # type: ignore
-from tokenizers import Tokenizer  # type: ignore
 
-from payi.lib.helpers import PayiCategories, PayiHeaderNames, payi_aws_bedrock_url
+from payi.lib.helpers import PayiCategories, PayiHeaderNames, PayiPropertyNames, payi_aws_bedrock_url
 from payi.types.ingest_units_params import Units
 from payi.types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
@@ -21,9 +20,10 @@ from .instrument import (
 )
 from .version_helper import get_version_helper
 
-GUARDRAIL_ID = "system.aws.bedrock.guardrail.id"
-GUARDRAIL_VERSION = "system.aws.bedrock.guardrail.version"
-GUARDRAIL_ACTION = "system.aws.bedrock.guardrail.action"
+if TYPE_CHECKING:
+    from tokenizers import Tokenizer  # type: ignore
+else:
+    Tokenizer = None  
 
 GUARDRAIL_SEMANTIC_FAILURE_DESCRIPTION = "Bedrock Guardrails intervened"
 
@@ -118,9 +118,8 @@ def _redirect_to_payi(request: Any, event_name: str, **_: 'dict[str, Any]') -> N
     for key, value in extra_headers.items():
         request.headers[key] = value
 
-
 class InvokeResponseWrapper(ObjectProxy): # type: ignore
-    _cohere_embed_english_v3_tokenizer: Optional[Tokenizer] = None
+    _cohere_embed_english_v3_tokenizer: Optional['Tokenizer'] = None
 
     def __init__(
         self,
@@ -189,15 +188,26 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
             if texts and len(texts) > 0:
                 text = " ".join(texts)
 
-                if self._cohere_embed_english_v3_tokenizer is None:
-                    current_dir = os.path.dirname(os.path.abspath(__file__))
-                    tokenizer_path = os.path.join(current_dir, "data", "cohere_embed_english_v3.json")
-                    self._cohere_embed_english_v3_tokenizer = Tokenizer.from_file(tokenizer_path) # type: ignore
+                try:
+                    from tokenizers import Tokenizer  # type: ignore
 
-                tokens: list = self._cohere_embed_english_v3_tokenizer.encode(text, add_special_tokens=False).tokens # type: ignore
+                    if self._cohere_embed_english_v3_tokenizer is None: # type: ignore
+                        current_dir = os.path.dirname(os.path.abspath(__file__))
+                        tokenizer_path = os.path.join(current_dir, "data", "cohere_embed_english_v3.json")
+                        self._cohere_embed_english_v3_tokenizer = Tokenizer.from_file(tokenizer_path) # type: ignore
 
-                if tokens and isinstance(tokens, list):
-                    units["text"] = Units(input=len(tokens), output=0) # type: ignore
+                    if self._cohere_embed_english_v3_tokenizer is not None and isinstance(self._cohere_embed_english_v3_tokenizer, Tokenizer): # type: ignore
+                        tokens: list = self._cohere_embed_english_v3_tokenizer.encode(text, add_special_tokens=False).tokens # type: ignore
+
+                        if tokens and isinstance(tokens, list):
+                            units["text"] = Units(input=len(tokens), output=0) # type: ignore
+
+                except ImportError:
+                    self._request._instrumentor._logger.warning("tokenizers module not found, caller must install the tokenizers module. Cannot record text tokens for Cohere embed english v3")
+                    pass
+                except Exception as e:
+                    self._request._instrumentor._logger.warning(f"Error processing Cohere embed english v3 response: {e}")
+                    pass
 
         if self._log_prompt_and_response:
             ingest["provider_response_json"] = data.decode('utf-8') # type: ignore
@@ -388,11 +398,11 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
     
         guardrail_id = kwargs.get("guardrailIdentifier", "")
         if guardrail_id:
-            self.add_internal_request_property(GUARDRAIL_ID, guardrail_id)
+            self.add_internal_request_property(PayiPropertyNames.aws_bedrock_guardrail_id, guardrail_id)
 
         guardrail_version = kwargs.get("guardrailVersion", "")
         if guardrail_version:
-            self.add_internal_request_property(GUARDRAIL_VERSION, guardrail_version)
+            self.add_internal_request_property(PayiPropertyNames.aws_bedrock_guardrail_version, guardrail_version)
 
         if guardrail_id and guardrail_version and BedrockInstrumentor._guardrail_trace:
             trace = kwargs.get("trace", None)
@@ -488,9 +498,9 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
     def process_stop_action(self, action: str) -> None:
         # record both as a semantic failure and guardrail action so it is discoverable through both properties
         if action == "INTERVENED":
-            self.add_internal_request_property('system.failure', action)
-            self.add_internal_request_property('system.failure.description', GUARDRAIL_SEMANTIC_FAILURE_DESCRIPTION)
-            self.add_internal_request_property(GUARDRAIL_ACTION, action)
+            self.add_internal_request_property(PayiPropertyNames.failure, action)
+            self.add_internal_request_property(PayiPropertyNames.failure_description, GUARDRAIL_SEMANTIC_FAILURE_DESCRIPTION)
+            self.add_internal_request_property(PayiPropertyNames.aws_bedrock_guardrail_action, action)
 
     @override
     def remove_inline_data(self, prompt: 'dict[str, Any]') -> bool:# noqa: ARG002
@@ -519,11 +529,11 @@ class _BedrockConverseProviderRequest(_BedrockProviderRequest):
         if guardrail_config:
             guardrailIdentifier = guardrail_config.get("guardrailIdentifier", "")
             if guardrailIdentifier:
-                self.add_internal_request_property(GUARDRAIL_ID, guardrailIdentifier)
+                self.add_internal_request_property(PayiPropertyNames.aws_bedrock_guardrail_id, guardrailIdentifier)
 
             guardrailVersion = guardrail_config.get("guardrailVersion", "")
             if guardrailVersion:
-                self.add_internal_request_property(GUARDRAIL_VERSION, guardrailVersion)
+                self.add_internal_request_property(PayiPropertyNames.aws_bedrock_guardrail_version, guardrailVersion)
 
             if guardrailIdentifier and guardrailVersion and BedrockInstrumentor._guardrail_trace:
                 trace = guardrail_config.get("trace", None)
@@ -597,9 +607,9 @@ class _BedrockConverseProviderRequest(_BedrockProviderRequest):
     def process_stop_reason(self, reason: str) -> None:
         if reason == "guardrail_intervened":
             # record both as a semantic failure and guardrail action so it is discoverable through both properties
-            self.add_internal_request_property('system.failure', reason)
-            self.add_internal_request_property('system.failure.description', GUARDRAIL_SEMANTIC_FAILURE_DESCRIPTION)
-            self.add_internal_request_property(GUARDRAIL_ACTION, reason)
+            self.add_internal_request_property(PayiPropertyNames.failure, reason)
+            self.add_internal_request_property(PayiPropertyNames.failure_description, GUARDRAIL_SEMANTIC_FAILURE_DESCRIPTION)
+            self.add_internal_request_property(PayiPropertyNames.aws_bedrock_guardrail_action, reason)
 
 def bedrock_converse_process_streaming_for_function_call(request: _ProviderRequest, chunk: 'dict[str, Any]') -> None:  
     contentBlockStart = chunk.get("contentBlockStart", {})
