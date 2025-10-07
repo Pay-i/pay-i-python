@@ -25,6 +25,18 @@ class PayiCategories:
     aws_bedrock:str = "system.aws.bedrock"
     google_vertex:str = "system.google.vertex"
 
+class PayiPropertyNames:
+    failure:str = "system.failure"
+    failure_description:str = "system.failure.description"
+
+    account_name:str = "system.account_name"
+    use_case_step:str = "system.use_case_step"
+    user_id:str = "system.user_id"
+
+    aws_bedrock_guardrail_id:str = "system.aws.bedrock.guardrail.id"
+    aws_bedrock_guardrail_version:str = "system.aws.bedrock.guardrail.version"
+    aws_bedrock_guardrail_action:str = "system.aws.bedrock.guardrail.action"
+
 def create_limit_header_from_ids(*, limit_ids: List[str]) -> Dict[str, str]:
     if not isinstance(limit_ids, list):  # type: ignore
         raise TypeError("limit_ids must be a list")
