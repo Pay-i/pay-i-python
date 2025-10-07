@@ -1,5 +1,51 @@
 # Changelog
 
+## 0.1.0-alpha.126 (2025-10-07)
+
+Full Changelog: [v0.1.0-alpha.125...v0.1.0-alpha.126](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.125...v0.1.0-alpha.126)
+
+### Features
+
+* offline instrumentation ([#378](https://github.com/Pay-i/pay-i-python/issues/378)) ([ae6a60f](https://github.com/Pay-i/pay-i-python/commit/ae6a60f5992f10bccbdaaf56a0097b2661e70643))
+
+## 0.1.0-alpha.125 (2025-09-30)
+
+Full Changelog: [v0.1.0-alpha.124...v0.1.0-alpha.125](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.124...v0.1.0-alpha.125)
+
+### Bug Fixes
+
+* do not set headers with default to omit ([addd6f4](https://github.com/Pay-i/pay-i-python/commit/addd6f4231c95270ba83d5d651b68a34ec89de1b))
+
+## 0.1.0-alpha.124 (2025-09-24)
+
+Full Changelog: [v0.1.0-alpha.123...v0.1.0-alpha.124](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.123...v0.1.0-alpha.124)
+
+### Chores
+
+* do not install brew dependencies in ./scripts/bootstrap by default ([7b5100c](https://github.com/Pay-i/pay-i-python/commit/7b5100c5e554f0bd186c8075ef6a41aec82373cb))
+* **types:** change optional parameter type from NotGiven to Omit ([1cef789](https://github.com/Pay-i/pay-i-python/commit/1cef789e7b927c1f7a153bd466e7ff232dfca19d))
+
+## 0.1.0-alpha.123 (2025-09-24)
+
+Full Changelog: [v0.1.0-alpha.122...v0.1.0-alpha.123](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.122...v0.1.0-alpha.123)
+
+### Chores
+
+* **internal:** update pydantic dependency ([fb48d11](https://github.com/Pay-i/pay-i-python/commit/fb48d111c97e54ec3f63b9f3887cb41446dc7ec3))
+* **types:** change optional parameter type from NotGiven to Omit ([1bb17c3](https://github.com/Pay-i/pay-i-python/commit/1bb17c32a90ae1398d38cb66e46746bc6ab7ea46))
+
+## 0.1.0-alpha.122 (2025-09-18)
+
+Full Changelog: [v0.1.0-alpha.121...v0.1.0-alpha.122](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.121...v0.1.0-alpha.122)
+
+### Bug Fixes
+
+* merge properties properly ([#371](https://github.com/Pay-i/pay-i-python/issues/371)) ([66d16d6](https://github.com/Pay-i/pay-i-python/commit/66d16d6e5c62ddc610a1c7e70c21947267da04bf))
+
+## 0.1.0-alpha.121 (2025-09-17)
+
+Full Changelog: [v0.1.0-alpha.120...v0.1.0-alpha.121](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.120...v0.1.0-alpha.121)
+
 ## 0.1.0-alpha.120 (2025-09-16)
 
 Full Changelog: [v0.1.0-alpha.119...v0.1.0-alpha.120](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.119...v0.1.0-alpha.120)

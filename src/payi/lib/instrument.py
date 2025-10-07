@@ -2,13 +2,14 @@ import os
 import json
 import time
 import uuid
+import atexit
 import asyncio
 import inspect
 import logging
 import traceback
 from abc import abstractmethod
 from enum import Enum
-from typing import Any, Set, Union, Callable, Optional, Sequence, TypedDict
+from typing import Any, Set, Union, Optional, Sequence, TypedDict
 from datetime import datetime, timezone
 from dataclasses import dataclass
 
@@ -17,7 +18,7 @@ from wrapt import ObjectProxy  # type: ignore
 
 from payi import Payi, AsyncPayi, APIStatusError, APIConnectionError, __version__ as _payi_version
 from payi.types import IngestUnitsParams
-from payi.lib.helpers import PayiHeaderNames
+from payi.lib.helpers import PayiHeaderNames, PayiPropertyNames
 from payi.types.shared import XproxyResult
 from payi.types.ingest_response import IngestResponse
 from payi.types.ingest_units_params import Units, ProviderResponseFunctionCall
@@ -117,10 +118,10 @@ class _ProviderRequest:
                 except Exception as _ex:
                     pass
  
-        self.add_internal_request_property('system.failure', exception_str)
+        self.add_internal_request_property(PayiPropertyNames.failure, exception_str)
         if fields:
             failure_description = ",".join(fields)
-            self.add_internal_request_property("system.failure.description", failure_description)
+            self.add_internal_request_property(PayiPropertyNames.failure_description, failure_description)
 
         if "http_status_code" not in self._ingest:
             # use a non existent http status code so when presented to the user, the origin is clear
@@ -148,6 +149,9 @@ class _ProviderRequest:
 class PayiInstrumentAwsBedrockConfig(TypedDict, total=False):
     guardrail_trace: bool
 
+class PayiInstrumentOfflineInstrumentationConfig(TypedDict, total=False):
+    file_name: str
+
 class PayiInstrumentConfig(TypedDict, total=False):
     proxy: bool
     global_instrumentation: bool
@@ -163,6 +167,7 @@ class PayiInstrumentConfig(TypedDict, total=False):
     request_tags: Optional["list[str]"]
     request_properties: Optional["dict[str, str]"]
     aws_config: Optional[PayiInstrumentAwsBedrockConfig]
+    offline_instrumentation: Optional[PayiInstrumentOfflineInstrumentationConfig]
 
 class PayiContext(TypedDict, total=False):
     use_case_name: Optional[str]
@@ -190,7 +195,6 @@ class _Context(TypedDict, total=False):
     limit_ids: Optional['list[str]']
     user_id: Optional[str]
     account_name: Optional[str]
-    request_tags: Optional["list[str]"]
     request_properties: Optional["dict[str, str]"]
     price_as_category: Optional[str]
     price_as_resource: Optional[str]
@@ -236,9 +240,6 @@ class _PayiInstrumentor:
         instruments: Union[Set[str], None] = None,
         log_prompt_and_response: bool = True,
         logger: Optional[logging.Logger] = None,
-        prompt_and_response_logger: Optional[
-            Callable[[str, "dict[str, str]"], None]
-        ] = None,  # (request id, dict of data to store) -> None
         global_config: PayiInstrumentConfig = {},
         caller_filename: str = ""
     ):
@@ -257,7 +258,6 @@ class _PayiInstrumentor:
 
         self._context_stack: list[_Context] = []  # Stack of context dictionaries
         self._log_prompt_and_response: bool = log_prompt_and_response
-        self._prompt_and_response_logger: Optional[Callable[[str, dict[str, str]], None]] = prompt_and_response_logger
 
         self._blocked_limits: set[str] = set()
         self._exceeded_limits: set[str] = set()
@@ -275,6 +275,17 @@ class _PayiInstrumentor:
 
         self._last_result: Optional[Union[XproxyResult, XproxyError]] = None
 
+        self._offline_instrumentation = global_config.pop("offline_instrumentation", None)
+        self._offline_ingest_packets: list[IngestUnitsParams] = []
+        self._offline_instrumentation_file_name: Optional[str] = None
+        
+        if self._offline_instrumentation is not None:
+            timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+            self._offline_instrumentation_file_name = self._offline_instrumentation.get("file_name", f"payi_instrumentation_{timestamp}.json")
+            
+            # Register exit handler to write packets when process exits
+            atexit.register(lambda: self._write_offline_ingest_packets())
+
         global_instrumentation = global_config.pop("global_instrumentation", True)
 
         if instruments is None or "*" in instruments:
@@ -287,9 +298,7 @@ class _PayiInstrumentor:
                 global_config["proxy"] = self._proxy_default
 
             # Use default clients if not provided for global ingest instrumentation
-            if not self._payi and not self._apayi:
-                self._payi = Payi()
-                self._apayi = AsyncPayi()
+            self._ensure_payi_clients()
 
             if "use_case_name" not in global_config and caller_filename:
                 description = f"Default use case for {caller_filename}.py"
@@ -298,6 +307,9 @@ class _PayiInstrumentor:
                         self._payi.use_cases.definitions.create(name=caller_filename, description=description)
                     elif self._apayi:
                         self._call_async_use_case_definition_create(use_case_name=caller_filename, use_case_description=description)
+                    else:
+                        # in the case of _local_instrumentation is not None
+                        pass
                     global_config["use_case_name"] = caller_filename
                 except Exception as e:
                     self._logger.error(f"Error creating default use case definition based on file name {caller_filename}: {e}")
@@ -314,6 +326,14 @@ class _PayiInstrumentor:
                     context[key] = global_config[key] # type: ignore
 
             self._init_current_context(**context) 
+
+    def _ensure_payi_clients(self) -> None:
+        if self._offline_instrumentation is not None:
+            return
+
+        if not self._payi and not self._apayi:
+            self._payi = Payi()
+            self._apayi = AsyncPayi()
 
     def _instrument_all(self, global_config: PayiInstrumentConfig) -> None:
         self._instrument_openai()
@@ -378,6 +398,30 @@ class _PayiInstrumentor:
         except Exception as e:
             self._logger.error(f"Error instrumenting Google GenAi: {e}")
 
+    def _write_offline_ingest_packets(self) -> None:
+        if not self._offline_instrumentation_file_name or not self._offline_ingest_packets:
+            return
+            
+        try:
+            # Convert datetime objects to ISO strings for JSON serialization
+            serializable_packets: list[IngestUnitsParams] = []
+            for packet in self._offline_ingest_packets:
+                serializable_packet = packet.copy()
+                
+                # Convert datetime fields to ISO format strings
+                if 'event_timestamp' in serializable_packet and isinstance(serializable_packet['event_timestamp'], datetime):
+                    serializable_packet['event_timestamp'] = serializable_packet['event_timestamp'].isoformat()
+                    
+                serializable_packets.append(serializable_packet)
+            
+            with open(self._offline_instrumentation_file_name, 'w', encoding='utf-8') as f:
+                json.dump(serializable_packets, f)
+                
+            self._logger.debug(f"Written {len(self._offline_ingest_packets)} ingest packets to {self._offline_instrumentation_file_name}")
+            
+        except Exception as e:
+            self._logger.error(f"Error writing offline ingest packets to {self._offline_instrumentation_file_name}: {e}")
+
     @staticmethod
     def _create_logged_ingest_units(
         ingest_units: IngestUnitsParams,
@@ -397,7 +441,6 @@ class _PayiInstrumentor:
     def _process_ingest_units(
         self,
         request: _ProviderRequest,
-        log_data: 'dict[str, str]',
         extra_headers: 'dict[str, str]') -> None:
         ingest_units = request._ingest
 
@@ -408,11 +451,18 @@ class _PayiInstrumentor:
             # convert the function call builder to a list of function calls
             ingest_units["provider_response_function_calls"] = list(request._function_call_builder.values())
 
+        if "provider_response_id" not in ingest_units or not ingest_units["provider_response_id"]:
+            ingest_units["provider_response_id"] = f"payi_{uuid.uuid4()}"
+
         if 'resource' not in ingest_units or ingest_units['resource'] == '':
             ingest_units['resource'] = "system.unknown_model"
 
         if request._internal_request_properties:
-            ingest_units["properties"] = request._internal_request_properties
+            properties = ingest_units.get("properties") or {}
+            ingest_units["properties"] = properties
+            for key, value in request._internal_request_properties.items():
+                if key not in properties:
+                    properties[key] = value
 
         request_json = ingest_units.get('provider_request_json', "")
         if request_json and self._instrument_inline_data is False:
@@ -430,19 +480,6 @@ class _PayiInstrumentor:
             units = ingest_units.get("units", {})
             if not units or all(unit.get("input", 0) == 0 and unit.get("output", 0) == 0 for unit in units.values()):
                 self._logger.info('ingesting with no token counts')
-
-        if self._log_prompt_and_response and self._prompt_and_response_logger:
-            response_json = ingest_units.pop("provider_response_json", None)
-            request_json = ingest_units.pop("provider_request_json", None)
-            stack_trace = ingest_units.get("properties", {}).pop("system.stack_trace", None)  # type: ignore
-
-            if response_json is not None:
-                # response_json is a list of strings, convert a single json string
-                log_data["provider_response_json"] = json.dumps(response_json)
-            if request_json is not None:
-                log_data["provider_request_json"] = request_json
-            if stack_trace is not None:
-                log_data["stack_trace"] = stack_trace
 
     def _process_ingest_units_response(self, ingest_response: IngestResponse) -> None:
         if ingest_response.xproxy_result.limits:
@@ -486,11 +523,8 @@ class _PayiInstrumentor:
 
         self._logger.debug(f"_aingest_units")
 
-        # return early if there are no units to ingest and on a successul ingest request
-        log_data: 'dict[str,str]' = {}
         extra_headers: 'dict[str, str]' = {}
-
-        self._process_ingest_units(request, log_data=log_data, extra_headers=extra_headers)
+        self._process_ingest_units(request, extra_headers=extra_headers)
 
         try:
             if self._logger.isEnabledFor(logging.DEBUG):
@@ -500,6 +534,18 @@ class _PayiInstrumentor:
                 ingest_response = await self._apayi.ingest.units(**ingest_units, extra_headers=extra_headers)
             elif self._payi:
                 ingest_response = self._payi.ingest.units(**ingest_units, extra_headers=extra_headers)
+            elif self._offline_instrumentation is not None:
+                self._offline_ingest_packets.append(ingest_units.copy())
+
+                # simulate a successful ingest for local instrumentation
+                now=datetime.now(timezone.utc)
+                ingest_response = IngestResponse(
+                    event_timestamp=now,
+                    ingest_timestamp=now,
+                    request_id="local_instrumentation",
+                    xproxy_result=XproxyResult(request_id="local_instrumentation"))
+                pass
+                
             else:
                 self._logger.error("No payi instance to ingest units")
                 return XproxyError(code="configuration_error", message="No Payi or AsyncPayi instance configured for ingesting units")
@@ -508,10 +554,6 @@ class _PayiInstrumentor:
 
             if ingest_response:
                 self._process_ingest_units_response(ingest_response)
-
-                if ingest_response and self._log_prompt_and_response and self._prompt_and_response_logger:
-                    request_id = ingest_response.xproxy_result.request_id
-                    self._prompt_and_response_logger(request_id, log_data)  # type: ignore
 
             return ingest_response.xproxy_result
 
@@ -605,10 +647,8 @@ class _PayiInstrumentor:
 
         self._logger.debug(f"_ingest_units")
 
-        # return early if there are no units to ingest and on a successul ingest request
-        log_data: 'dict[str,str]' = {}
         extra_headers: 'dict[str, str]' = {}
-        self._process_ingest_units(request, log_data=log_data, extra_headers=extra_headers)
+        self._process_ingest_units(request, extra_headers=extra_headers)
 
         try:
             if self._payi:
@@ -620,16 +660,18 @@ class _PayiInstrumentor:
 
                 self._process_ingest_units_response(ingest_response)
 
-                if self._log_prompt_and_response and self._prompt_and_response_logger:
-                    request_id = ingest_response.xproxy_result.request_id
-                    self._prompt_and_response_logger(request_id, log_data)  # type: ignore
-
                 return ingest_response.xproxy_result
             elif self._apayi:
                 # task runs async. aingest_units will invoke the callback and post process
                 sync_response = self._call_aingest_sync(request)
                 self._logger.debug(f"_ingest_units: apayi success ({sync_response})")
                 return sync_response
+            elif self._offline_instrumentation is not None:
+                self._offline_ingest_packets.append(ingest_units.copy())
+
+                # simulate a successful ingest for local instrumentation
+                return XproxyResult(request_id="local_instrumentation")
+
             else:
                 self._logger.error("No payi instance to ingest units")
                 return XproxyError(code="configuration_error", message="No Payi or AsyncPayi instance configured for ingesting units")
@@ -657,6 +699,31 @@ class _PayiInstrumentor:
 
         return {}
 
+    @staticmethod
+    def _valid_str_or_none(value: Optional[str], default: Optional[str] = None) -> Optional[str]:
+        if value is None:
+            return default
+        elif len(value) == 0:
+            # an empty string explicitly blocks the default value
+            return None
+        else:
+            return value
+        
+    @staticmethod
+    def _valid_properties_or_none(value: Optional["dict[str, str]"], default: Optional["dict[str, str]"] = None) -> Optional["dict[str, str]"]:
+        if value is None:
+            return default.copy() if default else None
+        elif len(value) == 0:
+            # an empty dictionary explicitly blocks the default value
+            return None
+        elif default:
+            # merge dictionaries, child overrides parent keys
+            merged = default.copy()
+            merged.update(value)
+            return merged
+        else:
+            return value.copy()
+
     def _init_current_context(
         self,
         proxy: Optional[bool] = None,
@@ -667,7 +734,6 @@ class _PayiInstrumentor:
         use_case_step: Optional[str]= None,
         user_id: Optional[str]= None,
         account_name: Optional[str]= None,
-        request_tags: Optional["list[str]"] = None,
         request_properties: Optional["dict[str, str]"] = None,
         use_case_properties: Optional["dict[str, str]"] = None,
         price_as_category: Optional[str] = None,
@@ -685,7 +751,6 @@ class _PayiInstrumentor:
         parent_use_case_name = parent_context.get("use_case_name", None)
         parent_use_case_id = parent_context.get("use_case_id", None)
         parent_use_case_version = parent_context.get("use_case_version", None)
-        parent_use_case_step = parent_context.get("use_case_step", None)
 
         assign_use_case_values = False
 
@@ -717,26 +782,12 @@ class _PayiInstrumentor:
             assign_use_case_values = True
 
         if assign_use_case_values:
-            context["use_case_id"] = use_case_id if use_case_id else parent_use_case_id
-            context["use_case_version"] = use_case_version if use_case_version else parent_use_case_version
-            context["use_case_step"] = use_case_step if use_case_step else parent_use_case_step
+            context["use_case_version"] = use_case_version if use_case_version is not None else parent_use_case_version
+            context["use_case_id"] =  self._valid_str_or_none(use_case_id, parent_use_case_id)
+            context["use_case_step"] = self._valid_str_or_none(use_case_step, None)
 
             parent_use_case_properties = parent_context.get("use_case_properties", None)
-            if use_case_properties is not None:
-                if not use_case_properties:
-                    # an empty dictionary explicitly blocks inheriting from the parent state
-                    context["use_case_properties"] = None
-                else:
-                    if parent_use_case_properties:
-                        # merge dictionaries, child overrides parent keys
-                        merged = parent_use_case_properties.copy()
-                        merged.update(use_case_properties)
-                        context["use_case_properties"] = merged
-                    else:
-                        context["use_case_properties"] = use_case_properties.copy()
-            elif parent_use_case_properties:
-                # use the parent use_case_properties if it exists
-                context["use_case_properties"] = parent_use_case_properties.copy()
+            context["use_case_properties"] = self._valid_properties_or_none(use_case_properties, parent_use_case_properties)
 
         parent_limit_ids = parent_context.get("limit_ids", None)
         if limit_ids is None:
@@ -750,56 +801,13 @@ class _PayiInstrumentor:
             context["limit_ids"] = list(set(limit_ids) | set(parent_limit_ids)) if parent_limit_ids else limit_ids.copy()
 
         parent_user_id = parent_context.get("user_id", None)
-        if user_id is None:
-            # use the parent user_id if it exists
-            context["user_id"] = parent_user_id
-        elif len(user_id) == 0:
-            # caller passing an empty string explicitly blocks inheriting from the parent state
-            context["user_id"] = None
-        else:
-            context["user_id"] = user_id
+        context["user_id"] = self._valid_str_or_none(user_id, parent_user_id)
 
         parent_account_name = parent_context.get("account_name", None)
-        if account_name is None:
-            # use the parent account_name if it exists
-            context["account_name"] = parent_account_name
-        elif len(account_name) == 0:
-            # caller passing an empty string explicitly blocks inheriting from the parent state
-            context["account_name"] = None
-        else:
-            context["account_name"] = account_name
-
-        parent_request_tags = parent_context.get("request_tags", None)
-        if request_tags is not None:
-            if len(request_tags) == 0:
-                # caller passing an empty list explicitly blocks inheriting from the parent state
-                context["request_tags"] = None
-            else:
-                if parent_request_tags:
-                    # union of new and parent lists if the parent context contains request tags
-                    context["request_tags"] = list(set(request_tags) | set(parent_request_tags))
-                else:
-                    context["request_tags"] = request_tags.copy()
-        elif parent_request_tags:
-            # use the parent request_tags if it exists
-            context["request_tags"] = parent_request_tags.copy()
+        context["account_name"] = self._valid_str_or_none(account_name, parent_account_name)
 
         parent_request_properties = parent_context.get("request_properties", None)
-        if request_properties is not None:
-            if not request_properties:
-                # an empty dictionary explicitly blocks inheriting from the parent state
-                context["request_properties"] = None
-            else:
-                if parent_request_properties:
-                    # merge dictionaries, child overrides parent keys
-                    merged = parent_request_properties.copy()
-                    merged.update(request_properties)
-                    context["request_properties"] = merged
-                else:
-                    context["request_properties"] = request_properties.copy()
-        elif parent_request_properties:
-            # use the parent request_properties if it exists
-            context["request_properties"] = parent_request_properties.copy()
+        context["request_properties"] = self._valid_properties_or_none(request_properties, parent_request_properties)
 
         if price_as_category:
             context["price_as_category"] = price_as_category
@@ -818,7 +826,6 @@ class _PayiInstrumentor:
         use_case_version: Optional[int],        
         user_id: Optional[str],
         account_name: Optional[str],
-        request_tags: Optional["list[str]"] = None,
         request_properties: Optional["dict[str, str]"] = None,
         use_case_properties: Optional["dict[str, str]"] = None,
         *args: Any,
@@ -833,7 +840,6 @@ class _PayiInstrumentor:
                 use_case_version=use_case_version,
                 user_id=user_id,
                 account_name=account_name,
-                request_tags=request_tags,
                 request_properties=request_properties,
                 use_case_properties=use_case_properties
             )
@@ -849,7 +855,6 @@ class _PayiInstrumentor:
         use_case_version: Optional[int],        
         user_id: Optional[str],
         account_name: Optional[str],
-        request_tags: Optional["list[str]"] = None,
         request_properties: Optional["dict[str, str]"] = None,
         use_case_properties: Optional["dict[str, str]"] = None,
         *args: Any,
@@ -864,7 +869,6 @@ class _PayiInstrumentor:
                 use_case_version=use_case_version,
                 user_id=user_id,
                 account_name=account_name,
-                request_tags=request_tags,
                 request_properties=request_properties,
                 use_case_properties=use_case_properties)
             return func(*args, **kwargs)
@@ -897,7 +901,8 @@ class _PayiInstrumentor:
     ) -> None:
 
         limit_ids = ingest_extra_headers.pop(PayiHeaderNames.limit_ids, None)
-        request_tags = ingest_extra_headers.pop(PayiHeaderNames.request_tags, None)
+        # pop and ignore the request tags header since it is no longer processed
+        ingest_extra_headers.pop(PayiHeaderNames.request_tags, None)
 
         use_case_name = ingest_extra_headers.pop(PayiHeaderNames.use_case_name, None)
         use_case_id = ingest_extra_headers.pop(PayiHeaderNames.use_case_id, None)
@@ -909,8 +914,6 @@ class _PayiInstrumentor:
 
         if limit_ids:
             request._ingest["limit_ids"] = limit_ids.split(",")
-        if request_tags:
-            request._ingest["request_tags"] = request_tags.split(",")
         if use_case_name:
             request._ingest["use_case_name"] = use_case_name
         if use_case_id:
@@ -1255,7 +1258,6 @@ class _PayiInstrumentor:
 
         context_user_id: Optional[str] = context.get("user_id")
         context_account_name: Optional[str] = context.get("account_name")
-        context_request_tags: Optional[list[str]] = context.get("request_tags")
 
         context_price_as_category: Optional[str] = context.get("price_as_category")
         context_price_as_resource: Optional[str] = context.get("price_as_resource")
@@ -1316,10 +1318,7 @@ class _PayiInstrumentor:
             if context_use_case_version is not None:
                 extra_headers[PayiHeaderNames.use_case_version] = str(context_use_case_version)
             if context_use_case_step is not None:
-                extra_headers[PayiHeaderNames.use_case_step] = str(context_use_case_step)
-
-        if PayiHeaderNames.request_tags not in extra_headers and context_request_tags:
-            extra_headers[PayiHeaderNames.request_tags] = ",".join(context_request_tags)
+                extra_headers[PayiHeaderNames.use_case_step] = context_use_case_step
 
         if PayiHeaderNames.price_as_category not in extra_headers and context_price_as_category:
             extra_headers[PayiHeaderNames.price_as_category] = context_price_as_category
@@ -1726,7 +1725,6 @@ def payi_instrument(
     payi: Optional[Union[Payi, AsyncPayi, 'list[Union[Payi, AsyncPayi]]']] = None,
     instruments: Optional[Set[str]] = None,
     log_prompt_and_response: bool = True,
-    prompt_and_response_logger: Optional[Callable[[str, "dict[str, str]"], None]] = None,
     config: Optional[PayiInstrumentConfig] = None,
     logger: Optional[logging.Logger] = None,
 ) -> None:
@@ -1759,7 +1757,6 @@ def payi_instrument(
         instruments=instruments,
         log_prompt_and_response=log_prompt_and_response,
         logger=logger,
-        prompt_and_response_logger=prompt_and_response_logger,
         global_config=config if config else PayiInstrumentConfig(),
         caller_filename=caller_filename
     )
@@ -1777,6 +1774,7 @@ def track(
     use_case_properties: Optional["dict[str, str]"] = None,
     proxy: Optional[bool] = None,
 ) -> Any:
+    _ = request_tags
 
     def _track(func: Any) -> Any:
         import asyncio
@@ -1797,7 +1795,6 @@ def track(
                     use_case_version,
                     user_id,
                     account_name,
-                    request_tags,
                     request_properties,
                     use_case_properties,
                     *args,
@@ -1821,7 +1818,6 @@ def track(
                     use_case_version,
                     user_id,
                     account_name,
-                    request_tags,
                     request_properties,
                     use_case_properties,
                     *args,
@@ -1861,7 +1857,6 @@ def track_context(
 
     context["user_id"] = user_id
     context["account_name"] = account_name
-    context["request_tags"] = request_tags
 
     context["price_as_category"] = price_as_category
     context["price_as_resource"] = price_as_resource
@@ -1869,6 +1864,8 @@ def track_context(
 
     context["request_properties"] = request_properties
     context["use_case_properties"] = use_case_properties
+
+    _ = request_tags
 
     return _InternalTrackContext(context)
 

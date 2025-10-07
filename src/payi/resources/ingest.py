@@ -10,7 +10,7 @@ import httpx
 from payi._utils._utils import is_given
 
 from ..types import ingest_units_params
-from .._types import NOT_GIVEN, Body, Query, Headers, NotGiven, SequenceNotStr
+from .._types import Body, Omit, Query, Headers, NotGiven, SequenceNotStr, omit, not_given
 from .._utils import maybe_transform, strip_not_given, async_maybe_transform
 from .._compat import cached_property
 from .._resource import SyncAPIResource, AsyncAPIResource
@@ -53,13 +53,13 @@ class IngestResource(SyncAPIResource):
     def bulk(
         self,
         *,
-        events: Iterable[IngestEventParam] | NotGiven = NOT_GIVEN,
+        events: Iterable[IngestEventParam] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> BulkIngestResponse:
         """
         Bulk Ingest
@@ -87,38 +87,38 @@ class IngestResource(SyncAPIResource):
         *,
         category: str,
         units: Dict[str, IngestUnits],
-        end_to_end_latency_ms: Optional[int] | NotGiven = NOT_GIVEN,
-        event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
-        http_status_code: Optional[int] | NotGiven = NOT_GIVEN,
-        properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
-        provider_request_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | NotGiven = NOT_GIVEN,
-        provider_request_json: Optional[str] | NotGiven = NOT_GIVEN,
-        provider_request_reasoning_json: Optional[str] | NotGiven = NOT_GIVEN,
+        end_to_end_latency_ms: Optional[int] | Omit = omit,
+        event_timestamp: Union[str, datetime, None] | Omit = omit,
+        http_status_code: Optional[int] | Omit = omit,
+        properties: Optional[Dict[str, str]] | Omit = omit,
+        provider_request_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | Omit = omit,
+        provider_request_json: Optional[str] | Omit = omit,
+        provider_request_reasoning_json: Optional[str] | Omit = omit,
         provider_response_function_calls: Optional[Iterable[ingest_units_params.ProviderResponseFunctionCall]]
-        | NotGiven = NOT_GIVEN,
-        provider_response_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | NotGiven = NOT_GIVEN,
-        provider_response_id: Optional[str] | NotGiven = NOT_GIVEN,
-        provider_response_json: Union[str, SequenceNotStr[str], None] | NotGiven = NOT_GIVEN,
-        provider_uri: Optional[str] | NotGiven = NOT_GIVEN,
-        resource: Optional[str] | NotGiven = NOT_GIVEN,
-        time_to_first_completion_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
-        time_to_first_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
-        use_case_properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
-        limit_ids: Optional[list[str]] | NotGiven = NOT_GIVEN,
-        request_tags: Optional[list[str]] | NotGiven = NOT_GIVEN,
-        use_case_id: Optional[str] | NotGiven = NOT_GIVEN,
-        use_case_name: Optional[str] | NotGiven = NOT_GIVEN,
-        use_case_step: Optional[str] | NotGiven = NOT_GIVEN,
-        use_case_version: Optional[int] | NotGiven = NOT_GIVEN,
-        user_id: Optional[str] | NotGiven = NOT_GIVEN,
-        resource_scope: Optional[str] | NotGiven = NOT_GIVEN,
-        account_name: Optional[str] | NotGiven = NOT_GIVEN,
+        | Omit = omit,
+        provider_response_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | Omit = omit,
+        provider_response_id: Optional[str] | Omit = omit,
+        provider_response_json: Union[str, SequenceNotStr[str], None] | Omit = omit,
+        provider_uri: Optional[str] | Omit = omit,
+        resource: Optional[str] | Omit = omit,
+        time_to_first_completion_token_ms: Optional[int] | Omit = omit,
+        time_to_first_token_ms: Optional[int] | Omit = omit,
+        use_case_properties: Optional[Dict[str, str]] | Omit = omit,
+        limit_ids: Optional[list[str]] | Omit = omit,
+        request_tags: Optional[list[str]] | Omit = omit,
+        use_case_id: Optional[str] | Omit = omit,
+        use_case_name: Optional[str] | Omit = omit,
+        use_case_step: Optional[str] | Omit = omit,
+        use_case_version: Optional[int] | Omit = omit,
+        user_id: Optional[str] | Omit = omit,
+        resource_scope: Optional[str] | Omit = omit,
+        account_name: Optional[str] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> IngestResponse:
         """
         Ingest an Event
@@ -164,62 +164,53 @@ class IngestResource(SyncAPIResource):
 
           timeout (Union[float, None], optional): The timeout for the request in seconds. Defaults to None.
         """
-        valid_ids_str: str | NotGiven = NOT_GIVEN
-        _valid_tags_str: str | NotGiven = NOT_GIVEN
-        use_case_version_str: str | NotGiven = NOT_GIVEN
+        request_tags = request_tags
+        valid_ids_str: str | Omit = omit
+        use_case_version_str: str | Omit = omit
 
-        if limit_ids is None or isinstance(limit_ids, NotGiven):
-            valid_ids_str = NOT_GIVEN
+        if limit_ids is None or not is_given(limit_ids):
+            valid_ids_str = omit
         elif not isinstance(limit_ids, list):  # type: ignore
             raise TypeError("limit_ids must be a list")
         else:
-            # Proceed with the list comprehension if limit_ids is not NotGiven
+            # Proceed with the list comprehension if limit_ids is given
             valid_ids = [id.strip() for id in limit_ids if id.strip()]
-            valid_ids_str = ",".join(valid_ids) if valid_ids else NOT_GIVEN
+            valid_ids_str = ",".join(valid_ids) if valid_ids else omit
 
-        if request_tags is None or isinstance(request_tags, NotGiven):
-            _valid_tags_str = NOT_GIVEN
-        elif not isinstance(request_tags, list):  # type: ignore
-            raise TypeError("request_tags must be a list")
-        else:
-            # Proceed with the list comprehension if request_tags is not NotGiven
-            valid_tags = [tag.strip() for tag in request_tags if tag.strip()]
-            _valid_tags_str = ",".join(valid_tags) if valid_tags else NOT_GIVEN
+        if use_case_name is None or not is_given(use_case_name):
+            use_case_name = omit
 
-        if use_case_name is None or isinstance(use_case_name, NotGiven):
-            use_case_name = NOT_GIVEN
+        if use_case_step is None or not is_given(use_case_step):
+            use_case_step = omit
 
-        if use_case_step is None or isinstance(use_case_step, NotGiven):
-            use_case_step = NOT_GIVEN
-        
-        if use_case_id is None or isinstance(use_case_id, NotGiven):
-            use_case_id = NOT_GIVEN
-        
-        if use_case_version is None or isinstance(use_case_version, NotGiven):
-            use_case_version_str = NOT_GIVEN
+        if use_case_id is None or not is_given(use_case_id):
+            use_case_id = omit
+
+        if use_case_version is None or not is_given(use_case_version):
+            use_case_version_str = omit
         else:
             use_case_version_str = str(use_case_version)
 
-        if user_id is None or isinstance(user_id, NotGiven):
-            user_id = NOT_GIVEN
+        if user_id is None or not is_given(user_id):
+            user_id = omit
 
-        if resource_scope is None or isinstance(resource_scope, NotGiven):
-            resource_scope = NOT_GIVEN
+        if resource_scope is None or not is_given(resource_scope):
+            resource_scope = omit
 
-        if account_name is None or isinstance(account_name, NotGiven):
-            account_name = NOT_GIVEN
+        if account_name is None or not is_given(account_name):
+            account_name = omit
 
         extra_headers = {
             **strip_not_given(
                 {
                     "xProxy-Limit-IDs": valid_ids_str,
-                    "xProxy-Request-Tags": NOT_GIVEN, # _valid_tags_str
+                    "xProxy-Request-Tags": omit,
                     "xProxy-UseCase-ID": use_case_id,
                     "xProxy-UseCase-Name": use_case_name,
                     "xProxy-UseCase-Step": use_case_step,
                     "xProxy-UseCase-Version": use_case_version_str
                     if is_given(use_case_version)
-                    else NOT_GIVEN,
+                    else not_given,
                     "xProxy-User-ID": user_id,
                     "xProxy-Resource-Scope": resource_scope,
                     "xProxy-Account-Name": account_name,
@@ -283,13 +274,13 @@ class AsyncIngestResource(AsyncAPIResource):
     async def bulk(
         self,
         *,
-        events: Iterable[IngestEventParam] | NotGiven = NOT_GIVEN,
+        events: Iterable[IngestEventParam] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> BulkIngestResponse:
         """
         Bulk Ingest
@@ -317,37 +308,37 @@ class AsyncIngestResource(AsyncAPIResource):
         *,
         category: str,
         units: Dict[str, IngestUnits],
-        end_to_end_latency_ms: Optional[int] | NotGiven = NOT_GIVEN,
-        event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
-        http_status_code: Optional[int] | NotGiven = NOT_GIVEN,
-        properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
-        provider_request_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | NotGiven = NOT_GIVEN,
-        provider_request_json: Optional[str] | NotGiven = NOT_GIVEN,
-        provider_request_reasoning_json: Optional[str] | NotGiven = NOT_GIVEN,
+        end_to_end_latency_ms: Optional[int] | Omit = omit,
+        event_timestamp: Union[str, datetime, None] | Omit = omit,
+        http_status_code: Optional[int] | Omit = omit,
+        properties: Optional[Dict[str, str]] | Omit = omit,
+        provider_request_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | Omit = omit,
+        provider_request_json: Optional[str] | Omit = omit,
+        provider_request_reasoning_json: Optional[str] | Omit = omit,
         provider_response_function_calls: Optional[Iterable[ingest_units_params.ProviderResponseFunctionCall]]
-        | NotGiven = NOT_GIVEN,
-        provider_response_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | NotGiven = NOT_GIVEN,
-        provider_response_id: Optional[str] | NotGiven = NOT_GIVEN,
-        provider_response_json: Union[str, SequenceNotStr[str], None] | NotGiven = NOT_GIVEN,
-        provider_uri: Optional[str] | NotGiven = NOT_GIVEN,
-        resource: Optional[str] | NotGiven = NOT_GIVEN,
-        time_to_first_completion_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
-        time_to_first_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
-        use_case_properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
-        limit_ids: Optional[list[str]] | NotGiven = NOT_GIVEN,
-        request_tags: Optional[list[str]] | NotGiven = NOT_GIVEN,
-        use_case_id: Optional[str] | NotGiven = NOT_GIVEN,
-        use_case_name: Optional[str] | NotGiven = NOT_GIVEN,
-        use_case_step: Optional[str] | NotGiven = NOT_GIVEN,
-        use_case_version: Optional[int] | NotGiven = NOT_GIVEN,
-        user_id: Optional[str] | NotGiven = NOT_GIVEN,
-        resource_scope: Union[str, None] | NotGiven = NOT_GIVEN,
-        account_name: Optional[str] | NotGiven = NOT_GIVEN,
+        | Omit = omit,
+        provider_response_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | Omit = omit,
+        provider_response_id: Optional[str] | Omit = omit,
+        provider_response_json: Union[str, SequenceNotStr[str], None] | Omit = omit,
+        provider_uri: Optional[str] | Omit = omit,
+        resource: Optional[str] | Omit = omit,
+        time_to_first_completion_token_ms: Optional[int] | Omit = omit,
+        time_to_first_token_ms: Optional[int] | Omit = omit,
+        use_case_properties: Optional[Dict[str, str]] | Omit = omit,
+        limit_ids: Optional[list[str]] | Omit = omit,
+        request_tags: Optional[list[str]] | Omit = omit,
+        use_case_id: Optional[str] | Omit = omit,
+        use_case_name: Optional[str] | Omit = omit,
+        use_case_step: Optional[str] | Omit = omit,
+        use_case_version: Optional[int] | Omit = omit,
+        user_id: Optional[str] | Omit = omit,
+        resource_scope: Union[str, None] | Omit = omit,
+        account_name: Optional[str] | Omit = omit,
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> IngestResponse:
         """
         Ingest an Event
@@ -393,63 +384,54 @@ class AsyncIngestResource(AsyncAPIResource):
 
           timeout (Union[float, None], optional): The timeout for the request in seconds. Defaults to None.
         """
-        valid_ids_str: str | NotGiven = NOT_GIVEN
-        _valid_tags_str: str | NotGiven = NOT_GIVEN
-        use_case_version_str: str | NotGiven = NOT_GIVEN
+        request_tags = request_tags
+        valid_ids_str: str | Omit = omit
+        use_case_version_str: str | Omit = omit
 
-        if limit_ids is None or isinstance(limit_ids, NotGiven):
-            valid_ids_str = NOT_GIVEN
+        if limit_ids is None or not is_given(limit_ids):
+            valid_ids_str = omit
         elif not isinstance(limit_ids, list):  # type: ignore
             raise TypeError("limit_ids must be a list")
         else:
-            # Proceed with the list comprehension if limit_ids is not NotGiven
+            # Proceed with the list comprehension if limit_ids is given
             valid_ids = [id.strip() for id in limit_ids if id.strip()]
-            valid_ids_str = ",".join(valid_ids) if valid_ids else NOT_GIVEN
+            valid_ids_str = ",".join(valid_ids) if valid_ids else omit
 
-        if request_tags is None or isinstance(request_tags, NotGiven):
-            _valid_tags_str = NOT_GIVEN
-        elif not isinstance(request_tags, list):  # type: ignore
-            raise TypeError("request_tags must be a list")
-        else:
-            # Proceed with the list comprehension if request_tags is not NotGiven
-            valid_tags = [tag.strip() for tag in request_tags if tag.strip()]
-            _valid_tags_str = ",".join(valid_tags) if valid_tags else NOT_GIVEN
+        if use_case_name is None or not is_given(use_case_name):
+            use_case_name = omit
 
-        if use_case_name is None or isinstance(use_case_name, NotGiven):
-            use_case_name = NOT_GIVEN
-        
-        if use_case_step is None or isinstance(use_case_step, NotGiven):
-            use_case_step = NOT_GIVEN
-        
-        if use_case_id is None or isinstance(use_case_id, NotGiven):
-            use_case_id = NOT_GIVEN
+        if use_case_step is None or not is_given(use_case_step):
+            use_case_step = omit
 
-        if use_case_version is None or isinstance(use_case_version, NotGiven):
-            use_case_version_str = NOT_GIVEN
+        if use_case_id is None or not is_given(use_case_id):
+            use_case_id = omit
+
+        if use_case_version is None or not is_given(use_case_version):
+            use_case_version_str = omit
         else:
             use_case_version_str = str(use_case_version)
 
-        if user_id is None or isinstance(user_id, NotGiven):
-            user_id = NOT_GIVEN
+        if user_id is None or not is_given(user_id):
+            user_id = omit
 
-        if resource_scope is None or isinstance(resource_scope, NotGiven):
-            resource_scope = NOT_GIVEN
+        if resource_scope is None or not is_given(resource_scope):
+            resource_scope = omit
 
-        if account_name is None or isinstance(account_name, NotGiven):
-            account_name = NOT_GIVEN
+        if account_name is None or not is_given(account_name):
+            account_name = omit
 
         extra_headers = {
             **strip_not_given(
                 {
                     "xProxy-Account-Name": account_name,
                     "xProxy-Limit-IDs": valid_ids_str,
-                    "xProxy-Request-Tags": NOT_GIVEN, # _valid_tags_str,
+                    "xProxy-Request-Tags": omit,
                     "xProxy-UseCase-ID": use_case_id,
                     "xProxy-UseCase-Name": use_case_name,
                     "xProxy-UseCase-Step": use_case_step,
                     "xProxy-UseCase-Version": use_case_version_str
                     if is_given(use_case_version)
-                    else NOT_GIVEN,
+                    else not_given,
                     "xProxy-User-ID": user_id,
                     "xProxy-Resource-Scope": resource_scope,
                 }

@@ -7,7 +7,7 @@ from typing_extensions import Literal
 
 import httpx
 
-from ...._types import NOT_GIVEN, Body, Query, Headers, NotGiven
+from ...._types import Body, Omit, Query, Headers, NotGiven, omit, not_given
 from ...._utils import maybe_transform, async_maybe_transform
 from ...._compat import cached_property
 from ...._resource import SyncAPIResource, AsyncAPIResource
@@ -62,7 +62,7 @@ class KpisResource(SyncAPIResource):
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> KpiCreateResponse:
         """
         Create a new KPI definition for a Use Case
@@ -105,7 +105,7 @@ class KpisResource(SyncAPIResource):
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> KpiRetrieveResponse:
         """
         Get a KPI definition for a Use Case
@@ -136,14 +136,14 @@ class KpisResource(SyncAPIResource):
         kpi_name: str,
         *,
         use_case_name: str,
-        description: Optional[str] | NotGiven = NOT_GIVEN,
-        goal: Optional[float] | NotGiven = NOT_GIVEN,
+        description: Optional[str] | Omit = omit,
+        goal: Optional[float] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> KpiUpdateResponse:
         """
         Update a KPI definition for a Use Case
@@ -180,16 +180,16 @@ class KpisResource(SyncAPIResource):
         self,
         use_case_name: str,
         *,
-        cursor: str | NotGiven = NOT_GIVEN,
-        kpi_name: str | NotGiven = NOT_GIVEN,
-        limit: int | NotGiven = NOT_GIVEN,
-        sort_ascending: bool | NotGiven = NOT_GIVEN,
+        cursor: str | Omit = omit,
+        kpi_name: str | Omit = omit,
+        limit: int | Omit = omit,
+        sort_ascending: bool | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> SyncCursorPage[KpiListResponse]:
         """
         Get all KPIs for a Use Case
@@ -236,7 +236,7 @@ class KpisResource(SyncAPIResource):
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> KpiDeleteResponse:
         """
         Delete a KPI definition for a Use Case
@@ -296,7 +296,7 @@ class AsyncKpisResource(AsyncAPIResource):
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> KpiCreateResponse:
         """
         Create a new KPI definition for a Use Case
@@ -339,7 +339,7 @@ class AsyncKpisResource(AsyncAPIResource):
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> KpiRetrieveResponse:
         """
         Get a KPI definition for a Use Case
@@ -370,14 +370,14 @@ class AsyncKpisResource(AsyncAPIResource):
         kpi_name: str,
         *,
         use_case_name: str,
-        description: Optional[str] | NotGiven = NOT_GIVEN,
-        goal: Optional[float] | NotGiven = NOT_GIVEN,
+        description: Optional[str] | Omit = omit,
+        goal: Optional[float] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> KpiUpdateResponse:
         """
         Update a KPI definition for a Use Case
@@ -414,16 +414,16 @@ class AsyncKpisResource(AsyncAPIResource):
         self,
         use_case_name: str,
         *,
-        cursor: str | NotGiven = NOT_GIVEN,
-        kpi_name: str | NotGiven = NOT_GIVEN,
-        limit: int | NotGiven = NOT_GIVEN,
-        sort_ascending: bool | NotGiven = NOT_GIVEN,
+        cursor: str | Omit = omit,
+        kpi_name: str | Omit = omit,
+        limit: int | Omit = omit,
+        sort_ascending: bool | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> AsyncPaginator[KpiListResponse, AsyncCursorPage[KpiListResponse]]:
         """
         Get all KPIs for a Use Case
@@ -470,7 +470,7 @@ class AsyncKpisResource(AsyncAPIResource):
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> KpiDeleteResponse:
         """
         Delete a KPI definition for a Use Case
