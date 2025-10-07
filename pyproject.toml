@@ -16,7 +16,8 @@ dependencies = [
     "sniffio",
     "wrapt>=1.17.2",
     "tiktoken>=0.8.0",
-    "nest-asyncio>=1.6.0"
+    "nest-asyncio>=1.6.0",
+    "tokenizers>=0.21.4"
 ]
 requires-python = ">= 3.8"
 classifiers = [

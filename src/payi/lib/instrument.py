@@ -195,7 +195,6 @@ class _Context(TypedDict, total=False):
     limit_ids: Optional['list[str]']
     user_id: Optional[str]
     account_name: Optional[str]
-    request_tags: Optional["list[str]"]
     request_properties: Optional["dict[str, str]"]
     price_as_category: Optional[str]
     price_as_resource: Optional[str]
@@ -697,6 +696,31 @@ class _PayiInstrumentor:
 
         return {}
 
+    @staticmethod
+    def _valid_str_or_none(value: Optional[str], default: Optional[str] = None) -> Optional[str]:
+        if value is None:
+            return default
+        elif len(value) == 0:
+            # an empty string explicitly blocks the default value
+            return None
+        else:
+            return value
+        
+    @staticmethod
+    def _valid_properties_or_none(value: Optional["dict[str, str]"], default: Optional["dict[str, str]"] = None) -> Optional["dict[str, str]"]:
+        if value is None:
+            return default.copy() if default else None
+        elif len(value) == 0:
+            # an empty dictionary explicitly blocks the default value
+            return None
+        elif default:
+            # merge dictionaries, child overrides parent keys
+            merged = default.copy()
+            merged.update(value)
+            return merged
+        else:
+            return value.copy()
+
     def _init_current_context(
         self,
         proxy: Optional[bool] = None,
@@ -707,7 +731,6 @@ class _PayiInstrumentor:
         use_case_step: Optional[str]= None,
         user_id: Optional[str]= None,
         account_name: Optional[str]= None,
-        request_tags: Optional["list[str]"] = None,
         request_properties: Optional["dict[str, str]"] = None,
         use_case_properties: Optional["dict[str, str]"] = None,
         price_as_category: Optional[str] = None,
@@ -725,7 +748,6 @@ class _PayiInstrumentor:
         parent_use_case_name = parent_context.get("use_case_name", None)
         parent_use_case_id = parent_context.get("use_case_id", None)
         parent_use_case_version = parent_context.get("use_case_version", None)
-        parent_use_case_step = parent_context.get("use_case_step", None)
 
         assign_use_case_values = False
 
@@ -757,26 +779,12 @@ class _PayiInstrumentor:
             assign_use_case_values = True
 
         if assign_use_case_values:
-            context["use_case_id"] = use_case_id if use_case_id else parent_use_case_id
-            context["use_case_version"] = use_case_version if use_case_version else parent_use_case_version
-            context["use_case_step"] = use_case_step if use_case_step else parent_use_case_step
+            context["use_case_version"] = use_case_version if use_case_version is not None else parent_use_case_version
+            context["use_case_id"] =  self._valid_str_or_none(use_case_id, parent_use_case_id)
+            context["use_case_step"] = self._valid_str_or_none(use_case_step, None)
 
             parent_use_case_properties = parent_context.get("use_case_properties", None)
-            if use_case_properties is not None:
-                if not use_case_properties:
-                    # an empty dictionary explicitly blocks inheriting from the parent state
-                    context["use_case_properties"] = None
-                else:
-                    if parent_use_case_properties:
-                        # merge dictionaries, child overrides parent keys
-                        merged = parent_use_case_properties.copy()
-                        merged.update(use_case_properties)
-                        context["use_case_properties"] = merged
-                    else:
-                        context["use_case_properties"] = use_case_properties.copy()
-            elif parent_use_case_properties:
-                # use the parent use_case_properties if it exists
-                context["use_case_properties"] = parent_use_case_properties.copy()
+            context["use_case_properties"] = self._valid_properties_or_none(use_case_properties, parent_use_case_properties)
 
         parent_limit_ids = parent_context.get("limit_ids", None)
         if limit_ids is None:
@@ -790,56 +798,13 @@ class _PayiInstrumentor:
             context["limit_ids"] = list(set(limit_ids) | set(parent_limit_ids)) if parent_limit_ids else limit_ids.copy()
 
         parent_user_id = parent_context.get("user_id", None)
-        if user_id is None:
-            # use the parent user_id if it exists
-            context["user_id"] = parent_user_id
-        elif len(user_id) == 0:
-            # caller passing an empty string explicitly blocks inheriting from the parent state
-            context["user_id"] = None
-        else:
-            context["user_id"] = user_id
+        context["user_id"] = self._valid_str_or_none(user_id, parent_user_id)
 
         parent_account_name = parent_context.get("account_name", None)
-        if account_name is None:
-            # use the parent account_name if it exists
-            context["account_name"] = parent_account_name
-        elif len(account_name) == 0:
-            # caller passing an empty string explicitly blocks inheriting from the parent state
-            context["account_name"] = None
-        else:
-            context["account_name"] = account_name
-
-        parent_request_tags = parent_context.get("request_tags", None)
-        if request_tags is not None:
-            if len(request_tags) == 0:
-                # caller passing an empty list explicitly blocks inheriting from the parent state
-                context["request_tags"] = None
-            else:
-                if parent_request_tags:
-                    # union of new and parent lists if the parent context contains request tags
-                    context["request_tags"] = list(set(request_tags) | set(parent_request_tags))
-                else:
-                    context["request_tags"] = request_tags.copy()
-        elif parent_request_tags:
-            # use the parent request_tags if it exists
-            context["request_tags"] = parent_request_tags.copy()
+        context["account_name"] = self._valid_str_or_none(account_name, parent_account_name)
 
         parent_request_properties = parent_context.get("request_properties", None)
-        if request_properties is not None:
-            if not request_properties:
-                # an empty dictionary explicitly blocks inheriting from the parent state
-                context["request_properties"] = None
-            else:
-                if parent_request_properties:
-                    # merge dictionaries, child overrides parent keys
-                    merged = parent_request_properties.copy()
-                    merged.update(request_properties)
-                    context["request_properties"] = merged
-                else:
-                    context["request_properties"] = request_properties.copy()
-        elif parent_request_properties:
-            # use the parent request_properties if it exists
-            context["request_properties"] = parent_request_properties.copy()
+        context["request_properties"] = self._valid_properties_or_none(request_properties, parent_request_properties)
 
         if price_as_category:
             context["price_as_category"] = price_as_category
@@ -858,7 +823,6 @@ class _PayiInstrumentor:
         use_case_version: Optional[int],        
         user_id: Optional[str],
         account_name: Optional[str],
-        request_tags: Optional["list[str]"] = None,
         request_properties: Optional["dict[str, str]"] = None,
         use_case_properties: Optional["dict[str, str]"] = None,
         *args: Any,
@@ -873,7 +837,6 @@ class _PayiInstrumentor:
                 use_case_version=use_case_version,
                 user_id=user_id,
                 account_name=account_name,
-                request_tags=request_tags,
                 request_properties=request_properties,
                 use_case_properties=use_case_properties
             )
@@ -889,7 +852,6 @@ class _PayiInstrumentor:
         use_case_version: Optional[int],        
         user_id: Optional[str],
         account_name: Optional[str],
-        request_tags: Optional["list[str]"] = None,
         request_properties: Optional["dict[str, str]"] = None,
         use_case_properties: Optional["dict[str, str]"] = None,
         *args: Any,
@@ -904,7 +866,6 @@ class _PayiInstrumentor:
                 use_case_version=use_case_version,
                 user_id=user_id,
                 account_name=account_name,
-                request_tags=request_tags,
                 request_properties=request_properties,
                 use_case_properties=use_case_properties)
             return func(*args, **kwargs)
@@ -937,7 +898,8 @@ class _PayiInstrumentor:
     ) -> None:
 
         limit_ids = ingest_extra_headers.pop(PayiHeaderNames.limit_ids, None)
-        request_tags = ingest_extra_headers.pop(PayiHeaderNames.request_tags, None)
+        # pop and ignore the request tags header since it is no longer processed
+        ingest_extra_headers.pop(PayiHeaderNames.request_tags, None)
 
         use_case_name = ingest_extra_headers.pop(PayiHeaderNames.use_case_name, None)
         use_case_id = ingest_extra_headers.pop(PayiHeaderNames.use_case_id, None)
@@ -949,8 +911,6 @@ class _PayiInstrumentor:
 
         if limit_ids:
             request._ingest["limit_ids"] = limit_ids.split(",")
-        if request_tags:
-            request._ingest["request_tags"] = request_tags.split(",")
         if use_case_name:
             request._ingest["use_case_name"] = use_case_name
         if use_case_id:
@@ -1295,7 +1255,6 @@ class _PayiInstrumentor:
 
         context_user_id: Optional[str] = context.get("user_id")
         context_account_name: Optional[str] = context.get("account_name")
-        context_request_tags: Optional[list[str]] = context.get("request_tags")
 
         context_price_as_category: Optional[str] = context.get("price_as_category")
         context_price_as_resource: Optional[str] = context.get("price_as_resource")
@@ -1357,9 +1316,6 @@ class _PayiInstrumentor:
                 extra_headers[PayiHeaderNames.use_case_version] = str(context_use_case_version)
             if context_use_case_step is not None:
                 extra_headers[PayiHeaderNames.use_case_step] = str(context_use_case_step)
-
-        if PayiHeaderNames.request_tags not in extra_headers and context_request_tags:
-            extra_headers[PayiHeaderNames.request_tags] = ",".join(context_request_tags)
 
         if PayiHeaderNames.price_as_category not in extra_headers and context_price_as_category:
             extra_headers[PayiHeaderNames.price_as_category] = context_price_as_category
@@ -1815,6 +1771,7 @@ def track(
     use_case_properties: Optional["dict[str, str]"] = None,
     proxy: Optional[bool] = None,
 ) -> Any:
+    _ = request_tags
 
     def _track(func: Any) -> Any:
         import asyncio
@@ -1835,7 +1792,6 @@ def track(
                     use_case_version,
                     user_id,
                     account_name,
-                    request_tags,
                     request_properties,
                     use_case_properties,
                     *args,
@@ -1859,7 +1815,6 @@ def track(
                     use_case_version,
                     user_id,
                     account_name,
-                    request_tags,
                     request_properties,
                     use_case_properties,
                     *args,
@@ -1899,7 +1854,6 @@ def track_context(
 
     context["user_id"] = user_id
     context["account_name"] = account_name
-    context["request_tags"] = request_tags
 
     context["price_as_category"] = price_as_category
     context["price_as_resource"] = price_as_resource
@@ -1907,6 +1861,8 @@ def track_context(
 
     context["request_properties"] = request_properties
     context["use_case_properties"] = use_case_properties
+
+    _ = request_tags
 
     return _InternalTrackContext(context)
 

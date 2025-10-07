@@ -36,11 +36,17 @@ distro==1.8.0
     # via payi
 exceptiongroup==1.2.2
     # via anyio
+filelock==3.19.1
+    # via huggingface-hub
 frozenlist==1.6.2
     # via aiohttp
     # via aiosignal
+fsspec==2025.9.0
+    # via huggingface-hub
 h11==0.16.0
     # via httpcore
+hf-xet==1.1.10
+    # via huggingface-hub
 httpcore==1.0.9
     # via httpx
 httpx==0.28.1
@@ -48,6 +54,8 @@ httpx==0.28.1
     # via payi
 httpx-aiohttp==0.1.8
     # via payi
+huggingface-hub==0.35.3
+    # via tokenizers
 idna==3.4
     # via anyio
     # via httpx
@@ -58,6 +66,8 @@ multidict==6.4.4
     # via yarl
 nest-asyncio==1.6.0
     # via payi
+packaging==25.0
+    # via huggingface-hub
 propcache==0.3.1
     # via aiohttp
     # via yarl
@@ -65,17 +75,25 @@ pydantic==2.11.9
     # via payi
 pydantic-core==2.33.2
     # via pydantic
+pyyaml==6.0.3
+    # via huggingface-hub
 regex==2024.11.6
     # via tiktoken
 requests==2.32.3
+    # via huggingface-hub
     # via tiktoken
 sniffio==1.3.0
     # via anyio
     # via payi
 tiktoken==0.8.0
     # via payi
+tokenizers==0.22.1
+    # via payi
+tqdm==4.67.1
+    # via huggingface-hub
 typing-extensions==4.12.2
     # via anyio
+    # via huggingface-hub
     # via multidict
     # via payi
     # via pydantic
