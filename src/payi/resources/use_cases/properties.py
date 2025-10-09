@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict
+from typing import Dict, Optional
 
 import httpx
 
@@ -47,7 +47,7 @@ class PropertiesResource(SyncAPIResource):
         self,
         use_case_id: str,
         *,
-        properties: Dict[str, str],
+        properties: Dict[str, Optional[str]],
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -103,7 +103,7 @@ class AsyncPropertiesResource(AsyncAPIResource):
         self,
         use_case_id: str,
         *,
-        properties: Dict[str, str],
+        properties: Dict[str, Optional[str]],
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,

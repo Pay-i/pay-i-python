@@ -25,14 +25,6 @@ from ..._response import (
 )
 from ...pagination import SyncCursorPage, AsyncCursorPage
 from ..._base_client import AsyncPaginator, make_request_options
-from .fixed_cost_resources import (
-    FixedCostResourcesResource,
-    AsyncFixedCostResourcesResource,
-    FixedCostResourcesResourceWithRawResponse,
-    AsyncFixedCostResourcesResourceWithRawResponse,
-    FixedCostResourcesResourceWithStreamingResponse,
-    AsyncFixedCostResourcesResourceWithStreamingResponse,
-)
 from ...types.category_response import CategoryResponse
 from ...types.category_delete_response import CategoryDeleteResponse
 from ...types.category_resource_response import CategoryResourceResponse
@@ -45,10 +37,6 @@ class CategoriesResource(SyncAPIResource):
     @cached_property
     def resources(self) -> ResourcesResource:
         return ResourcesResource(self._client)
-
-    @cached_property
-    def fixed_cost_resources(self) -> FixedCostResourcesResource:
-        return FixedCostResourcesResource(self._client)
 
     @cached_property
     def with_raw_response(self) -> CategoriesResourceWithRawResponse:
@@ -236,10 +224,6 @@ class AsyncCategoriesResource(AsyncAPIResource):
     @cached_property
     def resources(self) -> AsyncResourcesResource:
         return AsyncResourcesResource(self._client)
-
-    @cached_property
-    def fixed_cost_resources(self) -> AsyncFixedCostResourcesResource:
-        return AsyncFixedCostResourcesResource(self._client)
 
     @cached_property
     def with_raw_response(self) -> AsyncCategoriesResourceWithRawResponse:
@@ -444,10 +428,6 @@ class CategoriesResourceWithRawResponse:
     def resources(self) -> ResourcesResourceWithRawResponse:
         return ResourcesResourceWithRawResponse(self._categories.resources)
 
-    @cached_property
-    def fixed_cost_resources(self) -> FixedCostResourcesResourceWithRawResponse:
-        return FixedCostResourcesResourceWithRawResponse(self._categories.fixed_cost_resources)
-
 
 class AsyncCategoriesResourceWithRawResponse:
     def __init__(self, categories: AsyncCategoriesResource) -> None:
@@ -469,10 +449,6 @@ class AsyncCategoriesResourceWithRawResponse:
     @cached_property
     def resources(self) -> AsyncResourcesResourceWithRawResponse:
         return AsyncResourcesResourceWithRawResponse(self._categories.resources)
-
-    @cached_property
-    def fixed_cost_resources(self) -> AsyncFixedCostResourcesResourceWithRawResponse:
-        return AsyncFixedCostResourcesResourceWithRawResponse(self._categories.fixed_cost_resources)
 
 
 class CategoriesResourceWithStreamingResponse:
@@ -496,10 +472,6 @@ class CategoriesResourceWithStreamingResponse:
     def resources(self) -> ResourcesResourceWithStreamingResponse:
         return ResourcesResourceWithStreamingResponse(self._categories.resources)
 
-    @cached_property
-    def fixed_cost_resources(self) -> FixedCostResourcesResourceWithStreamingResponse:
-        return FixedCostResourcesResourceWithStreamingResponse(self._categories.fixed_cost_resources)
-
 
 class AsyncCategoriesResourceWithStreamingResponse:
     def __init__(self, categories: AsyncCategoriesResource) -> None:
@@ -521,7 +493,3 @@ class AsyncCategoriesResourceWithStreamingResponse:
     @cached_property
     def resources(self) -> AsyncResourcesResourceWithStreamingResponse:
         return AsyncResourcesResourceWithStreamingResponse(self._categories.resources)
-
-    @cached_property
-    def fixed_cost_resources(self) -> AsyncFixedCostResourcesResourceWithStreamingResponse:
-        return AsyncFixedCostResourcesResourceWithStreamingResponse(self._categories.fixed_cost_resources)

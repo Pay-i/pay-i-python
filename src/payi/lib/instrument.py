@@ -9,7 +9,7 @@ import logging
 import traceback
 from abc import abstractmethod
 from enum import Enum
-from typing import Any, Set, Union, Optional, Sequence, TypedDict
+from typing import Any, Set, Union, Optional, Sequence, TypedDict, cast
 from datetime import datetime, timezone
 from dataclasses import dataclass
 
@@ -60,7 +60,7 @@ class _ProviderRequest:
         self._building_function_response: bool = False
         self._function_calls: Optional[list[ProviderResponseFunctionCall]] = None
         self._is_large_context: bool = False
-        self._internal_request_properties: dict[str, str] = {}
+        self._internal_request_properties: dict[str, Optional[str]] = {}
 
     def process_chunk(self, _chunk: Any) -> _ChunkResult:
         return _ChunkResult(send_chunk_to_caller=True)
@@ -161,11 +161,11 @@ class PayiInstrumentConfig(TypedDict, total=False):
     use_case_name: Optional[str]
     use_case_id: Optional[str]
     use_case_version: Optional[int]
-    use_case_properties: Optional["dict[str, str]"]
+    use_case_properties: Optional["dict[str, Optional[str]]"]
     user_id: Optional[str]
     account_name: Optional[str]
     request_tags: Optional["list[str]"]
-    request_properties: Optional["dict[str, str]"]
+    request_properties: Optional["dict[str, Optional[str]]"]
     aws_config: Optional[PayiInstrumentAwsBedrockConfig]
     offline_instrumentation: Optional[PayiInstrumentOfflineInstrumentationConfig]
 
@@ -174,12 +174,12 @@ class PayiContext(TypedDict, total=False):
     use_case_id: Optional[str]
     use_case_version: Optional[int]
     use_case_step: Optional[str]
-    use_case_properties: Optional["dict[str, str]"]
+    use_case_properties: Optional["dict[str, Optional[str]]"]
     limit_ids: Optional['list[str]']
     user_id: Optional[str]
     account_name: Optional[str]
     request_tags: Optional["list[str]"]
-    request_properties: Optional["dict[str, str]"]
+    request_properties: Optional["dict[str, Optional[str]]"]
     price_as_category: Optional[str]
     price_as_resource: Optional[str]
     resource_scope: Optional[str]
@@ -191,11 +191,11 @@ class _Context(TypedDict, total=False):
     use_case_id: Optional[str]
     use_case_version: Optional[int]
     use_case_step: Optional[str]
-    use_case_properties: Optional["dict[str, str]"]
+    use_case_properties: Optional["dict[str, Optional[str]]"]
     limit_ids: Optional['list[str]']
     user_id: Optional[str]
     account_name: Optional[str]
-    request_properties: Optional["dict[str, str]"]
+    request_properties: Optional["dict[str, Optional[str]]"]
     price_as_category: Optional[str]
     price_as_resource: Optional[str]
     resource_scope: Optional[str]
@@ -710,7 +710,7 @@ class _PayiInstrumentor:
             return value
         
     @staticmethod
-    def _valid_properties_or_none(value: Optional["dict[str, str]"], default: Optional["dict[str, str]"] = None) -> Optional["dict[str, str]"]:
+    def _valid_properties_or_none(value: Optional["dict[str, Optional[str]]"], default: Optional["dict[str, Optional[str]]"] = None) -> Optional["dict[str, Optional[str]]"]:
         if value is None:
             return default.copy() if default else None
         elif len(value) == 0:
@@ -734,8 +734,8 @@ class _PayiInstrumentor:
         use_case_step: Optional[str]= None,
         user_id: Optional[str]= None,
         account_name: Optional[str]= None,
-        request_properties: Optional["dict[str, str]"] = None,
-        use_case_properties: Optional["dict[str, str]"] = None,
+        request_properties: Optional["dict[str, Optional[str]]"] = None,
+        use_case_properties: Optional["dict[str, Optional[str]]"] = None,
         price_as_category: Optional[str] = None,
         price_as_resource: Optional[str] = None,
         resource_scope: Optional[str] = None,
@@ -826,8 +826,8 @@ class _PayiInstrumentor:
         use_case_version: Optional[int],        
         user_id: Optional[str],
         account_name: Optional[str],
-        request_properties: Optional["dict[str, str]"] = None,
-        use_case_properties: Optional["dict[str, str]"] = None,
+        request_properties: Optional["dict[str, Optional[str]]"] = None,
+        use_case_properties: Optional["dict[str, Optional[str]]"] = None,
         *args: Any,
         **kwargs: Any,
     ) -> Any:
@@ -855,8 +855,8 @@ class _PayiInstrumentor:
         use_case_version: Optional[int],        
         user_id: Optional[str],
         account_name: Optional[str],
-        request_properties: Optional["dict[str, str]"] = None,
-        use_case_properties: Optional["dict[str, str]"] = None,
+        request_properties: Optional["dict[str, Optional[str]]"] = None,
+        use_case_properties: Optional["dict[str, Optional[str]]"] = None,
         *args: Any,
         **kwargs: Any,
     ) -> Any:
@@ -1795,8 +1795,8 @@ def track(
                     use_case_version,
                     user_id,
                     account_name,
-                    request_properties,
-                    use_case_properties,
+                    cast(Optional['dict[str, Optional[str]]'], request_properties),
+                    cast(Optional['dict[str, Optional[str]]'], use_case_properties),
                     *args,
                     **kwargs,
                 )
@@ -1818,8 +1818,8 @@ def track(
                     use_case_version,
                     user_id,
                     account_name,
-                    request_properties,
-                    use_case_properties,
+                    cast(Optional['dict[str, Optional[str]]'], request_properties),
+                    cast(Optional['dict[str, Optional[str]]'], use_case_properties),
                     *args,
                     **kwargs,
                 )
@@ -1862,8 +1862,8 @@ def track_context(
     context["price_as_resource"] = price_as_resource
     context["resource_scope"] = resource_scope
 
-    context["request_properties"] = request_properties
-    context["use_case_properties"] = use_case_properties
+    context["request_properties"] = cast(Optional['dict[str, Optional[str]]'], request_properties)
+    context["use_case_properties"] = cast(Optional['dict[str, Optional[str]]'], use_case_properties)
 
     _ = request_tags
 

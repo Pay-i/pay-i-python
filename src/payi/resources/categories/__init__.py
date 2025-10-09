@@ -16,14 +16,6 @@ from .categories import (
     CategoriesResourceWithStreamingResponse,
     AsyncCategoriesResourceWithStreamingResponse,
 )
-from .fixed_cost_resources import (
-    FixedCostResourcesResource,
-    AsyncFixedCostResourcesResource,
-    FixedCostResourcesResourceWithRawResponse,
-    AsyncFixedCostResourcesResourceWithRawResponse,
-    FixedCostResourcesResourceWithStreamingResponse,
-    AsyncFixedCostResourcesResourceWithStreamingResponse,
-)
 
 __all__ = [
     "ResourcesResource",
@@ -32,12 +24,6 @@ __all__ = [
     "AsyncResourcesResourceWithRawResponse",
     "ResourcesResourceWithStreamingResponse",
     "AsyncResourcesResourceWithStreamingResponse",
-    "FixedCostResourcesResource",
-    "AsyncFixedCostResourcesResource",
-    "FixedCostResourcesResourceWithRawResponse",
-    "AsyncFixedCostResourcesResourceWithRawResponse",
-    "FixedCostResourcesResourceWithStreamingResponse",
-    "AsyncFixedCostResourcesResourceWithStreamingResponse",
     "CategoriesResource",
     "AsyncCategoriesResource",
     "CategoriesResourceWithRawResponse",

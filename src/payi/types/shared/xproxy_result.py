@@ -32,6 +32,8 @@ class XproxyResult(BaseModel):
 
     cost: Optional[Cost] = None
 
+    duplicate_request: Optional[bool] = None
+
     limits: Optional[Dict[str, Limits]] = None
 
     request_id: Optional[str] = None
