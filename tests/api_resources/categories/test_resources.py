@@ -163,6 +163,7 @@ class TestResources:
         resource = client.categories.resources.list(
             resource="resource",
             category="category",
+            active=True,
             cursor="cursor",
             limit=0,
             sort_ascending=True,
@@ -419,6 +420,7 @@ class TestAsyncResources:
         resource = await async_client.categories.resources.list(
             resource="resource",
             category="category",
+            active=True,
             cursor="cursor",
             limit=0,
             sort_ascending=True,

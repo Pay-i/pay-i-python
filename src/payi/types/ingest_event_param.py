@@ -35,7 +35,7 @@ class IngestEventParam(TypedDict, total=False):
 
     limit_ids: Optional[SequenceNotStr[str]]
 
-    properties: Optional[Dict[str, str]]
+    properties: Optional[Dict[str, Optional[str]]]
 
     provider_request_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]]
 
@@ -65,7 +65,7 @@ class IngestEventParam(TypedDict, total=False):
 
     use_case_name: Optional[str]
 
-    use_case_properties: Optional[Dict[str, str]]
+    use_case_properties: Optional[Dict[str, Optional[str]]]
 
     use_case_step: Optional[str]
 

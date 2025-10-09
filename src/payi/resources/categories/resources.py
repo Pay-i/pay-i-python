@@ -140,6 +140,7 @@ class ResourcesResource(SyncAPIResource):
         resource: str,
         *,
         category: str,
+        active: bool | Omit = omit,
         cursor: str | Omit = omit,
         limit: int | Omit = omit,
         sort_ascending: bool | Omit = omit,
@@ -176,6 +177,7 @@ class ResourcesResource(SyncAPIResource):
                 timeout=timeout,
                 query=maybe_transform(
                     {
+                        "active": active,
                         "cursor": cursor,
                         "limit": limit,
                         "sort_ascending": sort_ascending,
@@ -341,6 +343,7 @@ class AsyncResourcesResource(AsyncAPIResource):
         resource: str,
         *,
         category: str,
+        active: bool | Omit = omit,
         cursor: str | Omit = omit,
         limit: int | Omit = omit,
         sort_ascending: bool | Omit = omit,
@@ -377,6 +380,7 @@ class AsyncResourcesResource(AsyncAPIResource):
                 timeout=timeout,
                 query=maybe_transform(
                     {
+                        "active": active,
                         "cursor": cursor,
                         "limit": limit,
                         "sort_ascending": sort_ascending,

@@ -25,7 +25,7 @@ class IngestUnitsParams(TypedDict, total=False):
 
     http_status_code: Optional[int]
 
-    properties: Optional[Dict[str, str]]
+    properties: Optional[Dict[str, Optional[str]]]
 
     provider_request_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]]
 
@@ -49,7 +49,7 @@ class IngestUnitsParams(TypedDict, total=False):
 
     time_to_first_token_ms: Optional[int]
 
-    use_case_properties: Optional[Dict[str, str]]
+    use_case_properties: Optional[Dict[str, Optional[str]]]
 
     limit_ids: Annotated[Union[list[str], None], PropertyInfo(alias="xProxy-Limit-IDs")]
 

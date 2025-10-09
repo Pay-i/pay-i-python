@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict
+from typing import Dict, Optional
 from typing_extensions import Required, TypedDict
 
 __all__ = ["PropertyUpdateParams"]
@@ -11,4 +11,4 @@ __all__ = ["PropertyUpdateParams"]
 class PropertyUpdateParams(TypedDict, total=False):
     category: Required[str]
 
-    properties: Required[Dict[str, str]]
+    properties: Required[Dict[str, Optional[str]]]
