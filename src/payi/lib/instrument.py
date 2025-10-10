@@ -185,6 +185,19 @@ class PayiContext(TypedDict, total=False):
     resource_scope: Optional[str]
     last_result: Optional[Union[XproxyResult, XproxyError]]
 
+class PayiInstanceDefaultContext(TypedDict, total=False):
+    use_case_name: Optional[str]
+    use_case_id: Optional[str]
+    use_case_version: Optional[int]
+    use_case_properties: Optional["dict[str, str]"]
+    limit_ids: Optional['list[str]']
+    user_id: Optional[str]
+    account_name: Optional[str]
+    request_properties: Optional["dict[str, str]"]
+    price_as_category: Optional[str]
+    price_as_resource: Optional[str]
+    resource_scope: Optional[str]
+
 class _Context(TypedDict, total=False):
     proxy: Optional[bool]
     use_case_name: Optional[str]
@@ -323,7 +336,7 @@ class _PayiInstrumentor:
             context_keys = list(_Context.__annotations__.keys()) if hasattr(_Context, '__annotations__') else []
             for key in context_keys:
                 if key in global_config:
-                    context[key] = global_config[key] # type: ignore
+                    context[key] = global_config[key] # type: ignore[literal-required]
 
             self._init_current_context(**context) 
 
@@ -724,6 +737,56 @@ class _PayiInstrumentor:
         else:
             return value.copy()
 
+    def _set_instance_default_context(
+        self,
+        instance: Any,
+        context: PayiInstanceDefaultContext
+    ) -> None:
+        if instance is None:
+            raise ValueError("instance cannot be None")
+        if not context:
+            raise ValueError("context_dict cannot be None or empty")
+        
+        context = context.copy()
+        if "use_case_properties" in context and context["use_case_properties"] is not None:
+            context["use_case_properties"] = context["use_case_properties"].copy()
+        if "request_properties" in context and context["request_properties"] is not None:
+            context["request_properties"] = context["request_properties"].copy()
+        if "limit_ids" in context and context["limit_ids"] is not None:
+            context["limit_ids"] = context["limit_ids"].copy()
+
+        instance.__payi_default_context__ = context
+        self._logger.debug(f"payi_set_default_context: attached context to instance {type(instance).__name__}")
+
+    @staticmethod
+    def _get_instance_default_context(
+        instance: Any
+    ) -> "Optional[PayiInstanceDefaultContext]":
+        if instance is None:
+            return None
+
+        context = getattr(instance, "__payi_default_context__", None)
+        if not context:
+            inner_instance = getattr(instance, "_client", None)
+            if inner_instance:
+                context = getattr(inner_instance, "__payi_default_context__", None)
+
+        # Return a copy to prevent external modifications
+        return context if context else None
+
+    @staticmethod
+    def _merge_context_instance_defaults(
+        context: _Context,
+        instance_defaults: Optional[PayiInstanceDefaultContext]
+    ) -> _Context:
+        if instance_defaults:
+            context = context.copy()
+            for key, value in instance_defaults.items():
+                if value is not None and context.get(key, None) is None:
+                    context[key] = value # type: ignore[literal-required]
+
+        return context
+
     def _init_current_context(
         self,
         proxy: Optional[bool] = None,
@@ -991,6 +1054,8 @@ class _PayiInstrumentor:
             # wrapped function invoked outside of decorator scope
             return await wrapped(*args, **kwargs)
 
+        context = self._merge_context_instance_defaults(context, self._get_instance_default_context(instance))
+
         # after _udpate_headers, all metadata to add to ingest is in extra_headers, keyed by the xproxy-xxx header name
         extra_headers: Optional[dict[str, str]] = kwargs.get("extra_headers")
         extra_headers = (extra_headers or {}).copy()
@@ -1116,6 +1181,8 @@ class _PayiInstrumentor:
 
             # wrapped function invoked outside of decorator scope
             return wrapped(*args, **kwargs)
+
+        context = self._merge_context_instance_defaults(context, self._get_instance_default_context(instance))
 
         # after _udpate_headers, all metadata to add to ingest is in extra_headers, keyed by the xproxy-xxx header name
         extra_headers: Optional[dict[str, str]] = kwargs.get("extra_headers")
@@ -1886,3 +1953,12 @@ def get_context() -> PayiContext:
     if _instrumentor._last_result:
         context_dict["last_result"] = _instrumentor._last_result
     return PayiContext(**dict(context_dict))  # type: ignore
+
+def payi_set_default_context(
+    instance: Any,
+    context: PayiInstanceDefaultContext
+) -> None:
+    if not _instrumentor:
+        raise RuntimeError("payi_instrument() must be called before using payi_add_client_default_context()")
+    
+    _instrumentor._set_instance_default_context(instance, context)
