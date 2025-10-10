@@ -90,7 +90,7 @@ class IngestResource(SyncAPIResource):
         end_to_end_latency_ms: Optional[int] | Omit = omit,
         event_timestamp: Union[str, datetime, None] | Omit = omit,
         http_status_code: Optional[int] | Omit = omit,
-        properties: Optional[Dict[str, str]] | Omit = omit,
+        properties: Optional[Dict[str, Optional[str]]] | Omit = omit,
         provider_request_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | Omit = omit,
         provider_request_json: Optional[str] | Omit = omit,
         provider_request_reasoning_json: Optional[str] | Omit = omit,
@@ -103,8 +103,9 @@ class IngestResource(SyncAPIResource):
         resource: Optional[str] | Omit = omit,
         time_to_first_completion_token_ms: Optional[int] | Omit = omit,
         time_to_first_token_ms: Optional[int] | Omit = omit,
-        use_case_properties: Optional[Dict[str, str]] | Omit = omit,
+        use_case_properties: Optional[Dict[str, Optional[str]]] | Omit = omit,
         limit_ids: Optional[list[str]] | Omit = omit,
+        disable_logging: Optional[bool] | Omit = omit,
         request_tags: Optional[list[str]] | Omit = omit,
         use_case_id: Optional[str] | Omit = omit,
         use_case_name: Optional[str] | Omit = omit,
@@ -134,9 +135,11 @@ class IngestResource(SyncAPIResource):
 
           event_timestamp: (str, datetime, None): The timestamp of the event
 
+          disable_logging (bool, optional): Disable logging for the request
+
           limit_ids (list[str], optional): The limit IDs to associate with the request
 
-          properties (Dict[str, str], optional): Properties to associate with the request
+          properties (Dict[str, Optional[str]], optional): Properties to associate with the request
 
           request_tags (list[str], optional): The request tags to associate with the request
 
@@ -148,7 +151,7 @@ class IngestResource(SyncAPIResource):
 
           use_case_version (int, optional): The use case instance version
 
-          use_case_properties (Dict[str, str], optional): The use case properties
+          use_case_properties (Dict[str, Optional[str]], optional): The use case properties
 
           user_id (str, optional): The user id
           
@@ -214,6 +217,9 @@ class IngestResource(SyncAPIResource):
                     "xProxy-User-ID": user_id,
                     "xProxy-Resource-Scope": resource_scope,
                     "xProxy-Account-Name": account_name,
+                    "xProxy-Logging-Disable": str(disable_logging)
+                    if is_given(disable_logging)
+                    else not_given,
                 }
             ),
             **(extra_headers or {}),
@@ -311,7 +317,7 @@ class AsyncIngestResource(AsyncAPIResource):
         end_to_end_latency_ms: Optional[int] | Omit = omit,
         event_timestamp: Union[str, datetime, None] | Omit = omit,
         http_status_code: Optional[int] | Omit = omit,
-        properties: Optional[Dict[str, str]] | Omit = omit,
+        properties: Optional[Dict[str, Optional[str]]] | Omit = omit,
         provider_request_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | Omit = omit,
         provider_request_json: Optional[str] | Omit = omit,
         provider_request_reasoning_json: Optional[str] | Omit = omit,
@@ -324,8 +330,9 @@ class AsyncIngestResource(AsyncAPIResource):
         resource: Optional[str] | Omit = omit,
         time_to_first_completion_token_ms: Optional[int] | Omit = omit,
         time_to_first_token_ms: Optional[int] | Omit = omit,
-        use_case_properties: Optional[Dict[str, str]] | Omit = omit,
+        use_case_properties: Optional[Dict[str, Optional[str]]] | Omit = omit,
         limit_ids: Optional[list[str]] | Omit = omit,
+        disable_logging: Optional[bool] | Omit = omit,
         request_tags: Optional[list[str]] | Omit = omit,
         use_case_id: Optional[str] | Omit = omit,
         use_case_name: Optional[str] | Omit = omit,
@@ -354,9 +361,11 @@ class AsyncIngestResource(AsyncAPIResource):
 
           event_timestamp: (datetime, None): The timestamp of the event
 
+          disable_logging: (bool, optional): Disable logging for the request
+          
           limit_ids (list[str], optional): The limit IDs to associate with the request 
 
-          properties (Dict[str, str], optional): Properties to associate with the request 
+          properties (Dict[str, Optional[str]], optional): Properties to associate with the request
 
           request_tags (list[str], optional): The request tags to associate with the request
 
@@ -368,7 +377,7 @@ class AsyncIngestResource(AsyncAPIResource):
 
           use_case_version (int, optional): The use case instance version
 
-          use_case_properties (Dict[str, str], optional): The use case properties
+          use_case_properties (Dict[str, Optional[str]], optional): The use case properties
 
           user_id (str, optional): The user id
           
@@ -434,6 +443,9 @@ class AsyncIngestResource(AsyncAPIResource):
                     else not_given,
                     "xProxy-User-ID": user_id,
                     "xProxy-Resource-Scope": resource_scope,
+                    "xProxy-Logging-Disable": str(disable_logging)
+                    if is_given(disable_logging)
+                    else not_given,
                 }
             ),
             **(extra_headers or {}),

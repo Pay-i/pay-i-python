@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
-from typing_extensions import Required, TypedDict
+from typing_extensions import Required, Annotated, TypedDict
+
+from ..._utils import PropertyInfo
 
 __all__ = ["ResourceListParams"]
 
 
 class ResourceListParams(TypedDict, total=False):
     category: Required[str]
+
+    active: Annotated[bool, PropertyInfo(alias="Active")]
 
     cursor: str
 
