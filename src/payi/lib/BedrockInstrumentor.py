@@ -69,10 +69,10 @@ def create_client_wrapper(instrumentor: _PayiInstrumentor, wrapped: Any, instanc
 
     try:
         client: Any = wrapped(*args, **kwargs)
-        client.invoke_model = wrap_invoke(instrumentor, client.invoke_model)
-        client.invoke_model_with_response_stream = wrap_invoke_stream(instrumentor, client.invoke_model_with_response_stream)
-        client.converse = wrap_converse(instrumentor, client.converse)
-        client.converse_stream = wrap_converse_stream(instrumentor, client.converse_stream)
+        client.invoke_model = wrap_invoke(instrumentor, client.invoke_model, client)
+        client.invoke_model_with_response_stream = wrap_invoke_stream(instrumentor, client.invoke_model_with_response_stream, client)
+        client.converse = wrap_converse(instrumentor, client.converse, client)
+        client.converse_stream = wrap_converse_stream(instrumentor, client.converse_stream, client)
 
         instrumentor._logger.debug(f"Instrumented bedrock client")
 
@@ -221,7 +221,7 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
 
         return data # type: ignore
 
-def wrap_invoke(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
+def wrap_invoke(instrumentor: _PayiInstrumentor, wrapped: Any, instance: Any) -> Any:
     @wraps(wrapped)
     def invoke_wrapper(*args: Any, **kwargs: 'dict[str, Any]') -> Any:
         modelId:str = kwargs.get("modelId", "") # type: ignore
@@ -230,14 +230,14 @@ def wrap_invoke(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
             _BedrockInvokeProviderRequest(instrumentor=instrumentor, model_id=modelId),
             _IsStreaming.false,
             wrapped,
-            None,
+            instance,
             args,
             kwargs,
         )   
     
     return invoke_wrapper
 
-def wrap_invoke_stream(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
+def wrap_invoke_stream(instrumentor: _PayiInstrumentor, wrapped: Any, instance: Any) -> Any:
     @wraps(wrapped)
     def invoke_wrapper(*args: Any, **kwargs: Any) -> Any:
         modelId: str = kwargs.get("modelId", "") # type: ignore
@@ -247,14 +247,14 @@ def wrap_invoke_stream(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
             _BedrockInvokeProviderRequest(instrumentor=instrumentor, model_id=modelId),
             _IsStreaming.true,
             wrapped,
-            None,
+            instance,
             args,
             kwargs,
         )
 
     return invoke_wrapper
 
-def wrap_converse(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
+def wrap_converse(instrumentor: _PayiInstrumentor, wrapped: Any, instance: Any) -> Any:
     @wraps(wrapped)
     def invoke_wrapper(*args: Any, **kwargs: 'dict[str, Any]') -> Any:
         modelId:str = kwargs.get("modelId", "") # type: ignore
@@ -264,14 +264,14 @@ def wrap_converse(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
             _BedrockConverseProviderRequest(instrumentor=instrumentor),
             _IsStreaming.false,
             wrapped,
-            None,
+            instance,
             args,
             kwargs,
         )
     
     return invoke_wrapper
 
-def wrap_converse_stream(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
+def wrap_converse_stream(instrumentor: _PayiInstrumentor, wrapped: Any, instance: Any) -> Any:
     @wraps(wrapped)
     def invoke_wrapper(*args: Any, **kwargs: Any) -> Any:
         modelId: str = kwargs.get("modelId", "") # type: ignore
@@ -281,7 +281,7 @@ def wrap_converse_stream(instrumentor: _PayiInstrumentor, wrapped: Any) -> Any:
             _BedrockConverseProviderRequest(instrumentor=instrumentor),
             _IsStreaming.true,
             wrapped,
-            None,
+            instance,
             args,
             kwargs,
         )
