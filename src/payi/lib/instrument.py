@@ -18,7 +18,7 @@ from wrapt import ObjectProxy  # type: ignore
 
 from payi import Payi, AsyncPayi, APIStatusError, APIConnectionError, __version__ as _payi_version
 from payi.types import IngestUnitsParams
-from payi.lib.helpers import PayiHeaderNames, PayiPropertyNames
+from payi.lib.helpers import PayiHeaderNames, PayiPropertyNames, _compact_json
 from payi.types.shared import XproxyResult
 from payi.types.ingest_response import IngestResponse
 from payi.types.ingest_units_params import Units, ProviderResponseFunctionCall
@@ -149,6 +149,15 @@ class _ProviderRequest:
 class PayiInstrumentAwsBedrockConfig(TypedDict, total=False):
     guardrail_trace: bool
 
+class PayiInstrumentAzureOpenAiDeploymentConfig(TypedDict, total=False):
+    deployment_name: str
+    price_as_category: Optional[str]
+    price_as_resource: Optional[str]
+    resource_scope: Optional[str]   
+
+class PayiInstrumentAzureOpenAiConfig(TypedDict, total=False):
+    deployments: Sequence[PayiInstrumentAzureOpenAiDeploymentConfig]
+
 class PayiInstrumentOfflineInstrumentationConfig(TypedDict, total=False):
     file_name: str
 
@@ -167,6 +176,7 @@ class PayiInstrumentConfig(TypedDict, total=False):
     request_tags: Optional["list[str]"]
     request_properties: Optional["dict[str, Optional[str]]"]
     aws_config: Optional[PayiInstrumentAwsBedrockConfig]
+    azure_openai_config: Optional[PayiInstrumentAzureOpenAiConfig]
     offline_instrumentation: Optional[PayiInstrumentOfflineInstrumentationConfig]
 
 class PayiContext(TypedDict, total=False):
@@ -349,7 +359,7 @@ class _PayiInstrumentor:
             self._apayi = AsyncPayi()
 
     def _instrument_all(self, global_config: PayiInstrumentConfig) -> None:
-        self._instrument_openai()
+        self._instrument_openai(global_config.get("azure_openai_config", None))
         self._instrument_anthropic()
         self._instrument_aws_bedrock(global_config.get("aws_config", None))
         self._instrument_google_vertex()
@@ -357,7 +367,7 @@ class _PayiInstrumentor:
 
     def _instrument_specific(self, instruments: Set[str], global_config: PayiInstrumentConfig) -> None:
         if PayiCategories.openai in instruments or PayiCategories.azure_openai in instruments:
-            self._instrument_openai()
+            self._instrument_openai(global_config.get("azure_openai_config", None))
         if PayiCategories.anthropic in instruments:
             self._instrument_anthropic()
         if PayiCategories.aws_bedrock in instruments:
@@ -366,11 +376,11 @@ class _PayiInstrumentor:
             self._instrument_google_vertex()
             self._instrument_google_genai()
 
-    def _instrument_openai(self) -> None:
+    def _instrument_openai(self, azure_openai_config: Optional[PayiInstrumentAzureOpenAiConfig]) -> None:
         from .OpenAIInstrumentor import OpenAiInstrumentor
 
         try:
-            OpenAiInstrumentor.instrument(self)
+            OpenAiInstrumentor.instrument(self, azure_openai_config=azure_openai_config)
 
         except Exception as e:
             self._logger.error(f"Error instrumenting OpenAI: {e}")
@@ -451,7 +461,17 @@ class _PayiInstrumentor:
 
         return log_ingest_units
         
-    def _process_ingest_units(
+    def _merge_internal_request_properties(self, request: _ProviderRequest) -> None:
+        if not request._internal_request_properties:
+            return
+        
+        properties = request._ingest.get("properties") or {}
+        request._ingest["properties"] = properties
+        for key, value in request._internal_request_properties.items():
+            if key not in properties:
+                properties[key] = value
+                
+    def _after_invoke_update_request(
         self,
         request: _ProviderRequest,
         extra_headers: 'dict[str, str]') -> None:
@@ -470,12 +490,7 @@ class _PayiInstrumentor:
         if 'resource' not in ingest_units or ingest_units['resource'] == '':
             ingest_units['resource'] = "system.unknown_model"
 
-        if request._internal_request_properties:
-            properties = ingest_units.get("properties") or {}
-            ingest_units["properties"] = properties
-            for key, value in request._internal_request_properties.items():
-                if key not in properties:
-                    properties[key] = value
+        self._merge_internal_request_properties(request)
 
         request_json = ingest_units.get('provider_request_json', "")
         if request_json and self._instrument_inline_data is False:
@@ -484,7 +499,7 @@ class _PayiInstrumentor:
                 if request.remove_inline_data(prompt_dict):
                     self._logger.debug(f"Removed inline data from provider_request_json")
                     # store the modified dict back as JSON string
-                    ingest_units['provider_request_json'] = json.dumps(prompt_dict)
+                    ingest_units['provider_request_json'] = _compact_json(prompt_dict)
 
             except Exception as e:
                 self._logger.error(f"Error serializing provider_request_json: {e}")
@@ -537,7 +552,7 @@ class _PayiInstrumentor:
         self._logger.debug(f"_aingest_units")
 
         extra_headers: 'dict[str, str]' = {}
-        self._process_ingest_units(request, extra_headers=extra_headers)
+        self._after_invoke_update_request(request, extra_headers=extra_headers)
 
         try:
             if self._logger.isEnabledFor(logging.DEBUG):
@@ -661,7 +676,7 @@ class _PayiInstrumentor:
         self._logger.debug(f"_ingest_units")
 
         extra_headers: 'dict[str, str]' = {}
-        self._process_ingest_units(request, extra_headers=extra_headers)
+        self._after_invoke_update_request(request, extra_headers=extra_headers)
 
         try:
             if self._payi:
@@ -805,7 +820,7 @@ class _PayiInstrumentor:
         ) -> None:
 
         # there will always be a current context
-        context: _Context = self.get_context() # type: ignore
+        context: _Context = self._get_context() # type: ignore
         parent_context: _Context = self._context_stack[-2] if len(self._context_stack) > 1 else {}
 
         parent_proxy = parent_context.get("proxy", self._proxy_default)
@@ -946,26 +961,26 @@ class _PayiInstrumentor:
         if self._context_stack:
             self._context_stack.pop()
 
-    def get_context(self) -> Optional[_Context]:
+    def _get_context(self) -> Optional[_Context]:
         # Return the current top of the stack
         return self._context_stack[-1] if self._context_stack else None
 
-    def get_context_safe(self) -> _Context:
+    def _get_context_safe(self) -> _Context:
         # Return the current top of the stack
-        return self.get_context() or {}
+        return self._get_context() or {}
 
-    def _prepare_ingest(
+    def _before_invoke_update_request(
         self,
         request: _ProviderRequest,
-        context: _Context,
         ingest_extra_headers: "dict[str, str]", # do not conflict with potential kwargs["extra_headers"]
         args: Sequence[Any],
         kwargs: 'dict[str, Any]',
     ) -> None:
 
-        limit_ids = ingest_extra_headers.pop(PayiHeaderNames.limit_ids, None)
         # pop and ignore the request tags header since it is no longer processed
         ingest_extra_headers.pop(PayiHeaderNames.request_tags, None)
+
+        limit_ids = ingest_extra_headers.pop(PayiHeaderNames.limit_ids, None)
 
         use_case_name = ingest_extra_headers.pop(PayiHeaderNames.use_case_name, None)
         use_case_id = ingest_extra_headers.pop(PayiHeaderNames.use_case_id, None)
@@ -974,6 +989,9 @@ class _PayiInstrumentor:
 
         user_id = ingest_extra_headers.pop(PayiHeaderNames.user_id, None)
         account_name = ingest_extra_headers.pop(PayiHeaderNames.account_name, None)
+
+        request_properties = ingest_extra_headers.pop(PayiHeaderNames.request_properties, "")
+        use_case_properties = ingest_extra_headers.pop(PayiHeaderNames.use_case_properties, "")
 
         if limit_ids:
             request._ingest["limit_ids"] = limit_ids.split(",")
@@ -989,23 +1007,10 @@ class _PayiInstrumentor:
             request._ingest["user_id"] = user_id
         if account_name:
             request._ingest["account_name"] = account_name
-
-        request_properties = context.get("request_properties", None)
         if request_properties:
-            request._ingest["properties"] = request_properties
-
-        use_case_properties = context.get("use_case_properties", None)
+            request._ingest["properties"] = json.loads(request_properties)
         if use_case_properties:
-            request._ingest["use_case_properties"] = use_case_properties
-
-        if request._internal_request_properties:
-            if "properties" in request._ingest and request._ingest["properties"] is not None:
-                # Merge internal request properties, but don't override existing keys
-                for key, value in request._internal_request_properties.items():
-                    if key not in request._ingest["properties"]:
-                        request._ingest["properties"][key] = value
-            else:
-                request._ingest["properties"] = request._internal_request_properties # Assign
+            request._ingest["use_case_properties"] = json.loads(use_case_properties)
 
         if len(ingest_extra_headers) > 0:
             request._ingest["provider_request_headers"] = [PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) for k, v in ingest_extra_headers.items()]
@@ -1029,7 +1034,7 @@ class _PayiInstrumentor:
         request.process_request_prompt(provider_prompt, args, kwargs)
 
         if self._log_prompt_and_response:
-            request._ingest["provider_request_json"] = json.dumps(provider_prompt)
+            request._ingest["provider_request_json"] = _compact_json(provider_prompt)
 
         request._ingest["event_timestamp"] = datetime.now(timezone.utc)
         
@@ -1044,7 +1049,7 @@ class _PayiInstrumentor:
     ) -> Any:
         self._logger.debug(f"async_invoke_wrapper: instance {instance}, category {request._category}")
 
-        context = self.get_context()
+        context = self._get_context()
 
         # Bedrock client does not have an async method
 
@@ -1071,12 +1076,15 @@ class _PayiInstrumentor:
             self._logger.debug(f"async_invoke_wrapper: sending proxy request")
 
             return await wrapped(*args, **kwargs)
+        
+        if not request.supports_extra_headers and "extra_headers" in kwargs:
+            kwargs.pop("extra_headers", None)
 
         current_frame = inspect.currentframe()
         # f_back excludes the current frame, strip() cleans up whitespace and newlines
         stack = [frame.strip() for frame in traceback.format_stack(current_frame.f_back)]  # type: ignore
 
-        request._ingest['properties'] = { 'system.stack_trace': json.dumps(stack) }
+        request._ingest['properties'] = { 'system.stack_trace': _compact_json(stack) }
 
         if request.process_request(instance, extra_headers, args, kwargs) is False:
             self._logger.debug(f"async_invoke_wrapper: calling wrapped instance")
@@ -1093,7 +1101,7 @@ class _PayiInstrumentor:
             stream = False
 
         try:
-            self._prepare_ingest(request, context, extra_headers, args, kwargs)
+            self._before_invoke_update_request(request, extra_headers, args, kwargs)
             self._logger.debug(f"async_invoke_wrapper: calling wrapped instance (stream={stream})")
 
             if "extra_headers" in kwargs:
@@ -1171,7 +1179,7 @@ class _PayiInstrumentor:
     ) -> Any:
         self._logger.debug(f"invoke_wrapper: instance {instance}, category {request._category}")
 
-        context = self.get_context()
+        context = self._get_context()
 
         if not context:
             if not request.supports_extra_headers:
@@ -1199,12 +1207,15 @@ class _PayiInstrumentor:
             self._logger.debug(f"invoke_wrapper: sending proxy request")
 
             return wrapped(*args, **kwargs)
+
+        if not request.supports_extra_headers and "extra_headers" in kwargs:
+            kwargs.pop("extra_headers", None)
         
         current_frame = inspect.currentframe()
         # f_back excludes the current frame, strip() cleans up whitespace and newlines
         stack = [frame.strip() for frame in traceback.format_stack(current_frame.f_back)]  # type: ignore
 
-        request._ingest['properties'] = { 'system.stack_trace': json.dumps(stack) }
+        request._ingest['properties'] = { 'system.stack_trace': _compact_json(stack) }
 
         if request.process_request(instance, extra_headers, args, kwargs) is False:
             self._logger.debug(f"invoke_wrapper: calling wrapped instance")
@@ -1221,7 +1232,7 @@ class _PayiInstrumentor:
             stream = False
 
         try:
-            self._prepare_ingest(request, context, extra_headers, args, kwargs)
+            self._before_invoke_update_request(request, extra_headers, args, kwargs)
             self._logger.debug(f"invoke_wrapper: calling wrapped instance (stream={stream})")
 
             if "extra_headers" in kwargs:
@@ -1301,7 +1312,7 @@ class _PayiInstrumentor:
         self
     ) -> 'dict[str, str]':
         extra_headers: dict[str, str] = {}
-        context = self.get_context()
+        context = self._get_context()
         if context:
             self._update_extra_headers(context, extra_headers)
 
@@ -1330,13 +1341,38 @@ class _PayiInstrumentor:
         context_price_as_resource: Optional[str] = context.get("price_as_resource")
         context_resource_scope: Optional[str] = context.get("resource_scope")
 
-        # headers_limit_ids = extra_headers.get(PayiHeaderNames.limit_ids, None)
-    
+        context_request_properties: Optional[dict[str, Optional[str]]] = context.get("request_properties")
+        context_use_case_properties: Optional[dict[str, Optional[str]]] = context.get("use_case_properties")
+
+        if PayiHeaderNames.request_properties in extra_headers:
+            headers_request_properties = extra_headers.get(PayiHeaderNames.request_properties, None)
+
+            if not headers_request_properties:
+                # headers_request_properties is empty, remove it from extra_headers
+                extra_headers.pop(PayiHeaderNames.request_properties, None)
+            else:
+                # leave the value in extra_headers
+                ...
+        elif context_request_properties:
+            extra_headers[PayiHeaderNames.request_properties] = _compact_json(context_request_properties)
+
+        if PayiHeaderNames.use_case_properties in extra_headers:
+            headers_use_case_properties = extra_headers.get(PayiHeaderNames.use_case_properties, None)
+
+            if not headers_use_case_properties:
+                # headers_use_case_properties is empty, remove it from extra_headers
+                extra_headers.pop(PayiHeaderNames.use_case_properties, None)
+            else:
+                # leave the value in extra_headers
+                ...
+        elif context_use_case_properties:
+            extra_headers[PayiHeaderNames.use_case_properties] = _compact_json(context_use_case_properties)
+
         # If the caller specifies limit_ids in extra_headers, it takes precedence over the decorator
         if PayiHeaderNames.limit_ids in extra_headers:
             headers_limit_ids = extra_headers.get(PayiHeaderNames.limit_ids)
 
-            if headers_limit_ids is None or len(headers_limit_ids) == 0:
+            if not headers_limit_ids:
                 # headers_limit_ids is empty, remove it from extra_headers
                 extra_headers.pop(PayiHeaderNames.limit_ids, None)
             else:   
@@ -1347,7 +1383,7 @@ class _PayiInstrumentor:
 
         if PayiHeaderNames.user_id in extra_headers:
             headers_user_id = extra_headers.get(PayiHeaderNames.user_id, None)
-            if headers_user_id is None or len(headers_user_id) == 0:
+            if not headers_user_id:
                 # headers_user_id is empty, remove it from extra_headers
                 extra_headers.pop(PayiHeaderNames.user_id, None)
             else:
@@ -1358,7 +1394,7 @@ class _PayiInstrumentor:
 
         if PayiHeaderNames.account_name in extra_headers:
             headers_account_name = extra_headers.get(PayiHeaderNames.account_name, None)
-            if headers_account_name is None or len(headers_account_name) == 0:
+            if not headers_account_name:
                 # headers_account_name is empty, remove it from extra_headers
                 extra_headers.pop(PayiHeaderNames.account_name, None)
             else:
@@ -1369,7 +1405,7 @@ class _PayiInstrumentor:
 
         if PayiHeaderNames.use_case_name in extra_headers:
             headers_use_case_name = extra_headers.get(PayiHeaderNames.use_case_name, None)
-            if headers_use_case_name is None or len(headers_use_case_name) == 0:
+            if not headers_use_case_name:
                 # headers_use_case_name is empty, remove all use case related headers
                 extra_headers.pop(PayiHeaderNames.use_case_name, None)
                 extra_headers.pop(PayiHeaderNames.use_case_id, None)
@@ -1386,6 +1422,8 @@ class _PayiInstrumentor:
                 extra_headers[PayiHeaderNames.use_case_version] = str(context_use_case_version)
             if context_use_case_step is not None:
                 extra_headers[PayiHeaderNames.use_case_step] = context_use_case_step
+                # once the use case step is used, it is cleared from the context so that subsequent calls in the same context do not reuse it
+                del context["use_case_step"]
 
         if PayiHeaderNames.price_as_category not in extra_headers and context_price_as_category:
             extra_headers[PayiHeaderNames.price_as_category] = context_price_as_category
@@ -1631,7 +1669,7 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
             return chunk
         else:
             # assume dict
-            return json.dumps(chunk)
+            return _compact_json(chunk)
 
 class _StreamManagerWrapper(ObjectProxy):  # type: ignore
     def __init__(
@@ -1705,7 +1743,7 @@ class _GeneratorWrapper:  # type: ignore
             
         if self._log_prompt_and_response:
             dict = self._chunk_to_dict(chunk) 
-            self._responses.append(json.dumps(dict))
+            self._responses.append(_compact_json(dict))
                 
         return self._request.process_chunk(chunk)
     
@@ -1943,7 +1981,7 @@ def get_context() -> PayiContext:
     """
     if not _instrumentor:
         return PayiContext()
-    internal_context = _instrumentor.get_context() or {}
+    internal_context = _instrumentor._get_context() or {}
 
     context_dict = {
         key: value
