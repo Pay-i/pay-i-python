@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.128 (2025-10-11)
+
+Full Changelog: [v0.1.0-alpha.127...v0.1.0-alpha.128](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.127...v0.1.0-alpha.128)
+
+### Chores
+
+* **internal:** detect missing future annotations with ruff ([d068700](https://github.com/Pay-i/pay-i-python/commit/d068700e0368d22a79c3a24e300eabf9face720a))
+
 ## 0.1.0-alpha.127 (2025-10-09)
 
 Full Changelog: [v0.1.0-alpha.126...v0.1.0-alpha.127](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.126...v0.1.0-alpha.127)
