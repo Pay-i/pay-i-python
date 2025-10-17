@@ -751,6 +751,7 @@ class _PayiInstrumentor:
         parent_use_case_name = parent_context.get("use_case_name", None)
         parent_use_case_id = parent_context.get("use_case_id", None)
         parent_use_case_version = parent_context.get("use_case_version", None)
+        parent_use_case_step = parent_context.get("use_case_step", None)
 
         assign_use_case_values = False
 
@@ -784,7 +785,7 @@ class _PayiInstrumentor:
         if assign_use_case_values:
             context["use_case_version"] = use_case_version if use_case_version is not None else parent_use_case_version
             context["use_case_id"] =  self._valid_str_or_none(use_case_id, parent_use_case_id)
-            context["use_case_step"] = self._valid_str_or_none(use_case_step, None)
+            context["use_case_step"] = self._valid_str_or_none(use_case_step, parent_use_case_step)
 
             parent_use_case_properties = parent_context.get("use_case_properties", None)
             context["use_case_properties"] = self._valid_properties_or_none(use_case_properties, parent_use_case_properties)
