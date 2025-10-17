@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.129 (2025-10-17)
+
+Full Changelog: [v0.1.0-alpha.128...v0.1.0-alpha.129](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.128...v0.1.0-alpha.129)
+
+### Bug Fixes
+
+* restore_use_case_step inheritance ([aa78a82](https://github.com/Pay-i/pay-i-python/commit/aa78a820dae165736784c9c9165e1c4f7475d98d))
+
 ## 0.1.0-alpha.128 (2025-10-11)
 
 Full Changelog: [v0.1.0-alpha.127...v0.1.0-alpha.128](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.127...v0.1.0-alpha.128)
