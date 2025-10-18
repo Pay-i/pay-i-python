@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.130 (2025-10-18)
+
+Full Changelog: [v0.1.0-alpha.129...v0.1.0-alpha.130](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.129...v0.1.0-alpha.130)
+
+### Chores
+
+* bump `httpx-aiohttp` version to 0.1.9 ([94e1cd5](https://github.com/Pay-i/pay-i-python/commit/94e1cd5dd8628fd6b146f0b6ecbd6ebb5be7b5cd))
+
 ## 0.1.0-alpha.129 (2025-10-17)
 
 Full Changelog: [v0.1.0-alpha.128...v0.1.0-alpha.129](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.128...v0.1.0-alpha.129)
