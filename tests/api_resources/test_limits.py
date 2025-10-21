@@ -38,8 +38,8 @@ class TestLimits:
             limit_name="x",
             max=0,
             limit_id="limit_id",
-            limit_tags=["tag1", "tag2"],
             limit_type="block",
+            properties={"foo": "string"},
             threshold=0,
         )
         assert_matches_type(LimitResponse, limit, path=["response"])
@@ -294,8 +294,8 @@ class TestAsyncLimits:
             limit_name="x",
             max=0,
             limit_id="limit_id",
-            limit_tags=["tag1", "tag2"],
             limit_type="block",
+            properties={"foo": "string"},
             threshold=0,
         )
         assert_matches_type(LimitResponse, limit, path=["response"])

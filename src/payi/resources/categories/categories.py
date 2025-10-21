@@ -175,6 +175,7 @@ class CategoriesResource(SyncAPIResource):
         self,
         category: str,
         *,
+        active: bool | Omit = omit,
         cursor: str | Omit = omit,
         limit: int | Omit = omit,
         sort_ascending: bool | Omit = omit,
@@ -209,6 +210,7 @@ class CategoriesResource(SyncAPIResource):
                 timeout=timeout,
                 query=maybe_transform(
                     {
+                        "active": active,
                         "cursor": cursor,
                         "limit": limit,
                         "sort_ascending": sort_ascending,
@@ -362,6 +364,7 @@ class AsyncCategoriesResource(AsyncAPIResource):
         self,
         category: str,
         *,
+        active: bool | Omit = omit,
         cursor: str | Omit = omit,
         limit: int | Omit = omit,
         sort_ascending: bool | Omit = omit,
@@ -396,6 +399,7 @@ class AsyncCategoriesResource(AsyncAPIResource):
                 timeout=timeout,
                 query=maybe_transform(
                     {
+                        "active": active,
                         "cursor": cursor,
                         "limit": limit,
                         "sort_ascending": sort_ascending,
