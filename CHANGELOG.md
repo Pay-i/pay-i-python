@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.131 (2025-10-21)
+
+Full Changelog: [v0.1.0-alpha.130...v0.1.0-alpha.131](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.130...v0.1.0-alpha.131)
+
+### Features
+
+* **api:** limit properties ([16edabe](https://github.com/Pay-i/pay-i-python/commit/16edabe61a480db13ffb71cce1932bf3b017d766))
+
 ## 0.1.0-alpha.130 (2025-10-18)
 
 Full Changelog: [v0.1.0-alpha.129...v0.1.0-alpha.130](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.129...v0.1.0-alpha.130)
