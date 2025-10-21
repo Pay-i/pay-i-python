@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Dict, Optional
 from typing_extensions import Literal
 
 import httpx
 
-from ...._types import Body, Omit, Query, Headers, NotGiven, SequenceNotStr, omit, not_given
+from ...._types import Body, Omit, Query, Headers, NotGiven, omit, not_given
 from ...._utils import maybe_transform, async_maybe_transform
 from ...._compat import cached_property
 from ...._resource import SyncAPIResource, AsyncAPIResource
@@ -49,8 +49,8 @@ class LimitConfigResource(SyncAPIResource):
         use_case_name: str,
         *,
         max: float,
-        limit_tags: Optional[SequenceNotStr[str]] | Omit = omit,
         limit_type: Literal["block", "allow"] | Omit = omit,
+        properties: Optional[Dict[str, Optional[str]]] | Omit = omit,
         threshold: Optional[float] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -78,8 +78,8 @@ class LimitConfigResource(SyncAPIResource):
             body=maybe_transform(
                 {
                     "max": max,
-                    "limit_tags": limit_tags,
                     "limit_type": limit_type,
+                    "properties": properties,
                     "threshold": threshold,
                 },
                 limit_config_create_params.LimitConfigCreateParams,
@@ -149,8 +149,8 @@ class AsyncLimitConfigResource(AsyncAPIResource):
         use_case_name: str,
         *,
         max: float,
-        limit_tags: Optional[SequenceNotStr[str]] | Omit = omit,
         limit_type: Literal["block", "allow"] | Omit = omit,
+        properties: Optional[Dict[str, Optional[str]]] | Omit = omit,
         threshold: Optional[float] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -178,8 +178,8 @@ class AsyncLimitConfigResource(AsyncAPIResource):
             body=await async_maybe_transform(
                 {
                     "max": max,
-                    "limit_tags": limit_tags,
                     "limit_type": limit_type,
+                    "properties": properties,
                     "threshold": threshold,
                 },
                 limit_config_create_params.LimitConfigCreateParams,

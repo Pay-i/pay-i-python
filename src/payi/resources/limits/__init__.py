@@ -1,13 +1,5 @@
 # File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-from .tags import (
-    TagsResource,
-    AsyncTagsResource,
-    TagsResourceWithRawResponse,
-    AsyncTagsResourceWithRawResponse,
-    TagsResourceWithStreamingResponse,
-    AsyncTagsResourceWithStreamingResponse,
-)
 from .limits import (
     LimitsResource,
     AsyncLimitsResource,
@@ -16,14 +8,22 @@ from .limits import (
     LimitsResourceWithStreamingResponse,
     AsyncLimitsResourceWithStreamingResponse,
 )
+from .properties import (
+    PropertiesResource,
+    AsyncPropertiesResource,
+    PropertiesResourceWithRawResponse,
+    AsyncPropertiesResourceWithRawResponse,
+    PropertiesResourceWithStreamingResponse,
+    AsyncPropertiesResourceWithStreamingResponse,
+)
 
 __all__ = [
-    "TagsResource",
-    "AsyncTagsResource",
-    "TagsResourceWithRawResponse",
-    "AsyncTagsResourceWithRawResponse",
-    "TagsResourceWithStreamingResponse",
-    "AsyncTagsResourceWithStreamingResponse",
+    "PropertiesResource",
+    "AsyncPropertiesResource",
+    "PropertiesResourceWithRawResponse",
+    "AsyncPropertiesResourceWithRawResponse",
+    "PropertiesResourceWithStreamingResponse",
+    "AsyncPropertiesResourceWithStreamingResponse",
     "LimitsResource",
     "AsyncLimitsResource",
     "LimitsResourceWithRawResponse",
