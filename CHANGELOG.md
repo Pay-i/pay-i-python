@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.132 (2025-10-22)
+
+Full Changelog: [v0.1.0-alpha.131...v0.1.0-alpha.132](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.131...v0.1.0-alpha.132)
+
+### Features
+
+* thread local storage ([#385](https://github.com/Pay-i/pay-i-python/issues/385)) ([057de83](https://github.com/Pay-i/pay-i-python/commit/057de83b15fc791e6eb813d8cb62a54a0de0eea9))
+
 ## 0.1.0-alpha.131 (2025-10-21)
 
 Full Changelog: [v0.1.0-alpha.130...v0.1.0-alpha.131](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.130...v0.1.0-alpha.131)
