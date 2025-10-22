@@ -6,6 +6,7 @@ import atexit
 import asyncio
 import inspect
 import logging
+import threading
 import traceback
 from abc import abstractmethod
 from enum import Enum
@@ -210,6 +211,15 @@ class _StreamingType(Enum):
     iterator = 1
     stream_manager = 2
 
+class _ThreadLocalContextStorage(threading.local):
+    """
+    Thread-local storage for context stacks. Each thread gets its own context stack.
+    
+    Note: We don't use __init__ because threading.local's __init__ semantics are tricky.
+    Instead, we lazily initialize the context_stack attribute in the property accessor.
+    """
+    context_stack: "list[_Context]"
+
 class _InternalTrackContext:
     def __init__(
         self,
@@ -256,7 +266,12 @@ class _PayiInstrumentor:
         if self._apayi:
             _g_logger.debug(f"Pay-i instrumentor initialized with AsyncPayi instance: {self._apayi}")            
 
-        self._context_stack: list[_Context] = []  # Stack of context dictionaries
+        # Thread-local storage for context stacks - each thread gets its own stack
+        self._thread_local_storage = _ThreadLocalContextStorage()
+        
+        # Global immutable initial context that all threads inherit on first access
+        self._global_initial_context: Optional[_Context] = None
+        
         self._log_prompt_and_response: bool = log_prompt_and_response
 
         self._blocked_limits: set[str] = set()
@@ -316,7 +331,7 @@ class _PayiInstrumentor:
 
             self.__enter__()
 
-            # _init_current_context will update the currrent context stack location
+            # _init_current_context will update the current context stack location
             context: _Context = {}
             # Copy allowed keys from global_config into context
             # Dynamically use keys from _Context TypedDict
@@ -325,7 +340,12 @@ class _PayiInstrumentor:
                 if key in global_config:
                     context[key] = global_config[key] # type: ignore
 
-            self._init_current_context(**context) 
+            self._init_current_context(**context)
+            
+            # Store the initialized context as the global initial context (immutable after this point)
+            # All threads will inherit a copy of this context on their first access
+            current_context = self.get_context()
+            self._global_initial_context = current_context.copy() if current_context else None 
 
     def _ensure_payi_clients(self) -> None:
         if self._offline_instrumentation is not None:
@@ -688,6 +708,25 @@ class _PayiInstrumentor:
         
     def _ingest_units(self, request: _ProviderRequest) -> Optional[Union[XproxyResult, XproxyError]]:
         return self.set_xproxy_result(self._ingest_units_worker(request))
+
+    @property
+    def _context_stack(self) -> "list[_Context]":
+        """
+        Get the thread-local context stack. On first access per thread, 
+        initializes with the global initial context if one was set.
+        """
+        # Lazy-initialize the context_stack for this thread if it doesn't exist
+        if not hasattr(self._thread_local_storage, 'context_stack'):
+            self._thread_local_storage.context_stack = []
+        
+        stack = self._thread_local_storage.context_stack
+
+        # If this is the first access in this thread and we have a global initial context,
+        # initialize this thread's stack with it
+        if len(stack) == 0 and self._global_initial_context is not None:
+            stack.append(self._global_initial_context.copy())
+        
+        return stack
 
     def _setup_call_func(
         self
