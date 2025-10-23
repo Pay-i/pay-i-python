@@ -3,8 +3,8 @@
 from typing import List
 from typing_extensions import TypeAlias
 
-from .limit_tags import LimitTags
+from ..limit_response import LimitResponse
 
-__all__ = ["TagDeleteResponse"]
+__all__ = ["PropertyUpdateResponse"]
 
-TagDeleteResponse: TypeAlias = List[LimitTags]
+PropertyUpdateResponse: TypeAlias = List[LimitResponse]

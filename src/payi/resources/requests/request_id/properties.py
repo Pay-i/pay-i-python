@@ -56,7 +56,7 @@ class PropertiesResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> PropertiesResponse:
         """
-        Update Request properties
+        Update a Request properties
 
         Args:
           extra_headers: Send extra headers
@@ -112,7 +112,7 @@ class AsyncPropertiesResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> PropertiesResponse:
         """
-        Update Request properties
+        Update a Request properties
 
         Args:
           extra_headers: Send extra headers

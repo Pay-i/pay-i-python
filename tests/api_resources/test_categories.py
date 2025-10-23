@@ -154,6 +154,7 @@ class TestCategories:
     def test_method_list_resources_with_all_params(self, client: Payi) -> None:
         category = client.categories.list_resources(
             category="category",
+            active=True,
             cursor="cursor",
             limit=0,
             sort_ascending=True,
@@ -328,6 +329,7 @@ class TestAsyncCategories:
     async def test_method_list_resources_with_all_params(self, async_client: AsyncPayi) -> None:
         category = await async_client.categories.list_resources(
             category="category",
+            active=True,
             cursor="cursor",
             limit=0,
             sort_ascending=True,

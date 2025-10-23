@@ -1,5 +1,45 @@
 # Changelog
 
+## 0.1.0-alpha.132 (2025-10-22)
+
+Full Changelog: [v0.1.0-alpha.131...v0.1.0-alpha.132](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.131...v0.1.0-alpha.132)
+
+### Features
+
+* thread local storage ([#385](https://github.com/Pay-i/pay-i-python/issues/385)) ([057de83](https://github.com/Pay-i/pay-i-python/commit/057de83b15fc791e6eb813d8cb62a54a0de0eea9))
+
+## 0.1.0-alpha.131 (2025-10-21)
+
+Full Changelog: [v0.1.0-alpha.130...v0.1.0-alpha.131](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.130...v0.1.0-alpha.131)
+
+### Features
+
+* **api:** limit properties ([16edabe](https://github.com/Pay-i/pay-i-python/commit/16edabe61a480db13ffb71cce1932bf3b017d766))
+
+## 0.1.0-alpha.130 (2025-10-18)
+
+Full Changelog: [v0.1.0-alpha.129...v0.1.0-alpha.130](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.129...v0.1.0-alpha.130)
+
+### Chores
+
+* bump `httpx-aiohttp` version to 0.1.9 ([94e1cd5](https://github.com/Pay-i/pay-i-python/commit/94e1cd5dd8628fd6b146f0b6ecbd6ebb5be7b5cd))
+
+## 0.1.0-alpha.129 (2025-10-17)
+
+Full Changelog: [v0.1.0-alpha.128...v0.1.0-alpha.129](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.128...v0.1.0-alpha.129)
+
+### Bug Fixes
+
+* restore_use_case_step inheritance ([aa78a82](https://github.com/Pay-i/pay-i-python/commit/aa78a820dae165736784c9c9165e1c4f7475d98d))
+
+## 0.1.0-alpha.128 (2025-10-11)
+
+Full Changelog: [v0.1.0-alpha.127...v0.1.0-alpha.128](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.127...v0.1.0-alpha.128)
+
+### Chores
+
+* **internal:** detect missing future annotations with ruff ([d068700](https://github.com/Pay-i/pay-i-python/commit/d068700e0368d22a79c3a24e300eabf9face720a))
+
 ## 0.1.0-alpha.127 (2025-10-09)
 
 Full Changelog: [v0.1.0-alpha.126...v0.1.0-alpha.127](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.126...v0.1.0-alpha.127)

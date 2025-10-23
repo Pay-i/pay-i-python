@@ -35,8 +35,8 @@ class TestDefinitions:
             name="x",
             limit_config={
                 "max": 0,
-                "limit_tags": ["tag1", "tag2"],
                 "limit_type": "block",
+                "properties": {"foo": "string"},
                 "threshold": 0,
             },
             logging_enabled=True,
@@ -248,8 +248,8 @@ class TestAsyncDefinitions:
             name="x",
             limit_config={
                 "max": 0,
-                "limit_tags": ["tag1", "tag2"],
                 "limit_type": "block",
+                "properties": {"foo": "string"},
                 "threshold": 0,
             },
             logging_enabled=True,

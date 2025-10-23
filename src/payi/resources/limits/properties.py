@@ -6,19 +6,19 @@ from typing import Dict, Optional
 
 import httpx
 
-from ...._types import Body, Query, Headers, NotGiven, not_given
-from ...._utils import maybe_transform, async_maybe_transform
-from ...._compat import cached_property
-from ...._resource import SyncAPIResource, AsyncAPIResource
-from ...._response import (
+from ..._types import Body, Query, Headers, NotGiven, not_given
+from ..._utils import maybe_transform, async_maybe_transform
+from ..._compat import cached_property
+from ..._resource import SyncAPIResource, AsyncAPIResource
+from ..._response import (
     to_raw_response_wrapper,
     to_streamed_response_wrapper,
     async_to_raw_response_wrapper,
     async_to_streamed_response_wrapper,
 )
-from ...._base_client import make_request_options
-from ....types.requests.response_id import property_update_params
-from ....types.shared.properties_response import PropertiesResponse
+from ..._base_client import make_request_options
+from ...types.limits import property_update_params
+from ...types.limits.property_update_response import PropertyUpdateResponse
 
 __all__ = ["PropertiesResource", "AsyncPropertiesResource"]
 
@@ -45,9 +45,8 @@ class PropertiesResource(SyncAPIResource):
 
     def update(
         self,
-        provider_response_id: str,
+        limit_id: str,
         *,
-        category: str,
         properties: Dict[str, Optional[str]],
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -55,9 +54,9 @@ class PropertiesResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
-    ) -> PropertiesResponse:
+    ) -> PropertyUpdateResponse:
         """
-        Update a Request properties
+        Update a Limit Properties
 
         Args:
           extra_headers: Send extra headers
@@ -68,19 +67,15 @@ class PropertiesResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not category:
-            raise ValueError(f"Expected a non-empty value for `category` but received {category!r}")
-        if not provider_response_id:
-            raise ValueError(
-                f"Expected a non-empty value for `provider_response_id` but received {provider_response_id!r}"
-            )
+        if not limit_id:
+            raise ValueError(f"Expected a non-empty value for `limit_id` but received {limit_id!r}")
         return self._put(
-            f"/api/v1/requests/provider/{category}/{provider_response_id}/properties",
+            f"/api/v1/limits/{limit_id}/properties",
             body=maybe_transform({"properties": properties}, property_update_params.PropertyUpdateParams),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=PropertiesResponse,
+            cast_to=PropertyUpdateResponse,
         )
 
 
@@ -106,9 +101,8 @@ class AsyncPropertiesResource(AsyncAPIResource):
 
     async def update(
         self,
-        provider_response_id: str,
+        limit_id: str,
         *,
-        category: str,
         properties: Dict[str, Optional[str]],
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -116,9 +110,9 @@ class AsyncPropertiesResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
-    ) -> PropertiesResponse:
+    ) -> PropertyUpdateResponse:
         """
-        Update a Request properties
+        Update a Limit Properties
 
         Args:
           extra_headers: Send extra headers
@@ -129,19 +123,15 @@ class AsyncPropertiesResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        if not category:
-            raise ValueError(f"Expected a non-empty value for `category` but received {category!r}")
-        if not provider_response_id:
-            raise ValueError(
-                f"Expected a non-empty value for `provider_response_id` but received {provider_response_id!r}"
-            )
+        if not limit_id:
+            raise ValueError(f"Expected a non-empty value for `limit_id` but received {limit_id!r}")
         return await self._put(
-            f"/api/v1/requests/provider/{category}/{provider_response_id}/properties",
+            f"/api/v1/limits/{limit_id}/properties",
             body=await async_maybe_transform({"properties": properties}, property_update_params.PropertyUpdateParams),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=PropertiesResponse,
+            cast_to=PropertyUpdateResponse,
         )
 
 

@@ -30,8 +30,8 @@ class TestLimitConfig:
         limit_config = client.use_cases.definitions.limit_config.create(
             use_case_name="use_case_name",
             max=0,
-            limit_tags=["tag1", "tag2"],
             limit_type="block",
+            properties={"foo": "string"},
             threshold=0,
         )
         assert_matches_type(UseCaseDefinition, limit_config, path=["response"])
@@ -127,8 +127,8 @@ class TestAsyncLimitConfig:
         limit_config = await async_client.use_cases.definitions.limit_config.create(
             use_case_name="use_case_name",
             max=0,
-            limit_tags=["tag1", "tag2"],
             limit_type="block",
+            properties={"foo": "string"},
             threshold=0,
         )
         assert_matches_type(UseCaseDefinition, limit_config, path=["response"])

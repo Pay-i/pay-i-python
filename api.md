@@ -39,28 +39,17 @@ Methods:
 - <code title="delete /api/v1/limits/{limit_id}">client.limits.<a href="./src/payi/resources/limits/limits.py">delete</a>(limit_id) -> <a href="./src/payi/types/default_response.py">DefaultResponse</a></code>
 - <code title="post /api/v1/limits/{limit_id}/reset">client.limits.<a href="./src/payi/resources/limits/limits.py">reset</a>(limit_id, \*\*<a href="src/payi/types/limit_reset_params.py">params</a>) -> <a href="./src/payi/types/limit_history_response.py">LimitHistoryResponse</a></code>
 
-## Tags
+## Properties
 
 Types:
 
 ```python
-from payi.types.limits import (
-    LimitTags,
-    TagCreateResponse,
-    TagUpdateResponse,
-    TagListResponse,
-    TagDeleteResponse,
-    TagRemoveResponse,
-)
+from payi.types.limits import PropertyUpdateResponse
 ```
 
 Methods:
 
-- <code title="post /api/v1/limits/{limit_id}/tags">client.limits.tags.<a href="./src/payi/resources/limits/tags.py">create</a>(limit_id, \*\*<a href="src/payi/types/limits/tag_create_params.py">params</a>) -> <a href="./src/payi/types/limits/tag_create_response.py">TagCreateResponse</a></code>
-- <code title="put /api/v1/limits/{limit_id}/tags">client.limits.tags.<a href="./src/payi/resources/limits/tags.py">update</a>(limit_id, \*\*<a href="src/payi/types/limits/tag_update_params.py">params</a>) -> <a href="./src/payi/types/limits/tag_update_response.py">TagUpdateResponse</a></code>
-- <code title="get /api/v1/limits/{limit_id}/tags">client.limits.tags.<a href="./src/payi/resources/limits/tags.py">list</a>(limit_id) -> <a href="./src/payi/types/limits/tag_list_response.py">TagListResponse</a></code>
-- <code title="delete /api/v1/limits/{limit_id}/tags">client.limits.tags.<a href="./src/payi/resources/limits/tags.py">delete</a>(limit_id) -> <a href="./src/payi/types/limits/tag_delete_response.py">TagDeleteResponse</a></code>
-- <code title="patch /api/v1/limits/{limit_id}/tags/remove">client.limits.tags.<a href="./src/payi/resources/limits/tags.py">remove</a>(limit_id, \*\*<a href="src/payi/types/limits/tag_remove_params.py">params</a>) -> <a href="./src/payi/types/limits/tag_remove_response.py">TagRemoveResponse</a></code>
+- <code title="put /api/v1/limits/{limit_id}/properties">client.limits.properties.<a href="./src/payi/resources/limits/properties.py">update</a>(limit_id, \*\*<a href="src/payi/types/limits/property_update_params.py">params</a>) -> <a href="./src/payi/types/limits/property_update_response.py">PropertyUpdateResponse</a></code>
 
 # Ingest
 
