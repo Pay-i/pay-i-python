@@ -36,7 +36,13 @@ _g_logger: logging.Logger = logging.getLogger("payi.instrument")
 class _ChunkResult:
     send_chunk_to_caller: bool
     ingest: bool = False
-    
+
+@dataclass
+class PriceAs:
+    category: Optional[str]
+    resource: Optional[str]
+    resource_scope: Optional[str]
+
 class _ProviderRequest:
     def __init__(
             self, 
@@ -62,6 +68,7 @@ class _ProviderRequest:
         self._function_calls: Optional[list[ProviderResponseFunctionCall]] = None
         self._is_large_context: bool = False
         self._internal_request_properties: dict[str, Optional[str]] = {}
+        self._price_as: PriceAs = PriceAs(category=None, resource=None, resource_scope=None)
 
     def process_chunk(self, _chunk: Any) -> _ChunkResult:
         return _ChunkResult(send_chunk_to_caller=True)
@@ -147,8 +154,15 @@ class _ProviderRequest:
             self._ingest["provider_response_function_calls"] = self._function_calls
         self._function_calls.append(ProviderResponseFunctionCall(name=name, arguments=arguments))
 
+class PayiInstrumentAwsBedrockModelConfig(TypedDict, total=False):
+    model_id: str
+    price_as_category: Optional[str]
+    price_as_resource: Optional[str]
+    resource_scope: Optional[str]   
+
 class PayiInstrumentAwsBedrockConfig(TypedDict, total=False):
-    guardrail_trace: bool
+    guardrail_trace: Optional[bool]
+    models: Optional[Sequence[PayiInstrumentAwsBedrockModelConfig]]
 
 class PayiInstrumentAzureOpenAiDeploymentConfig(TypedDict, total=False):
     deployment_name: str
@@ -326,10 +340,21 @@ class _PayiInstrumentor:
 
         global_instrumentation = global_config.pop("global_instrumentation", True)
 
+        # configure first, then instrument
+        aws_config = global_config.get("aws_config", None)
+        if aws_config:
+            from .BedrockInstrumentor import BedrockInstrumentor
+            BedrockInstrumentor.configure(aws_config=aws_config)
+
+        azure_openai_config = global_config.get("azure_openai_config", None)
+        if azure_openai_config:
+            from .OpenAIInstrumentor import OpenAiInstrumentor
+            OpenAiInstrumentor.configure(azure_openai_config=azure_openai_config)
+
         if instruments is None or "*" in instruments:
-            self._instrument_all(global_config=global_config)
+            self._instrument_all()
         else:
-            self._instrument_specific(instruments=instruments, global_config=global_config)
+            self._instrument_specific(instruments=instruments)
 
         if global_instrumentation:
             if "proxy" not in global_config:
@@ -367,7 +392,7 @@ class _PayiInstrumentor:
             
             # Store the initialized context as the global initial context (immutable after this point)
             # All threads will inherit a copy of this context on their first access
-            current_context = self.get_context()
+            current_context = self._context
             self._global_initial_context = current_context.copy() if current_context else None 
 
     def _ensure_payi_clients(self) -> None:
@@ -378,29 +403,29 @@ class _PayiInstrumentor:
             self._payi = Payi()
             self._apayi = AsyncPayi()
 
-    def _instrument_all(self, global_config: PayiInstrumentConfig) -> None:
-        self._instrument_openai(global_config.get("azure_openai_config", None))
+    def _instrument_all(self) -> None:
+        self._instrument_openai()
         self._instrument_anthropic()
-        self._instrument_aws_bedrock(global_config.get("aws_config", None))
+        self._instrument_aws_bedrock()
         self._instrument_google_vertex()
         self._instrument_google_genai()
 
-    def _instrument_specific(self, instruments: Set[str], global_config: PayiInstrumentConfig) -> None:
+    def _instrument_specific(self, instruments: Set[str]) -> None:
         if PayiCategories.openai in instruments or PayiCategories.azure_openai in instruments:
-            self._instrument_openai(global_config.get("azure_openai_config", None))
+            self._instrument_openai()
         if PayiCategories.anthropic in instruments:
             self._instrument_anthropic()
         if PayiCategories.aws_bedrock in instruments:
-            self._instrument_aws_bedrock(global_config.get("aws_config", None))
+            self._instrument_aws_bedrock()
         if PayiCategories.google_vertex in instruments:
             self._instrument_google_vertex()
             self._instrument_google_genai()
 
-    def _instrument_openai(self, azure_openai_config: Optional[PayiInstrumentAzureOpenAiConfig]) -> None:
+    def _instrument_openai(self) -> None:
         from .OpenAIInstrumentor import OpenAiInstrumentor
 
         try:
-            OpenAiInstrumentor.instrument(self, azure_openai_config=azure_openai_config)
+            OpenAiInstrumentor.instrument(self)
 
         except Exception as e:
             self._logger.error(f"Error instrumenting OpenAI: {e}")
@@ -414,11 +439,11 @@ class _PayiInstrumentor:
         except Exception as e:
             self._logger.error(f"Error instrumenting Anthropic: {e}")
 
-    def _instrument_aws_bedrock(self, aws_config: Optional[PayiInstrumentAwsBedrockConfig]) -> None:
+    def _instrument_aws_bedrock(self) -> None:
         from .BedrockInstrumentor import BedrockInstrumentor
 
         try:
-            BedrockInstrumentor.instrument(self, aws_config=aws_config)
+            BedrockInstrumentor.instrument(self)
 
         except Exception as e:
             self._logger.error(f"Error instrumenting AWS bedrock: {e}")
@@ -859,7 +884,7 @@ class _PayiInstrumentor:
         ) -> None:
 
         # there will always be a current context
-        context: _Context = self._get_context() # type: ignore
+        context: _Context = self._context # type: ignore
         parent_context: _Context = self._context_stack[-2] if len(self._context_stack) > 1 else {}
 
         parent_proxy = parent_context.get("proxy", self._proxy_default)
@@ -1001,13 +1026,24 @@ class _PayiInstrumentor:
         if self._context_stack:
             self._context_stack.pop()
 
-    def _get_context(self) -> Optional[_Context]:
+    @property
+    def _context(self) -> Optional[_Context]:
         # Return the current top of the stack
         return self._context_stack[-1] if self._context_stack else None
 
-    def _get_context_safe(self) -> _Context:
+    @property
+    def _context_safe(self) -> _Context:
         # Return the current top of the stack
-        return self._get_context() or {}
+        return self._context or {}
+
+    def _extract_price_as(self, extra_headers: "dict[str, str]") -> PriceAs:
+        context = self._context_safe
+
+        return PriceAs(
+            category=extra_headers.pop(PayiHeaderNames.price_as_category, None) or context.get("price_as_category", None),
+            resource=extra_headers.pop(PayiHeaderNames.price_as_resource, None) or context.get("price_as_resource", None),
+            resource_scope=extra_headers.pop(PayiHeaderNames.resource_scope, None) or context.get("resource_scope", None),
+        )
 
     def _before_invoke_update_request(
         self,
@@ -1089,7 +1125,7 @@ class _PayiInstrumentor:
     ) -> Any:
         self._logger.debug(f"async_invoke_wrapper: instance {instance}, category {request._category}")
 
-        context = self._get_context()
+        context = self._context
 
         # Bedrock client does not have an async method
 
@@ -1117,6 +1153,7 @@ class _PayiInstrumentor:
 
             return await wrapped(*args, **kwargs)
         
+        request._price_as = self._extract_price_as(extra_headers)
         if not request.supports_extra_headers and "extra_headers" in kwargs:
             kwargs.pop("extra_headers", None)
 
@@ -1219,7 +1256,7 @@ class _PayiInstrumentor:
     ) -> Any:
         self._logger.debug(f"invoke_wrapper: instance {instance}, category {request._category}")
 
-        context = self._get_context()
+        context = self._context
 
         if not context:
             if not request.supports_extra_headers:
@@ -1248,6 +1285,7 @@ class _PayiInstrumentor:
 
             return wrapped(*args, **kwargs)
 
+        request._price_as = self._extract_price_as(extra_headers)
         if not request.supports_extra_headers and "extra_headers" in kwargs:
             kwargs.pop("extra_headers", None)
         
@@ -1352,7 +1390,7 @@ class _PayiInstrumentor:
         self
     ) -> 'dict[str, str]':
         extra_headers: dict[str, str] = {}
-        context = self._get_context()
+        context = self._context
         if context:
             self._update_extra_headers(context, extra_headers)
 
@@ -1462,8 +1500,6 @@ class _PayiInstrumentor:
                 extra_headers[PayiHeaderNames.use_case_version] = str(context_use_case_version)
             if context_use_case_step is not None:
                 extra_headers[PayiHeaderNames.use_case_step] = context_use_case_step
-                # once the use case step is used, it is cleared from the context so that subsequent calls in the same context do not reuse it
-                del context["use_case_step"]
 
         if PayiHeaderNames.price_as_category not in extra_headers and context_price_as_category:
             extra_headers[PayiHeaderNames.price_as_category] = context_price_as_category
@@ -2021,7 +2057,7 @@ def get_context() -> PayiContext:
     """
     if not _instrumentor:
         return PayiContext()
-    internal_context = _instrumentor._get_context() or {}
+    internal_context = _instrumentor._context_safe
 
     context_dict = {
         key: value

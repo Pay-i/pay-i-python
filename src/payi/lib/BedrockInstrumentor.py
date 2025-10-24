@@ -1,6 +1,6 @@
 import os
 import json
-from typing import TYPE_CHECKING, Any, Optional, Sequence
+from typing import TYPE_CHECKING, Any, Dict, Optional, Sequence
 from functools import wraps
 from typing_extensions import override
 
@@ -12,6 +12,7 @@ from payi.types.pay_i_common_models_api_router_header_info_param import PayIComm
 
 from .instrument import (
     PayiInstrumentAwsBedrockConfig,
+    _Context,
     _ChunkResult,
     _IsStreaming,
     _StreamingType,
@@ -35,8 +36,47 @@ class BedrockInstrumentor:
 
     _guardrail_trace: bool = True
 
+    _model_mapping: Dict[str, _Context] = {}
+
     @staticmethod
-    def instrument(instrumentor: _PayiInstrumentor, aws_config: Optional[PayiInstrumentAwsBedrockConfig]) -> None:
+    def get_mapping(model_id: Optional[str]) -> _Context:
+        if not model_id:
+            return  {}
+
+        return BedrockInstrumentor._model_mapping.get(model_id, {})
+
+    @staticmethod
+    def configure(aws_config: Optional[PayiInstrumentAwsBedrockConfig]) -> None:
+        if not aws_config:
+            return
+        
+        trace = aws_config.get("guardrail_trace", True)
+        if trace is None:
+            trace = True
+        BedrockInstrumentor._guardrail_trace = trace
+
+        models = aws_config.get("models", [])
+        if models:
+            for model in models:
+                model_id = model.get("model_id", "")
+                if not model_id:
+                    continue
+
+                price_as_category = model.get("price_as_category", None)
+                price_as_resource = model.get("price_as_resource", None)
+                resource_scope = model.get("resource_scope", None)
+
+                if not price_as_category and not price_as_resource:
+                    continue
+
+                BedrockInstrumentor._model_mapping[model_id] = _Context(
+                    price_as_category=price_as_category,
+                    price_as_resource=price_as_resource,
+                    resource_scope=resource_scope,
+                )
+
+    @staticmethod
+    def instrument(instrumentor: _PayiInstrumentor) -> None:
         BedrockInstrumentor._instrumentor = instrumentor
 
         BedrockInstrumentor._module_version = get_version_helper(BedrockInstrumentor._module_name)
@@ -57,9 +97,6 @@ class BedrockInstrumentor:
         except Exception as e:
             instrumentor._logger.debug(f"Error instrumenting bedrock: {e}")
             return
-
-        if aws_config:
-            BedrockInstrumentor._guardrail_trace = aws_config.get("guardrail_trace", True)
 
 @_PayiInstrumentor.payi_wrapper
 def create_client_wrapper(instrumentor: _PayiInstrumentor, wrapped: Any, instance: Any, *args: Any, **kwargs: Any) -> Any: #  noqa: ARG001
@@ -301,10 +338,25 @@ class _BedrockProviderRequest(_ProviderRequest):
             )
 
     @override
-    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
-        # boto3 doesn't allow extra_headers
-        kwargs.pop("extra_headers", None)
-        self._ingest["resource"] = kwargs.get("modelId", "")
+    def process_request(self, instance: Any, extra_headers: 'dict[str, str]',  args: Sequence[Any], kwargs: Any) -> bool:
+        modelId =  kwargs.get("modelId", "")
+        self._ingest["resource"] = modelId
+
+        if not self._price_as.resource and not self._price_as.category and BedrockInstrumentor._model_mapping:
+            deployment = BedrockInstrumentor._model_mapping.get(modelId, {})
+            self._price_as.category = deployment.get("price_as_category", "")
+            self._price_as.resource = deployment.get("price_as_resource", "")
+            self._price_as.resource_scope = deployment.get("resource_scope", None)
+
+        if self._price_as.resource_scope:
+            self._ingest["resource_scope"] = self._price_as.resource_scope
+        
+        # override defaults
+        if self._price_as.category:
+            self._ingest["category"] = self._price_as.category
+        if self._price_as.resource:
+            self._ingest["resource"] = self._price_as.resource
+
         return True
 
     @override
@@ -384,6 +436,11 @@ class _BedrockProviderRequest(_ProviderRequest):
 class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, model_id: str):
         super().__init__(instrumentor=instrumentor)
+
+        price_as_resource = BedrockInstrumentor._model_mapping.get(model_id, {}).get("price_as_resource", None)
+        if price_as_resource:
+            model_id = price_as_resource
+
         self._is_anthropic: bool = 'anthropic' in model_id
         self._is_nova: bool = 'nova' in model_id
         self._is_meta: bool = 'meta' in model_id
@@ -524,7 +581,7 @@ class _BedrockConverseProviderRequest(_BedrockProviderRequest):
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
         super().process_request(instance, extra_headers, args, kwargs)
-        
+
         guardrail_config = kwargs.get("guardrailConfig", {})
         if guardrail_config:
             guardrailIdentifier = guardrail_config.get("guardrailIdentifier", "")
