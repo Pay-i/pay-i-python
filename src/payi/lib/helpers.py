@@ -1,15 +1,18 @@
 import os
-from typing import Dict, List, Union
+import json
+from typing import Any, Dict, List, Union
 
 PAYI_BASE_URL = "https://api.pay-i.com"
 
 class PayiHeaderNames:
     limit_ids:str  = "xProxy-Limit-IDs"
     request_tags:str = "xProxy-Request-Tags"
+    request_properties:str = "xProxy-Request-Properties"
     use_case_id:str = "xProxy-UseCase-ID"
     use_case_name:str = "xProxy-UseCase-Name"
     use_case_version:str = "xProxy-UseCase-Version"
     use_case_step:str = "xProxy-UseCase-Step"
+    use_case_properties:str = "xProxy-UseCase-Properties"
     user_id:str = "xProxy-User-ID"
     account_name:str = "xProxy-Account-Name"
     price_as_category:str = "xProxy-PriceAs-Category"
@@ -37,6 +40,11 @@ class PayiPropertyNames:
     aws_bedrock_guardrail_version:str = "system.aws.bedrock.guardrail.version"
     aws_bedrock_guardrail_action:str = "system.aws.bedrock.guardrail.action"
 
+class PayiResourceScopes:
+    global_scope: str = "global"
+    datazone_scope: str = "datazone"
+    region_scope: str = "region"
+
 def create_limit_header_from_ids(*, limit_ids: List[str]) -> Dict[str, str]:
     if not isinstance(limit_ids, list):  # type: ignore
         raise TypeError("limit_ids must be a list")
@@ -53,6 +61,9 @@ def create_request_header_from_tags(*, request_tags: List[str]) -> Dict[str, str
 
     return { PayiHeaderNames.request_tags: ",".join(valid_tags) } if valid_tags else {}
 
+def _compact_json(data: Any) -> str:
+    return json.dumps(data, separators=(',', ':'))  
+
 def create_headers(
     *,
     limit_ids: Union[List[str], None] = None,
@@ -63,6 +74,8 @@ def create_headers(
     use_case_name: Union[str, None] = None,
     use_case_version: Union[int, None] = None,
     use_case_step: Union[str, None] = None,
+    use_case_properties: Union[Dict[str, str], None] = None,
+    request_properties: Union[Dict[str, str], None] = None,
     price_as_category: Union[str, None] = None,
     price_as_resource: Union[str, None] = None,
     resource_scope: Union[str, None] = None,
@@ -83,6 +96,10 @@ def create_headers(
         headers.update({ PayiHeaderNames.use_case_name: use_case_name})
     if use_case_version:
         headers.update({ PayiHeaderNames.use_case_version: str(use_case_version)})
+    if use_case_properties:
+        headers.update({ PayiHeaderNames.use_case_properties: _compact_json(use_case_properties) })
+    if request_properties:
+        headers.update({ PayiHeaderNames.request_properties: _compact_json(request_properties) })
     if use_case_step:
         headers.update({ PayiHeaderNames.use_case_step: use_case_step})
     if price_as_category:
