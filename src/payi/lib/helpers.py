@@ -40,6 +40,11 @@ class PayiPropertyNames:
     aws_bedrock_guardrail_version:str = "system.aws.bedrock.guardrail.version"
     aws_bedrock_guardrail_action:str = "system.aws.bedrock.guardrail.action"
 
+class PayiResourceScopes:
+    global_scope: str = "global"
+    datazone_scope: str = "datazone"
+    region_scope: str = "region"
+
 def create_limit_header_from_ids(*, limit_ids: List[str]) -> Dict[str, str]:
     if not isinstance(limit_ids, list):  # type: ignore
         raise TypeError("limit_ids must be a list")
