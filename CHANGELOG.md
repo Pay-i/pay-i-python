@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.134 (2025-10-30)
+
+Full Changelog: [v0.1.0-alpha.133...v0.1.0-alpha.134](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.133...v0.1.0-alpha.134)
+
+### Features
+
+* model mapping configuration ([#388](https://github.com/Pay-i/pay-i-python/issues/388)) ([dd3c9da](https://github.com/Pay-i/pay-i-python/commit/dd3c9da33328b8005e416341f2017dbe17c2fc1e))
+
 ## 0.1.0-alpha.133 (2025-10-30)
 
 Full Changelog: [v0.1.0-alpha.132...v0.1.0-alpha.133](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.132...v0.1.0-alpha.133)

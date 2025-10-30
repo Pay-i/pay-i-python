@@ -1,15 +1,23 @@
 import json
-from typing import Any, Union, Optional, Sequence
+from typing import Any, Dict, Union, Optional, Sequence
 from typing_extensions import override
 from importlib.metadata import version
 
 import tiktoken  # type: ignore
 from wrapt import wrap_function_wrapper  # type: ignore
 
-from payi.lib.helpers import PayiCategories, PayiHeaderNames
+from payi.lib.helpers import PayiCategories
 from payi.types.ingest_units_params import Units
 
-from .instrument import _ChunkResult, _IsStreaming, _StreamingType, _ProviderRequest, _PayiInstrumentor
+from .instrument import (
+    PayiInstrumentAzureOpenAiConfig,
+    _Context,
+    _ChunkResult,
+    _IsStreaming,
+    _StreamingType,
+    _ProviderRequest,
+    _PayiInstrumentor,
+)
 from .version_helper import get_version_helper
 
 
@@ -17,11 +25,19 @@ class OpenAiInstrumentor:
     _module_name: str = "openai"
     _module_version: str = ""
 
+    _azure_openai_deployments: Dict[str, _Context] = {}
+
     @staticmethod
     def is_azure(instance: Any) -> bool:
         from openai import AzureOpenAI, AsyncAzureOpenAI # type: ignore # noqa: I001
 
         return isinstance(instance._client, (AsyncAzureOpenAI, AzureOpenAI))
+
+    @staticmethod
+    def configure(azure_openai_config: Optional[PayiInstrumentAzureOpenAiConfig]) -> None:
+        if azure_openai_config:
+            model_mappings = azure_openai_config.get("model_mappings", [])
+            OpenAiInstrumentor._azure_openai_deployments = _PayiInstrumentor._model_mapping_to_context_dict(model_mappings)
 
     @staticmethod
     def instrument(instrumentor: _PayiInstrumentor) -> None:
@@ -52,7 +68,7 @@ class OpenAiInstrumentor:
                 aembeddings_wrapper(instrumentor),
             )
         except Exception as e:
-            instrumentor._logger.debug(f"Error instrumenting openai: {e}")
+            instrumentor._logger.debug(f"Error instrumenting openai completions: {e}")
 
         # responses separately as they are relatively new and the client may not be using the latest openai module
         try:            
@@ -69,7 +85,7 @@ class OpenAiInstrumentor:
             )
 
         except Exception as e:
-            instrumentor._logger.debug(f"Error instrumenting openai: {e}")
+            instrumentor._logger.debug(f"Error instrumenting openai responses: {e}")
 
 @_PayiInstrumentor.payi_wrapper
 def embeddings_wrapper(
@@ -201,44 +217,39 @@ class _OpenAiProviderRequest(_ProviderRequest):
         self._input_tokens_details_key = input_tokens_details_key
 
     @override
-    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool: # type: ignore
-        self._ingest["resource"] = kwargs.get("model", "")
+    def process_request(self, instance: Any, extra_headers: 'dict[str, str]',  args: Sequence[Any], kwargs: Any) -> bool: # type: ignore
+        model = kwargs.get("model", "")
 
         if not (instance and hasattr(instance, "_client")) or OpenAiInstrumentor.is_azure(instance) is False:
+            self._ingest["resource"] = model
             return True
 
-        context = self._instrumentor.get_context_safe()
-        price_as_category = extra_headers.get(PayiHeaderNames.price_as_category) or context.get("price_as_category")
-        price_as_resource = extra_headers.get(PayiHeaderNames.price_as_resource) or context.get("price_as_resource")
-        resource_scope = extra_headers.get(PayiHeaderNames.resource_scope) or context.get("resource_scope")
+        if not self._price_as.resource and not self._price_as.category and OpenAiInstrumentor._azure_openai_deployments:
+            deployment = OpenAiInstrumentor._azure_openai_deployments.get(model, {})
+            self._price_as.category = deployment.get("price_as_category", None)
+            self._price_as.resource = deployment.get("price_as_resource", None)
+            self._price_as.resource_scope = deployment.get("resource_scope", None)
 
-        if PayiHeaderNames.price_as_category in extra_headers:
-            del extra_headers[PayiHeaderNames.price_as_category]
-        if PayiHeaderNames.price_as_resource in extra_headers:
-            del extra_headers[PayiHeaderNames.price_as_resource]
-        if PayiHeaderNames.resource_scope in extra_headers:
-            del extra_headers[PayiHeaderNames.resource_scope]
-            
-        if not price_as_resource and not price_as_category:
+        if not self._price_as.resource and not self._price_as.category:
             self._instrumentor._logger.error("Azure OpenAI requires price as resource and/or category to be specified, not ingesting")
             return False
 
-        if resource_scope:
-            if not(resource_scope in ["global", "datazone"] or resource_scope.startswith("region")):
+        if self._price_as.resource_scope:
+            if not (self._price_as.resource_scope in ["global", "datazone"] or self._price_as.resource_scope.startswith("region")):
                 self._instrumentor._logger.error("Azure OpenAI invalid resource scope, not ingesting")
                 return False
 
-            self._ingest["resource_scope"] = resource_scope
+            self._ingest["resource_scope"] = self._price_as.resource_scope
 
         self._category = PayiCategories.azure_openai
 
         self._ingest["category"] = self._category
 
-        if price_as_category:
+        if self._price_as.category:
             # price as category overrides default
-            self._ingest["category"] = price_as_category
-        if price_as_resource:
-            self._ingest["resource"] = price_as_resource
+            self._ingest["category"] = self._price_as.category
+        if self._price_as.resource:
+            self._ingest["resource"] = self._price_as.resource
 
         return True
 

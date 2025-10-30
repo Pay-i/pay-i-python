@@ -19,7 +19,7 @@ from wrapt import ObjectProxy  # type: ignore
 
 from payi import Payi, AsyncPayi, APIStatusError, APIConnectionError, __version__ as _payi_version
 from payi.types import IngestUnitsParams
-from payi.lib.helpers import PayiHeaderNames, PayiPropertyNames
+from payi.lib.helpers import PayiHeaderNames, PayiPropertyNames, _compact_json
 from payi.types.shared import XproxyResult
 from payi.types.ingest_response import IngestResponse
 from payi.types.ingest_units_params import Units, ProviderResponseFunctionCall
@@ -36,7 +36,13 @@ _g_logger: logging.Logger = logging.getLogger("payi.instrument")
 class _ChunkResult:
     send_chunk_to_caller: bool
     ingest: bool = False
-    
+
+@dataclass
+class PriceAs:
+    category: Optional[str]
+    resource: Optional[str]
+    resource_scope: Optional[str]
+
 class _ProviderRequest:
     def __init__(
             self, 
@@ -62,6 +68,7 @@ class _ProviderRequest:
         self._function_calls: Optional[list[ProviderResponseFunctionCall]] = None
         self._is_large_context: bool = False
         self._internal_request_properties: dict[str, Optional[str]] = {}
+        self._price_as: PriceAs = PriceAs(category=None, resource=None, resource_scope=None)
 
     def process_chunk(self, _chunk: Any) -> _ChunkResult:
         return _ChunkResult(send_chunk_to_caller=True)
@@ -147,8 +154,20 @@ class _ProviderRequest:
             self._ingest["provider_response_function_calls"] = self._function_calls
         self._function_calls.append(ProviderResponseFunctionCall(name=name, arguments=arguments))
 
+class PayiInstrumentModelMapping(TypedDict, total=False):
+    model: str
+    price_as_category: Optional[str]
+    price_as_resource: Optional[str]
+    # "global", "datazone", "region", "region.<region_name>"
+    resource_scope: Optional[str]   
+
 class PayiInstrumentAwsBedrockConfig(TypedDict, total=False):
-    guardrail_trace: bool
+    guardrail_trace: Optional[bool]
+    model_mappings: Optional[Sequence[PayiInstrumentModelMapping]]
+
+class PayiInstrumentAzureOpenAiConfig(TypedDict, total=False):
+    # map deployment name known model
+    model_mappings: Sequence[PayiInstrumentModelMapping] 
 
 class PayiInstrumentOfflineInstrumentationConfig(TypedDict, total=False):
     file_name: str
@@ -168,6 +187,7 @@ class PayiInstrumentConfig(TypedDict, total=False):
     request_tags: Optional["list[str]"]
     request_properties: Optional["dict[str, Optional[str]]"]
     aws_config: Optional[PayiInstrumentAwsBedrockConfig]
+    azure_openai_config: Optional[PayiInstrumentAzureOpenAiConfig]
     offline_instrumentation: Optional[PayiInstrumentOfflineInstrumentationConfig]
 
 class PayiContext(TypedDict, total=False):
@@ -185,6 +205,19 @@ class PayiContext(TypedDict, total=False):
     price_as_resource: Optional[str]
     resource_scope: Optional[str]
     last_result: Optional[Union[XproxyResult, XproxyError]]
+
+class PayiInstanceDefaultContext(TypedDict, total=False):
+    use_case_name: Optional[str]
+    use_case_id: Optional[str]
+    use_case_version: Optional[int]
+    use_case_properties: Optional["dict[str, str]"]
+    limit_ids: Optional['list[str]']
+    user_id: Optional[str]
+    account_name: Optional[str]
+    request_properties: Optional["dict[str, str]"]
+    price_as_category: Optional[str]
+    price_as_resource: Optional[str]
+    resource_scope: Optional[str]
 
 class _Context(TypedDict, total=False):
     proxy: Optional[bool]
@@ -277,7 +310,8 @@ class _PayiInstrumentor:
         self._blocked_limits: set[str] = set()
         self._exceeded_limits: set[str] = set()
 
-        self._api_connection_error_last_log_time: float = time.time()
+        # by not setting to time.time() the first connection error is always logged
+        self._api_connection_error_last_log_time: float = 0
         self._api_connection_error_count: int = 0
         self._api_connection_error_window: int = global_config.get("connection_error_logging_window", 60)
         if self._api_connection_error_window < 0:
@@ -303,10 +337,21 @@ class _PayiInstrumentor:
 
         global_instrumentation = global_config.pop("global_instrumentation", True)
 
+        # configure first, then instrument
+        aws_config = global_config.get("aws_config", None)
+        if aws_config:
+            from .BedrockInstrumentor import BedrockInstrumentor
+            BedrockInstrumentor.configure(aws_config=aws_config)
+
+        azure_openai_config = global_config.get("azure_openai_config", None)
+        if azure_openai_config:
+            from .OpenAIInstrumentor import OpenAiInstrumentor
+            OpenAiInstrumentor.configure(azure_openai_config=azure_openai_config)
+
         if instruments is None or "*" in instruments:
-            self._instrument_all(global_config=global_config)
+            self._instrument_all()
         else:
-            self._instrument_specific(instruments=instruments, global_config=global_config)
+            self._instrument_specific(instruments=instruments)
 
         if global_instrumentation:
             if "proxy" not in global_config:
@@ -338,13 +383,13 @@ class _PayiInstrumentor:
             context_keys = list(_Context.__annotations__.keys()) if hasattr(_Context, '__annotations__') else []
             for key in context_keys:
                 if key in global_config:
-                    context[key] = global_config[key] # type: ignore
+                    context[key] = global_config[key] # type: ignore[literal-required]
 
             self._init_current_context(**context)
             
             # Store the initialized context as the global initial context (immutable after this point)
             # All threads will inherit a copy of this context on their first access
-            current_context = self.get_context()
+            current_context = self._context
             self._global_initial_context = current_context.copy() if current_context else None 
 
     def _ensure_payi_clients(self) -> None:
@@ -355,20 +400,20 @@ class _PayiInstrumentor:
             self._payi = Payi()
             self._apayi = AsyncPayi()
 
-    def _instrument_all(self, global_config: PayiInstrumentConfig) -> None:
+    def _instrument_all(self) -> None:
         self._instrument_openai()
         self._instrument_anthropic()
-        self._instrument_aws_bedrock(global_config.get("aws_config", None))
+        self._instrument_aws_bedrock()
         self._instrument_google_vertex()
         self._instrument_google_genai()
 
-    def _instrument_specific(self, instruments: Set[str], global_config: PayiInstrumentConfig) -> None:
+    def _instrument_specific(self, instruments: Set[str]) -> None:
         if PayiCategories.openai in instruments or PayiCategories.azure_openai in instruments:
             self._instrument_openai()
         if PayiCategories.anthropic in instruments:
             self._instrument_anthropic()
         if PayiCategories.aws_bedrock in instruments:
-            self._instrument_aws_bedrock(global_config.get("aws_config", None))
+            self._instrument_aws_bedrock()
         if PayiCategories.google_vertex in instruments:
             self._instrument_google_vertex()
             self._instrument_google_genai()
@@ -391,11 +436,11 @@ class _PayiInstrumentor:
         except Exception as e:
             self._logger.error(f"Error instrumenting Anthropic: {e}")
 
-    def _instrument_aws_bedrock(self, aws_config: Optional[PayiInstrumentAwsBedrockConfig]) -> None:
+    def _instrument_aws_bedrock(self) -> None:
         from .BedrockInstrumentor import BedrockInstrumentor
 
         try:
-            BedrockInstrumentor.instrument(self, aws_config=aws_config)
+            BedrockInstrumentor.instrument(self)
 
         except Exception as e:
             self._logger.error(f"Error instrumenting AWS bedrock: {e}")
@@ -417,6 +462,28 @@ class _PayiInstrumentor:
 
         except Exception as e:
             self._logger.error(f"Error instrumenting Google GenAi: {e}")
+
+    @staticmethod
+    def _model_mapping_to_context_dict(model_mappings: Sequence[PayiInstrumentModelMapping]) -> 'dict[str, _Context]':
+        context: dict[str, _Context] = {}
+        for mapping in model_mappings:
+            model = mapping.get("model", "")
+            if not model:
+                continue
+
+            price_as_category = mapping.get("price_as_category", None)
+            price_as_resource = mapping.get("price_as_resource", None)
+            resource_scope = mapping.get("resource_scope", None)
+
+            if not price_as_category and not price_as_resource:
+                continue
+
+            context[model] = _Context(
+                price_as_category=price_as_category,
+                price_as_resource=price_as_resource,
+                resource_scope=resource_scope,
+            )
+        return context
 
     def _write_offline_ingest_packets(self) -> None:
         if not self._offline_instrumentation_file_name or not self._offline_ingest_packets:
@@ -458,7 +525,17 @@ class _PayiInstrumentor:
 
         return log_ingest_units
         
-    def _process_ingest_units(
+    def _merge_internal_request_properties(self, request: _ProviderRequest) -> None:
+        if not request._internal_request_properties:
+            return
+        
+        properties = request._ingest.get("properties") or {}
+        request._ingest["properties"] = properties
+        for key, value in request._internal_request_properties.items():
+            if key not in properties:
+                properties[key] = value
+                
+    def _after_invoke_update_request(
         self,
         request: _ProviderRequest,
         extra_headers: 'dict[str, str]') -> None:
@@ -477,12 +554,7 @@ class _PayiInstrumentor:
         if 'resource' not in ingest_units or ingest_units['resource'] == '':
             ingest_units['resource'] = "system.unknown_model"
 
-        if request._internal_request_properties:
-            properties = ingest_units.get("properties") or {}
-            ingest_units["properties"] = properties
-            for key, value in request._internal_request_properties.items():
-                if key not in properties:
-                    properties[key] = value
+        self._merge_internal_request_properties(request)
 
         request_json = ingest_units.get('provider_request_json', "")
         if request_json and self._instrument_inline_data is False:
@@ -491,7 +563,7 @@ class _PayiInstrumentor:
                 if request.remove_inline_data(prompt_dict):
                     self._logger.debug(f"Removed inline data from provider_request_json")
                     # store the modified dict back as JSON string
-                    ingest_units['provider_request_json'] = json.dumps(prompt_dict)
+                    ingest_units['provider_request_json'] = _compact_json(prompt_dict)
 
             except Exception as e:
                 self._logger.error(f"Error serializing provider_request_json: {e}")
@@ -544,7 +616,7 @@ class _PayiInstrumentor:
         self._logger.debug(f"_aingest_units")
 
         extra_headers: 'dict[str, str]' = {}
-        self._process_ingest_units(request, extra_headers=extra_headers)
+        self._after_invoke_update_request(request, extra_headers=extra_headers)
 
         try:
             if self._logger.isEnabledFor(logging.DEBUG):
@@ -668,7 +740,7 @@ class _PayiInstrumentor:
         self._logger.debug(f"_ingest_units")
 
         extra_headers: 'dict[str, str]' = {}
-        self._process_ingest_units(request, extra_headers=extra_headers)
+        self._after_invoke_update_request(request, extra_headers=extra_headers)
 
         try:
             if self._payi:
@@ -763,6 +835,56 @@ class _PayiInstrumentor:
         else:
             return value.copy()
 
+    def _set_instance_default_context(
+        self,
+        instance: Any,
+        context: PayiInstanceDefaultContext
+    ) -> None:
+        if instance is None:
+            raise ValueError("instance cannot be None")
+        if not context:
+            raise ValueError("context_dict cannot be None or empty")
+        
+        context = context.copy()
+        if "use_case_properties" in context and context["use_case_properties"] is not None:
+            context["use_case_properties"] = context["use_case_properties"].copy()
+        if "request_properties" in context and context["request_properties"] is not None:
+            context["request_properties"] = context["request_properties"].copy()
+        if "limit_ids" in context and context["limit_ids"] is not None:
+            context["limit_ids"] = context["limit_ids"].copy()
+
+        instance.__payi_default_context__ = context
+        self._logger.debug(f"payi_set_default_context: attached context to instance {type(instance).__name__}")
+
+    @staticmethod
+    def _get_instance_default_context(
+        instance: Any
+    ) -> "Optional[PayiInstanceDefaultContext]":
+        if instance is None:
+            return None
+
+        context = getattr(instance, "__payi_default_context__", None)
+        if not context:
+            inner_instance = getattr(instance, "_client", None)
+            if inner_instance:
+                context = getattr(inner_instance, "__payi_default_context__", None)
+
+        # Return a copy to prevent external modifications
+        return context if context else None
+
+    @staticmethod
+    def _merge_context_instance_defaults(
+        context: _Context,
+        instance_defaults: Optional[PayiInstanceDefaultContext]
+    ) -> _Context:
+        if instance_defaults:
+            context = context.copy()
+            for key, value in instance_defaults.items():
+                if value is not None and context.get(key, None) is None:
+                    context[key] = value # type: ignore[literal-required]
+
+        return context
+
     def _init_current_context(
         self,
         proxy: Optional[bool] = None,
@@ -781,7 +903,7 @@ class _PayiInstrumentor:
         ) -> None:
 
         # there will always be a current context
-        context: _Context = self.get_context() # type: ignore
+        context: _Context = self._context # type: ignore
         parent_context: _Context = self._context_stack[-2] if len(self._context_stack) > 1 else {}
 
         parent_proxy = parent_context.get("proxy", self._proxy_default)
@@ -923,26 +1045,37 @@ class _PayiInstrumentor:
         if self._context_stack:
             self._context_stack.pop()
 
-    def get_context(self) -> Optional[_Context]:
+    @property
+    def _context(self) -> Optional[_Context]:
         # Return the current top of the stack
         return self._context_stack[-1] if self._context_stack else None
 
-    def get_context_safe(self) -> _Context:
+    @property
+    def _context_safe(self) -> _Context:
         # Return the current top of the stack
-        return self.get_context() or {}
+        return self._context or {}
 
-    def _prepare_ingest(
+    def _extract_price_as(self, extra_headers: "dict[str, str]") -> PriceAs:
+        context = self._context_safe
+
+        return PriceAs(
+            category=extra_headers.pop(PayiHeaderNames.price_as_category, None) or context.get("price_as_category", None),
+            resource=extra_headers.pop(PayiHeaderNames.price_as_resource, None) or context.get("price_as_resource", None),
+            resource_scope=extra_headers.pop(PayiHeaderNames.resource_scope, None) or context.get("resource_scope", None),
+        )
+
+    def _before_invoke_update_request(
         self,
         request: _ProviderRequest,
-        context: _Context,
         ingest_extra_headers: "dict[str, str]", # do not conflict with potential kwargs["extra_headers"]
         args: Sequence[Any],
         kwargs: 'dict[str, Any]',
     ) -> None:
 
-        limit_ids = ingest_extra_headers.pop(PayiHeaderNames.limit_ids, None)
         # pop and ignore the request tags header since it is no longer processed
         ingest_extra_headers.pop(PayiHeaderNames.request_tags, None)
+
+        limit_ids = ingest_extra_headers.pop(PayiHeaderNames.limit_ids, None)
 
         use_case_name = ingest_extra_headers.pop(PayiHeaderNames.use_case_name, None)
         use_case_id = ingest_extra_headers.pop(PayiHeaderNames.use_case_id, None)
@@ -951,6 +1084,9 @@ class _PayiInstrumentor:
 
         user_id = ingest_extra_headers.pop(PayiHeaderNames.user_id, None)
         account_name = ingest_extra_headers.pop(PayiHeaderNames.account_name, None)
+
+        request_properties = ingest_extra_headers.pop(PayiHeaderNames.request_properties, "")
+        use_case_properties = ingest_extra_headers.pop(PayiHeaderNames.use_case_properties, "")
 
         if limit_ids:
             request._ingest["limit_ids"] = limit_ids.split(",")
@@ -966,23 +1102,10 @@ class _PayiInstrumentor:
             request._ingest["user_id"] = user_id
         if account_name:
             request._ingest["account_name"] = account_name
-
-        request_properties = context.get("request_properties", None)
         if request_properties:
-            request._ingest["properties"] = request_properties
-
-        use_case_properties = context.get("use_case_properties", None)
+            request._ingest["properties"] = json.loads(request_properties)
         if use_case_properties:
-            request._ingest["use_case_properties"] = use_case_properties
-
-        if request._internal_request_properties:
-            if "properties" in request._ingest and request._ingest["properties"] is not None:
-                # Merge internal request properties, but don't override existing keys
-                for key, value in request._internal_request_properties.items():
-                    if key not in request._ingest["properties"]:
-                        request._ingest["properties"][key] = value
-            else:
-                request._ingest["properties"] = request._internal_request_properties # Assign
+            request._ingest["use_case_properties"] = json.loads(use_case_properties)
 
         if len(ingest_extra_headers) > 0:
             request._ingest["provider_request_headers"] = [PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) for k, v in ingest_extra_headers.items()]
@@ -1006,7 +1129,7 @@ class _PayiInstrumentor:
         request.process_request_prompt(provider_prompt, args, kwargs)
 
         if self._log_prompt_and_response:
-            request._ingest["provider_request_json"] = json.dumps(provider_prompt)
+            request._ingest["provider_request_json"] = _compact_json(provider_prompt)
 
         request._ingest["event_timestamp"] = datetime.now(timezone.utc)
         
@@ -1021,7 +1144,7 @@ class _PayiInstrumentor:
     ) -> Any:
         self._logger.debug(f"async_invoke_wrapper: instance {instance}, category {request._category}")
 
-        context = self.get_context()
+        context = self._context
 
         # Bedrock client does not have an async method
 
@@ -1030,6 +1153,8 @@ class _PayiInstrumentor:
 
             # wrapped function invoked outside of decorator scope
             return await wrapped(*args, **kwargs)
+
+        # context = self._merge_context_instance_defaults(context, self._get_instance_default_context(instance))
 
         # after _udpate_headers, all metadata to add to ingest is in extra_headers, keyed by the xproxy-xxx header name
         extra_headers: Optional[dict[str, str]] = kwargs.get("extra_headers")
@@ -1046,12 +1171,16 @@ class _PayiInstrumentor:
             self._logger.debug(f"async_invoke_wrapper: sending proxy request")
 
             return await wrapped(*args, **kwargs)
+        
+        request._price_as = self._extract_price_as(extra_headers)
+        if not request.supports_extra_headers and "extra_headers" in kwargs:
+            kwargs.pop("extra_headers", None)
 
         current_frame = inspect.currentframe()
         # f_back excludes the current frame, strip() cleans up whitespace and newlines
         stack = [frame.strip() for frame in traceback.format_stack(current_frame.f_back)]  # type: ignore
 
-        request._ingest['properties'] = { 'system.stack_trace': json.dumps(stack) }
+        request._ingest['properties'] = { 'system.stack_trace': _compact_json(stack) }
 
         if request.process_request(instance, extra_headers, args, kwargs) is False:
             self._logger.debug(f"async_invoke_wrapper: calling wrapped instance")
@@ -1068,7 +1197,7 @@ class _PayiInstrumentor:
             stream = False
 
         try:
-            self._prepare_ingest(request, context, extra_headers, args, kwargs)
+            self._before_invoke_update_request(request, extra_headers, args, kwargs)
             self._logger.debug(f"async_invoke_wrapper: calling wrapped instance (stream={stream})")
 
             if "extra_headers" in kwargs:
@@ -1146,7 +1275,7 @@ class _PayiInstrumentor:
     ) -> Any:
         self._logger.debug(f"invoke_wrapper: instance {instance}, category {request._category}")
 
-        context = self.get_context()
+        context = self._context
 
         if not context:
             if not request.supports_extra_headers:
@@ -1156,6 +1285,8 @@ class _PayiInstrumentor:
 
             # wrapped function invoked outside of decorator scope
             return wrapped(*args, **kwargs)
+
+        # context = self._merge_context_instance_defaults(context, self._get_instance_default_context(instance))
 
         # after _udpate_headers, all metadata to add to ingest is in extra_headers, keyed by the xproxy-xxx header name
         extra_headers: Optional[dict[str, str]] = kwargs.get("extra_headers")
@@ -1172,12 +1303,16 @@ class _PayiInstrumentor:
             self._logger.debug(f"invoke_wrapper: sending proxy request")
 
             return wrapped(*args, **kwargs)
+
+        request._price_as = self._extract_price_as(extra_headers)
+        if not request.supports_extra_headers and "extra_headers" in kwargs:
+            kwargs.pop("extra_headers", None)
         
         current_frame = inspect.currentframe()
         # f_back excludes the current frame, strip() cleans up whitespace and newlines
         stack = [frame.strip() for frame in traceback.format_stack(current_frame.f_back)]  # type: ignore
 
-        request._ingest['properties'] = { 'system.stack_trace': json.dumps(stack) }
+        request._ingest['properties'] = { 'system.stack_trace': _compact_json(stack) }
 
         if request.process_request(instance, extra_headers, args, kwargs) is False:
             self._logger.debug(f"invoke_wrapper: calling wrapped instance")
@@ -1194,7 +1329,7 @@ class _PayiInstrumentor:
             stream = False
 
         try:
-            self._prepare_ingest(request, context, extra_headers, args, kwargs)
+            self._before_invoke_update_request(request, extra_headers, args, kwargs)
             self._logger.debug(f"invoke_wrapper: calling wrapped instance (stream={stream})")
 
             if "extra_headers" in kwargs:
@@ -1274,7 +1409,7 @@ class _PayiInstrumentor:
         self
     ) -> 'dict[str, str]':
         extra_headers: dict[str, str] = {}
-        context = self.get_context()
+        context = self._context
         if context:
             self._update_extra_headers(context, extra_headers)
 
@@ -1303,13 +1438,38 @@ class _PayiInstrumentor:
         context_price_as_resource: Optional[str] = context.get("price_as_resource")
         context_resource_scope: Optional[str] = context.get("resource_scope")
 
-        # headers_limit_ids = extra_headers.get(PayiHeaderNames.limit_ids, None)
-    
+        context_request_properties: Optional[dict[str, Optional[str]]] = context.get("request_properties")
+        context_use_case_properties: Optional[dict[str, Optional[str]]] = context.get("use_case_properties")
+
+        if PayiHeaderNames.request_properties in extra_headers:
+            headers_request_properties = extra_headers.get(PayiHeaderNames.request_properties, None)
+
+            if not headers_request_properties:
+                # headers_request_properties is empty, remove it from extra_headers
+                extra_headers.pop(PayiHeaderNames.request_properties, None)
+            else:
+                # leave the value in extra_headers
+                ...
+        elif context_request_properties:
+            extra_headers[PayiHeaderNames.request_properties] = _compact_json(context_request_properties)
+
+        if PayiHeaderNames.use_case_properties in extra_headers:
+            headers_use_case_properties = extra_headers.get(PayiHeaderNames.use_case_properties, None)
+
+            if not headers_use_case_properties:
+                # headers_use_case_properties is empty, remove it from extra_headers
+                extra_headers.pop(PayiHeaderNames.use_case_properties, None)
+            else:
+                # leave the value in extra_headers
+                ...
+        elif context_use_case_properties:
+            extra_headers[PayiHeaderNames.use_case_properties] = _compact_json(context_use_case_properties)
+
         # If the caller specifies limit_ids in extra_headers, it takes precedence over the decorator
         if PayiHeaderNames.limit_ids in extra_headers:
             headers_limit_ids = extra_headers.get(PayiHeaderNames.limit_ids)
 
-            if headers_limit_ids is None or len(headers_limit_ids) == 0:
+            if not headers_limit_ids:
                 # headers_limit_ids is empty, remove it from extra_headers
                 extra_headers.pop(PayiHeaderNames.limit_ids, None)
             else:   
@@ -1320,7 +1480,7 @@ class _PayiInstrumentor:
 
         if PayiHeaderNames.user_id in extra_headers:
             headers_user_id = extra_headers.get(PayiHeaderNames.user_id, None)
-            if headers_user_id is None or len(headers_user_id) == 0:
+            if not headers_user_id:
                 # headers_user_id is empty, remove it from extra_headers
                 extra_headers.pop(PayiHeaderNames.user_id, None)
             else:
@@ -1331,7 +1491,7 @@ class _PayiInstrumentor:
 
         if PayiHeaderNames.account_name in extra_headers:
             headers_account_name = extra_headers.get(PayiHeaderNames.account_name, None)
-            if headers_account_name is None or len(headers_account_name) == 0:
+            if not headers_account_name:
                 # headers_account_name is empty, remove it from extra_headers
                 extra_headers.pop(PayiHeaderNames.account_name, None)
             else:
@@ -1342,7 +1502,7 @@ class _PayiInstrumentor:
 
         if PayiHeaderNames.use_case_name in extra_headers:
             headers_use_case_name = extra_headers.get(PayiHeaderNames.use_case_name, None)
-            if headers_use_case_name is None or len(headers_use_case_name) == 0:
+            if not headers_use_case_name:
                 # headers_use_case_name is empty, remove all use case related headers
                 extra_headers.pop(PayiHeaderNames.use_case_name, None)
                 extra_headers.pop(PayiHeaderNames.use_case_id, None)
@@ -1604,7 +1764,7 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
             return chunk
         else:
             # assume dict
-            return json.dumps(chunk)
+            return _compact_json(chunk)
 
 class _StreamManagerWrapper(ObjectProxy):  # type: ignore
     def __init__(
@@ -1678,7 +1838,7 @@ class _GeneratorWrapper:  # type: ignore
             
         if self._log_prompt_and_response:
             dict = self._chunk_to_dict(chunk) 
-            self._responses.append(json.dumps(dict))
+            self._responses.append(_compact_json(dict))
                 
         return self._request.process_chunk(chunk)
     
@@ -1916,7 +2076,7 @@ def get_context() -> PayiContext:
     """
     if not _instrumentor:
         return PayiContext()
-    internal_context = _instrumentor.get_context() or {}
+    internal_context = _instrumentor._context_safe
 
     context_dict = {
         key: value
@@ -1926,3 +2086,12 @@ def get_context() -> PayiContext:
     if _instrumentor._last_result:
         context_dict["last_result"] = _instrumentor._last_result
     return PayiContext(**dict(context_dict))  # type: ignore
+
+# def payi_set_default_context(
+#     instance: Any,
+#     context: PayiInstanceDefaultContext
+# ) -> None:
+#     if not _instrumentor:
+#         raise RuntimeError("payi_instrument() must be called before using payi_add_client_default_context()")
+    
+#     _instrumentor._set_instance_default_context(instance, context)
