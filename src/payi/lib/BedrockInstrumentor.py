@@ -55,25 +55,9 @@ class BedrockInstrumentor:
             trace = True
         BedrockInstrumentor._guardrail_trace = trace
 
-        models = aws_config.get("models", [])
-        if models:
-            for model in models:
-                model_id = model.get("model_id", "")
-                if not model_id:
-                    continue
-
-                price_as_category = model.get("price_as_category", None)
-                price_as_resource = model.get("price_as_resource", None)
-                resource_scope = model.get("resource_scope", None)
-
-                if not price_as_category and not price_as_resource:
-                    continue
-
-                BedrockInstrumentor._model_mapping[model_id] = _Context(
-                    price_as_category=price_as_category,
-                    price_as_resource=price_as_resource,
-                    resource_scope=resource_scope,
-                )
+        model_mappings = aws_config.get("model_mappings", [])
+        if model_mappings:
+            BedrockInstrumentor._model_mapping = _PayiInstrumentor._model_mapping_to_context_dict(model_mappings)
 
     @staticmethod
     def instrument(instrumentor: _PayiInstrumentor) -> None:

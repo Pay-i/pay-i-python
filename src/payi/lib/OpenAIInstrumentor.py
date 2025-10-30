@@ -36,23 +36,8 @@ class OpenAiInstrumentor:
     @staticmethod
     def configure(azure_openai_config: Optional[PayiInstrumentAzureOpenAiConfig]) -> None:
         if azure_openai_config:
-            for deployment in azure_openai_config.get("deployments", []):
-                deployment_name = deployment.get("deployment_name", "")
-                if not deployment_name:
-                    continue
-
-                price_as_category = deployment.get("price_as_category", None)
-                price_as_resource = deployment.get("price_as_resource", None)
-                resource_scope = deployment.get("resource_scope", None)
-
-                if not price_as_category and not price_as_resource:
-                    continue
-
-                OpenAiInstrumentor._azure_openai_deployments[deployment_name] = _Context(
-                    price_as_category=price_as_category,
-                    price_as_resource=price_as_resource,
-                    resource_scope=resource_scope,
-                )
+            model_mappings = azure_openai_config.get("model_mappings", [])
+            OpenAiInstrumentor._azure_openai_deployments = _PayiInstrumentor._model_mapping_to_context_dict(model_mappings)
 
     @staticmethod
     def instrument(instrumentor: _PayiInstrumentor) -> None:
@@ -250,7 +235,7 @@ class _OpenAiProviderRequest(_ProviderRequest):
             return False
 
         if self._price_as.resource_scope:
-            if not self._price_as.resource_scope in ["global", "datazone"] or self._price_as.resource_scope.startswith("region"):
+            if not (self._price_as.resource_scope in ["global", "datazone"] or self._price_as.resource_scope.startswith("region")):
                 self._instrumentor._logger.error("Azure OpenAI invalid resource scope, not ingesting")
                 return False
 

@@ -154,24 +154,20 @@ class _ProviderRequest:
             self._ingest["provider_response_function_calls"] = self._function_calls
         self._function_calls.append(ProviderResponseFunctionCall(name=name, arguments=arguments))
 
-class PayiInstrumentAwsBedrockModelConfig(TypedDict, total=False):
-    model_id: str
+class PayiInstrumentModelMapping(TypedDict, total=False):
+    model: str
     price_as_category: Optional[str]
     price_as_resource: Optional[str]
+    # "global", "datazone", "region", "region.<region_name>"
     resource_scope: Optional[str]   
 
 class PayiInstrumentAwsBedrockConfig(TypedDict, total=False):
     guardrail_trace: Optional[bool]
-    models: Optional[Sequence[PayiInstrumentAwsBedrockModelConfig]]
-
-class PayiInstrumentAzureOpenAiDeploymentConfig(TypedDict, total=False):
-    deployment_name: str
-    price_as_category: Optional[str]
-    price_as_resource: Optional[str]
-    resource_scope: Optional[str]   
+    model_mappings: Optional[Sequence[PayiInstrumentModelMapping]]
 
 class PayiInstrumentAzureOpenAiConfig(TypedDict, total=False):
-    deployments: Sequence[PayiInstrumentAzureOpenAiDeploymentConfig]
+    # map deployment name known model
+    model_mappings: Sequence[PayiInstrumentModelMapping] 
 
 class PayiInstrumentOfflineInstrumentationConfig(TypedDict, total=False):
     file_name: str
@@ -314,7 +310,8 @@ class _PayiInstrumentor:
         self._blocked_limits: set[str] = set()
         self._exceeded_limits: set[str] = set()
 
-        self._api_connection_error_last_log_time: float = time.time()
+        # by not setting to time.time() the first connection error is always logged
+        self._api_connection_error_last_log_time: float = 0
         self._api_connection_error_count: int = 0
         self._api_connection_error_window: int = global_config.get("connection_error_logging_window", 60)
         if self._api_connection_error_window < 0:
@@ -465,6 +462,28 @@ class _PayiInstrumentor:
 
         except Exception as e:
             self._logger.error(f"Error instrumenting Google GenAi: {e}")
+
+    @staticmethod
+    def _model_mapping_to_context_dict(model_mappings: Sequence[PayiInstrumentModelMapping]) -> 'dict[str, _Context]':
+        context: dict[str, _Context] = {}
+        for mapping in model_mappings:
+            model = mapping.get("model", "")
+            if not model:
+                continue
+
+            price_as_category = mapping.get("price_as_category", None)
+            price_as_resource = mapping.get("price_as_resource", None)
+            resource_scope = mapping.get("resource_scope", None)
+
+            if not price_as_category and not price_as_resource:
+                continue
+
+            context[model] = _Context(
+                price_as_category=price_as_category,
+                price_as_resource=price_as_resource,
+                resource_scope=resource_scope,
+            )
+        return context
 
     def _write_offline_ingest_packets(self) -> None:
         if not self._offline_instrumentation_file_name or not self._offline_ingest_packets:
