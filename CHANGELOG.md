@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.133 (2025-10-30)
+
+Full Changelog: [v0.1.0-alpha.132...v0.1.0-alpha.133](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.132...v0.1.0-alpha.133)
+
+### Bug Fixes
+
+* **client:** close streams without requiring full consumption ([6ec5c11](https://github.com/Pay-i/pay-i-python/commit/6ec5c115c06a2d967d06464054bc7221ea917805))
+
 ## 0.1.0-alpha.132 (2025-10-22)
 
 Full Changelog: [v0.1.0-alpha.131...v0.1.0-alpha.132](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.131...v0.1.0-alpha.132)
