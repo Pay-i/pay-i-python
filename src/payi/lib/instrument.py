@@ -1154,7 +1154,7 @@ class _PayiInstrumentor:
             # wrapped function invoked outside of decorator scope
             return await wrapped(*args, **kwargs)
 
-        context = self._merge_context_instance_defaults(context, self._get_instance_default_context(instance))
+        # context = self._merge_context_instance_defaults(context, self._get_instance_default_context(instance))
 
         # after _udpate_headers, all metadata to add to ingest is in extra_headers, keyed by the xproxy-xxx header name
         extra_headers: Optional[dict[str, str]] = kwargs.get("extra_headers")
@@ -1286,7 +1286,7 @@ class _PayiInstrumentor:
             # wrapped function invoked outside of decorator scope
             return wrapped(*args, **kwargs)
 
-        context = self._merge_context_instance_defaults(context, self._get_instance_default_context(instance))
+        # context = self._merge_context_instance_defaults(context, self._get_instance_default_context(instance))
 
         # after _udpate_headers, all metadata to add to ingest is in extra_headers, keyed by the xproxy-xxx header name
         extra_headers: Optional[dict[str, str]] = kwargs.get("extra_headers")
@@ -2087,11 +2087,11 @@ def get_context() -> PayiContext:
         context_dict["last_result"] = _instrumentor._last_result
     return PayiContext(**dict(context_dict))  # type: ignore
 
-def payi_set_default_context(
-    instance: Any,
-    context: PayiInstanceDefaultContext
-) -> None:
-    if not _instrumentor:
-        raise RuntimeError("payi_instrument() must be called before using payi_add_client_default_context()")
+# def payi_set_default_context(
+#     instance: Any,
+#     context: PayiInstanceDefaultContext
+# ) -> None:
+#     if not _instrumentor:
+#         raise RuntimeError("payi_instrument() must be called before using payi_add_client_default_context()")
     
-    _instrumentor._set_instance_default_context(instance, context)
+#     _instrumentor._set_instance_default_context(instance, context)
