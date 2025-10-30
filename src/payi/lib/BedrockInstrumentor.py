@@ -425,11 +425,20 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
         if price_as_resource:
             model_id = price_as_resource
 
-        self._is_anthropic: bool = 'anthropic' in model_id
-        self._is_nova: bool = 'nova' in model_id
-        self._is_meta: bool = 'meta' in model_id
-        self._is_amazon_titan_embed_text_v1: bool = 'amazon.titan-embed-text-v1' == model_id
-        self._is_cohere_embed_english_v3: bool = 'cohere.embed-english-v3' == model_id
+        self._is_anthropic: bool = False
+        self._is_nova: bool = False
+        self._is_meta: bool = False
+        self._is_amazon_titan_embed_text_v1: bool = False
+        self._is_cohere_embed_english_v3: bool = False
+
+        self._assign_model_state(model_id=model_id)
+
+    def _assign_model_state(self, model_id: str) -> None:
+        self._is_anthropic = 'anthropic' in model_id
+        self._is_nova = 'nova' in model_id
+        self._is_meta = 'meta' in model_id
+        self._is_amazon_titan_embed_text_v1 = 'amazon.titan-embed-text-v1' == model_id
+        self._is_cohere_embed_english_v3 = 'cohere.embed-english-v3' == model_id
 
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
@@ -437,6 +446,10 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
 
         super().process_request(instance, extra_headers, args, kwargs)
     
+        # super().process_request will assign price_as mapping from global state, so evaluate afterwards
+        if self._price_as.resource:
+            self._assign_model_state(model_id=self._price_as.resource)
+
         guardrail_id = kwargs.get("guardrailIdentifier", "")
         if guardrail_id:
             self.add_internal_request_property(PayiPropertyNames.aws_bedrock_guardrail_id, guardrail_id)
