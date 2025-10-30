@@ -195,20 +195,12 @@ class _AnthropicProviderRequest(_ProviderRequest):
 
         return None
 
+    def _update_resource_name(self, model: str) -> str:
+        return ("anthropic." if self._is_vertex else "") + model
+
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]',  args: Sequence[Any], kwargs: Any) -> bool:
-        model = kwargs.get("model", "")
-
-        if self._is_bedrock:
-            from payi.lib.BedrockInstrumentor import BedrockInstrumentor
-
-            bedrock_model_mapping = BedrockInstrumentor.get_mapping(model)
-
-            self._price_as.category = bedrock_model_mapping.get("price_as_category", self._price_as.category)
-            self._price_as.resource = bedrock_model_mapping.get("price_as_resource", self._price_as.resource)
-            self._price_as.resource_scope = bedrock_model_mapping.get("resource_scope", self._price_as.resource_scope)
-
-        self._ingest["resource"] = ("anthropic." if self._is_vertex else "") + model
+        self._ingest["resource"] = self._update_resource_name(kwargs.get("model", ""))
 
         if self._price_as.resource_scope:
             self._ingest["resource_scope"] = self._price_as.resource_scope
@@ -217,7 +209,7 @@ class _AnthropicProviderRequest(_ProviderRequest):
         if self._price_as.category:
             self._ingest["category"] = self._price_as.category
         if self._price_as.resource:
-            self._ingest["resource"] = ("anthropic." if self._is_vertex else "") + self._price_as.resource
+            self._ingest["resource"] = self._update_resource_name(self._price_as.resource)
 
         self._instrumentor._logger.debug(f"Processing anthropic request: model {self._ingest['resource']}, category {self._category}")
 
