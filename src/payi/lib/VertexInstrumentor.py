@@ -14,42 +14,20 @@ class VertexInstrumentor:
 
     @staticmethod
     def instrument(instrumentor: _PayiInstrumentor) -> None:
-        try:
-            VertexInstrumentor._module_version = get_version_helper(VertexInstrumentor._module_name)
+        VertexInstrumentor._module_version = get_version_helper(VertexInstrumentor._module_name)
 
-            wrap_function_wrapper(
-                "vertexai.generative_models",
-                "GenerativeModel.generate_content",
-                generate_wrapper(instrumentor),
-            )
+        wrappers = [
+            ("vertexai.generative_models", "GenerativeModel.generate_content", generate_wrapper(instrumentor)),
+            ("vertexai.generative_models", "GenerativeModel.generate_content_async", agenerate_wrapper(instrumentor)),
+            ("vertexai.preview.generative_models", "GenerativeModel.generate_content", generate_wrapper(instrumentor)),
+            ("vertexai.preview.generative_models", "GenerativeModel.generate_content_async", agenerate_wrapper(instrumentor)),
+        ]
 
-            wrap_function_wrapper(
-                "vertexai.generative_models",
-                "GenerativeModel.generate_content_async",
-                agenerate_wrapper(instrumentor),
-            )
-
-        except Exception as e:
-            instrumentor._logger.debug(f"Error instrumenting vertex: {e}")
-            return
-
-        # separate instrumetning preview functionality from released in case it fails
-        try:
-            wrap_function_wrapper(
-                "vertexai.preview.generative_models",
-                "GenerativeModel.generate_content",
-                generate_wrapper(instrumentor),
-            )
-
-            wrap_function_wrapper(
-                "vertexai.preview.generative_models",
-                "GenerativeModel.generate_content_async",
-                agenerate_wrapper(instrumentor),
-            )
-
-        except Exception as e:
-            instrumentor._logger.debug(f"Error instrumenting vertex: {e}")
-            return
+        for module, method, wrapper in wrappers:
+            try:
+                wrap_function_wrapper(module, method, wrapper)
+            except Exception as e:
+                instrumentor._logger.debug(f"Error wrapping {module}.{method}: {e}")
 
 @_PayiInstrumentor.payi_wrapper
 def generate_wrapper(

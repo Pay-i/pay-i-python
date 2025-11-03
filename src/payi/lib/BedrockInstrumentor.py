@@ -144,13 +144,15 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
 
     def __init__(
         self,
-        response: Any,
+        response: 'dict[str, Any]',
+        body: Any,
         request: '_BedrockInvokeProviderRequest',
         log_prompt_and_response: bool
         ) -> None:
 
-        super().__init__(response) # type: ignore
+        super().__init__(body) # type: ignore
         self._response = response
+        self._body = body
         self._request = request
         self._log_prompt_and_response = log_prompt_and_response
 
@@ -238,7 +240,8 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
 
         self._request.process_stop_action(response.get("amazon-bedrock-guardrailAction", ""))
 
-        self._request._instrumentor._ingest_units(self._request)
+        xproxy_result = self._request._instrumentor._ingest_units(self._request)
+        _PayiInstrumentor.assign_xproxy_result(self._response, xproxy_result)
 
         return data # type: ignore
 
@@ -345,6 +348,7 @@ class _BedrockProviderRequest(_ProviderRequest):
 
     @override
     def process_initial_stream_response(self, response: Any) -> None:
+        super().process_initial_stream_response(response)
         self._ingest["provider_response_id"] = response.get("ResponseMetadata", {}).get("RequestId", None)
 
     @override
@@ -543,7 +547,8 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
             self._ingest["provider_response_headers"] = [PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) for k, v in response_headers.items()]
 
         response["body"] = InvokeResponseWrapper(
-            response=response["body"],
+            response=response,
+            body=response["body"],
             request=self,
             log_prompt_and_response=log_prompt_and_response)
 

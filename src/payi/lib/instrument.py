@@ -43,7 +43,32 @@ class PriceAs:
     resource: Optional[str]
     resource_scope: Optional[str]
 
+def _set_attr_safe(o: Any, attr_name: str, attr_value: Any) -> None:
+    try:
+        if hasattr(o, '__pydantic_private__'):
+            o.__pydantic_private__[attr_name] = attr_value
+        elif hasattr(o, '__dict__'):
+            # Use object.__setattr__ to bypass Pydantic validation
+            # This allows setting attributes outside the model schema without triggering forbid=true errors
+            object.__setattr__(o, attr_name, attr_value)
+            o.__pydantic_private__[attr_name] = attr_value
+        else:
+            setattr(o, attr_name, attr_value)
+
+    except Exception as e:
+        _g_logger.debug(f"Could not set attribute {attr_name}: {e}")
+
 class _ProviderRequest:
+    excluded_headers = {
+        "transfer-encoding",
+        "content-length",
+        "content-type",
+        "content-encoding",
+        "content-disposition",
+    }
+    _payi_response_headers_attr = "_payi_response_headers"
+    _payi_xproxy_result_attr = "_payi_xproxy_result"
+
     def __init__(
             self, 
             instrumentor: '_PayiInstrumentor',
@@ -84,7 +109,7 @@ class _ProviderRequest:
         ...
     
     def process_initial_stream_response(self, response: Any) -> None:
-        pass
+        self.add_response_headers(response)
 
     def remove_inline_data(self, prompt: 'dict[str, Any]') -> bool:# noqa: ARG002
         return False
@@ -153,6 +178,35 @@ class _ProviderRequest:
             self._function_calls = []
             self._ingest["provider_response_function_calls"] = self._function_calls
         self._function_calls.append(ProviderResponseFunctionCall(name=name, arguments=arguments))
+    
+    def add_response_headers(self, response: Any) -> None:
+        response_headers  = getattr(response, _ProviderRequest._payi_response_headers_attr, {})
+        if response_headers:
+            self._ingest["provider_response_headers"] = [PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) for k, v in response_headers.items() if k.lower() not in _ProviderRequest.excluded_headers]
+
+    @staticmethod
+    def process_response_wrapper(wrapped: Any, _instance: Any, args: Any, kwargs: Any) -> Any:
+        httpResponse = kwargs.get("response", None)
+
+        r =  wrapped(*args, **kwargs)
+
+        if httpResponse:
+            headers = getattr(httpResponse, "headers", None)
+            _set_attr_safe(r, _ProviderRequest._payi_response_headers_attr, dict(headers) if headers else {})
+
+        return r
+
+    @staticmethod
+    async def aprocess_response_wrapper(wrapped: Any, _instance: Any, args: Any, kwargs: Any) -> Any:
+        httpResponse = kwargs.get("response", None)
+
+        r = await wrapped(*args, **kwargs)
+
+        if httpResponse:
+            headers = getattr(httpResponse, "headers", None)
+            _set_attr_safe(r, _ProviderRequest._payi_response_headers_attr, dict(headers) if headers else {})
+
+        return r
 
 class PayiInstrumentModelMapping(TypedDict, total=False):
     model: str
@@ -1132,7 +1186,12 @@ class _PayiInstrumentor:
             request._ingest["provider_request_json"] = _compact_json(provider_prompt)
 
         request._ingest["event_timestamp"] = datetime.now(timezone.utc)
-        
+
+    @staticmethod
+    def assign_xproxy_result(o: Any, xproxy_result: Optional[Union[XproxyResult, XproxyError]]) -> None:
+        if xproxy_result:
+            _set_attr_safe(o, _ProviderRequest._payi_xproxy_result_attr, xproxy_result)
+
     async def async_invoke_wrapper(
         self,
         request: _ProviderRequest,
@@ -1250,6 +1309,8 @@ class _PayiInstrumentor:
         request._ingest["end_to_end_latency_ms"] = duration
         request._ingest["http_status_code"] = 200
 
+        request.add_response_headers(response)
+
         return_result: Any = request.process_synchronous_response(
             response=response,
             log_prompt_and_response=self._log_prompt_and_response,
@@ -1259,7 +1320,8 @@ class _PayiInstrumentor:
             self._logger.debug(f"async_invoke_wrapper: process sync response return")
             return return_result
 
-        await self._aingest_units(request)
+        xproxy_result = await self._aingest_units(request)
+        self.assign_xproxy_result(response, xproxy_result)
 
         self._logger.debug(f"async_invoke_wrapper: finished")
         return response
@@ -1392,15 +1454,19 @@ class _PayiInstrumentor:
         request._ingest["end_to_end_latency_ms"] = duration
         request._ingest["http_status_code"] = 200
 
+        request.add_response_headers(response)
+
         return_result: Any = request.process_synchronous_response(
             response=response,
             log_prompt_and_response=self._log_prompt_and_response,
             kwargs=kwargs)
+
         if return_result:
             self._logger.debug(f"invoke_wrapper: process sync response return")
             return return_result
 
-        self._ingest_units(request)
+        xproxy_result = self._ingest_units(request)
+        self.assign_xproxy_result(response, xproxy_result)
 
         self._logger.debug(f"invoke_wrapper: finished")
         return response
@@ -1653,8 +1719,8 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
                     result = self._evaluate_chunk(decode)
 
             if result and result.ingest:
-                self._stop_iteration()
-
+                xproxy_result = self._stop_iteration()
+                _PayiInstrumentor.assign_xproxy_result(event, xproxy_result)
             yield event
 
         self._instrumentor._logger.debug(f"StreamIteratorWrapper: bedrock iter finished")
@@ -1677,7 +1743,8 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
             result = self._evaluate_chunk(chunk)
 
             if result.ingest:
-                self._stop_iteration()
+                xproxy_result = self._stop_iteration()
+                _PayiInstrumentor.assign_xproxy_result(chunk, xproxy_result)
 
             if result.send_chunk_to_caller:
                 return chunk # type: ignore
@@ -1701,7 +1768,8 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
             result = self._evaluate_chunk(chunk)
 
             if result.ingest:
-                await self._astop_iteration()
+                xproxy_result = await self._astop_iteration()
+                _PayiInstrumentor.assign_xproxy_result(chunk, xproxy_result)
 
             if  result.send_chunk_to_caller:
                 return chunk # type: ignore
@@ -1735,24 +1803,27 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
         if self._instrumentor._log_prompt_and_response:
             self._request._ingest["provider_response_json"] = self._responses
 
-    async def _astop_iteration(self) -> None:
+    async def _astop_iteration(self) -> Optional[Union[XproxyResult, XproxyError]]:
         if self._ingested:
             self._instrumentor._logger.debug(f"StreamIteratorWrapper: astop iteration already ingested, skipping")
-            return
+            return None
 
         self._process_stop_iteration()
-
-        await self._instrumentor._aingest_units(self._request)
+        xproxy_result = await self._instrumentor._aingest_units(self._request)
         self._ingested = True
 
-    def _stop_iteration(self) -> None:
+        return xproxy_result
+
+    def _stop_iteration(self) -> Optional[Union[XproxyResult, XproxyError]]:
         if self._ingested:
             self._instrumentor._logger.debug(f"StreamIteratorWrapper: stop iteration already ingested, skipping")
-            return
+            return None
 
         self._process_stop_iteration()
-        self._instrumentor._ingest_units(self._request)
+        xproxy_result = self._instrumentor._ingest_units(self._request)
         self._ingested = True
+
+        return xproxy_result
 
     @staticmethod
     def chunk_to_json(chunk: Any) -> str:
@@ -1848,7 +1919,8 @@ class _GeneratorWrapper:  # type: ignore
             result = self._process_chunk(chunk)
 
             if result.ingest:
-                self._stop_iteration()
+                xproxy_result = self._stop_iteration()
+                _PayiInstrumentor.assign_xproxy_result(chunk, xproxy_result)
 
             # ignore result.send_chunk_to_caller:
             return chunk
@@ -1866,7 +1938,8 @@ class _GeneratorWrapper:  # type: ignore
             result = self._process_chunk(chunk)
 
             if result.ingest:
-                await self._astop_iteration()
+                xproxy_result = await self._astop_iteration()
+                _PayiInstrumentor.assign_xproxy_result(chunk, xproxy_result)
 
             # ignore result.send_chunk_to_caller:
             return chunk # type: ignore
@@ -1887,25 +1960,25 @@ class _GeneratorWrapper:  # type: ignore
         else:
             return {}
 
-    def _stop_iteration(self) -> None:
+    def _stop_iteration(self) -> Optional[Union[XproxyResult, XproxyError]]:
         if self._ingested:
             self._instrumentor._logger.debug(f"GeneratorWrapper: stop iteration already ingested, skipping")
-            return
+            return None
 
         self._process_stop_iteration()
-
-        self._instrumentor._ingest_units(self._request)
+        xproxy_result = self._instrumentor._ingest_units(self._request)
         self._ingested = True
+        return xproxy_result
 
-    async def _astop_iteration(self) -> None:
+    async def _astop_iteration(self) -> Optional[Union[XproxyResult, XproxyError]]:
         if self._ingested:
             self._instrumentor._logger.debug(f"GeneratorWrapper: astop iteration already ingested, skipping")
-            return
+            return None
 
         self._process_stop_iteration()
-        
-        await self._instrumentor._aingest_units(self._request)
+        xproxy_result = await self._instrumentor._aingest_units(self._request)
         self._ingested = True
+        return xproxy_result
 
     def _process_stop_iteration(self) -> None:
         self._instrumentor._logger.debug(f"GeneratorWrapper: stop iteration")
