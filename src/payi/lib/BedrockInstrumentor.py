@@ -8,7 +8,6 @@ from wrapt import ObjectProxy, wrap_function_wrapper  # type: ignore
 
 from payi.lib.helpers import PayiCategories, PayiHeaderNames, PayiPropertyNames, payi_aws_bedrock_url
 from payi.types.ingest_units_params import Units
-from payi.types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
 from .instrument import (
     PayiInstrumentAwsBedrockConfig,
@@ -38,6 +37,8 @@ class BedrockInstrumentor:
 
     _model_mapping: Dict[str, _Context] = {}
 
+    _add_streaming_xproxy_result: bool = False
+
     @staticmethod
     def get_mapping(model_id: Optional[str]) -> _Context:
         if not model_id:
@@ -54,6 +55,10 @@ class BedrockInstrumentor:
         if trace is None:
             trace = True
         BedrockInstrumentor._guardrail_trace = trace
+
+        add_streaming_xproxy_result = aws_config.get("add_streaming_xproxy_result", False)
+        if add_streaming_xproxy_result:
+            BedrockInstrumentor._add_streaming_xproxy_result = add_streaming_xproxy_result
 
         model_mappings = aws_config.get("model_mappings", [])
         if model_mappings:
@@ -346,10 +351,19 @@ class _BedrockProviderRequest(_ProviderRequest):
 
         return True
 
+    def process_response_metadata(self, metadata: 'dict[str, Any]') -> None:
+        request_id = metadata.get("RequestId", "")
+        if request_id:
+            self._ingest["provider_response_id"] = request_id
+
+        response_headers = metadata.get("HTTPHeaders", {})
+        if response_headers:
+            self.add_response_headers(response_headers)
+
     @override
     def process_initial_stream_response(self, response: Any) -> None:
         super().process_initial_stream_response(response)
-        self._ingest["provider_response_id"] = response.get("ResponseMetadata", {}).get("RequestId", None)
+        self.process_response_metadata(response.get("ResponseMetadata", {}))
 
     @override
     def process_exception(self, exception: Exception, kwargs: Any, ) -> bool:
@@ -536,15 +550,7 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
         log_prompt_and_response: bool,
         kwargs: Any) -> Any:
 
-        metadata = response.get("ResponseMetadata", {})
-
-        request_id = metadata.get("RequestId", "")
-        if request_id:
-            self._ingest["provider_response_id"] = request_id
-
-        response_headers = metadata.get("HTTPHeaders", {}).copy()
-        if response_headers:
-            self._ingest["provider_response_headers"] = [PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) for k, v in response_headers.items()]
+        self.process_response_metadata(response.get("ResponseMetadata", {}))
 
         response["body"] = InvokeResponseWrapper(
             response=response,
@@ -615,15 +621,7 @@ class _BedrockConverseProviderRequest(_BedrockProviderRequest):
         units: dict[str, Units] = self._ingest["units"]
         units["text"] = Units(input=input, output=output)
 
-        metadata = response.get("ResponseMetadata", {})
-
-        request_id = metadata.get("RequestId", "")
-        if request_id:
-            self._ingest["provider_response_id"] = request_id
-
-        response_headers = metadata.get("HTTPHeaders", {})
-        if response_headers:
-            self._ingest["provider_response_headers"] = [PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) for k, v in response_headers.items()]
+        self.process_response_metadata(response.get("ResponseMetadata", {}))
 
         if log_prompt_and_response:
             response_without_metadata = response.copy()

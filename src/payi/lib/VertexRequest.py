@@ -5,7 +5,6 @@ from typing_extensions import override
 
 from payi.lib.helpers import PayiCategories
 from payi.types.ingest_units_params import Units
-from payi.types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
 from .instrument import _ChunkResult, _StreamingType, _ProviderRequest, _PayiInstrumentor
 
@@ -48,7 +47,7 @@ class _VertexRequest(_ProviderRequest): # type: ignore
         if "provider_response_headers" not in self._ingest:
             response_headers = response_dict.get('sdk_http_response', {}).get('headers', {})
             if response_headers:
-                self._ingest["provider_response_headers"] = [PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) for k, v in response_headers.items() if k.lower() not in _ProviderRequest.excluded_headers]
+                self.add_response_headers(response_headers)
 
         if "resource" not in self._ingest: 
             model: Optional[str] = self._get_model_name(response_dict)  # type: ignore[unreachable]
@@ -119,7 +118,7 @@ class _VertexRequest(_ProviderRequest): # type: ignore
 
         response_headers = response_dict.get('sdk_http_response', {}).get('headers', {})
         if response_headers:
-            self._ingest["provider_response_headers"] = [PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) for k, v in response_headers.items() if k.lower() not in _ProviderRequest.excluded_headers]
+            self.add_response_headers(response_headers)
 
         id: Optional[str] = response_dict.get("response_id", None)
         if id:

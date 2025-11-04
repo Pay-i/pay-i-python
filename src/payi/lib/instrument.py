@@ -45,13 +45,15 @@ class PriceAs:
 
 def _set_attr_safe(o: Any, attr_name: str, attr_value: Any) -> None:
     try:
-        if hasattr(o, '__pydantic_private__'):
+        if hasattr(o, '__pydantic_private__') and o.__pydantic_private__ is not None:
             o.__pydantic_private__[attr_name] = attr_value
-        elif hasattr(o, '__dict__'):
+
+        if hasattr(o, '__dict__'):
             # Use object.__setattr__ to bypass Pydantic validation
             # This allows setting attributes outside the model schema without triggering forbid=true errors
             object.__setattr__(o, attr_name, attr_value)
-            o.__pydantic_private__[attr_name] = attr_value
+        elif isinstance(o, dict):
+            o[attr_name] = attr_value
         else:
             setattr(o, attr_name, attr_value)
 
@@ -66,8 +68,9 @@ class _ProviderRequest:
         "content-encoding",
         "content-disposition",
     }
-    _payi_response_headers_attr = "_payi_response_headers"
-    _payi_xproxy_result_attr = "_payi_xproxy_result"
+
+    _instrumented_response_headers_attr = "_instrumented_response_headers"
+    _xproxy_result_attr = "xproxy_result"
 
     def __init__(
             self, 
@@ -109,7 +112,7 @@ class _ProviderRequest:
         ...
     
     def process_initial_stream_response(self, response: Any) -> None:
-        self.add_response_headers(response)
+        self.add_instrumented_response_headers(response)
 
     def remove_inline_data(self, prompt: 'dict[str, Any]') -> bool:# noqa: ARG002
         return False
@@ -179,10 +182,13 @@ class _ProviderRequest:
             self._ingest["provider_response_function_calls"] = self._function_calls
         self._function_calls.append(ProviderResponseFunctionCall(name=name, arguments=arguments))
     
-    def add_response_headers(self, response: Any) -> None:
-        response_headers  = getattr(response, _ProviderRequest._payi_response_headers_attr, {})
+    def add_instrumented_response_headers(self, response: Any) -> None:
+        response_headers  = getattr(response, _ProviderRequest._instrumented_response_headers_attr, {})
         if response_headers:
-            self._ingest["provider_response_headers"] = [PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) for k, v in response_headers.items() if k.lower() not in _ProviderRequest.excluded_headers]
+            self.add_response_headers(response_headers)
+
+    def add_response_headers(self, response_headers: 'dict[str, Any]') -> None:
+        self._ingest["provider_response_headers"] = [PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) for k, v in response_headers.items() if k.lower() not in _ProviderRequest.excluded_headers]
 
     @staticmethod
     def process_response_wrapper(wrapped: Any, _instance: Any, args: Any, kwargs: Any) -> Any:
@@ -192,7 +198,7 @@ class _ProviderRequest:
 
         if httpResponse:
             headers = getattr(httpResponse, "headers", None)
-            _set_attr_safe(r, _ProviderRequest._payi_response_headers_attr, dict(headers) if headers else {})
+            _set_attr_safe(r, _ProviderRequest._instrumented_response_headers_attr, dict(headers) if headers else {})
 
         return r
 
@@ -204,7 +210,7 @@ class _ProviderRequest:
 
         if httpResponse:
             headers = getattr(httpResponse, "headers", None)
-            _set_attr_safe(r, _ProviderRequest._payi_response_headers_attr, dict(headers) if headers else {})
+            _set_attr_safe(r, _ProviderRequest._instrumented_response_headers_attr, dict(headers) if headers else {})
 
         return r
 
@@ -217,6 +223,7 @@ class PayiInstrumentModelMapping(TypedDict, total=False):
 
 class PayiInstrumentAwsBedrockConfig(TypedDict, total=False):
     guardrail_trace: Optional[bool]
+    add_streaming_xproxy_result: Optional[bool]
     model_mappings: Optional[Sequence[PayiInstrumentModelMapping]]
 
 class PayiInstrumentAzureOpenAiConfig(TypedDict, total=False):
@@ -1190,7 +1197,7 @@ class _PayiInstrumentor:
     @staticmethod
     def assign_xproxy_result(o: Any, xproxy_result: Optional[Union[XproxyResult, XproxyError]]) -> None:
         if xproxy_result:
-            _set_attr_safe(o, _ProviderRequest._payi_xproxy_result_attr, xproxy_result)
+            _set_attr_safe(o, _ProviderRequest._xproxy_result_attr, xproxy_result)
 
     async def async_invoke_wrapper(
         self,
@@ -1309,7 +1316,7 @@ class _PayiInstrumentor:
         request._ingest["end_to_end_latency_ms"] = duration
         request._ingest["http_status_code"] = 200
 
-        request.add_response_headers(response)
+        request.add_instrumented_response_headers(response)
 
         return_result: Any = request.process_synchronous_response(
             response=response,
@@ -1454,7 +1461,7 @@ class _PayiInstrumentor:
         request._ingest["end_to_end_latency_ms"] = duration
         request._ingest["http_status_code"] = 200
 
-        request.add_response_headers(response)
+        request.add_instrumented_response_headers(response)
 
         return_result: Any = request.process_synchronous_response(
             response=response,
@@ -1719,8 +1726,13 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
                     result = self._evaluate_chunk(decode)
 
             if result and result.ingest:
+                from .BedrockInstrumentor import BedrockInstrumentor
+
                 xproxy_result = self._stop_iteration()
-                _PayiInstrumentor.assign_xproxy_result(event, xproxy_result)
+
+                # the xproxy_result is not json serializable by default so adding the object is opt in by the client
+                if BedrockInstrumentor._add_streaming_xproxy_result:
+                    _PayiInstrumentor.assign_xproxy_result(event, xproxy_result)
             yield event
 
         self._instrumentor._logger.debug(f"StreamIteratorWrapper: bedrock iter finished")
