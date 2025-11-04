@@ -63,10 +63,6 @@ def _set_attr_safe(o: Any, attr_name: str, attr_value: Any) -> None:
 class _ProviderRequest:
     excluded_headers = {
         "transfer-encoding",
-        "content-length",
-        "content-type",
-        "content-encoding",
-        "content-disposition",
     }
 
     _instrumented_response_headers_attr = "_instrumented_response_headers"
@@ -188,7 +184,11 @@ class _ProviderRequest:
             self.add_response_headers(response_headers)
 
     def add_response_headers(self, response_headers: 'dict[str, Any]') -> None:
-        self._ingest["provider_response_headers"] = [PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) for k, v in response_headers.items() if k.lower() not in _ProviderRequest.excluded_headers]
+        self._ingest["provider_response_headers"] = [
+            PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) 
+            for k, v in response_headers.items() 
+            if (k_lower := k.lower()) not in _ProviderRequest.excluded_headers and not k_lower.startswith("content-")
+        ]
 
     @staticmethod
     def process_response_wrapper(wrapped: Any, _instance: Any, args: Any, kwargs: Any) -> Any:
