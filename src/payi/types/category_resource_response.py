@@ -3,6 +3,8 @@
 from typing import Dict, Optional
 from datetime import datetime
 
+from pydantic import Field as FieldInfo
+
 from .._models import BaseModel
 
 __all__ = ["CategoryResourceResponse", "Units", "AwsBedrockResource", "AzureResource", "GoogleVertexResource"]
@@ -15,7 +17,7 @@ class Units(BaseModel):
 
 
 class AwsBedrockResource(BaseModel):
-    aws_model_units: int
+    aws_model_units: int = FieldInfo(alias="model_units")
 
 
 class AzureResource(BaseModel):
