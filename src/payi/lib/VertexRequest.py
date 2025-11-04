@@ -44,6 +44,11 @@ class _VertexRequest(_ProviderRequest): # type: ignore
             if id:
                 self._ingest["provider_response_id"] = id
 
+        if "provider_response_headers" not in self._ingest:
+            response_headers = response_dict.get('sdk_http_response', {}).get('headers', {})
+            if response_headers:
+                self.add_response_headers(response_headers)
+
         if "resource" not in self._ingest: 
             model: Optional[str] = self._get_model_name(response_dict)  # type: ignore[unreachable]
             if model:
@@ -110,6 +115,10 @@ class _VertexRequest(_ProviderRequest): # type: ignore
         self,
         response_dict: 'dict[str, Any]',
         log_prompt_and_response: bool) -> Any:
+
+        response_headers = response_dict.get('sdk_http_response', {}).get('headers', {})
+        if response_headers:
+            self.add_response_headers(response_headers)
 
         id: Optional[str] = response_dict.get("response_id", None)
         if id:

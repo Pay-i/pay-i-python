@@ -41,51 +41,24 @@ class OpenAiInstrumentor:
 
     @staticmethod
     def instrument(instrumentor: _PayiInstrumentor) -> None:
-        try:
-            OpenAiInstrumentor._module_version = get_version_helper(OpenAiInstrumentor._module_name)
+        OpenAiInstrumentor._module_version = get_version_helper(OpenAiInstrumentor._module_name)
 
-            wrap_function_wrapper(
-                "openai.resources.chat.completions",
-                "Completions.create",
-                chat_wrapper(instrumentor),
-            )
+        wrappers = [
+            ("openai._base_client", "AsyncAPIClient._process_response", _ProviderRequest.aprocess_response_wrapper),
+            ("openai._base_client", "SyncAPIClient._process_response", _ProviderRequest.process_response_wrapper),
+            ("openai.resources.chat.completions", "Completions.create", chat_wrapper(instrumentor)),
+            ("openai.resources.chat.completions", "AsyncCompletions.create", achat_wrapper(instrumentor)),
+            ("openai.resources.embeddings", "Embeddings.create", embeddings_wrapper(instrumentor)),
+            ("openai.resources.embeddings", "AsyncEmbeddings.create", aembeddings_wrapper(instrumentor)),
+            ("openai.resources.responses", "Responses.create", responses_wrapper(instrumentor)),
+            ("openai.resources.responses", "AsyncResponses.create", aresponses_wrapper(instrumentor)),
+        ]
 
-            wrap_function_wrapper(
-                "openai.resources.chat.completions",
-                "AsyncCompletions.create",
-                achat_wrapper(instrumentor),
-            )
-
-            wrap_function_wrapper(
-                "openai.resources.embeddings",
-                "Embeddings.create",
-                embeddings_wrapper(instrumentor),
-            )
-
-            wrap_function_wrapper(
-                "openai.resources.embeddings",
-                 "AsyncEmbeddings.create",
-                aembeddings_wrapper(instrumentor),
-            )
-        except Exception as e:
-            instrumentor._logger.debug(f"Error instrumenting openai completions: {e}")
-
-        # responses separately as they are relatively new and the client may not be using the latest openai module
-        try:            
-            wrap_function_wrapper(
-                "openai.resources.responses",
-                "Responses.create",
-                responses_wrapper(instrumentor),
-            )
-
-            wrap_function_wrapper(
-                "openai.resources.responses",
-                "AsyncResponses.create",
-                aresponses_wrapper(instrumentor),
-            )
-
-        except Exception as e:
-            instrumentor._logger.debug(f"Error instrumenting openai responses: {e}")
+        for module, method, wrapper in wrappers:
+            try:
+                wrap_function_wrapper(module, method, wrapper)
+            except Exception as e:
+                instrumentor._logger.debug(f"Error wrapping {module}.{method}: {e}")
 
 @_PayiInstrumentor.payi_wrapper
 def embeddings_wrapper(
@@ -625,4 +598,4 @@ def model_to_dict(model: Any) -> Any:
     elif hasattr(model, "parse"):  # Raw API response
         return model_to_dict(model.parse())
     else:
-        return model        
+        return model
