@@ -14,36 +14,20 @@ class GoogleGenAiInstrumentor:
 
     @staticmethod
     def instrument(instrumentor: _PayiInstrumentor) -> None:
-        try:
-            GoogleGenAiInstrumentor._module_version = get_version_helper(GoogleGenAiInstrumentor._module_name)
+        GoogleGenAiInstrumentor._module_version = get_version_helper(GoogleGenAiInstrumentor._module_name)
 
-            wrap_function_wrapper(
-                "google.genai.models",
-                "Models.generate_content",
-                generate_wrapper(instrumentor),
-            )
+        wrappers = [
+            ("google.genai.models", "Models.generate_content", generate_wrapper(instrumentor)),
+            ("google.genai.models", "Models.generate_content_stream", generate_stream_wrapper(instrumentor)),
+            ("google.genai.models", "AsyncModels.generate_content", agenerate_wrapper(instrumentor)),
+            ("google.genai.models", "AsyncModels.generate_content_stream", agenerate_stream_wrapper(instrumentor)),
+        ]
 
-            wrap_function_wrapper(
-                "google.genai.models",
-                "Models.generate_content_stream",
-                generate_stream_wrapper(instrumentor),
-            )
-
-            wrap_function_wrapper(
-                "google.genai.models",
-                "AsyncModels.generate_content",
-                agenerate_wrapper(instrumentor),
-            )
-
-            wrap_function_wrapper(
-                "google.genai.models",
-                "AsyncModels.generate_content_stream",
-                agenerate_stream_wrapper(instrumentor),
-            )
-
-        except Exception as e:
-            instrumentor._logger.debug(f"Error instrumenting vertex: {e}")
-            return
+        for module, method, wrapper in wrappers:
+            try:
+                wrap_function_wrapper(module, method, wrapper)
+            except Exception as e:
+                instrumentor._logger.debug(f"Error wrapping {module}.{method}: {e}")
 
 @_PayiInstrumentor.payi_wrapper
 def generate_wrapper(

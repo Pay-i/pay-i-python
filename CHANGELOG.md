@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.0-alpha.135 (2025-11-04)
+
+Full Changelog: [v0.1.0-alpha.134...v0.1.0-alpha.135](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.134...v0.1.0-alpha.135)
+
+### Features
+
+* **api:** manual updates ([27643c5](https://github.com/Pay-i/pay-i-python/commit/27643c537491c2158bba978fad5081840d939661))
+* instrument openai and anthropic response headers ([#391](https://github.com/Pay-i/pay-i-python/issues/391)) ([1af61aa](https://github.com/Pay-i/pay-i-python/commit/1af61aa447fc28b324648163e31c8e02326136df))
+
+
+### Chores
+
+* **internal/tests:** avoid race condition with implicit client cleanup ([254063e](https://github.com/Pay-i/pay-i-python/commit/254063e279a60865250fe9b4dbef8542fff634d6))
+* **internal:** grammar fix (it's -&gt; its) ([d2d51bf](https://github.com/Pay-i/pay-i-python/commit/d2d51bf82e221ce2162f161848c7a838f5837056))
+
 ## 0.1.0-alpha.134 (2025-10-30)
 
 Full Changelog: [v0.1.0-alpha.133...v0.1.0-alpha.134](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.133...v0.1.0-alpha.134)

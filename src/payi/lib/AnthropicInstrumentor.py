@@ -30,61 +30,26 @@ class AnthropicInstrumentor:
 
     @staticmethod
     def instrument(instrumentor: _PayiInstrumentor) -> None:
-        try:
-            AnthropicInstrumentor._module_version = get_version_helper(AnthropicInstrumentor._module_name)
+        AnthropicInstrumentor._module_version = get_version_helper(AnthropicInstrumentor._module_name)
 
-            wrap_function_wrapper(
-                "anthropic.resources.messages",
-                "Messages.create",
-                messages_wrapper(instrumentor),
-            )
+        wrappers = [
+            ("anthropic._base_client", "AsyncAPIClient._process_response", _ProviderRequest.aprocess_response_wrapper),
+            ("anthropic._base_client", "SyncAPIClient._process_response", _ProviderRequest.process_response_wrapper),
+            ("anthropic.resources.messages", "Messages.create", messages_wrapper(instrumentor)),
+            ("anthropic.resources.messages", "Messages.stream", stream_messages_wrapper(instrumentor)),
+            ("anthropic.resources.beta.messages", "Messages.create", messages_wrapper(instrumentor)),
+            ("anthropic.resources.beta.messages", "Messages.stream", stream_messages_wrapper(instrumentor)),
+            ("anthropic.resources.messages", "AsyncMessages.create", amessages_wrapper(instrumentor)),
+            ("anthropic.resources.messages", "AsyncMessages.stream", astream_messages_wrapper(instrumentor)),
+            ("anthropic.resources.beta.messages", "AsyncMessages.create", amessages_wrapper(instrumentor)),
+            ("anthropic.resources.beta.messages", "AsyncMessages.stream", astream_messages_wrapper(instrumentor)),
+        ]
 
-            wrap_function_wrapper(
-                "anthropic.resources.messages",
-                "Messages.stream",
-                stream_messages_wrapper(instrumentor),
-            )
-
-            wrap_function_wrapper(
-                "anthropic.resources.beta.messages",
-                "Messages.create",
-                messages_wrapper(instrumentor),
-            )
-
-            wrap_function_wrapper(
-                "anthropic.resources.beta.messages",
-                "Messages.stream",
-                stream_messages_wrapper(instrumentor),
-            )
-
-            wrap_function_wrapper(
-                "anthropic.resources.messages",
-                "AsyncMessages.create",
-                amessages_wrapper(instrumentor),
-            )
-
-            wrap_function_wrapper(
-                "anthropic.resources.messages",
-                "AsyncMessages.stream",
-                astream_messages_wrapper(instrumentor),
-            )
-
-            wrap_function_wrapper(
-                "anthropic.resources.beta.messages",
-                "AsyncMessages.create",
-                amessages_wrapper(instrumentor),
-            )
-
-            wrap_function_wrapper(
-                "anthropic.resources.beta.messages",
-                "AsyncMessages.stream",
-                astream_messages_wrapper(instrumentor),
-            )
-
-        except Exception as e:
-            instrumentor._logger.debug(f"Error instrumenting anthropic: {e}")
-            return
-
+        for module, method, wrapper in wrappers:
+            try:
+                wrap_function_wrapper(module, method, wrapper)
+            except Exception as e:
+                instrumentor._logger.debug(f"Error wrapping {module}.{method}: {e}")
 
 @_PayiInstrumentor.payi_wrapper
 def messages_wrapper(
