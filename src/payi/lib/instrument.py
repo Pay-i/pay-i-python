@@ -15,6 +15,7 @@ from typing import Any, Set, Union, Optional, Sequence, TypedDict, cast
 from datetime import datetime, timezone
 
 import nest_asyncio  # type: ignore
+from wrapt import wrap_function_wrapper  # type: ignore
 
 from payi import Payi, AsyncPayi, APIStatusError, APIConnectionError, __version__ as _payi_version
 from payi.types import IngestUnitsParams
@@ -176,9 +177,6 @@ class _PayiInstrumentor:
         # Thread-local storage for context stacks - each thread gets its own stack
         self._thread_local_storage = _ThreadLocalContextStorage()
         
-        # Global immutable initial context that all threads inherit on first access
-        self._global_initial_context: Optional[_Context] = None
-        
         self._log_prompt_and_response: bool = log_prompt_and_response
 
         self._blocked_limits: set[str] = set()
@@ -227,6 +225,15 @@ class _PayiInstrumentor:
         else:
             self._instrument_specific(instruments=instruments)
 
+        self._instrument_futures()
+
+        # Always create the global context by entering a context
+        # This pushes a context onto _global_context_stack
+        self.__enter__()
+
+        # Build the initial context from global_config
+        context: _Context = {}
+            
         if global_instrumentation:
             if "proxy" not in global_config:
                 global_config["proxy"] = self._proxy_default
@@ -248,10 +255,6 @@ class _PayiInstrumentor:
                 except Exception as e:
                     self._logger.error(f"Error creating default use case definition based on file name {caller_filename}: {e}")
 
-            self.__enter__()
-
-            # _init_current_context will update the current context stack location
-            context: _Context = {}
             # Copy allowed keys from global_config into context
             # Dynamically use keys from _Context TypedDict
             context_keys = list(_Context.__annotations__.keys()) if hasattr(_Context, '__annotations__') else []
@@ -259,12 +262,13 @@ class _PayiInstrumentor:
                 if key in global_config:
                     context[key] = global_config[key] # type: ignore[literal-required]
 
-            self._init_current_context(**context)
-            
-            # Store the initialized context as the global initial context (immutable after this point)
-            # All threads will inherit a copy of this context on their first access
-            current_context = self._context
-            self._global_initial_context = current_context.copy() if current_context else None 
+        # _init_current_context will update the current context stack location
+        self._init_current_context(**context)
+        
+        # If global_instrumentation is False, exit the context we entered
+        # This keeps the global context stack populated but doesn't keep us in a permanent context
+        if not global_instrumentation:
+            self.__exit__(None, None, None)
 
     def _ensure_payi_clients(self) -> None:
         if self._offline_instrumentation is not None:
@@ -274,6 +278,18 @@ class _PayiInstrumentor:
             self._payi = Payi()
             self._apayi = AsyncPayi()
 
+    def _instrument_futures(self) -> None:
+        """Install hooks for all common concurrent execution patterns."""
+        # ThreadPoolExecutor
+        try:
+            wrap_function_wrapper("concurrent.futures", "ThreadPoolExecutor.submit", thread_submit_wrapper)
+        except Exception as e:
+            self._logger.debug(f"Error wrapping ThreadPoolExecutor.submit: {e}")
+        try:
+            wrap_function_wrapper("asyncio", "create_task", create_task_wrapper)
+        except Exception as e:
+            self._logger.debug(f"Error wrapping asyncio.create_task: {e}")
+        
     def _instrument_all(self) -> None:
         self._instrument_openai()
         self._instrument_anthropic()
@@ -649,7 +665,7 @@ class _PayiInstrumentor:
     def _context_stack(self) -> "list[_Context]":
         """
         Get the thread-local context stack. On first access per thread, 
-        initializes with the global initial context if one was set.
+        initializes with the current state of the main thread's context stack.
         """
         # Lazy-initialize the context_stack for this thread if it doesn't exist
         if not hasattr(self._thread_local_storage, 'context_stack'):
@@ -657,10 +673,6 @@ class _PayiInstrumentor:
         
         stack = self._thread_local_storage.context_stack
 
-        # If this is the first access in this thread and we have a global initial context,
-        # initialize this thread's stack with it
-        if len(stack) == 0 and self._global_initial_context is not None:
-            stack.append(self._global_initial_context.copy())
         
         return stack
 
@@ -850,12 +862,12 @@ class _PayiInstrumentor:
             return func(*args, **kwargs)
 
     def __enter__(self) -> Any:
-        # Push a new context dictionary onto the stack
+        # Push a new context dictionary onto the thread-local stack
         self._context_stack.append({})
         return self
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
-        # Pop the current context off the stack
+        # Pop the current context off the thread-local stack
         if self._context_stack:
             self._context_stack.pop()
 
@@ -1377,6 +1389,55 @@ class _PayiInstrumentor:
             return wrapper
 
         return _payi_awrapper
+
+def thread_submit_wrapper(
+    # instrumentor: _PayiInstrumentor,
+    wrapped: Any,
+    _instance: Any,
+    args: Any,
+    kwargs: Any,
+) -> Any:
+    global _instrumentor
+    instrumentor: _PayiInstrumentor = _instrumentor  # type: ignore
+
+    if len(args) > 0 and instrumentor:
+        fn = args[0]
+        fn_args = args[1:]
+        captured_context = instrumentor._context.copy() if instrumentor._context else None
+
+        def context_wrapper(*inner_args: Any, **inner_kwargs: Any) -> Any:
+            if captured_context:
+                with instrumentor:
+                    instrumentor._context_stack[-1].update(captured_context)
+                    return fn(*inner_args, **inner_kwargs)
+            return fn(*inner_args, **inner_kwargs)
+        
+        return wrapped(context_wrapper, *fn_args, **kwargs)
+    return wrapped(*args, **kwargs)
+
+async def create_task_wrapper(
+    # instrumentor: _PayiInstrumentor,
+    wrapped: Any,
+    _instance: Any,
+    args: Any,
+    kwargs: Any,
+) -> Any:
+    global _instrumentor
+    instrumentor: _PayiInstrumentor = _instrumentor  # type: ignore
+
+    if len(args) > 0 and instrumentor:
+        coro = args[0]
+        captured_context = instrumentor._context.copy() if instrumentor._context else None
+
+        async def context_wrapper() -> Any:
+            if captured_context:
+                with instrumentor:
+                    instrumentor._context_stack[-1].update(captured_context)
+                    return await coro
+            return await coro
+        
+        return wrapped(context_wrapper(), *args[1:], **kwargs)
+    return wrapped(*args, **kwargs)
 
 global _instrumentor
 _instrumentor: Optional[_PayiInstrumentor] = None
