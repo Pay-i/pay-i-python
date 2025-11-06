@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 from typing import Any, Union, Optional, Sequence
 from typing_extensions import override
@@ -8,8 +10,9 @@ from wrapt import wrap_function_wrapper  # type: ignore
 from payi.lib.helpers import PayiCategories
 from payi.types.ingest_units_params import Units
 
-from .instrument import _ChunkResult, _IsStreaming, _StreamingType, _ProviderRequest, _PayiInstrumentor
+from .instrument import _IsStreaming, _PayiInstrumentor
 from .version_helper import get_version_helper
+from .ProviderRequest import _ChunkResult, _StreamingType, _ProviderRequest
 
 
 class AnthropicInstrumentor:
@@ -255,7 +258,7 @@ def anthropic_process_compute_input_cost(request: _ProviderRequest, usage: 'dict
     if cache_read_input_tokens > 0:
         units["text_cache_read"+large_context] = Units(input=cache_read_input_tokens, output=0)
 
-    return _PayiInstrumentor.update_for_vision(input, units, request._estimated_prompt_tokens, is_large_context=request._is_large_context)
+    return request.update_for_vision(input, request._estimated_prompt_tokens, is_large_context=request._is_large_context)
 
 def anthropic_process_synchronous_response(request: _ProviderRequest, response: 'dict[str, Any]', log_prompt_and_response: bool, assign_id: bool) -> Any:
     usage = response.get('usage', {})
