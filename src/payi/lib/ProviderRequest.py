@@ -175,13 +175,13 @@ class _ProviderRequest:
             if key not in properties:
                 properties[key] = value
                 
-    def update_for_vision(self, input: int,  estimated_prompt_tokens: Optional[int], is_large_context: bool = False) -> int:
-        if estimated_prompt_tokens:
-            vision = input - estimated_prompt_tokens
+    def update_for_vision(self, input: int) -> int:
+        if self._estimated_prompt_tokens:
+            vision = input - self._estimated_prompt_tokens
             if (vision > 0):
-                key = "vision_large_context" if is_large_context else "vision"
+                key = "vision_large_context" if self._is_large_context else "vision"
                 self._ingest["units"][key] = IngestUnits(input=vision, output=0)
-                input = estimated_prompt_tokens
+                input = self._estimated_prompt_tokens
         
         return input
 

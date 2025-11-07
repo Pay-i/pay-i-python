@@ -258,7 +258,7 @@ def anthropic_process_compute_input_cost(request: _ProviderRequest, usage: 'dict
     if cache_read_input_tokens > 0:
         units["text_cache_read"+large_context] = Units(input=cache_read_input_tokens, output=0)
 
-    return request.update_for_vision(input, request._estimated_prompt_tokens, is_large_context=request._is_large_context)
+    return request.update_for_vision(input)
 
 def anthropic_process_synchronous_response(request: _ProviderRequest, response: 'dict[str, Any]', log_prompt_and_response: bool, assign_id: bool) -> Any:
     usage = response.get('usage', {})

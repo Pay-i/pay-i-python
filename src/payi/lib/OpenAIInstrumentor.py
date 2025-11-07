@@ -288,7 +288,7 @@ class _OpenAiProviderRequest(_ProviderRequest):
             if input_cache != 0:
                 units["text_cache_read"] = Units(input=input_cache, output=0)
 
-        input = self.update_for_vision(input - input_cache, self._estimated_prompt_tokens)
+        input = self.update_for_vision(input - input_cache)
 
         units["text"] = Units(input=input, output=output)
 
