@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import copy
 import json
 import time
 import uuid
@@ -227,13 +228,6 @@ class _PayiInstrumentor:
 
         self._instrument_futures()
 
-        # Always create the global context by entering a context
-        # This pushes a context onto _global_context_stack
-        self.__enter__()
-
-        # Build the initial context from global_config
-        context: _Context = {}
-            
         if global_instrumentation:
             if "proxy" not in global_config:
                 global_config["proxy"] = self._proxy_default
@@ -255,6 +249,11 @@ class _PayiInstrumentor:
                 except Exception as e:
                     self._logger.error(f"Error creating default use case definition based on file name {caller_filename}: {e}")
 
+            self.__enter__()
+
+            # _init_current_context will update the current context stack location
+            context: _Context = {}
+
             # Copy allowed keys from global_config into context
             # Dynamically use keys from _Context TypedDict
             context_keys = list(_Context.__annotations__.keys()) if hasattr(_Context, '__annotations__') else []
@@ -262,13 +261,7 @@ class _PayiInstrumentor:
                 if key in global_config:
                     context[key] = global_config[key] # type: ignore[literal-required]
 
-        # _init_current_context will update the current context stack location
-        self._init_current_context(**context)
-        
-        # If global_instrumentation is False, exit the context we entered
-        # This keeps the global context stack populated but doesn't keep us in a permanent context
-        if not global_instrumentation:
-            self.__exit__(None, None, None)
+            self._init_current_context(**context)
 
     def _ensure_payi_clients(self) -> None:
         if self._offline_instrumentation is not None:
@@ -280,13 +273,19 @@ class _PayiInstrumentor:
 
     def _instrument_futures(self) -> None:
         """Install hooks for all common concurrent execution patterns."""
-        # ThreadPoolExecutor
+        def _thread_wrapper(wrapped: Any, instance: Any, args: Any, kwargs: Any) -> Any:
+            return self._thread_submit_wrapper(wrapped, instance, args, kwargs)
+
+        async def _task_wrapper(wrapped: Any, instance: Any, args: Any, kwargs: Any) -> Any:
+            return await self._create_task_wrapper(wrapped, instance, args, kwargs)
+
         try:
-            wrap_function_wrapper("concurrent.futures", "ThreadPoolExecutor.submit", thread_submit_wrapper)
+            wrap_function_wrapper("concurrent.futures", "ThreadPoolExecutor.submit", _thread_wrapper)
         except Exception as e:
             self._logger.debug(f"Error wrapping ThreadPoolExecutor.submit: {e}")
+
         try:
-            wrap_function_wrapper("asyncio", "create_task", create_task_wrapper)
+            wrap_function_wrapper("asyncio", "create_task", _task_wrapper)
         except Exception as e:
             self._logger.debug(f"Error wrapping asyncio.create_task: {e}")
         
@@ -352,6 +351,47 @@ class _PayiInstrumentor:
 
         except Exception as e:
             self._logger.error(f"Error instrumenting Google GenAi: {e}")
+
+    def _thread_submit_wrapper(
+        self,
+        wrapped: Any,
+        _instance: Any,
+        args: Any,
+        kwargs: Any,
+    ) -> Any:
+        if len(args) > 0:
+            fn = args[0]
+            fn_args = args[1:]
+            captured_context = copy.deepcopy(self._context_safe)
+
+            def context_wrapper(*inner_args: Any, **inner_kwargs: Any) -> Any:
+                with self:
+                    # self._context_stack[-1].update(captured_context)
+                    self._init_current_context(**captured_context)
+                    return fn(*inner_args, **inner_kwargs)
+
+            return wrapped(context_wrapper, *fn_args, **kwargs)
+        return wrapped(*args, **kwargs)
+
+    async def _create_task_wrapper(
+        self,
+        wrapped: Any,
+        _instance: Any,
+        args: Any,
+        kwargs: Any,
+    ) -> Any:
+        if len(args) > 0:
+            coro = args[0]
+            captured_context = copy.deepcopy(self._context_safe)
+
+            async def context_wrapper() -> Any:
+                with self:
+                    # self._context_stack[-1].update(captured_context)
+                    self._init_current_context(**captured_context)
+                    return await coro
+            
+            return wrapped(context_wrapper(), *args[1:], **kwargs)
+        return wrapped(*args, **kwargs)
 
     @staticmethod
     def _model_mapping_to_context_dict(model_mappings: Sequence[PayiInstrumentModelMapping]) -> 'dict[str, _Context]':
@@ -1390,55 +1430,6 @@ class _PayiInstrumentor:
 
         return _payi_awrapper
 
-def thread_submit_wrapper(
-    # instrumentor: _PayiInstrumentor,
-    wrapped: Any,
-    _instance: Any,
-    args: Any,
-    kwargs: Any,
-) -> Any:
-    global _instrumentor
-    instrumentor: _PayiInstrumentor = _instrumentor  # type: ignore
-
-    if len(args) > 0 and instrumentor:
-        fn = args[0]
-        fn_args = args[1:]
-        captured_context = instrumentor._context.copy() if instrumentor._context else None
-
-        def context_wrapper(*inner_args: Any, **inner_kwargs: Any) -> Any:
-            if captured_context:
-                with instrumentor:
-                    instrumentor._context_stack[-1].update(captured_context)
-                    return fn(*inner_args, **inner_kwargs)
-            return fn(*inner_args, **inner_kwargs)
-        
-        return wrapped(context_wrapper, *fn_args, **kwargs)
-    return wrapped(*args, **kwargs)
-
-async def create_task_wrapper(
-    # instrumentor: _PayiInstrumentor,
-    wrapped: Any,
-    _instance: Any,
-    args: Any,
-    kwargs: Any,
-) -> Any:
-    global _instrumentor
-    instrumentor: _PayiInstrumentor = _instrumentor  # type: ignore
-
-    if len(args) > 0 and instrumentor:
-        coro = args[0]
-        captured_context = instrumentor._context.copy() if instrumentor._context else None
-
-        async def context_wrapper() -> Any:
-            if captured_context:
-                with instrumentor:
-                    instrumentor._context_stack[-1].update(captured_context)
-                    return await coro
-            return await coro
-        
-        return wrapped(context_wrapper(), *args[1:], **kwargs)
-    return wrapped(*args, **kwargs)
-
 global _instrumentor
 _instrumentor: Optional[_PayiInstrumentor] = None
 
@@ -1499,7 +1490,6 @@ def track(
     _ = request_tags
 
     def _track(func: Any) -> Any:
-        import asyncio
         if asyncio.iscoroutinefunction(func):
             async def awrapper(*args: Any, **kwargs: Any) -> Any:
                 if not _instrumentor:
