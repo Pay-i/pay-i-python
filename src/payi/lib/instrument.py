@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import os
+import copy
 import json
 import time
 import uuid
@@ -8,211 +11,28 @@ import inspect
 import logging
 import threading
 import traceback
-from abc import abstractmethod
 from enum import Enum
 from typing import Any, Set, Union, Optional, Sequence, TypedDict, cast
 from datetime import datetime, timezone
-from dataclasses import dataclass
 
 import nest_asyncio  # type: ignore
-from wrapt import ObjectProxy  # type: ignore
+from wrapt import wrap_function_wrapper  # type: ignore
 
 from payi import Payi, AsyncPayi, APIStatusError, APIConnectionError, __version__ as _payi_version
 from payi.types import IngestUnitsParams
-from payi.lib.helpers import PayiHeaderNames, PayiPropertyNames, _compact_json
+from payi.lib.helpers import PayiHeaderNames, _compact_json
 from payi.types.shared import XproxyResult
 from payi.types.ingest_response import IngestResponse
-from payi.types.ingest_units_params import Units, ProviderResponseFunctionCall
 from payi.types.shared.xproxy_error import XproxyError
 from payi.types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
 from .helpers import PayiCategories
 from .Stopwatch import Stopwatch
+from .StreamWrappers import _GeneratorWrapper, _StreamManagerWrapper, _StreamIteratorWrapper
+from .ProviderRequest import PriceAs, _StreamingType, _ProviderRequest
 
 global _g_logger
 _g_logger: logging.Logger = logging.getLogger("payi.instrument")
-
-@dataclass
-class _ChunkResult:
-    send_chunk_to_caller: bool
-    ingest: bool = False
-
-@dataclass
-class PriceAs:
-    category: Optional[str]
-    resource: Optional[str]
-    resource_scope: Optional[str]
-
-def _set_attr_safe(o: Any, attr_name: str, attr_value: Any) -> None:
-    try:
-        if hasattr(o, '__pydantic_private__') and o.__pydantic_private__ is not None:
-            o.__pydantic_private__[attr_name] = attr_value
-
-        if hasattr(o, '__dict__'):
-            # Use object.__setattr__ to bypass Pydantic validation
-            # This allows setting attributes outside the model schema without triggering forbid=true errors
-            object.__setattr__(o, attr_name, attr_value)
-        elif isinstance(o, dict):
-            o[attr_name] = attr_value
-        else:
-            setattr(o, attr_name, attr_value)
-
-    except Exception as e:
-        _g_logger.debug(f"Could not set attribute {attr_name}: {e}")
-
-class _ProviderRequest:
-    excluded_headers = {
-        "transfer-encoding",
-    }
-
-    _instrumented_response_headers_attr = "_instrumented_response_headers"
-    _xproxy_result_attr = "xproxy_result"
-
-    def __init__(
-            self, 
-            instrumentor: '_PayiInstrumentor',
-            category: str,
-            streaming_type: '_StreamingType',
-            module_name: str,
-            module_version: str,
-            is_aws_client: Optional[bool] = None,
-            is_google_vertex_or_genai_client: Optional[bool] = None,
-            ) -> None:
-        self._instrumentor: '_PayiInstrumentor' = instrumentor
-        self._module_name: str = module_name
-        self._module_version: str = module_version  
-        self._estimated_prompt_tokens: Optional[int] = None
-        self._category: str = category
-        self._ingest: IngestUnitsParams = { "category": category, "units": {} } # type: ignore
-        self._streaming_type: '_StreamingType' = streaming_type
-        self._is_aws_client: Optional[bool] = is_aws_client
-        self._is_google_vertex_or_genai_client: Optional[bool] = is_google_vertex_or_genai_client
-        self._function_call_builder: Optional[dict[int, ProviderResponseFunctionCall]] = None
-        self._building_function_response: bool = False
-        self._function_calls: Optional[list[ProviderResponseFunctionCall]] = None
-        self._is_large_context: bool = False
-        self._internal_request_properties: dict[str, Optional[str]] = {}
-        self._price_as: PriceAs = PriceAs(category=None, resource=None, resource_scope=None)
-
-    def process_chunk(self, _chunk: Any) -> _ChunkResult:
-        return _ChunkResult(send_chunk_to_caller=True)
-
-    def process_synchronous_response(self, response: Any, log_prompt_and_response: bool, kwargs: Any) -> Optional[object]:  # noqa: ARG002
-        return None
-    
-    @abstractmethod
-    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
-        ...
-    
-    def process_request_prompt(self, prompt: 'dict[str, Any]', args: Sequence[Any], kwargs: 'dict[str, Any]') -> None:
-        ...
-    
-    def process_initial_stream_response(self, response: Any) -> None:
-        self.add_instrumented_response_headers(response)
-
-    def remove_inline_data(self, prompt: 'dict[str, Any]') -> bool:# noqa: ARG002
-        return False
-
-    @property
-    def is_aws_client(self) -> bool:
-        return self._is_aws_client if self._is_aws_client is not None else False
-
-    @property
-    def is_google_vertex_or_genai_client(self) -> bool:
-        return self._is_google_vertex_or_genai_client if self._is_google_vertex_or_genai_client is not None else False
-
-    def process_exception(self, exception: Exception, kwargs: Any, ) -> bool: # noqa: ARG002
-        self.exception_to_semantic_failure(exception)
-        return True
-    
-    @property
-    def supports_extra_headers(self) -> bool:
-        return not self.is_aws_client and not self.is_google_vertex_or_genai_client
-    
-    @property
-    def streaming_type(self) -> '_StreamingType':
-        return self._streaming_type
-
-    def add_internal_request_property(self, key: str, value: str) -> None:
-        self._internal_request_properties[key] = value
-
-    def exception_to_semantic_failure(self, e: Exception) -> None:
-        exception_str = f"{type(e).__name__}"
-    
-        fields: list[str] = []
-    
-        for attr in dir(e):
-            if not attr.startswith("__"):
-                try:
-                    value = getattr(e, attr)
-                    if value and not inspect.ismethod(value) and not inspect.isfunction(value) and not callable(value):
-                        fields.append(f"{attr}={value}")
-                except Exception as _ex:
-                    pass
- 
-        self.add_internal_request_property(PayiPropertyNames.failure, exception_str)
-        if fields:
-            failure_description = ",".join(fields)
-            self.add_internal_request_property(PayiPropertyNames.failure_description, failure_description)
-
-        if "http_status_code" not in self._ingest:
-            # use a non existent http status code so when presented to the user, the origin is clear
-            self._ingest["http_status_code"] = 299
-
-    def add_streaming_function_call(self, index: int, name: Optional[str], arguments: Optional[str]) -> None:
-        if not self._function_call_builder:
-            self._function_call_builder = {}
-
-        if not index in self._function_call_builder:
-            self._function_call_builder[index] = ProviderResponseFunctionCall(name=name or "", arguments=arguments or "")
-        else:
-            function = self._function_call_builder[index]
-            if name:
-                function["name"] = function["name"] + name
-            if arguments:
-                function["arguments"] = (function.get("arguments", "") or "") + arguments
-
-    def add_synchronous_function_call(self, name: str, arguments: Optional[str]) -> None:
-        if not self._function_calls:
-            self._function_calls = []
-            self._ingest["provider_response_function_calls"] = self._function_calls
-        self._function_calls.append(ProviderResponseFunctionCall(name=name, arguments=arguments))
-    
-    def add_instrumented_response_headers(self, response: Any) -> None:
-        response_headers  = getattr(response, _ProviderRequest._instrumented_response_headers_attr, {})
-        if response_headers:
-            self.add_response_headers(response_headers)
-
-    def add_response_headers(self, response_headers: 'dict[str, Any]') -> None:
-        self._ingest["provider_response_headers"] = [
-            PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) 
-            for k, v in response_headers.items() 
-            if (k_lower := k.lower()) not in _ProviderRequest.excluded_headers and not k_lower.startswith("content-")
-        ]
-
-    @staticmethod
-    def process_response_wrapper(wrapped: Any, _instance: Any, args: Any, kwargs: Any) -> Any:
-        httpResponse = kwargs.get("response", None)
-
-        r =  wrapped(*args, **kwargs)
-
-        if httpResponse:
-            headers = getattr(httpResponse, "headers", None)
-            _set_attr_safe(r, _ProviderRequest._instrumented_response_headers_attr, dict(headers) if headers else {})
-
-        return r
-
-    @staticmethod
-    async def aprocess_response_wrapper(wrapped: Any, _instance: Any, args: Any, kwargs: Any) -> Any:
-        httpResponse = kwargs.get("response", None)
-
-        r = await wrapped(*args, **kwargs)
-
-        if httpResponse:
-            headers = getattr(httpResponse, "headers", None)
-            _set_attr_safe(r, _ProviderRequest._instrumented_response_headers_attr, dict(headers) if headers else {})
-
-        return r
 
 class PayiInstrumentModelMapping(TypedDict, total=False):
     model: str
@@ -300,11 +120,6 @@ class _IsStreaming(Enum):
     true = 1 
     kwargs = 2
 
-class _StreamingType(Enum):
-    generator = 0
-    iterator = 1
-    stream_manager = 2
-
 class _ThreadLocalContextStorage(threading.local):
     """
     Thread-local storage for context stacks. Each thread gets its own context stack.
@@ -363,9 +178,6 @@ class _PayiInstrumentor:
         # Thread-local storage for context stacks - each thread gets its own stack
         self._thread_local_storage = _ThreadLocalContextStorage()
         
-        # Global immutable initial context that all threads inherit on first access
-        self._global_initial_context: Optional[_Context] = None
-        
         self._log_prompt_and_response: bool = log_prompt_and_response
 
         self._blocked_limits: set[str] = set()
@@ -414,6 +226,8 @@ class _PayiInstrumentor:
         else:
             self._instrument_specific(instruments=instruments)
 
+        self._instrument_futures()
+
         if global_instrumentation:
             if "proxy" not in global_config:
                 global_config["proxy"] = self._proxy_default
@@ -439,6 +253,7 @@ class _PayiInstrumentor:
 
             # _init_current_context will update the current context stack location
             context: _Context = {}
+
             # Copy allowed keys from global_config into context
             # Dynamically use keys from _Context TypedDict
             context_keys = list(_Context.__annotations__.keys()) if hasattr(_Context, '__annotations__') else []
@@ -447,11 +262,6 @@ class _PayiInstrumentor:
                     context[key] = global_config[key] # type: ignore[literal-required]
 
             self._init_current_context(**context)
-            
-            # Store the initialized context as the global initial context (immutable after this point)
-            # All threads will inherit a copy of this context on their first access
-            current_context = self._context
-            self._global_initial_context = current_context.copy() if current_context else None 
 
     def _ensure_payi_clients(self) -> None:
         if self._offline_instrumentation is not None:
@@ -461,6 +271,24 @@ class _PayiInstrumentor:
             self._payi = Payi()
             self._apayi = AsyncPayi()
 
+    def _instrument_futures(self) -> None:
+        """Install hooks for all common concurrent execution patterns."""
+        def _thread_wrapper(wrapped: Any, instance: Any, args: Any, kwargs: Any) -> Any:
+            return self._thread_submit_wrapper(wrapped, instance, args, kwargs)
+
+        async def _task_wrapper(wrapped: Any, instance: Any, args: Any, kwargs: Any) -> Any:
+            return await self._create_task_wrapper(wrapped, instance, args, kwargs)
+
+        try:
+            wrap_function_wrapper("concurrent.futures", "ThreadPoolExecutor.submit", _thread_wrapper)
+        except Exception as e:
+            self._logger.debug(f"Error wrapping ThreadPoolExecutor.submit: {e}")
+
+        try:
+            wrap_function_wrapper("asyncio", "create_task", _task_wrapper)
+        except Exception as e:
+            self._logger.debug(f"Error wrapping asyncio.create_task: {e}")
+        
     def _instrument_all(self) -> None:
         self._instrument_openai()
         self._instrument_anthropic()
@@ -524,6 +352,47 @@ class _PayiInstrumentor:
         except Exception as e:
             self._logger.error(f"Error instrumenting Google GenAi: {e}")
 
+    def _thread_submit_wrapper(
+        self,
+        wrapped: Any,
+        _instance: Any,
+        args: Any,
+        kwargs: Any,
+    ) -> Any:
+        if len(args) > 0:
+            fn = args[0]
+            fn_args = args[1:]
+            captured_context = copy.deepcopy(self._context_safe)
+
+            def context_wrapper(*inner_args: Any, **inner_kwargs: Any) -> Any:
+                with self:
+                    # self._context_stack[-1].update(captured_context)
+                    self._init_current_context(**captured_context)
+                    return fn(*inner_args, **inner_kwargs)
+
+            return wrapped(context_wrapper, *fn_args, **kwargs)
+        return wrapped(*args, **kwargs)
+
+    async def _create_task_wrapper(
+        self,
+        wrapped: Any,
+        _instance: Any,
+        args: Any,
+        kwargs: Any,
+    ) -> Any:
+        if len(args) > 0:
+            coro = args[0]
+            captured_context = copy.deepcopy(self._context_safe)
+
+            async def context_wrapper() -> Any:
+                with self:
+                    # self._context_stack[-1].update(captured_context)
+                    self._init_current_context(**captured_context)
+                    return await coro
+            
+            return wrapped(context_wrapper(), *args[1:], **kwargs)
+        return wrapped(*args, **kwargs)
+
     @staticmethod
     def _model_mapping_to_context_dict(model_mappings: Sequence[PayiInstrumentModelMapping]) -> 'dict[str, _Context]':
         context: dict[str, _Context] = {}
@@ -586,16 +455,6 @@ class _PayiInstrumentor:
 
         return log_ingest_units
         
-    def _merge_internal_request_properties(self, request: _ProviderRequest) -> None:
-        if not request._internal_request_properties:
-            return
-        
-        properties = request._ingest.get("properties") or {}
-        request._ingest["properties"] = properties
-        for key, value in request._internal_request_properties.items():
-            if key not in properties:
-                properties[key] = value
-                
     def _after_invoke_update_request(
         self,
         request: _ProviderRequest,
@@ -615,7 +474,7 @@ class _PayiInstrumentor:
         if 'resource' not in ingest_units or ingest_units['resource'] == '':
             ingest_units['resource'] = "system.unknown_model"
 
-        self._merge_internal_request_properties(request)
+        request.merge_internal_request_properties()
 
         request_json = ingest_units.get('provider_request_json', "")
         if request_json and self._instrument_inline_data is False:
@@ -846,7 +705,7 @@ class _PayiInstrumentor:
     def _context_stack(self) -> "list[_Context]":
         """
         Get the thread-local context stack. On first access per thread, 
-        initializes with the global initial context if one was set.
+        initializes with the current state of the main thread's context stack.
         """
         # Lazy-initialize the context_stack for this thread if it doesn't exist
         if not hasattr(self._thread_local_storage, 'context_stack'):
@@ -854,10 +713,6 @@ class _PayiInstrumentor:
         
         stack = self._thread_local_storage.context_stack
 
-        # If this is the first access in this thread and we have a global initial context,
-        # initialize this thread's stack with it
-        if len(stack) == 0 and self._global_initial_context is not None:
-            stack.append(self._global_initial_context.copy())
         
         return stack
 
@@ -895,56 +750,6 @@ class _PayiInstrumentor:
             return merged
         else:
             return value.copy()
-
-    def _set_instance_default_context(
-        self,
-        instance: Any,
-        context: PayiInstanceDefaultContext
-    ) -> None:
-        if instance is None:
-            raise ValueError("instance cannot be None")
-        if not context:
-            raise ValueError("context_dict cannot be None or empty")
-        
-        context = context.copy()
-        if "use_case_properties" in context and context["use_case_properties"] is not None:
-            context["use_case_properties"] = context["use_case_properties"].copy()
-        if "request_properties" in context and context["request_properties"] is not None:
-            context["request_properties"] = context["request_properties"].copy()
-        if "limit_ids" in context and context["limit_ids"] is not None:
-            context["limit_ids"] = context["limit_ids"].copy()
-
-        instance.__payi_default_context__ = context
-        self._logger.debug(f"payi_set_default_context: attached context to instance {type(instance).__name__}")
-
-    @staticmethod
-    def _get_instance_default_context(
-        instance: Any
-    ) -> "Optional[PayiInstanceDefaultContext]":
-        if instance is None:
-            return None
-
-        context = getattr(instance, "__payi_default_context__", None)
-        if not context:
-            inner_instance = getattr(instance, "_client", None)
-            if inner_instance:
-                context = getattr(inner_instance, "__payi_default_context__", None)
-
-        # Return a copy to prevent external modifications
-        return context if context else None
-
-    @staticmethod
-    def _merge_context_instance_defaults(
-        context: _Context,
-        instance_defaults: Optional[PayiInstanceDefaultContext]
-    ) -> _Context:
-        if instance_defaults:
-            context = context.copy()
-            for key, value in instance_defaults.items():
-                if value is not None and context.get(key, None) is None:
-                    context[key] = value # type: ignore[literal-required]
-
-        return context
 
     def _init_current_context(
         self,
@@ -1097,12 +902,12 @@ class _PayiInstrumentor:
             return func(*args, **kwargs)
 
     def __enter__(self) -> Any:
-        # Push a new context dictionary onto the stack
+        # Push a new context dictionary onto the thread-local stack
         self._context_stack.append({})
         return self
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
-        # Pop the current context off the stack
+        # Pop the current context off the thread-local stack
         if self._context_stack:
             self._context_stack.pop()
 
@@ -1194,11 +999,6 @@ class _PayiInstrumentor:
 
         request._ingest["event_timestamp"] = datetime.now(timezone.utc)
 
-    @staticmethod
-    def assign_xproxy_result(o: Any, xproxy_result: Optional[Union[XproxyResult, XproxyError]]) -> None:
-        if xproxy_result:
-            _set_attr_safe(o, _ProviderRequest._xproxy_result_attr, xproxy_result)
-
     async def async_invoke_wrapper(
         self,
         request: _ProviderRequest,
@@ -1219,8 +1019,6 @@ class _PayiInstrumentor:
 
             # wrapped function invoked outside of decorator scope
             return await wrapped(*args, **kwargs)
-
-        # context = self._merge_context_instance_defaults(context, self._get_instance_default_context(instance))
 
         # after _udpate_headers, all metadata to add to ingest is in extra_headers, keyed by the xproxy-xxx header name
         extra_headers: Optional[dict[str, str]] = kwargs.get("extra_headers")
@@ -1328,7 +1126,7 @@ class _PayiInstrumentor:
             return return_result
 
         xproxy_result = await self._aingest_units(request)
-        self.assign_xproxy_result(response, xproxy_result)
+        request.assign_xproxy_result(response, xproxy_result)
 
         self._logger.debug(f"async_invoke_wrapper: finished")
         return response
@@ -1354,8 +1152,6 @@ class _PayiInstrumentor:
 
             # wrapped function invoked outside of decorator scope
             return wrapped(*args, **kwargs)
-
-        # context = self._merge_context_instance_defaults(context, self._get_instance_default_context(instance))
 
         # after _udpate_headers, all metadata to add to ingest is in extra_headers, keyed by the xproxy-xxx header name
         extra_headers: Optional[dict[str, str]] = kwargs.get("extra_headers")
@@ -1473,7 +1269,7 @@ class _PayiInstrumentor:
             return return_result
 
         xproxy_result = self._ingest_units(request)
-        self.assign_xproxy_result(response, xproxy_result)
+        request.assign_xproxy_result(response, xproxy_result)
 
         self._logger.debug(f"invoke_wrapper: finished")
         return response
@@ -1603,17 +1399,6 @@ class _PayiInstrumentor:
             extra_headers[PayiHeaderNames.resource_scope] = context_resource_scope
 
     @staticmethod
-    def update_for_vision(input: int, units: 'dict[str, Units]', estimated_prompt_tokens: Optional[int], is_large_context: bool = False) -> int:
-        if estimated_prompt_tokens:
-            vision = input - estimated_prompt_tokens
-            if (vision > 0):
-                key = "vision_large_context" if is_large_context else "vision"
-                units[key] = Units(input=vision, output=0)
-                input = estimated_prompt_tokens
-        
-        return input
-
-    @staticmethod
     def payi_wrapper(func: Any) -> Any:
         def _payi_wrapper(o: Any) -> Any:
             def wrapper(wrapped: Any, instance: Any, args: Any, kwargs: Any) -> Any:
@@ -1644,363 +1429,6 @@ class _PayiInstrumentor:
             return wrapper
 
         return _payi_awrapper
-
-class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
-    def __init__(
-        self,
-        response: Any,
-        instance: Any,
-        instrumentor: _PayiInstrumentor,
-        stopwatch: Stopwatch,
-        request: _ProviderRequest,
-    ) -> None:
-
-        instrumentor._logger.debug(f"StreamIteratorWrapper: instance {instance}, category {request._category}")
-
-        request.process_initial_stream_response(response)
-
-        bedrock_from_stream: bool = False
-        if request.is_aws_client:
-            stream = response.get("stream", None)
-
-            if stream:
-                response = stream
-                bedrock_from_stream = True
-            else:
-                response = response.get("body")
-                bedrock_from_stream = False
-
-        super().__init__(response)  # type: ignore
-
-        self._response = response
-        self._instance = instance
-
-        self._instrumentor = instrumentor
-        self._stopwatch: Stopwatch = stopwatch
-        self._responses: list[str] = []
-
-        self._request: _ProviderRequest = request
-
-        self._first_token: bool = True
-        self._bedrock_from_stream: bool = bedrock_from_stream
-        self._ingested: bool = False
-        self._iter_started: bool = False
-
-    def __enter__(self) -> Any:
-        self._instrumentor._logger.debug(f"StreamIteratorWrapper: __enter__")
-        return self
-
-    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None: 
-        self._instrumentor._logger.debug(f"StreamIteratorWrapper: __exit__")
-        self.__wrapped__.__exit__(exc_type, exc_val, exc_tb)  # type: ignore
-
-    async def __aenter__(self) -> Any:
-        self._instrumentor._logger.debug(f"StreamIteratorWrapper: __aenter__")
-        return self
-
-    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
-        self._instrumentor._logger.debug(f"StreamIteratorWrapper: __aexit__")
-        await self.__wrapped__.__aexit__(exc_type, exc_val, exc_tb)  # type: ignore
-
-    def __iter__(self) -> Any:  
-        self._iter_started = True
-        if self._request.is_aws_client:
-            # MUST reside in a separate function so that the yield statement (e.g. the generator) doesn't implicitly return its own iterator and overriding self
-            self._instrumentor._logger.debug(f"StreamIteratorWrapper: bedrock __iter__")
-            return self._iter_bedrock()
-
-        self._instrumentor._logger.debug(f"StreamIteratorWrapper: __iter__")
-        return self
-
-    def _iter_bedrock(self) -> Any:
-        # botocore EventStream doesn't have a __next__ method so iterate over the wrapped object in place
-        for event in self.__wrapped__: # type: ignore
-            result: Optional[_ChunkResult] = None
-
-            if (self._bedrock_from_stream):
-                result = self._evaluate_chunk(event)
-            else:
-                chunk = event.get('chunk') # type: ignore
-                if chunk:
-                    decode = chunk.get('bytes').decode() # type: ignore
-                    result = self._evaluate_chunk(decode)
-
-            if result and result.ingest:
-                from .BedrockInstrumentor import BedrockInstrumentor
-
-                xproxy_result = self._stop_iteration()
-
-                # the xproxy_result is not json serializable by default so adding the object is opt in by the client
-                if BedrockInstrumentor._add_streaming_xproxy_result:
-                    _PayiInstrumentor.assign_xproxy_result(event, xproxy_result)
-            yield event
-
-        self._instrumentor._logger.debug(f"StreamIteratorWrapper: bedrock iter finished")
-
-        self._stop_iteration()
-
-    def __aiter__(self) -> Any:
-        self._iter_started = True
-        self._instrumentor._logger.debug(f"StreamIteratorWrapper: __aiter__")
-        return self
-
-    def __next__(self) -> object:
-        try:
-            chunk: object = self.__wrapped__.__next__()  # type: ignore
-
-            if self._ingested:
-                self._instrumentor._logger.debug(f"StreamIteratorWrapper: __next__ already ingested, not processing chunk {chunk}")
-                return chunk # type: ignore
-
-            result = self._evaluate_chunk(chunk)
-
-            if result.ingest:
-                xproxy_result = self._stop_iteration()
-                _PayiInstrumentor.assign_xproxy_result(chunk, xproxy_result)
-
-            if result.send_chunk_to_caller:
-                return chunk # type: ignore
-            else:
-                return self.__next__()
-        except Exception as e:
-            if isinstance(e, StopIteration):
-                self._stop_iteration()
-            else:
-                self._instrumentor._logger.debug(f"StreamIteratorWrapper: __next__ exception {e}")
-            raise e
-
-    async def __anext__(self) -> object:
-        try:
-            chunk: object = await self.__wrapped__.__anext__()  # type: ignore
-
-            if self._ingested:
-                self._instrumentor._logger.debug(f"StreamIteratorWrapper: __next__ already ingested, not processing chunk {chunk}")
-                return chunk # type: ignore
-
-            result = self._evaluate_chunk(chunk)
-
-            if result.ingest:
-                xproxy_result = await self._astop_iteration()
-                _PayiInstrumentor.assign_xproxy_result(chunk, xproxy_result)
-
-            if  result.send_chunk_to_caller:
-                return chunk # type: ignore
-            else:
-                return await self.__anext__()
-
-        except Exception as e:
-            if isinstance(e, StopAsyncIteration):
-                await self._astop_iteration()
-            else:
-                self._instrumentor._logger.debug(f"StreamIteratorWrapper: __anext__ exception {e}")
-            raise e
-
-    def _evaluate_chunk(self, chunk: Any) -> _ChunkResult:
-        if self._first_token:
-            self._request._ingest["time_to_first_token_ms"] = self._stopwatch.elapsed_ms_int()
-            self._first_token = False
-
-        if self._instrumentor._log_prompt_and_response:
-            self._responses.append(self.chunk_to_json(chunk))
-
-        return self._request.process_chunk(chunk)
-
-    def _process_stop_iteration(self) -> None:
-        self._instrumentor._logger.debug(f"StreamIteratorWrapper: process stop iteration")
-
-        self._stopwatch.stop()
-        self._request._ingest["end_to_end_latency_ms"] = self._stopwatch.elapsed_ms_int()
-        self._request._ingest["http_status_code"] = 200
-
-        if self._instrumentor._log_prompt_and_response:
-            self._request._ingest["provider_response_json"] = self._responses
-
-    async def _astop_iteration(self) -> Optional[Union[XproxyResult, XproxyError]]:
-        if self._ingested:
-            self._instrumentor._logger.debug(f"StreamIteratorWrapper: astop iteration already ingested, skipping")
-            return None
-
-        self._process_stop_iteration()
-        xproxy_result = await self._instrumentor._aingest_units(self._request)
-        self._ingested = True
-
-        return xproxy_result
-
-    def _stop_iteration(self) -> Optional[Union[XproxyResult, XproxyError]]:
-        if self._ingested:
-            self._instrumentor._logger.debug(f"StreamIteratorWrapper: stop iteration already ingested, skipping")
-            return None
-
-        self._process_stop_iteration()
-        xproxy_result = self._instrumentor._ingest_units(self._request)
-        self._ingested = True
-
-        return xproxy_result
-
-    @staticmethod
-    def chunk_to_json(chunk: Any) -> str:
-        if hasattr(chunk, "to_json"):
-            return str(chunk.to_json())
-        elif isinstance(chunk, bytes):
-            return chunk.decode()
-        elif isinstance(chunk, str):
-            return chunk
-        else:
-            # assume dict
-            return _compact_json(chunk)
-
-class _StreamManagerWrapper(ObjectProxy):  # type: ignore
-    def __init__(
-        self,
-        stream_manager: Any,  # type: ignore
-        instance: Any,
-        instrumentor: _PayiInstrumentor, 
-        stopwatch: Stopwatch,
-        request: _ProviderRequest,
-    ) -> None:
-        instrumentor._logger.debug(f"StreamManagerWrapper: instance {instance}, category {request._category}")
-
-        super().__init__(stream_manager)  # type: ignore
-
-        self._stream_manager = stream_manager  
-        self._instance = instance
-        self._instrumentor = instrumentor
-        self._stopwatch: Stopwatch = stopwatch
-        self._responses: list[str] = []
-        self._request: _ProviderRequest = request
-        self._first_token: bool = True
-
-    def __enter__(self) -> _StreamIteratorWrapper:
-        self._instrumentor._logger.debug(f"_StreamManagerWrapper: __enter__")
-
-        return _StreamIteratorWrapper(
-            response=self.__wrapped__.__enter__(),  # type: ignore
-            instance=self._instance,
-            instrumentor=self._instrumentor,
-            stopwatch=self._stopwatch,
-            request=self._request,
-        )
-
-class _GeneratorWrapper:  # type: ignore
-    def __init__(
-        self,
-        generator: Any,
-        instance: Any,
-        instrumentor: _PayiInstrumentor, 
-        stopwatch: Stopwatch,
-        request: _ProviderRequest,
-    ) -> None:
-        instrumentor._logger.debug(f"GeneratorWrapper: instance {instance}, category {request._category}")
-
-        super().__init__()  # type: ignore
-        
-        self._generator = generator
-        self._instance = instance
-        self._instrumentor = instrumentor
-        self._stopwatch: Stopwatch = stopwatch
-        self._log_prompt_and_response: bool = instrumentor._log_prompt_and_response
-        self._responses: list[str] = []
-        self._request: _ProviderRequest = request
-        self._first_token: bool = True
-        self._ingested: bool = False
-        self._iter_started: bool = False
-
-    def __iter__(self) -> Any:
-        self._iter_started = True
-        self._instrumentor._logger.debug(f"GeneratorWrapper: __iter__")
-        return self
-        
-    def __aiter__(self) -> Any:
-        self._instrumentor._logger.debug(f"GeneratorWrapper: __aiter__")
-        return self
-
-    def _process_chunk(self, chunk: Any) -> _ChunkResult:
-        if self._first_token:
-            self._request._ingest["time_to_first_token_ms"] = self._stopwatch.elapsed_ms_int()
-            self._first_token = False
-            
-        if self._log_prompt_and_response:
-            dict = self._chunk_to_dict(chunk) 
-            self._responses.append(_compact_json(dict))
-                
-        return self._request.process_chunk(chunk)
-    
-    def __next__(self) -> Any:
-        try:
-            chunk = next(self._generator)
-            result = self._process_chunk(chunk)
-
-            if result.ingest:
-                xproxy_result = self._stop_iteration()
-                _PayiInstrumentor.assign_xproxy_result(chunk, xproxy_result)
-
-            # ignore result.send_chunk_to_caller:
-            return chunk
-
-        except Exception as e:
-            if isinstance(e, StopIteration):
-                self._stop_iteration()
-            else:
-                self._instrumentor._logger.debug(f"GeneratorWrapper: __next__ exception {e}")            
-            raise e
-
-    async def __anext__(self) -> Any:
-        try:
-            chunk = await anext(self._generator) # type: ignore
-            result = self._process_chunk(chunk)
-
-            if result.ingest:
-                xproxy_result = await self._astop_iteration()
-                _PayiInstrumentor.assign_xproxy_result(chunk, xproxy_result)
-
-            # ignore result.send_chunk_to_caller:
-            return chunk # type: ignore
-
-        except Exception as e:
-            if isinstance(e, StopAsyncIteration):
-                await self._astop_iteration()
-            else:
-                self._instrumentor._logger.debug(f"GeneratorWrapper: __anext__ exception {e}")
-            raise e
-
-    @staticmethod
-    def _chunk_to_dict(chunk: Any) -> 'dict[str, object]':
-        if hasattr(chunk, "to_dict"):
-            return chunk.to_dict() # type: ignore
-        elif hasattr(chunk, "to_json_dict"):  
-            return chunk.to_json_dict() # type: ignore
-        else:
-            return {}
-
-    def _stop_iteration(self) -> Optional[Union[XproxyResult, XproxyError]]:
-        if self._ingested:
-            self._instrumentor._logger.debug(f"GeneratorWrapper: stop iteration already ingested, skipping")
-            return None
-
-        self._process_stop_iteration()
-        xproxy_result = self._instrumentor._ingest_units(self._request)
-        self._ingested = True
-        return xproxy_result
-
-    async def _astop_iteration(self) -> Optional[Union[XproxyResult, XproxyError]]:
-        if self._ingested:
-            self._instrumentor._logger.debug(f"GeneratorWrapper: astop iteration already ingested, skipping")
-            return None
-
-        self._process_stop_iteration()
-        xproxy_result = await self._instrumentor._aingest_units(self._request)
-        self._ingested = True
-        return xproxy_result
-
-    def _process_stop_iteration(self) -> None:
-        self._instrumentor._logger.debug(f"GeneratorWrapper: stop iteration")
-
-        self._stopwatch.stop()
-        self._request._ingest["end_to_end_latency_ms"] = self._stopwatch.elapsed_ms_int()
-        self._request._ingest["http_status_code"] = 200
-            
-        if self._log_prompt_and_response:
-            self._request._ingest["provider_response_json"] = self._responses
 
 global _instrumentor
 _instrumentor: Optional[_PayiInstrumentor] = None
@@ -2062,7 +1490,6 @@ def track(
     _ = request_tags
 
     def _track(func: Any) -> Any:
-        import asyncio
         if asyncio.iscoroutinefunction(func):
             async def awrapper(*args: Any, **kwargs: Any) -> Any:
                 if not _instrumentor:
@@ -2171,12 +1598,3 @@ def get_context() -> PayiContext:
     if _instrumentor._last_result:
         context_dict["last_result"] = _instrumentor._last_result
     return PayiContext(**dict(context_dict))  # type: ignore
-
-# def payi_set_default_context(
-#     instance: Any,
-#     context: PayiInstanceDefaultContext
-# ) -> None:
-#     if not _instrumentor:
-#         raise RuntimeError("payi_instrument() must be called before using payi_add_client_default_context()")
-    
-#     _instrumentor._set_instance_default_context(instance, context)
