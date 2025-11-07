@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import math
 from typing import Any, Optional
@@ -6,7 +8,8 @@ from typing_extensions import override
 from payi.lib.helpers import PayiCategories
 from payi.types.ingest_units_params import Units
 
-from .instrument import _ChunkResult, _StreamingType, _ProviderRequest, _PayiInstrumentor
+from .instrument import _PayiInstrumentor
+from .ProviderRequest import _ChunkResult, _StreamingType, _ProviderRequest
 
 
 class _VertexRequest(_ProviderRequest): # type: ignore

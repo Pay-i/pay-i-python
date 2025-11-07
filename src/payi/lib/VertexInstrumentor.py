@@ -1,11 +1,14 @@
+from __future__ import annotations
+
 from typing import Any, List, Union, Optional, Sequence
 from typing_extensions import override
 
 from wrapt import wrap_function_wrapper  # type: ignore
 
-from .instrument import _ChunkResult, _IsStreaming, _PayiInstrumentor
+from .instrument import _IsStreaming, _PayiInstrumentor
 from .VertexRequest import _VertexRequest
 from .version_helper import get_version_helper
+from .ProviderRequest import _ChunkResult
 
 
 class VertexInstrumentor:

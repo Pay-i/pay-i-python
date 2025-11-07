@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.136 (2025-11-07)
+
+Full Changelog: [v0.1.0-alpha.135...v0.1.0-alpha.136](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.135...v0.1.0-alpha.136)
+
+### Features
+
+* copy current thread context state to new task state ([#392](https://github.com/Pay-i/pay-i-python/issues/392)) ([4b3a80e](https://github.com/Pay-i/pay-i-python/commit/4b3a80e45bb61edf0bd8734cc7cd530396e11761))
+
 ## 0.1.0-alpha.135 (2025-11-04)
 
 Full Changelog: [v0.1.0-alpha.134...v0.1.0-alpha.135](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.134...v0.1.0-alpha.135)

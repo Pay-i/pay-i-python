@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import json
 from typing import TYPE_CHECKING, Any, Dict, Optional, Sequence
@@ -12,13 +14,11 @@ from payi.types.ingest_units_params import Units
 from .instrument import (
     PayiInstrumentAwsBedrockConfig,
     _Context,
-    _ChunkResult,
     _IsStreaming,
-    _StreamingType,
-    _ProviderRequest,
     _PayiInstrumentor,
 )
 from .version_helper import get_version_helper
+from .ProviderRequest import _ChunkResult, _StreamingType, _ProviderRequest
 
 if TYPE_CHECKING:
     from tokenizers import Tokenizer  # type: ignore
@@ -246,7 +246,7 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
         self._request.process_stop_action(response.get("amazon-bedrock-guardrailAction", ""))
 
         xproxy_result = self._request._instrumentor._ingest_units(self._request)
-        _PayiInstrumentor.assign_xproxy_result(self._response, xproxy_result)
+        self._request.assign_xproxy_result(self._response, xproxy_result)
 
         return data # type: ignore
 

@@ -1,6 +1,10 @@
+from __future__ import annotations
+
 import os
 import json
 from typing import Any, Dict, List, Union
+
+__all__ = ['_set_attr_safe'] 
 
 PAYI_BASE_URL = "https://api.pay-i.com"
 
@@ -135,3 +139,22 @@ def payi_aws_bedrock_url(payi_base_url: Union[str, None] = None) -> str:
 
 # def payi_google_vertex_url(payi_base_url: Union[str, None] = None) -> str:
 #     return _resolve_payi_base_url(payi_base_url=payi_base_url) + "/api/v1/proxy/google.vertex"
+
+def _set_attr_safe(o: Any, attr_name: str, attr_value: Any) -> None:
+    try:
+        if hasattr(o, '__pydantic_private__') and o.__pydantic_private__ is not None:
+            o.__pydantic_private__[attr_name] = attr_value
+
+        if hasattr(o, '__dict__'):
+            # Use object.__setattr__ to bypass Pydantic validation
+            # This allows setting attributes outside the model schema without triggering forbid=true errors
+            object.__setattr__(o, attr_name, attr_value)
+        elif isinstance(o, dict):
+            o[attr_name] = attr_value
+        else:
+            setattr(o, attr_name, attr_value)
+
+    except Exception:
+        # _g_logger.debug(f"Could not set attribute {attr_name}: {e}")
+        pass
+

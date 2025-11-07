@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 from typing import Any, Dict, Union, Optional, Sequence
 from typing_extensions import override
@@ -12,13 +14,11 @@ from payi.types.ingest_units_params import Units
 from .instrument import (
     PayiInstrumentAzureOpenAiConfig,
     _Context,
-    _ChunkResult,
     _IsStreaming,
-    _StreamingType,
-    _ProviderRequest,
     _PayiInstrumentor,
 )
 from .version_helper import get_version_helper
+from .ProviderRequest import _ChunkResult, _StreamingType, _ProviderRequest
 
 
 class OpenAiInstrumentor:
@@ -288,7 +288,7 @@ class _OpenAiProviderRequest(_ProviderRequest):
             if input_cache != 0:
                 units["text_cache_read"] = Units(input=input_cache, output=0)
 
-        input = _PayiInstrumentor.update_for_vision(input - input_cache, units, self._estimated_prompt_tokens)
+        input = self.update_for_vision(input - input_cache)
 
         units["text"] = Units(input=input, output=output)
 
