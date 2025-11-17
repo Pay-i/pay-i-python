@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.0-alpha.137 (2025-11-12)
+
+Full Changelog: [v0.1.0-alpha.136...v0.1.0-alpha.137](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.136...v0.1.0-alpha.137)
+
+### Bug Fixes
+
+* compat with Python 3.14 ([fb9eb17](https://github.com/Pay-i/pay-i-python/commit/fb9eb178b8355db3a0582ba50b0127cb4fe3c77a))
+* **compat:** update signatures of `model_dump` and `model_dump_json` for Pydantic v1 ([4f1bce5](https://github.com/Pay-i/pay-i-python/commit/4f1bce57cb24f10e8a10f600c67997eac348a4c6))
+
+
+### Chores
+
+* **package:** drop Python 3.8 support ([ca7e546](https://github.com/Pay-i/pay-i-python/commit/ca7e5465046cc9fd3f3df3f2b145ef9037205a7c))
+
 ## 0.1.0-alpha.136 (2025-11-07)
 
 Full Changelog: [v0.1.0-alpha.135...v0.1.0-alpha.136](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.135...v0.1.0-alpha.136)
