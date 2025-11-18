@@ -21,6 +21,7 @@ class TestProperties:
     def test_method_update(self, client: Payi) -> None:
         property = client.use_cases.properties.update(
             use_case_id="use_case_id",
+            use_case_name="use_case_name",
             properties={"foo": "string"},
         )
         assert_matches_type(UseCaseInstanceResponse, property, path=["response"])
@@ -29,6 +30,7 @@ class TestProperties:
     def test_raw_response_update(self, client: Payi) -> None:
         response = client.use_cases.properties.with_raw_response.update(
             use_case_id="use_case_id",
+            use_case_name="use_case_name",
             properties={"foo": "string"},
         )
 
@@ -41,6 +43,7 @@ class TestProperties:
     def test_streaming_response_update(self, client: Payi) -> None:
         with client.use_cases.properties.with_streaming_response.update(
             use_case_id="use_case_id",
+            use_case_name="use_case_name",
             properties={"foo": "string"},
         ) as response:
             assert not response.is_closed
@@ -53,9 +56,17 @@ class TestProperties:
 
     @parametrize
     def test_path_params_update(self, client: Payi) -> None:
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `use_case_name` but received ''"):
+            client.use_cases.properties.with_raw_response.update(
+                use_case_id="use_case_id",
+                use_case_name="",
+                properties={"foo": "string"},
+            )
+
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `use_case_id` but received ''"):
             client.use_cases.properties.with_raw_response.update(
                 use_case_id="",
+                use_case_name="use_case_name",
                 properties={"foo": "string"},
             )
 
@@ -69,6 +80,7 @@ class TestAsyncProperties:
     async def test_method_update(self, async_client: AsyncPayi) -> None:
         property = await async_client.use_cases.properties.update(
             use_case_id="use_case_id",
+            use_case_name="use_case_name",
             properties={"foo": "string"},
         )
         assert_matches_type(UseCaseInstanceResponse, property, path=["response"])
@@ -77,6 +89,7 @@ class TestAsyncProperties:
     async def test_raw_response_update(self, async_client: AsyncPayi) -> None:
         response = await async_client.use_cases.properties.with_raw_response.update(
             use_case_id="use_case_id",
+            use_case_name="use_case_name",
             properties={"foo": "string"},
         )
 
@@ -89,6 +102,7 @@ class TestAsyncProperties:
     async def test_streaming_response_update(self, async_client: AsyncPayi) -> None:
         async with async_client.use_cases.properties.with_streaming_response.update(
             use_case_id="use_case_id",
+            use_case_name="use_case_name",
             properties={"foo": "string"},
         ) as response:
             assert not response.is_closed
@@ -101,8 +115,16 @@ class TestAsyncProperties:
 
     @parametrize
     async def test_path_params_update(self, async_client: AsyncPayi) -> None:
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `use_case_name` but received ''"):
+            await async_client.use_cases.properties.with_raw_response.update(
+                use_case_id="use_case_id",
+                use_case_name="",
+                properties={"foo": "string"},
+            )
+
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `use_case_id` but received ''"):
             await async_client.use_cases.properties.with_raw_response.update(
                 use_case_id="",
+                use_case_name="use_case_name",
                 properties={"foo": "string"},
             )

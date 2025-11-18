@@ -57,10 +57,10 @@ Types:
 
 ```python
 from payi.types import (
+    BulkIngestRequest,
     BulkIngestResponse,
-    IngestEvent,
+    IngestRequest,
     IngestResponse,
-    IngestUnits,
     PayICommonModelsAPIRouterHeaderInfo,
 )
 ```
@@ -110,8 +110,8 @@ from payi.types import UseCaseInstanceResponse
 Methods:
 
 - <code title="post /api/v1/use_cases/instances/{use_case_name}">client.use_cases.<a href="./src/payi/resources/use_cases/use_cases.py">create</a>(use_case_name) -> <a href="./src/payi/types/use_case_instance_response.py">UseCaseInstanceResponse</a></code>
-- <code title="get /api/v1/use_cases/instances/{use_case_id}">client.use_cases.<a href="./src/payi/resources/use_cases/use_cases.py">retrieve</a>(use_case_id) -> <a href="./src/payi/types/use_case_instance_response.py">UseCaseInstanceResponse</a></code>
-- <code title="delete /api/v1/use_cases/instances/{use_case_id}">client.use_cases.<a href="./src/payi/resources/use_cases/use_cases.py">delete</a>(use_case_id) -> <a href="./src/payi/types/use_case_instance_response.py">UseCaseInstanceResponse</a></code>
+- <code title="get /api/v1/use_cases/instances/{use_case_name}/{use_case_id}">client.use_cases.<a href="./src/payi/resources/use_cases/use_cases.py">retrieve</a>(use_case_id, \*, use_case_name) -> <a href="./src/payi/types/use_case_instance_response.py">UseCaseInstanceResponse</a></code>
+- <code title="delete /api/v1/use_cases/instances/{use_case_name}/{use_case_id}">client.use_cases.<a href="./src/payi/resources/use_cases/use_cases.py">delete</a>(use_case_id, \*, use_case_name) -> <a href="./src/payi/types/use_case_instance_response.py">UseCaseInstanceResponse</a></code>
 
 ## Kpis
 
@@ -123,24 +123,24 @@ from payi.types.use_cases import KpiListResponse
 
 Methods:
 
-- <code title="put /api/v1/use_cases/instances/{use_case_id}/kpis/{kpi_name}">client.use_cases.kpis.<a href="./src/payi/resources/use_cases/kpis.py">update</a>(kpi_name, \*, use_case_id, \*\*<a href="src/payi/types/use_cases/kpi_update_params.py">params</a>) -> None</code>
-- <code title="get /api/v1/use_cases/instances/{use_case_id}/kpis">client.use_cases.kpis.<a href="./src/payi/resources/use_cases/kpis.py">list</a>(use_case_id, \*\*<a href="src/payi/types/use_cases/kpi_list_params.py">params</a>) -> <a href="./src/payi/types/use_cases/kpi_list_response.py">SyncCursorPage[KpiListResponse]</a></code>
+- <code title="put /api/v1/use_cases/instances/{use_case_name}/{use_case_id}/kpis/{kpi_name}">client.use_cases.kpis.<a href="./src/payi/resources/use_cases/kpis.py">update</a>(kpi_name, \*, use_case_name, use_case_id, \*\*<a href="src/payi/types/use_cases/kpi_update_params.py">params</a>) -> None</code>
+- <code title="get /api/v1/use_cases/instances/{use_case_name}/{use_case_id}/kpis">client.use_cases.kpis.<a href="./src/payi/resources/use_cases/kpis.py">list</a>(use_case_id, \*, use_case_name, \*\*<a href="src/payi/types/use_cases/kpi_list_params.py">params</a>) -> <a href="./src/payi/types/use_cases/kpi_list_response.py">SyncCursorPage[KpiListResponse]</a></code>
 
 ## Definitions
 
 Types:
 
 ```python
-from payi.types.use_cases import UseCaseDefinition
+from payi.types.use_cases import UseCaseDefinitionResponse
 ```
 
 Methods:
 
-- <code title="post /api/v1/use_cases/definitions">client.use_cases.definitions.<a href="./src/payi/resources/use_cases/definitions/definitions.py">create</a>(\*\*<a href="src/payi/types/use_cases/definition_create_params.py">params</a>) -> <a href="./src/payi/types/use_cases/use_case_definition.py">UseCaseDefinition</a></code>
-- <code title="get /api/v1/use_cases/definitions/{use_case_name}">client.use_cases.definitions.<a href="./src/payi/resources/use_cases/definitions/definitions.py">retrieve</a>(use_case_name) -> <a href="./src/payi/types/use_cases/use_case_definition.py">UseCaseDefinition</a></code>
-- <code title="put /api/v1/use_cases/definitions/{use_case_name}">client.use_cases.definitions.<a href="./src/payi/resources/use_cases/definitions/definitions.py">update</a>(use_case_name, \*\*<a href="src/payi/types/use_cases/definition_update_params.py">params</a>) -> <a href="./src/payi/types/use_cases/use_case_definition.py">UseCaseDefinition</a></code>
-- <code title="get /api/v1/use_cases/definitions">client.use_cases.definitions.<a href="./src/payi/resources/use_cases/definitions/definitions.py">list</a>(\*\*<a href="src/payi/types/use_cases/definition_list_params.py">params</a>) -> <a href="./src/payi/types/use_cases/use_case_definition.py">SyncCursorPage[UseCaseDefinition]</a></code>
-- <code title="delete /api/v1/use_cases/definitions/{use_case_name}">client.use_cases.definitions.<a href="./src/payi/resources/use_cases/definitions/definitions.py">delete</a>(use_case_name) -> <a href="./src/payi/types/use_cases/use_case_definition.py">UseCaseDefinition</a></code>
+- <code title="post /api/v1/use_cases/definitions">client.use_cases.definitions.<a href="./src/payi/resources/use_cases/definitions/definitions.py">create</a>(\*\*<a href="src/payi/types/use_cases/definition_create_params.py">params</a>) -> <a href="./src/payi/types/use_cases/use_case_definition_response.py">UseCaseDefinitionResponse</a></code>
+- <code title="get /api/v1/use_cases/definitions/{use_case_name}">client.use_cases.definitions.<a href="./src/payi/resources/use_cases/definitions/definitions.py">retrieve</a>(use_case_name) -> <a href="./src/payi/types/use_cases/use_case_definition_response.py">UseCaseDefinitionResponse</a></code>
+- <code title="put /api/v1/use_cases/definitions/{use_case_name}">client.use_cases.definitions.<a href="./src/payi/resources/use_cases/definitions/definitions.py">update</a>(use_case_name, \*\*<a href="src/payi/types/use_cases/definition_update_params.py">params</a>) -> <a href="./src/payi/types/use_cases/use_case_definition_response.py">UseCaseDefinitionResponse</a></code>
+- <code title="get /api/v1/use_cases/definitions">client.use_cases.definitions.<a href="./src/payi/resources/use_cases/definitions/definitions.py">list</a>(\*\*<a href="src/payi/types/use_cases/definition_list_params.py">params</a>) -> <a href="./src/payi/types/use_cases/use_case_definition_response.py">SyncCursorPage[UseCaseDefinitionResponse]</a></code>
+- <code title="delete /api/v1/use_cases/definitions/{use_case_name}">client.use_cases.definitions.<a href="./src/payi/resources/use_cases/definitions/definitions.py">delete</a>(use_case_name) -> <a href="./src/payi/types/use_cases/use_case_definition_response.py">UseCaseDefinitionResponse</a></code>
 
 ### Kpis
 
@@ -168,20 +168,20 @@ Methods:
 
 Methods:
 
-- <code title="post /api/v1/use_cases/definitions/{use_case_name}/limit_config">client.use_cases.definitions.limit_config.<a href="./src/payi/resources/use_cases/definitions/limit_config.py">create</a>(use_case_name, \*\*<a href="src/payi/types/use_cases/definitions/limit_config_create_params.py">params</a>) -> <a href="./src/payi/types/use_cases/use_case_definition.py">UseCaseDefinition</a></code>
-- <code title="delete /api/v1/use_cases/definitions/{use_case_name}/limit_config">client.use_cases.definitions.limit_config.<a href="./src/payi/resources/use_cases/definitions/limit_config.py">delete</a>(use_case_name) -> <a href="./src/payi/types/use_cases/use_case_definition.py">UseCaseDefinition</a></code>
+- <code title="post /api/v1/use_cases/definitions/{use_case_name}/limit_config">client.use_cases.definitions.limit_config.<a href="./src/payi/resources/use_cases/definitions/limit_config.py">create</a>(use_case_name, \*\*<a href="src/payi/types/use_cases/definitions/limit_config_create_params.py">params</a>) -> <a href="./src/payi/types/use_cases/use_case_definition_response.py">UseCaseDefinitionResponse</a></code>
+- <code title="delete /api/v1/use_cases/definitions/{use_case_name}/limit_config">client.use_cases.definitions.limit_config.<a href="./src/payi/resources/use_cases/definitions/limit_config.py">delete</a>(use_case_name) -> <a href="./src/payi/types/use_cases/use_case_definition_response.py">UseCaseDefinitionResponse</a></code>
 
 ### Version
 
 Methods:
 
-- <code title="post /api/v1/use_cases/definitions/{use_case_name}/increment_version">client.use_cases.definitions.version.<a href="./src/payi/resources/use_cases/definitions/version.py">increment</a>(use_case_name) -> <a href="./src/payi/types/use_cases/use_case_definition.py">UseCaseDefinition</a></code>
+- <code title="post /api/v1/use_cases/definitions/{use_case_name}/increment_version">client.use_cases.definitions.version.<a href="./src/payi/resources/use_cases/definitions/version.py">increment</a>(use_case_name) -> <a href="./src/payi/types/use_cases/use_case_definition_response.py">UseCaseDefinitionResponse</a></code>
 
 ## Properties
 
 Methods:
 
-- <code title="put /api/v1/use_cases/instances/{use_case_id}/properties">client.use_cases.properties.<a href="./src/payi/resources/use_cases/properties.py">update</a>(use_case_id, \*\*<a href="src/payi/types/use_cases/property_update_params.py">params</a>) -> <a href="./src/payi/types/use_case_instance_response.py">UseCaseInstanceResponse</a></code>
+- <code title="put /api/v1/use_cases/instances/{use_case_name}/{use_case_id}/properties">client.use_cases.properties.<a href="./src/payi/resources/use_cases/properties.py">update</a>(use_case_id, \*, use_case_name, \*\*<a href="src/payi/types/use_cases/property_update_params.py">params</a>) -> <a href="./src/payi/types/use_case_instance_response.py">UseCaseInstanceResponse</a></code>
 
 # Requests
 

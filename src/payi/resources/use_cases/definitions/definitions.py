@@ -43,7 +43,7 @@ from .limit_config import (
 from ....pagination import SyncCursorPage, AsyncCursorPage
 from ...._base_client import AsyncPaginator, make_request_options
 from ....types.use_cases import definition_list_params, definition_create_params, definition_update_params
-from ....types.use_cases.use_case_definition import UseCaseDefinition
+from ....types.use_cases.use_case_definition_response import UseCaseDefinitionResponse
 from ....types.shared_params.pay_i_common_models_budget_management_create_limit_base import (
     PayICommonModelsBudgetManagementCreateLimitBase,
 )
@@ -96,7 +96,7 @@ class DefinitionsResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
-    ) -> UseCaseDefinition:
+    ) -> UseCaseDefinitionResponse:
         """
         Create a new Use Case
 
@@ -123,7 +123,7 @@ class DefinitionsResource(SyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=UseCaseDefinition,
+            cast_to=UseCaseDefinitionResponse,
         )
 
     def retrieve(
@@ -136,7 +136,7 @@ class DefinitionsResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
-    ) -> UseCaseDefinition:
+    ) -> UseCaseDefinitionResponse:
         """
         Get Use Case details
 
@@ -156,7 +156,7 @@ class DefinitionsResource(SyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=UseCaseDefinition,
+            cast_to=UseCaseDefinitionResponse,
         )
 
     def update(
@@ -171,7 +171,7 @@ class DefinitionsResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
-    ) -> UseCaseDefinition:
+    ) -> UseCaseDefinitionResponse:
         """
         Update a Use Case definition
 
@@ -198,7 +198,7 @@ class DefinitionsResource(SyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=UseCaseDefinition,
+            cast_to=UseCaseDefinitionResponse,
         )
 
     def list(
@@ -214,7 +214,7 @@ class DefinitionsResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
-    ) -> SyncCursorPage[UseCaseDefinition]:
+    ) -> SyncCursorPage[UseCaseDefinitionResponse]:
         """
         Get all Use Cases
 
@@ -229,7 +229,7 @@ class DefinitionsResource(SyncAPIResource):
         """
         return self._get_api_list(
             "/api/v1/use_cases/definitions",
-            page=SyncCursorPage[UseCaseDefinition],
+            page=SyncCursorPage[UseCaseDefinitionResponse],
             options=make_request_options(
                 extra_headers=extra_headers,
                 extra_query=extra_query,
@@ -245,7 +245,7 @@ class DefinitionsResource(SyncAPIResource):
                     definition_list_params.DefinitionListParams,
                 ),
             ),
-            model=UseCaseDefinition,
+            model=UseCaseDefinitionResponse,
         )
 
     def delete(
@@ -258,7 +258,7 @@ class DefinitionsResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
-    ) -> UseCaseDefinition:
+    ) -> UseCaseDefinitionResponse:
         """
         Delete a Use Case
 
@@ -278,7 +278,7 @@ class DefinitionsResource(SyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=UseCaseDefinition,
+            cast_to=UseCaseDefinitionResponse,
         )
 
 
@@ -327,7 +327,7 @@ class AsyncDefinitionsResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
-    ) -> UseCaseDefinition:
+    ) -> UseCaseDefinitionResponse:
         """
         Create a new Use Case
 
@@ -354,7 +354,7 @@ class AsyncDefinitionsResource(AsyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=UseCaseDefinition,
+            cast_to=UseCaseDefinitionResponse,
         )
 
     async def retrieve(
@@ -367,7 +367,7 @@ class AsyncDefinitionsResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
-    ) -> UseCaseDefinition:
+    ) -> UseCaseDefinitionResponse:
         """
         Get Use Case details
 
@@ -387,7 +387,7 @@ class AsyncDefinitionsResource(AsyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=UseCaseDefinition,
+            cast_to=UseCaseDefinitionResponse,
         )
 
     async def update(
@@ -402,7 +402,7 @@ class AsyncDefinitionsResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
-    ) -> UseCaseDefinition:
+    ) -> UseCaseDefinitionResponse:
         """
         Update a Use Case definition
 
@@ -429,7 +429,7 @@ class AsyncDefinitionsResource(AsyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=UseCaseDefinition,
+            cast_to=UseCaseDefinitionResponse,
         )
 
     def list(
@@ -445,7 +445,7 @@ class AsyncDefinitionsResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
-    ) -> AsyncPaginator[UseCaseDefinition, AsyncCursorPage[UseCaseDefinition]]:
+    ) -> AsyncPaginator[UseCaseDefinitionResponse, AsyncCursorPage[UseCaseDefinitionResponse]]:
         """
         Get all Use Cases
 
@@ -460,7 +460,7 @@ class AsyncDefinitionsResource(AsyncAPIResource):
         """
         return self._get_api_list(
             "/api/v1/use_cases/definitions",
-            page=AsyncCursorPage[UseCaseDefinition],
+            page=AsyncCursorPage[UseCaseDefinitionResponse],
             options=make_request_options(
                 extra_headers=extra_headers,
                 extra_query=extra_query,
@@ -476,7 +476,7 @@ class AsyncDefinitionsResource(AsyncAPIResource):
                     definition_list_params.DefinitionListParams,
                 ),
             ),
-            model=UseCaseDefinition,
+            model=UseCaseDefinitionResponse,
         )
 
     async def delete(
@@ -489,7 +489,7 @@ class AsyncDefinitionsResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
-    ) -> UseCaseDefinition:
+    ) -> UseCaseDefinitionResponse:
         """
         Delete a Use Case
 
@@ -509,7 +509,7 @@ class AsyncDefinitionsResource(AsyncAPIResource):
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=UseCaseDefinition,
+            cast_to=UseCaseDefinitionResponse,
         )
 
 

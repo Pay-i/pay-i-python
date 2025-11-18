@@ -112,6 +112,7 @@ class UseCasesResource(SyncAPIResource):
         self,
         use_case_id: str,
         *,
+        use_case_name: str,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -131,10 +132,12 @@ class UseCasesResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
+        if not use_case_name:
+            raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         if not use_case_id:
             raise ValueError(f"Expected a non-empty value for `use_case_id` but received {use_case_id!r}")
         return self._get(
-            f"/api/v1/use_cases/instances/{use_case_id}",
+            f"/api/v1/use_cases/instances/{use_case_name}/{use_case_id}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -145,6 +148,7 @@ class UseCasesResource(SyncAPIResource):
         self,
         use_case_id: str,
         *,
+        use_case_name: str,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -164,10 +168,12 @@ class UseCasesResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
+        if not use_case_name:
+            raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         if not use_case_id:
             raise ValueError(f"Expected a non-empty value for `use_case_id` but received {use_case_id!r}")
         return self._delete(
-            f"/api/v1/use_cases/instances/{use_case_id}",
+            f"/api/v1/use_cases/instances/{use_case_name}/{use_case_id}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -244,6 +250,7 @@ class AsyncUseCasesResource(AsyncAPIResource):
         self,
         use_case_id: str,
         *,
+        use_case_name: str,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -263,10 +270,12 @@ class AsyncUseCasesResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
+        if not use_case_name:
+            raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         if not use_case_id:
             raise ValueError(f"Expected a non-empty value for `use_case_id` but received {use_case_id!r}")
         return await self._get(
-            f"/api/v1/use_cases/instances/{use_case_id}",
+            f"/api/v1/use_cases/instances/{use_case_name}/{use_case_id}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -277,6 +286,7 @@ class AsyncUseCasesResource(AsyncAPIResource):
         self,
         use_case_id: str,
         *,
+        use_case_name: str,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -296,10 +306,12 @@ class AsyncUseCasesResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
+        if not use_case_name:
+            raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         if not use_case_id:
             raise ValueError(f"Expected a non-empty value for `use_case_id` but received {use_case_id!r}")
         return await self._delete(
-            f"/api/v1/use_cases/instances/{use_case_id}",
+            f"/api/v1/use_cases/instances/{use_case_name}/{use_case_id}",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),

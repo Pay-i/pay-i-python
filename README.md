@@ -32,11 +32,11 @@ client = Payi(
     api_key=os.environ.get("PAYI_API_KEY"),  # This is the default and can be omitted
 )
 
-use_case_definition = client.use_cases.definitions.create(
+use_case_definition_response = client.use_cases.definitions.create(
     description="Sample Use Case Definition Description",
     name="SampleUseCaseDefinition",
 )
-print(use_case_definition.request_id)
+print(use_case_definition_response.request_id)
 ```
 
 While you can provide an `api_key` keyword argument,
@@ -59,11 +59,11 @@ client = AsyncPayi(
 
 
 async def main() -> None:
-    use_case_definition = await client.use_cases.definitions.create(
+    use_case_definition_response = await client.use_cases.definitions.create(
         description="Sample Use Case Definition Description",
         name="SampleUseCaseDefinition",
     )
-    print(use_case_definition.request_id)
+    print(use_case_definition_response.request_id)
 
 
 asyncio.run(main())
@@ -95,11 +95,11 @@ async def main() -> None:
         api_key="My API Key",
         http_client=DefaultAioHttpClient(),
     ) as client:
-        use_case_definition = await client.use_cases.definitions.create(
+        use_case_definition_response = await client.use_cases.definitions.create(
             description="Sample Use Case Definition Description",
             name="SampleUseCaseDefinition",
         )
-        print(use_case_definition.request_id)
+        print(use_case_definition_response.request_id)
 
 
 asyncio.run(main())
@@ -186,12 +186,12 @@ from payi import Payi
 
 client = Payi()
 
-use_case_definition = client.use_cases.definitions.create(
+use_case_definition_response = client.use_cases.definitions.create(
     description="x",
     name="x",
     limit_config={"max": 0},
 )
-print(use_case_definition.limit_config)
+print(use_case_definition_response.limit_config)
 ```
 
 ## Handling errors

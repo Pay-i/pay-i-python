@@ -10,6 +10,8 @@ __all__ = ["UseCaseInstanceResponse"]
 class UseCaseInstanceResponse(BaseModel):
     use_case_id: str
 
+    use_case_name: str
+
     limit_id: Optional[str] = None
 
     type_version: Optional[int] = None

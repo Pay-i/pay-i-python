@@ -9,4 +9,6 @@ __all__ = ["PropertyUpdateParams"]
 
 
 class PropertyUpdateParams(TypedDict, total=False):
+    use_case_name: Required[str]
+
     properties: Required[Dict[str, Optional[str]]]
