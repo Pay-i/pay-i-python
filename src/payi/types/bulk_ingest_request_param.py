@@ -11,7 +11,7 @@ from .._utils import PropertyInfo
 from .shared_params.ingest_units import IngestUnits
 from .pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
-__all__ = ["IngestEventParam", "ProviderResponseFunctionCall"]
+__all__ = ["BulkIngestRequestParam", "ProviderResponseFunctionCall"]
 
 
 class ProviderResponseFunctionCall(TypedDict, total=False):
@@ -20,7 +20,7 @@ class ProviderResponseFunctionCall(TypedDict, total=False):
     arguments: Optional[str]
 
 
-class IngestEventParam(TypedDict, total=False):
+class BulkIngestRequestParam(TypedDict, total=False):
     category: Required[str]
 
     units: Required[Dict[str, IngestUnits]]

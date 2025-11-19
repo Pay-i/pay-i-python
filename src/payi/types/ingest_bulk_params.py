@@ -5,10 +5,10 @@ from __future__ import annotations
 from typing import Iterable
 from typing_extensions import TypedDict
 
-from .ingest_event_param import IngestEventParam
+from .bulk_ingest_request_param import BulkIngestRequestParam
 
 __all__ = ["IngestBulkParams"]
 
 
 class IngestBulkParams(TypedDict, total=False):
-    events: Iterable[IngestEventParam]
+    events: Iterable[BulkIngestRequestParam]

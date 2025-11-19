@@ -9,6 +9,8 @@ __all__ = ["KpiUpdateParams"]
 
 
 class KpiUpdateParams(TypedDict, total=False):
+    use_case_name: Required[str]
+
     use_case_id: Required[str]
 
     score: Union[bool, float, None]

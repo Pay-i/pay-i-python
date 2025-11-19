@@ -47,6 +47,7 @@ class PropertiesResource(SyncAPIResource):
         self,
         use_case_id: str,
         *,
+        use_case_name: str,
         properties: Dict[str, Optional[str]],
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -67,10 +68,12 @@ class PropertiesResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
+        if not use_case_name:
+            raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         if not use_case_id:
             raise ValueError(f"Expected a non-empty value for `use_case_id` but received {use_case_id!r}")
         return self._put(
-            f"/api/v1/use_cases/instances/{use_case_id}/properties",
+            f"/api/v1/use_cases/instances/{use_case_name}/{use_case_id}/properties",
             body=maybe_transform({"properties": properties}, property_update_params.PropertyUpdateParams),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
@@ -103,6 +106,7 @@ class AsyncPropertiesResource(AsyncAPIResource):
         self,
         use_case_id: str,
         *,
+        use_case_name: str,
         properties: Dict[str, Optional[str]],
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -123,10 +127,12 @@ class AsyncPropertiesResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
+        if not use_case_name:
+            raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         if not use_case_id:
             raise ValueError(f"Expected a non-empty value for `use_case_id` but received {use_case_id!r}")
         return await self._put(
-            f"/api/v1/use_cases/instances/{use_case_id}/properties",
+            f"/api/v1/use_cases/instances/{use_case_name}/{use_case_id}/properties",
             body=await async_maybe_transform({"properties": properties}, property_update_params.PropertyUpdateParams),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
