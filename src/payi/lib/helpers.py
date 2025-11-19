@@ -29,6 +29,7 @@ class PayiCategories:
     anthropic:str  = "system.anthropic"
     openai:str = "system.openai"
     azure_openai:str = "system.azureopenai"
+    azure:str = "system.azure"
     aws_bedrock:str = "system.aws.bedrock"
     google_vertex:str = "system.google.vertex"
 
@@ -133,6 +134,9 @@ def payi_openai_url(payi_base_url: Union[str, None] = None) -> str:
 
 def payi_azure_openai_url(payi_base_url: Union[str, None] = None) -> str:
     return _resolve_payi_base_url(payi_base_url=payi_base_url) + "/api/v1/proxy/azure.openai"
+
+def payi_azure_anthropic_url(payi_base_url: Union[str, None] = None) -> str:
+    return _resolve_payi_base_url(payi_base_url=payi_base_url) + "/api/v1/proxy/azure.anthropic"
 
 def payi_aws_bedrock_url(payi_base_url: Union[str, None] = None) -> str:
     return _resolve_payi_base_url(payi_base_url=payi_base_url) + "/api/v1/proxy/aws.bedrock"

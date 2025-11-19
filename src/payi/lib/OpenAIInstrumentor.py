@@ -204,14 +204,9 @@ class _OpenAiProviderRequest(_ProviderRequest):
             self._price_as.resource_scope = deployment.get("resource_scope", None)
 
         if not self._price_as.resource and not self._price_as.category:
-            self._instrumentor._logger.error("Azure OpenAI requires price as resource and/or category to be specified, not ingesting")
-            return False
+            self._instrumentor._logger.warning("Azure OpenAI requires price as resource and/or category to be specified unless mapped in the Pay-i service")
 
         if self._price_as.resource_scope:
-            if not (self._price_as.resource_scope in ["global", "datazone"] or self._price_as.resource_scope.startswith("region")):
-                self._instrumentor._logger.error("Azure OpenAI invalid resource scope, not ingesting")
-                return False
-
             self._ingest["resource_scope"] = self._price_as.resource_scope
 
         self._category = PayiCategories.azure_openai
