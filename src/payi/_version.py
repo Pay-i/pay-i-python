@@ -1,4 +1,4 @@
 # File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
 __title__ = "payi"
-__version__ = "0.1.0-alpha.138"  # x-release-please-version
+__version__ = "0.1.0-alpha.139"  # x-release-please-version

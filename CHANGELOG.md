@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.139 (2025-11-21)
+
+Full Changelog: [v0.1.0-alpha.138...v0.1.0-alpha.139](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.138...v0.1.0-alpha.139)
+
+### Features
+
+* Azure Anthropic ([#397](https://github.com/Pay-i/pay-i-python/issues/397)) ([6e26b73](https://github.com/Pay-i/pay-i-python/commit/6e26b73d6ae6b9a75587ef82b160f792c973ddeb))
+
 ## 0.1.0-alpha.138 (2025-11-18)
 
 Full Changelog: [v0.1.0-alpha.137...v0.1.0-alpha.138](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.137...v0.1.0-alpha.138)
