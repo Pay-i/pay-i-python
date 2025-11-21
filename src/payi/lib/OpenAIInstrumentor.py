@@ -193,29 +193,28 @@ class _OpenAiProviderRequest(_ProviderRequest):
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]',  args: Sequence[Any], kwargs: Any) -> bool: # type: ignore
         model = kwargs.get("model", "")
 
-        if not (instance and hasattr(instance, "_client")) or OpenAiInstrumentor.is_azure(instance) is False:
-            self._ingest["resource"] = model
-            return True
+        self._ingest["resource"] = model
 
-        if not self._price_as.resource and not self._price_as.category and OpenAiInstrumentor._azure_openai_deployments:
-            deployment = OpenAiInstrumentor._azure_openai_deployments.get(model, {})
-            self._price_as.category = deployment.get("price_as_category", None)
-            self._price_as.resource = deployment.get("price_as_resource", None)
-            self._price_as.resource_scope = deployment.get("resource_scope", None)
+        if instance and hasattr(instance, "_client") and OpenAiInstrumentor.is_azure(instance):
+            self._category = PayiCategories.azure_openai
 
-        if not self._price_as.resource and not self._price_as.category:
-            self._instrumentor._logger.warning("Azure OpenAI requires price as resource and/or category to be specified unless mapped in the Pay-i service")
+            if not self._price_as.resource and not self._price_as.category and OpenAiInstrumentor._azure_openai_deployments:
+                deployment = OpenAiInstrumentor._azure_openai_deployments.get(model, {})
+                self._price_as.category = deployment.get("price_as_category", None)
+                self._price_as.resource = deployment.get("price_as_resource", None)
+                self._price_as.resource_scope = deployment.get("resource_scope", None)
+
+            if not self._price_as.resource and not self._price_as.category:
+                self._instrumentor._logger.warning("Azure OpenAI requires price as resource and/or category to be specified unless mapped in the Pay-i service")
 
         if self._price_as.resource_scope:
             self._ingest["resource_scope"] = self._price_as.resource_scope
 
-        self._category = PayiCategories.azure_openai
+        if self._price_as.category:
+            self._category = self._price_as.category
 
         self._ingest["category"] = self._category
 
-        if self._price_as.category:
-            # price as category overrides default
-            self._ingest["category"] = self._price_as.category
         if self._price_as.resource:
             self._ingest["resource"] = self._price_as.resource
 
