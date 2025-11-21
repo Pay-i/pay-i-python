@@ -198,6 +198,8 @@ class _OpenAiProviderRequest(_ProviderRequest):
         if instance and hasattr(instance, "_client") and OpenAiInstrumentor.is_azure(instance):
             self._category = PayiCategories.azure_openai
 
+            self._instrumentor._logger.debug(f"Azure OpenAI model {model}, available mappings: {list(OpenAiInstrumentor._azure_openai_deployments.keys())}, price as before final mapping: resource={self._price_as.resource}, category={self._price_as.category}, resource_scope={self._price_as.resource_scope}")
+
             if not self._price_as.resource and not self._price_as.category and OpenAiInstrumentor._azure_openai_deployments:
                 deployment = OpenAiInstrumentor._azure_openai_deployments.get(model, {})
                 self._price_as.category = deployment.get("price_as_category", None)

@@ -202,8 +202,9 @@ class _AnthropicProviderRequest(_ProviderRequest):
             self._price_as.resource = deployment.get("price_as_resource", None)
             self._price_as.resource_scope = deployment.get("resource_scope", None)
 
-        if not self._price_as.resource and not self._price_as.category:
-            self._instrumentor._logger.warning("Anthropic for Azure requires price as resource and/or category to be specified unless mapped in the Pay-i service")
+        if self._is_azure and not self._price_as.resource and not self._price_as.category:
+            self._instrumentor._logger.debug(f"Azure Anthropic model {model}, available mappings: {list(AnthropicInstrumentor._azure_deployments.keys())}")
+            self._instrumentor._logger.warning("Azure Anthropic requires price as resource and/or category to be specified unless mapped in the Pay-i service")
 
         if self._price_as.resource_scope:
             self._ingest["resource_scope"] = self._price_as.resource_scope
