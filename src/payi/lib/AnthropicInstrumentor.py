@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Union, Optional, Sequence
+from typing import Any, Dict, Union, Optional, Sequence
 from typing_extensions import override
 
 import tiktoken
@@ -10,7 +10,7 @@ from wrapt import wrap_function_wrapper  # type: ignore
 from payi.lib.helpers import PayiCategories
 from payi.types.ingest_units_params import Units
 
-from .instrument import _IsStreaming, _PayiInstrumentor
+from .instrument import PayiInstrumentAnthropicConfig, _Context, _IsStreaming, _PayiInstrumentor
 from .version_helper import get_version_helper
 from .ProviderRequest import _ChunkResult, _StreamingType, _ProviderRequest
 
@@ -18,6 +18,9 @@ from .ProviderRequest import _ChunkResult, _StreamingType, _ProviderRequest
 class AnthropicInstrumentor:
     _module_name: str = "anthropic"
     _module_version: str = ""
+
+    _azure_deployments: Dict[str, _Context] = {}
+    _azure_foundry_clients_supported: bool = True
 
     @staticmethod
     def is_vertex(instance: Any) -> bool:
@@ -30,6 +33,25 @@ class AnthropicInstrumentor:
         from anthropic import AnthropicBedrock, AsyncAnthropicBedrock  # type: ignore # noqa: I001
 
         return isinstance(instance._client, (AsyncAnthropicBedrock, AnthropicBedrock))
+
+    @staticmethod
+    def is_azure(instance: Any) -> bool:
+        if not AnthropicInstrumentor._azure_foundry_clients_supported:
+            return False
+
+        try:
+            from anthropic import AnthropicFoundry, AsyncAnthropicFoundry  # type: ignore # noqa: I001
+            return isinstance(instance._client, (AsyncAnthropicFoundry, AnthropicFoundry))
+        except Exception:
+            AnthropicInstrumentor._azure_foundry_clients_supported = False
+            return False
+
+    @staticmethod
+    def configure(anthropic_config: PayiInstrumentAnthropicConfig) -> None:
+        azure_config = anthropic_config.get("azure", {})
+        if azure_config:
+            model_mappings = azure_config.get("model_mappings", [])
+            AnthropicInstrumentor._azure_deployments = _PayiInstrumentor._model_mapping_to_context_dict(model_mappings)
 
     @staticmethod
     def instrument(instrumentor: _PayiInstrumentor) -> None:
@@ -130,12 +152,15 @@ class _AnthropicProviderRequest(_ProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, streaming_type: _StreamingType, instance: Any = None) -> None:
         self._is_vertex: bool = AnthropicInstrumentor.is_vertex(instance)
         self._is_bedrock: bool = AnthropicInstrumentor.is_bedrock(instance)
+        self._is_azure: bool = AnthropicInstrumentor.is_azure(instance)
     
         category: str = ""
         if self._is_vertex:
             category = PayiCategories.google_vertex
         elif self._is_bedrock:
             category = PayiCategories.aws_bedrock
+        elif self._is_azure:
+            category = PayiCategories.azure
         else:
             category = PayiCategories.anthropic
 
@@ -168,7 +193,18 @@ class _AnthropicProviderRequest(_ProviderRequest):
 
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]',  args: Sequence[Any], kwargs: Any) -> bool:
-        self._ingest["resource"] = self._update_resource_name(kwargs.get("model", ""))
+        model = self._update_resource_name(kwargs.get("model", ""))
+        self._ingest["resource"] = model
+
+        if not self._price_as.resource and not self._price_as.category and AnthropicInstrumentor._azure_deployments:
+            deployment = AnthropicInstrumentor._azure_deployments.get(model, {})
+            self._price_as.category = deployment.get("price_as_category", None)
+            self._price_as.resource = deployment.get("price_as_resource", None)
+            self._price_as.resource_scope = deployment.get("resource_scope", None)
+
+        if self._is_azure and not self._price_as.resource and not self._price_as.category:
+            self._instrumentor._logger.debug(f"Azure Anthropic model {model}, available mappings: {list(AnthropicInstrumentor._azure_deployments.keys())}")
+            self._instrumentor._logger.warning("Azure Anthropic requires price as resource and/or category to be specified unless mapped in the Pay-i service")
 
         if self._price_as.resource_scope:
             self._ingest["resource_scope"] = self._price_as.resource_scope
