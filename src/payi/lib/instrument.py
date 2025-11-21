@@ -50,6 +50,14 @@ class PayiInstrumentAzureOpenAiConfig(TypedDict, total=False):
     # map deployment name known model
     model_mappings: Sequence[PayiInstrumentModelMapping] 
 
+class PayiInstrumentAnthropicAzureConfig(TypedDict, total=False):
+    # map deployment name known model
+    model_mappings: Sequence[PayiInstrumentModelMapping] 
+
+class PayiInstrumentAnthropicConfig(TypedDict, total=False):
+    # map deployment name known model
+    azure: PayiInstrumentAnthropicAzureConfig
+
 class PayiInstrumentOfflineInstrumentationConfig(TypedDict, total=False):
     file_name: str
 
@@ -69,6 +77,7 @@ class PayiInstrumentConfig(TypedDict, total=False):
     request_properties: Optional["dict[str, Optional[str]]"]
     aws_config: Optional[PayiInstrumentAwsBedrockConfig]
     azure_openai_config: Optional[PayiInstrumentAzureOpenAiConfig]
+    anthropic_config: Optional[PayiInstrumentAnthropicConfig]
     offline_instrumentation: Optional[PayiInstrumentOfflineInstrumentationConfig]
 
 class PayiContext(TypedDict, total=False):
@@ -220,6 +229,11 @@ class _PayiInstrumentor:
         if azure_openai_config:
             from .OpenAIInstrumentor import OpenAiInstrumentor
             OpenAiInstrumentor.configure(azure_openai_config=azure_openai_config)
+
+        anthropic_config = global_config.get("anthropic_config", None)
+        if anthropic_config:
+            from .AnthropicInstrumentor import AnthropicInstrumentor
+            AnthropicInstrumentor.configure(anthropic_config=anthropic_config)
 
         if instruments is None or "*" in instruments:
             self._instrument_all()
@@ -382,6 +396,12 @@ class _PayiInstrumentor:
     ) -> Any:
         if len(args) > 0:
             coro = args[0]
+            
+            # Check if the first argument is actually a coroutine
+            if not inspect.iscoroutine(coro):
+                # If not a coroutine, just pass through unchanged
+                return wrapped(*args, **kwargs)
+            
             captured_context = copy.deepcopy(self._context_safe)
 
             async def context_wrapper() -> Any:
@@ -390,7 +410,10 @@ class _PayiInstrumentor:
                     self._init_current_context(**captured_context)
                     return await coro
             
-            return wrapped(context_wrapper(), *args[1:], **kwargs)
+            # Create the task with the wrapped coroutine, then return the task
+            # This ensures the returned object is a proper Task with add_done_callback
+            task = wrapped(context_wrapper(), *args[1:], **kwargs)
+            return task
         return wrapped(*args, **kwargs)
 
     @staticmethod
