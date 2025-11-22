@@ -20,6 +20,7 @@ from wrapt import wrap_function_wrapper  # type: ignore
 
 from payi import Payi, AsyncPayi, APIStatusError, APIConnectionError, __version__ as _payi_version
 from payi.types import IngestUnitsParams
+from payi._types import SequenceNotStr
 from payi.lib.helpers import PayiHeaderNames, _compact_json
 from payi.types.shared import XproxyResult
 from payi.types.ingest_response import IngestResponse
@@ -499,17 +500,36 @@ class _PayiInstrumentor:
 
         request.merge_internal_request_properties()
 
-        request_json = ingest_units.get('provider_request_json', "")
-        if request_json and self._instrument_inline_data is False:
-            try:
-                prompt_dict = json.loads(request_json)
-                if request.remove_inline_data(prompt_dict):
-                    self._logger.debug(f"Removed inline data from provider_request_json")
-                    # store the modified dict back as JSON string
-                    ingest_units['provider_request_json'] = _compact_json(prompt_dict)
+        if self._instrument_inline_data is False:
+            request_json = ingest_units.get('provider_request_json', "")
+            if request_json:
+                try:
+                    prompt_dict: dict[str, Any] = json.loads(request_json) if request_json else {}
 
-            except Exception as e:
-                self._logger.error(f"Error serializing provider_request_json: {e}")
+                    if request.remove_prompt_inline_data(prompt_dict):
+                        self._logger.debug(f"Removed inline data from provider_request_json")
+                        # store the modified dict back as JSON string
+                        ingest_units['provider_request_json'] = _compact_json(prompt_dict)
+
+                except Exception as e:
+                    self._logger.error(f"Error serializing provider_request_json: {e}")
+
+            response_json: Union[str, SequenceNotStr[str], None] = ingest_units.get('provider_response_json', None)
+            if response_json:
+                try:
+                    responses: list[dict[str, Any]] = []
+                    if isinstance(response_json, str):
+                        response_json = [response_json]
+                    if isinstance(response_json, Sequence):
+                        responses = [json.loads(r) for r in response_json] if response_json else []
+
+                    if request.remove_responses_inline_data(responses):
+                        self._logger.debug(f"Removed inline data from provider_response_json")
+                        # store the modified list back as JSON string
+                        ingest_units['provider_response_json'] = _compact_json(responses[0]) if len(responses) == 1 else [_compact_json(r) for r in responses]
+
+                except Exception as e:
+                    self._logger.error(f"Error serializing provider_request_json: {e}")
 
         if int(ingest_units.get("http_status_code") or 0) < 400:
             units = ingest_units.get("units", {})

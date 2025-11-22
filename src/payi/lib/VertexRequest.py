@@ -82,7 +82,7 @@ class _VertexRequest(_ProviderRequest): # type: ignore
         return _ChunkResult(send_chunk_to_caller=True, ingest=ingest)
 
     @override
-    def remove_inline_data(self, prompt: 'dict[str, Any]') -> bool:
+    def remove_prompt_inline_data(self, prompt: 'dict[str, Any]') -> bool:
         modified = False
 
         parts: list[dict[str, Any]] = prompt["contents"].get("parts", []) 

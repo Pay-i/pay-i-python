@@ -568,7 +568,7 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
             self.add_internal_request_property(PayiPropertyNames.aws_bedrock_guardrail_action, action)
 
     @override
-    def remove_inline_data(self, prompt: 'dict[str, Any]') -> bool:# noqa: ARG002
+    def remove_prompt_inline_data(self, prompt: 'dict[str, Any]') -> bool:# noqa: ARG002
         if not self._is_anthropic:
             return False
 

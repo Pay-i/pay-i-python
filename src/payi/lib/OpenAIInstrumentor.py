@@ -441,7 +441,7 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
         return True
 
     @override
-    def remove_inline_data(self, prompt: 'dict[str, Any]') -> bool:
+    def remove_prompt_inline_data(self, prompt: 'dict[str, Any]') -> bool:
         messages = prompt.get("messages", None)
         if not messages:
             return False
@@ -562,7 +562,7 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
         return True
 
     @override
-    def remove_inline_data(self, prompt: 'dict[str, Any]') -> bool:
+    def remove_prompt_inline_data(self, prompt: 'dict[str, Any]') -> bool:
         modified = False
         input = prompt.get("input", [])
         for item in input:
@@ -573,6 +573,39 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
                 if key == "content":
                     if isinstance(value, list):
                         modified = self.post_process_request_prompt(value, image_type="input_image", url_subkey=False) | modified # type: ignore
+
+        return modified
+
+    @override
+    def remove_responses_inline_data(self, responses: 'list[dict[str, Any]]') -> bool:# noqa: ARG002
+        modified = False
+        def remove_from_output_array(outputs: 'list[dict[str, Any]]') -> bool:
+            modified = False
+            for output in outputs:
+                response_type = output.get("type", "")
+                if response_type == "image_generation_call" and 'result' in output:
+                    output["result"] = _PayiInstrumentor._not_instrumented
+                    modified = True
+            return modified
+
+        for response in responses:
+            output = response.get("output", [])
+            if output:
+                modified |= remove_from_output_array(output)
+
+            response_type = response.get("type", "")
+            if response_type == "response.image_generation_call.partial_image" and 'partial_image_b64' in response:
+                response["partial_image_b64"] = _PayiInstrumentor._not_instrumented
+                modified = True
+            elif response_type == "response.output_item.done":
+                item = response.get("item", {})
+                if item and item.get("type", "") == "image_generation_call" and 'result' in item:
+                    item["result"] = _PayiInstrumentor._not_instrumented
+                    modified = True
+            elif response_type == "response.completed":
+                completed_output = response.get("response", {}).get("output", [])
+                if completed_output:
+                    modified |= remove_from_output_array(completed_output)
 
         return modified
 
