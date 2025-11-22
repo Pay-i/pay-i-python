@@ -172,12 +172,14 @@ class _OpenAiProviderRequest(_ProviderRequest):
     chat_input_tokens_key: str = "prompt_tokens"
     chat_output_tokens_key: str = "completion_tokens"
     chat_input_tokens_details_key: str = "prompt_tokens_details"
+    chat_completion_tokens_details_key: str = "completion_tokens_details"
 
     responses_input_tokens_key: str = "input_tokens"
     responses_output_tokens_key: str = "output_tokens"
     responses_input_tokens_details_key: str = "input_tokens_details"
+    responses_output_tokens_details_key: str = "output_tokens_details"
 
-    def __init__(self, instrumentor: _PayiInstrumentor, input_tokens_key: str, output_tokens_key: str, input_tokens_details_key: str) -> None:
+    def __init__(self, instrumentor: _PayiInstrumentor, input_tokens_key: str, output_tokens_key: str, input_tokens_details_key: str, output_tokens_details_key: str) -> None:
         super().__init__(
             instrumentor=instrumentor,
             category=PayiCategories.openai,
@@ -188,6 +190,7 @@ class _OpenAiProviderRequest(_ProviderRequest):
         self._input_tokens_key = input_tokens_key
         self._output_tokens_key = output_tokens_key
         self._input_tokens_details_key = input_tokens_details_key
+        self._output_tokens_details_key = output_tokens_details_key
 
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]',  args: Sequence[Any], kwargs: Any) -> bool: # type: ignore
@@ -278,11 +281,18 @@ class _OpenAiProviderRequest(_ProviderRequest):
         output = usage[self._output_tokens_key] if self._output_tokens_key in usage else 0
         input_cache = 0
 
-        prompt_tokens_details = usage.get(self._input_tokens_details_key)
+        prompt_tokens_details = usage.get(self._input_tokens_details_key, {})
         if prompt_tokens_details:
             input_cache = prompt_tokens_details.get("cached_tokens", 0)
             if input_cache != 0:
                 units["text_cache_read"] = Units(input=input_cache, output=0)
+
+        output_tokens_details = usage.get(self._output_tokens_details_key, {})
+        if output_tokens_details:
+            reasoning_tokens = output_tokens_details.get("reasoning_tokens", 0)
+            if reasoning_tokens != 0:
+                units["reasoning"] = Units(input=0, output=reasoning_tokens)
+                output -= reasoning_tokens
 
         input = self.update_for_vision(input - input_cache)
 
@@ -327,7 +337,8 @@ class _OpenAiEmbeddingsProviderRequest(_OpenAiProviderRequest):
             instrumentor=instrumentor,
             input_tokens_key=_OpenAiProviderRequest.chat_input_tokens_key,
             output_tokens_key=_OpenAiProviderRequest.chat_output_tokens_key,
-            input_tokens_details_key=_OpenAiProviderRequest.chat_input_tokens_details_key)
+            input_tokens_details_key=_OpenAiProviderRequest.chat_input_tokens_details_key,
+            output_tokens_details_key=_OpenAiProviderRequest.chat_completion_tokens_details_key)
 
     @override
     def process_synchronous_response(
@@ -343,7 +354,8 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
             instrumentor=instrumentor,
             input_tokens_key=_OpenAiProviderRequest.chat_input_tokens_key,
             output_tokens_key=_OpenAiProviderRequest.chat_output_tokens_key,
-            input_tokens_details_key=_OpenAiProviderRequest.chat_input_tokens_details_key)
+            input_tokens_details_key=_OpenAiProviderRequest.chat_input_tokens_details_key,
+            output_tokens_details_key=_OpenAiProviderRequest.chat_completion_tokens_details_key)
 
         self._include_usage_added = False
 
@@ -465,7 +477,8 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
             instrumentor=instrumentor,
             input_tokens_key=_OpenAiProviderRequest.responses_input_tokens_key,
             output_tokens_key=_OpenAiProviderRequest.responses_output_tokens_key,
-            input_tokens_details_key=_OpenAiProviderRequest.responses_input_tokens_details_key)
+            input_tokens_details_key=_OpenAiProviderRequest.responses_input_tokens_details_key,
+            output_tokens_details_key=_OpenAiProviderRequest.responses_output_tokens_details_key)
 
     @override
     def process_chunk(self, chunk: Any) -> _ChunkResult:
