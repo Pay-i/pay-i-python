@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.140 (2025-11-24)
+
+Full Changelog: [v0.1.0-alpha.139...v0.1.0-alpha.140](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.139...v0.1.0-alpha.140)
+
+### Bug Fixes
+
+* instrument azure deployment name ([5e74ec2](https://github.com/Pay-i/pay-i-python/commit/5e74ec206637ebb804fdf932eb1d8088f96cf611))
+
+
+### Chores
+
+* add Python 3.14 classifier and testing ([fda7bbc](https://github.com/Pay-i/pay-i-python/commit/fda7bbce713fdb9786634e0e562eafadc6310815))
+
 ## 0.1.0-alpha.139 (2025-11-21)
 
 Full Changelog: [v0.1.0-alpha.138...v0.1.0-alpha.139](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.138...v0.1.0-alpha.139)
