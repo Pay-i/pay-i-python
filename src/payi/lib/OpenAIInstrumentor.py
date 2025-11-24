@@ -193,14 +193,16 @@ class _OpenAiProviderRequest(_ProviderRequest):
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]',  args: Sequence[Any], kwargs: Any) -> bool: # type: ignore
         model = kwargs.get("model", "")
 
-        self._ingest["resource"] = model
-
         if instance and hasattr(instance, "_client") and OpenAiInstrumentor.is_azure(instance):
             self._category = PayiCategories.azure_openai
 
+            # model is technically optional as it is part of the URL path
+            if not model and hasattr(instance._client, "_azure_deployment"):
+                model = instance._client._azure_deployment
+
             self._instrumentor._logger.debug(f"Azure OpenAI model {model}, available mappings: {list(OpenAiInstrumentor._azure_openai_deployments.keys())}, price as before final mapping: resource={self._price_as.resource}, category={self._price_as.category}, resource_scope={self._price_as.resource_scope}")
 
-            if not self._price_as.resource and not self._price_as.category and OpenAiInstrumentor._azure_openai_deployments:
+            if model and not self._price_as.resource and not self._price_as.category and model in OpenAiInstrumentor._azure_openai_deployments:
                 deployment = OpenAiInstrumentor._azure_openai_deployments.get(model, {})
                 self._price_as.category = deployment.get("price_as_category", None)
                 self._price_as.resource = deployment.get("price_as_resource", None)
@@ -216,9 +218,7 @@ class _OpenAiProviderRequest(_ProviderRequest):
             self._category = self._price_as.category
 
         self._ingest["category"] = self._category
-
-        if self._price_as.resource:
-            self._ingest["resource"] = self._price_as.resource
+        self._ingest["resource"] = self._price_as.resource if self._price_as.resource else model
 
         return True
 
