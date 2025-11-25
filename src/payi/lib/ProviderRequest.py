@@ -165,6 +165,15 @@ class _ProviderRequest:
             if (k_lower := k.lower()) not in _ProviderRequest.excluded_headers and not k_lower.startswith("content-")
         ]
 
+    def find_response_header_value(self, header_name: str) -> Optional[str]:
+        response_headers = self._ingest.get("provider_response_headers", None)
+        if response_headers:
+            header_name = header_name.lower()
+            for header in response_headers:
+                if header.get("name", "").lower() == header_name:
+                    return header.get("value", None)
+        return None
+
     def merge_internal_request_properties(self) -> None:
         if not self._internal_request_properties:
             return
