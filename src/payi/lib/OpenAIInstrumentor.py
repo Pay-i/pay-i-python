@@ -12,7 +12,7 @@ from payi.lib.helpers import PayiCategories
 from payi.types.ingest_units_params import Units
 
 from .instrument import (
-    PayiInstrumentAzureOpenAiConfig,
+    PayiInstrumentOpenAiAzureConfig,
     _Context,
     _IsStreaming,
     _PayiInstrumentor,
@@ -34,7 +34,7 @@ class OpenAiInstrumentor:
         return isinstance(instance._client, (AsyncAzureOpenAI, AzureOpenAI))
 
     @staticmethod
-    def configure(azure_openai_config: Optional[PayiInstrumentAzureOpenAiConfig]) -> None:
+    def configure(azure_openai_config: Optional[PayiInstrumentOpenAiAzureConfig]) -> None:
         if azure_openai_config:
             model_mappings = azure_openai_config.get("model_mappings", [])
             OpenAiInstrumentor._azure_openai_deployments = _PayiInstrumentor._model_mapping_to_context_dict(model_mappings)
@@ -195,6 +195,9 @@ class _OpenAiProviderRequest(_ProviderRequest):
         model = kwargs.get("model", "")
 
         if self._is_azure:
+            if hasattr(instance._client, "_base_url"):
+               self._ingest["provider_uri"] = str(instance._client._base_url)
+
             self._category = PayiCategories.azure_openai
 
             # model is technically optional as it is part of the URL path
