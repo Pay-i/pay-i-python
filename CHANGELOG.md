@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.141 (2025-11-25)
+
+Full Changelog: [v0.1.0-alpha.140...v0.1.0-alpha.141](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.140...v0.1.0-alpha.141)
+
+### Bug Fixes
+
+* instrument azure deployment name ([38fba65](https://github.com/Pay-i/pay-i-python/commit/38fba650b2fe09c95efe91052f18a768f8e4ca92))
+
 ## 0.1.0-alpha.140 (2025-11-24)
 
 Full Changelog: [v0.1.0-alpha.139...v0.1.0-alpha.140](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.139...v0.1.0-alpha.140)
