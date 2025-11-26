@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.1.0-alpha.142 (2025-11-26)
+
+Full Changelog: [v0.1.0-alpha.141...v0.1.0-alpha.142](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.141...v0.1.0-alpha.142)
+
+### Bug Fixes
+
+* asyncio.create_task wrapper ([#402](https://github.com/Pay-i/pay-i-python/issues/402)) ([81f43c2](https://github.com/Pay-i/pay-i-python/commit/81f43c20ad35308ae69c3095ff8bbf69f651361b))
+
+## 0.1.0-alpha.141 (2025-11-25)
+
+Full Changelog: [v0.1.0-alpha.140...v0.1.0-alpha.141](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.140...v0.1.0-alpha.141)
+
+### Bug Fixes
+
+* instrument azure deployment name ([38fba65](https://github.com/Pay-i/pay-i-python/commit/38fba650b2fe09c95efe91052f18a768f8e4ca92))
+
+## 0.1.0-alpha.140 (2025-11-24)
+
+Full Changelog: [v0.1.0-alpha.139...v0.1.0-alpha.140](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.139...v0.1.0-alpha.140)
+
+### Bug Fixes
+
+* instrument azure deployment name ([5e74ec2](https://github.com/Pay-i/pay-i-python/commit/5e74ec206637ebb804fdf932eb1d8088f96cf611))
+
+
+### Chores
+
+* add Python 3.14 classifier and testing ([fda7bbc](https://github.com/Pay-i/pay-i-python/commit/fda7bbce713fdb9786634e0e562eafadc6310815))
+
 ## 0.1.0-alpha.139 (2025-11-21)
 
 Full Changelog: [v0.1.0-alpha.138...v0.1.0-alpha.139](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.138...v0.1.0-alpha.139)

@@ -334,7 +334,7 @@ class _BedrockProviderRequest(_ProviderRequest):
         modelId =  kwargs.get("modelId", "")
         self._ingest["resource"] = modelId
 
-        if not self._price_as.resource and not self._price_as.category and BedrockInstrumentor._model_mapping:
+        if not self._price_as.resource and not self._price_as.category and modelId in BedrockInstrumentor._model_mapping:
             deployment = BedrockInstrumentor._model_mapping.get(modelId, {})
             self._price_as.category = deployment.get("price_as_category", "")
             self._price_as.resource = deployment.get("price_as_resource", "")

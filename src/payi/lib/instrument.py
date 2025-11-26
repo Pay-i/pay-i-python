@@ -46,13 +46,17 @@ class PayiInstrumentAwsBedrockConfig(TypedDict, total=False):
     add_streaming_xproxy_result: Optional[bool]
     model_mappings: Optional[Sequence[PayiInstrumentModelMapping]]
 
-class PayiInstrumentAzureOpenAiConfig(TypedDict, total=False):
+class PayiInstrumentOpenAiAzureConfig(TypedDict, total=False):
     # map deployment name known model
     model_mappings: Sequence[PayiInstrumentModelMapping] 
 
 class PayiInstrumentAnthropicAzureConfig(TypedDict, total=False):
     # map deployment name known model
     model_mappings: Sequence[PayiInstrumentModelMapping] 
+
+class PayiInstrumentOpenAiConfig(TypedDict, total=False):
+    # map deployment name known model
+    azure: PayiInstrumentOpenAiAzureConfig
 
 class PayiInstrumentAnthropicConfig(TypedDict, total=False):
     # map deployment name known model
@@ -76,7 +80,8 @@ class PayiInstrumentConfig(TypedDict, total=False):
     request_tags: Optional["list[str]"]
     request_properties: Optional["dict[str, Optional[str]]"]
     aws_config: Optional[PayiInstrumentAwsBedrockConfig]
-    azure_openai_config: Optional[PayiInstrumentAzureOpenAiConfig]
+    azure_openai_config: Optional[PayiInstrumentOpenAiAzureConfig]
+    openai_config: Optional[PayiInstrumentOpenAiConfig]
     anthropic_config: Optional[PayiInstrumentAnthropicConfig]
     offline_instrumentation: Optional[PayiInstrumentOfflineInstrumentationConfig]
 
@@ -225,7 +230,10 @@ class _PayiInstrumentor:
             from .BedrockInstrumentor import BedrockInstrumentor
             BedrockInstrumentor.configure(aws_config=aws_config)
 
-        azure_openai_config = global_config.get("azure_openai_config", None)
+        azure_openai_config = (global_config.get("openai_config", None) or {}).get("azure", None)
+        if not azure_openai_config:
+            # azure_openai_config will be deprecated in the future
+            azure_openai_config = global_config.get("azure_openai_config", None)
         if azure_openai_config:
             from .OpenAIInstrumentor import OpenAiInstrumentor
             OpenAiInstrumentor.configure(azure_openai_config=azure_openai_config)
@@ -290,8 +298,8 @@ class _PayiInstrumentor:
         def _thread_wrapper(wrapped: Any, instance: Any, args: Any, kwargs: Any) -> Any:
             return self._thread_submit_wrapper(wrapped, instance, args, kwargs)
 
-        async def _task_wrapper(wrapped: Any, instance: Any, args: Any, kwargs: Any) -> Any:
-            return await self._create_task_wrapper(wrapped, instance, args, kwargs)
+        def _task_wrapper(wrapped: Any, instance: Any, args: Any, kwargs: Any) -> Any:
+            return self._create_task_wrapper(wrapped, instance, args, kwargs)
 
         try:
             wrap_function_wrapper("concurrent.futures", "ThreadPoolExecutor.submit", _thread_wrapper)
@@ -387,35 +395,45 @@ class _PayiInstrumentor:
             return wrapped(context_wrapper, *fn_args, **kwargs)
         return wrapped(*args, **kwargs)
 
-    async def _create_task_wrapper(
+    def _create_task_wrapper(
         self,
         wrapped: Any,
         _instance: Any,
         args: Any,
         kwargs: Any,
     ) -> Any:
+        # Handle different create_task signatures across Python versions:
+        # Python 3.7-3.10: create_task(coro, *, name=None)
+        # Python 3.11+: create_task(coro, *, name=None, context=None)
+        
         if len(args) > 0:
             coro = args[0]
             
-            # Check if the first argument is actually a coroutine
-            if not inspect.iscoroutine(coro):
-                # If not a coroutine, just pass through unchanged
-                return wrapped(*args, **kwargs)
-            
-            captured_context = copy.deepcopy(self._context_safe)
+            # Only wrap if it's actually a coroutine object
+            if inspect.iscoroutine(coro):
+                # Capture the current context before the task is created
+                captured_context = copy.deepcopy(self._context_safe)
 
-            async def context_wrapper() -> Any:
-                with self:
-                    # self._context_stack[-1].update(captured_context)
-                    self._init_current_context(**captured_context)
-                    return await coro
-            
-            # Create the task with the wrapped coroutine, then return the task
-            # This ensures the returned object is a proper Task with add_done_callback
-            task = wrapped(context_wrapper(), *args[1:], **kwargs)
-            return task
+                async def context_preserving_wrapper() -> Any:
+                    # Set up the context in the new task
+                    with self:
+                        self._init_current_context(**captured_context)
+                        # Await the original coroutine
+                        return await coro
+                
+                # Create a new coroutine with context preservation
+                wrapped_coro = context_preserving_wrapper()
+                
+                # Replace the first argument with our wrapped coroutine
+                new_args = (wrapped_coro,) + args[1:]
+                
+                # Call the original create_task with the wrapped coroutine
+                # This works for both Python 3.7-3.10 and 3.11+ because we're
+                # passing through all other args and kwargs unchanged
+                return wrapped(*new_args, **kwargs)
+        
+        # If not a coroutine or no args, pass through unchanged
         return wrapped(*args, **kwargs)
-
     @staticmethod
     def _model_mapping_to_context_dict(model_mappings: Sequence[PayiInstrumentModelMapping]) -> 'dict[str, _Context]':
         context: dict[str, _Context] = {}

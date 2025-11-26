@@ -12,7 +12,7 @@ from payi.lib.helpers import PayiCategories
 from payi.types.ingest_units_params import Units
 
 from .instrument import (
-    PayiInstrumentAzureOpenAiConfig,
+    PayiInstrumentOpenAiAzureConfig,
     _Context,
     _IsStreaming,
     _PayiInstrumentor,
@@ -34,7 +34,7 @@ class OpenAiInstrumentor:
         return isinstance(instance._client, (AsyncAzureOpenAI, AzureOpenAI))
 
     @staticmethod
-    def configure(azure_openai_config: Optional[PayiInstrumentAzureOpenAiConfig]) -> None:
+    def configure(azure_openai_config: Optional[PayiInstrumentOpenAiAzureConfig]) -> None:
         if azure_openai_config:
             model_mappings = azure_openai_config.get("model_mappings", [])
             OpenAiInstrumentor._azure_openai_deployments = _PayiInstrumentor._model_mapping_to_context_dict(model_mappings)
@@ -74,7 +74,7 @@ def embeddings_wrapper(
 ) -> Any:
     instrumentor._logger.debug("OpenAI Embeddings wrapper")
     return instrumentor.invoke_wrapper(
-        _OpenAiEmbeddingsProviderRequest(instrumentor),
+        _OpenAiEmbeddingsProviderRequest(instrumentor, instance),
         _IsStreaming.false,
         wrapped,
         instance,
@@ -92,7 +92,7 @@ async def aembeddings_wrapper(
 ) -> Any:
     instrumentor._logger.debug("async OpenAI Embeddings wrapper")
     return await instrumentor.async_invoke_wrapper(
-        _OpenAiEmbeddingsProviderRequest(instrumentor),
+        _OpenAiEmbeddingsProviderRequest(instrumentor, instance),
         _IsStreaming.false,
         wrapped,
         instance,
@@ -110,7 +110,7 @@ def chat_wrapper(
 ) -> Any:
     instrumentor._logger.debug("OpenAI completions wrapper")
     return instrumentor.invoke_wrapper(
-        _OpenAiChatProviderRequest(instrumentor),
+        _OpenAiChatProviderRequest(instrumentor, instance),
         _IsStreaming.kwargs,
         wrapped,
         instance,
@@ -128,7 +128,7 @@ async def achat_wrapper(
 ) -> Any:
     instrumentor._logger.debug("async OpenAI completions wrapper")
     return await instrumentor.async_invoke_wrapper(
-        _OpenAiChatProviderRequest(instrumentor),
+        _OpenAiChatProviderRequest(instrumentor, instance),
         _IsStreaming.kwargs,
         wrapped,
         instance,
@@ -146,7 +146,7 @@ def responses_wrapper(
 ) -> Any:
     instrumentor._logger.debug("OpenAI responses wrapper")
     return instrumentor.invoke_wrapper(
-        _OpenAiResponsesProviderRequest(instrumentor),
+        _OpenAiResponsesProviderRequest(instrumentor, instance),
         _IsStreaming.kwargs,
         wrapped,
         instance,
@@ -164,7 +164,7 @@ async def aresponses_wrapper(
 ) -> Any:
     instrumentor._logger.debug("async OpenAI responses wrapper")
     return await instrumentor.async_invoke_wrapper(
-        _OpenAiResponsesProviderRequest(instrumentor),
+        _OpenAiResponsesProviderRequest(instrumentor, instance),
         _IsStreaming.kwargs,
         wrapped,
         instance,
@@ -217,7 +217,7 @@ class _OpenAiProviderRequest(_ProviderRequest):
     responses_output_tokens_key: str = "output_tokens"
     responses_input_tokens_details_key: str = "input_tokens_details"
 
-    def __init__(self, instrumentor: _PayiInstrumentor, input_tokens_key: str, output_tokens_key: str, input_tokens_details_key: str) -> None:
+    def __init__(self, instrumentor: _PayiInstrumentor, instance: Any, input_tokens_key: str, output_tokens_key: str, input_tokens_details_key: str) -> None:
         super().__init__(
             instrumentor=instrumentor,
             category=PayiCategories.openai,
@@ -228,27 +228,29 @@ class _OpenAiProviderRequest(_ProviderRequest):
         self._input_tokens_key = input_tokens_key
         self._output_tokens_key = output_tokens_key
         self._input_tokens_details_key = input_tokens_details_key
+        self._is_azure = instance and hasattr(instance, "_client") and OpenAiInstrumentor.is_azure(instance)
 
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]',  args: Sequence[Any], kwargs: Any) -> bool: # type: ignore
         model = kwargs.get("model", "")
 
-        self._ingest["resource"] = model
+        if self._is_azure:
+            if hasattr(instance._client, "_base_url"):
+               self._ingest["provider_uri"] = str(instance._client._base_url)
 
-        if instance and hasattr(instance, "_client") and OpenAiInstrumentor.is_azure(instance):
             self._category = PayiCategories.azure_openai
 
-            self._instrumentor._logger.debug(f"Azure OpenAI model {model}, available mappings: {list(OpenAiInstrumentor._azure_openai_deployments.keys())}, price as before final mapping: resource={self._price_as.resource}, category={self._price_as.category}, resource_scope={self._price_as.resource_scope}")
+            # model is technically optional as it is part of the URL path
+            if not model and hasattr(instance._client, "_azure_deployment"):
+                model = instance._client._azure_deployment
 
-            if not self._price_as.resource and not self._price_as.category and OpenAiInstrumentor._azure_openai_deployments:
-                deployment = OpenAiInstrumentor._azure_openai_deployments.get(model, {})
-                self._price_as.category = deployment.get("price_as_category", None)
-                self._price_as.resource = deployment.get("price_as_resource", None)
-                self._price_as.resource_scope = deployment.get("resource_scope", None)
+            self.map_deployment(model)
 
-            if not self._price_as.resource and not self._price_as.category:
-                self._instrumentor._logger.warning("Azure OpenAI requires price as resource and/or category to be specified unless mapped in the Pay-i service")
+        self.apply_price_as(model)
 
+        return True
+
+    def apply_price_as(self, model: str) -> None:
         if self._price_as.resource_scope:
             self._ingest["resource_scope"] = self._price_as.resource_scope
 
@@ -256,11 +258,19 @@ class _OpenAiProviderRequest(_ProviderRequest):
             self._category = self._price_as.category
 
         self._ingest["category"] = self._category
+        self._ingest["resource"] = self._price_as.resource if self._price_as.resource else model
 
-        if self._price_as.resource:
-            self._ingest["resource"] = self._price_as.resource
+    def map_deployment(self, model:Optional[str]) -> None:
+        self._instrumentor._logger.debug(f"Azure OpenAI model {model}, available mappings: {list(OpenAiInstrumentor._azure_openai_deployments.keys())}, price as before final mapping: resource={self._price_as.resource}, category={self._price_as.category}, resource_scope={self._price_as.resource_scope}")
 
-        return True
+        if model and not self._price_as.resource and not self._price_as.category and model in OpenAiInstrumentor._azure_openai_deployments:
+            deployment = OpenAiInstrumentor._azure_openai_deployments.get(model, {})
+            self._price_as.category = deployment.get("price_as_category", None)
+            self._price_as.resource = deployment.get("price_as_resource", None)
+            self._price_as.resource_scope = deployment.get("resource_scope", None)
+
+        if not self._price_as.resource and not self._price_as.category:
+            self._instrumentor._logger.warning("Azure OpenAI requires price as resource and/or category to be specified unless mapped in the Pay-i service")
 
     @override
     def process_exception(self, exception: Exception, kwargs: Any, ) -> bool:
@@ -294,6 +304,15 @@ class _OpenAiProviderRequest(_ProviderRequest):
 
         return True
 
+    def update_deployment_name(self) -> None:
+        if self._ingest.get("resource", None):
+            return
+
+        deployment_name = self.find_response_header_value("x-ms-deployment-name")
+        if deployment_name:
+            self.map_deployment(deployment_name)
+            self.apply_price_as(deployment_name)
+
     def process_synchronous_response_worker(
         self,
         response: str,
@@ -302,6 +321,8 @@ class _OpenAiProviderRequest(_ProviderRequest):
         ) -> Any:
         response_dict = model_to_dict(response)
 
+        self.update_deployment_name()
+        
         if process_usage:
             self.add_usage_units(response_dict.get("usage", {}))
 
@@ -364,9 +385,10 @@ class _OpenAiProviderRequest(_ProviderRequest):
         return modified
 
 class _OpenAiEmbeddingsProviderRequest(_OpenAiProviderRequest):
-    def __init__(self, instrumentor: _PayiInstrumentor):
+    def __init__(self, instrumentor: _PayiInstrumentor, instance: Any):
         super().__init__(
             instrumentor=instrumentor,
+            instance=instance,
             input_tokens_key=_OpenAiProviderRequest.chat_input_tokens_key,
             output_tokens_key=_OpenAiProviderRequest.chat_output_tokens_key,
             input_tokens_details_key=_OpenAiProviderRequest.chat_input_tokens_details_key)
@@ -380,9 +402,10 @@ class _OpenAiEmbeddingsProviderRequest(_OpenAiProviderRequest):
         return self.process_synchronous_response_worker(response, log_prompt_and_response)
 
 class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
-    def __init__(self, instrumentor: _PayiInstrumentor):
+    def __init__(self, instrumentor: _PayiInstrumentor, instance: Any):
         super().__init__(
             instrumentor=instrumentor,
+            instance=instance,
             input_tokens_key=_OpenAiProviderRequest.chat_input_tokens_key,
             output_tokens_key=_OpenAiProviderRequest.chat_output_tokens_key,
             input_tokens_details_key=_OpenAiProviderRequest.chat_input_tokens_details_key)
@@ -416,6 +439,7 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
 
         usage = model.get("usage")
         if usage:
+            self.update_deployment_name()
             self.add_usage_units(usage)
 
             # If we added "include_usage" in the request on behalf of the client, do not return the extra 
@@ -502,9 +526,10 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
         return self.process_synchronous_response_worker(response, log_prompt_and_response)
 
 class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
-    def __init__(self, instrumentor: _PayiInstrumentor):
+    def __init__(self, instrumentor: _PayiInstrumentor, instance: Any):
         super().__init__(
             instrumentor=instrumentor,
+            instance=instance,
             input_tokens_key=_OpenAiProviderRequest.responses_input_tokens_key,
             output_tokens_key=_OpenAiProviderRequest.responses_output_tokens_key,
             input_tokens_details_key=_OpenAiProviderRequest.responses_input_tokens_details_key)
@@ -532,6 +557,7 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
 
         usage = response.get("usage")
         if usage:
+            self.update_deployment_name()
             self.add_usage_units(usage)
             ingest = True
 
