@@ -182,7 +182,7 @@ def images_wrapper(
 ) -> Any:
     instrumentor._logger.debug("OpenAI images wrapper")
     return instrumentor.invoke_wrapper(
-        _OpenAiImagesProviderRequest(instrumentor),
+        _OpenAiImagesProviderRequest(instrumentor, instance=instance),
         _IsStreaming.kwargs,
         wrapped,
         instance,
@@ -200,7 +200,7 @@ async def aimages_wrapper(
 ) -> Any:
     instrumentor._logger.debug("async OpenAI images wrapper")
     return await instrumentor.async_invoke_wrapper(
-        _OpenAiImagesProviderRequest(instrumentor),
+        _OpenAiImagesProviderRequest(instrumentor, instance=instance),
         _IsStreaming.kwargs,
         wrapped,
         instance,
@@ -655,9 +655,10 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
         return self.process_synchronous_response_worker(response, log_prompt_and_response)
 
 class _OpenAiImagesProviderRequest(_OpenAiProviderRequest):
-    def __init__(self, instrumentor: _PayiInstrumentor):
+    def __init__(self, instrumentor: _PayiInstrumentor, instance: Any):
         super().__init__(
             instrumentor=instrumentor,
+            instance=instance,
             input_tokens_key=_OpenAiProviderRequest.responses_input_tokens_key,
             output_tokens_key=_OpenAiProviderRequest.responses_output_tokens_key,
             input_tokens_details_key=_OpenAiProviderRequest.responses_input_tokens_details_key)
@@ -690,14 +691,9 @@ class _OpenAiImagesProviderRequest(_OpenAiProviderRequest):
         self._ingest["units"]["image"] = Units(input=image_input_tokens, output=image_output_tokens)
 
         # images apis do not return a response id, so a request id is better than no id at all
-        response_headers = self._ingest.get("provider_response_headers", None)
-        if response_headers:
-            for header in response_headers:
-                if header.get("name", "").lower() == "x-request-id":
-                    response = header.get("value", "")
-                    if response:
-                        self._ingest["provider_response_id"] = response
-                    break
+        request_id = self.find_response_header_value("x-request-id")
+        if request_id:
+            self._ingest["provider_response_id"] = request_id
 
     @override
     def process_synchronous_response(
