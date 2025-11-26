@@ -221,6 +221,10 @@ class _AnthropicProviderRequest(_ProviderRequest):
         if messages:
             anthropic_has_image_and_get_texts(self, messages)
 
+        # provider uri is only interesting for hosted providers
+        if (self._is_azure or self._is_vertex or self._is_bedrock) and hasattr(instance._client, "_base_url"):
+           self._ingest["provider_uri"] = str(instance._client._base_url)
+
         return True
 
     @override

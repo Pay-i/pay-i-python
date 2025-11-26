@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.142 (2025-11-26)
+
+Full Changelog: [v0.1.0-alpha.141...v0.1.0-alpha.142](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.141...v0.1.0-alpha.142)
+
+### Bug Fixes
+
+* asyncio.create_task wrapper ([#402](https://github.com/Pay-i/pay-i-python/issues/402)) ([81f43c2](https://github.com/Pay-i/pay-i-python/commit/81f43c20ad35308ae69c3095ff8bbf69f651361b))
+
 ## 0.1.0-alpha.141 (2025-11-25)
 
 Full Changelog: [v0.1.0-alpha.140...v0.1.0-alpha.141](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.140...v0.1.0-alpha.141)
