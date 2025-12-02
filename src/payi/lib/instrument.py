@@ -5,7 +5,6 @@ import copy
 import json
 import time
 import uuid
-import atexit
 import asyncio
 import inspect
 import logging
@@ -214,13 +213,11 @@ class _PayiInstrumentor:
         self._offline_instrumentation = global_config.pop("offline_instrumentation", None)
         self._offline_ingest_packets: list[IngestUnitsParams] = []
         self._offline_instrumentation_file_name: Optional[str] = None
-        
+        self._offline_instrumentation_lock = threading.Lock()
+
         if self._offline_instrumentation is not None:
             timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-            self._offline_instrumentation_file_name = self._offline_instrumentation.get("file_name", f"payi_instrumentation_{timestamp}.json")
-            
-            # Register exit handler to write packets when process exits
-            atexit.register(lambda: self._write_offline_ingest_packets())
+            self._offline_instrumentation_file_name = self._offline_instrumentation.get("file_name", f"payi_instrumentation_{timestamp}.jsonl")
 
         global_instrumentation = global_config.pop("global_instrumentation", True)
 
@@ -456,29 +453,41 @@ class _PayiInstrumentor:
             )
         return context
 
-    def _write_offline_ingest_packets(self) -> None:
-        if not self._offline_instrumentation_file_name or not self._offline_ingest_packets:
-            return
-            
-        try:
-            # Convert datetime objects to ISO strings for JSON serialization
-            serializable_packets: list[IngestUnitsParams] = []
-            for packet in self._offline_ingest_packets:
+    def _append_offline_ingest_packet(self, packet: IngestUnitsParams) -> IngestResponse:
+        """
+        Append a single ingest packet to the offline instrumentation file.
+        Uses JSONL (JSON Lines) format where each line is a separate JSON object.
+        This allows appending without rewriting the entire file.
+        """
+
+        if self._offline_instrumentation_file_name:
+            try:
+                # Convert datetime objects to ISO strings for JSON serialization
                 serializable_packet = packet.copy()
-                
+
                 # Convert datetime fields to ISO format strings
                 if 'event_timestamp' in serializable_packet and isinstance(serializable_packet['event_timestamp'], datetime):
                     serializable_packet['event_timestamp'] = serializable_packet['event_timestamp'].isoformat()
-                    
-                serializable_packets.append(serializable_packet)
-            
-            with open(self._offline_instrumentation_file_name, 'w', encoding='utf-8') as f:
-                json.dump(serializable_packets, f)
-                
-            self._logger.debug(f"Written {len(self._offline_ingest_packets)} ingest packets to {self._offline_instrumentation_file_name}")
-            
-        except Exception as e:
-            self._logger.error(f"Error writing offline ingest packets to {self._offline_instrumentation_file_name}: {e}")
+
+                # Thread-safe file append
+                with self._offline_instrumentation_lock:
+                    with open(self._offline_instrumentation_file_name, 'a', encoding='utf-8') as f:
+                        # Write the packet as a single line of JSON
+                        json.dump(serializable_packet, f)
+                        f.write('\n')
+
+                self._logger.debug(f"Appended ingest packet to {self._offline_instrumentation_file_name}")
+
+            except Exception as e:
+                self._logger.error(f"Error appending offline ingest packet to {self._offline_instrumentation_file_name}: {e}")
+
+        now=datetime.now(timezone.utc)
+        return IngestResponse(
+            event_timestamp=now,
+            ingest_timestamp=now,
+            request_id="offline_instrumentation",
+            xproxy_result=XproxyResult(request_id="offline_instrumentation"))
+
 
     @staticmethod
     def _create_logged_ingest_units(
@@ -583,22 +592,12 @@ class _PayiInstrumentor:
             if self._logger.isEnabledFor(logging.DEBUG):
                 self._logger.debug(f"_aingest_units: sending ({self._create_logged_ingest_units(ingest_units)})")
 
-            if self._apayi:    
+            if self._apayi:
                 ingest_response = await self._apayi.ingest.units(**ingest_units, extra_headers=extra_headers)
             elif self._payi:
                 ingest_response = self._payi.ingest.units(**ingest_units, extra_headers=extra_headers)
             elif self._offline_instrumentation is not None:
-                self._offline_ingest_packets.append(ingest_units.copy())
-
-                # simulate a successful ingest for local instrumentation
-                now=datetime.now(timezone.utc)
-                ingest_response = IngestResponse(
-                    event_timestamp=now,
-                    ingest_timestamp=now,
-                    request_id="local_instrumentation",
-                    xproxy_result=XproxyResult(request_id="local_instrumentation"))
-                pass
-                
+                ingest_response = self._append_offline_ingest_packet(ingest_units)
             else:
                 self._logger.error("No payi instance to ingest units")
                 return XproxyError(code="configuration_error", message="No Payi or AsyncPayi instance configured for ingesting units")
@@ -720,11 +719,8 @@ class _PayiInstrumentor:
                 self._logger.debug(f"_ingest_units: apayi success ({sync_response})")
                 return sync_response
             elif self._offline_instrumentation is not None:
-                self._offline_ingest_packets.append(ingest_units.copy())
-
-                # simulate a successful ingest for local instrumentation
-                return XproxyResult(request_id="local_instrumentation")
-
+                ingest_response = self._append_offline_ingest_packet(ingest_units)
+                return ingest_response.xproxy_result
             else:
                 self._logger.error("No payi instance to ingest units")
                 return XproxyError(code="configuration_error", message="No Payi or AsyncPayi instance configured for ingesting units")
