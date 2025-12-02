@@ -53,7 +53,9 @@ class OpenAiInstrumentor:
             ("openai.resources.embeddings", "Embeddings.create", embeddings_wrapper(instrumentor)),
             ("openai.resources.embeddings", "AsyncEmbeddings.create", aembeddings_wrapper(instrumentor)),
             ("openai.resources.responses", "Responses.create", responses_wrapper(instrumentor)),
+            ("openai.resources.responses", "Responses.parse", responses_wrapper(instrumentor)),
             ("openai.resources.responses", "AsyncResponses.create", aresponses_wrapper(instrumentor)),
+            ("openai.resources.responses", "AsyncResponses.parse", aresponses_wrapper(instrumentor)),
 
             # In post beta openai moddule releases wrapping these will fail and gracefully handled
             ("openai.resources.beta.chat.completions", "Completions.create", chat_wrapper(instrumentor)),
