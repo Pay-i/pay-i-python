@@ -47,11 +47,19 @@ class OpenAiInstrumentor:
             ("openai._base_client", "AsyncAPIClient._process_response", _ProviderRequest.aprocess_response_wrapper),
             ("openai._base_client", "SyncAPIClient._process_response", _ProviderRequest.process_response_wrapper),
             ("openai.resources.chat.completions", "Completions.create", chat_wrapper(instrumentor)),
+            ("openai.resources.chat.completions", "Completions.parse", chat_wrapper(instrumentor)),
             ("openai.resources.chat.completions", "AsyncCompletions.create", achat_wrapper(instrumentor)),
+            ("openai.resources.chat.completions", "AsyncCompletions.parse", achat_wrapper(instrumentor)),
             ("openai.resources.embeddings", "Embeddings.create", embeddings_wrapper(instrumentor)),
             ("openai.resources.embeddings", "AsyncEmbeddings.create", aembeddings_wrapper(instrumentor)),
             ("openai.resources.responses", "Responses.create", responses_wrapper(instrumentor)),
             ("openai.resources.responses", "AsyncResponses.create", aresponses_wrapper(instrumentor)),
+
+            # In post beta openai moddule releases wrapping these will fail and gracefully handled
+            ("openai.resources.beta.chat.completions", "Completions.create", chat_wrapper(instrumentor)),
+            ("openai.resources.beta.chat.completions", "Completions.parse", chat_wrapper(instrumentor)),
+            ("openai.resources.beta.chat.completions", "AsyncCompletions.create", achat_wrapper(instrumentor)),
+            ("openai.resources.beta.chat.completions", "AsyncCompletions.parse", achat_wrapper(instrumentor)),
         ]
 
         for module, method, wrapper in wrappers:
