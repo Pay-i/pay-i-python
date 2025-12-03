@@ -60,6 +60,7 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
         self._bedrock_from_stream: bool = bedrock_from_stream
         self._ingested: bool = False
         self._iter_started: bool = False
+        self._log_prompt_and_response: bool = request._log_prompt_and_response
 
     def __enter__(self) -> Any:
         self._instrumentor._logger.debug(f"StreamIteratorWrapper: __enter__")
@@ -175,7 +176,7 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
             self._request._ingest["time_to_first_token_ms"] = self._stopwatch.elapsed_ms_int()
             self._first_token = False
 
-        if self._instrumentor._log_prompt_and_response:
+        if self._log_prompt_and_response:
             self._responses.append(self.chunk_to_json(chunk))
 
         return self._request.process_chunk(chunk)
@@ -187,7 +188,7 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
         self._request._ingest["end_to_end_latency_ms"] = self._stopwatch.elapsed_ms_int()
         self._request._ingest["http_status_code"] = 200
 
-        if self._instrumentor._log_prompt_and_response:
+        if self._log_prompt_and_response:
             self._request._ingest["provider_response_json"] = self._responses
 
     async def _astop_iteration(self) -> Optional[Union[XproxyResult, XproxyError]]:
@@ -273,7 +274,7 @@ class _GeneratorWrapper:  # type: ignore
         self._instance = instance
         self._instrumentor = instrumentor
         self._stopwatch: Stopwatch = stopwatch
-        self._log_prompt_and_response: bool = instrumentor._log_prompt_and_response
+        self._log_prompt_and_response: bool = request._log_prompt_and_response
         self._responses: list[str] = []
         self._request: _ProviderRequest = request
         self._first_token: bool = True

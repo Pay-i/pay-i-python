@@ -24,6 +24,7 @@ class PayiHeaderNames:
     provider_base_uri = "xProxy-Provider-BaseUri"
     resource_scope:str = "xProxy-Resource-Scope"
     api_key:str = "xProxy-Api-Key"
+    logging_disable:str = "xProxy-Logging-Disable"
     
 class PayiCategories:
     anthropic:str  = "system.anthropic"
@@ -84,6 +85,7 @@ def create_headers(
     price_as_category: Union[str, None] = None,
     price_as_resource: Union[str, None] = None,
     resource_scope: Union[str, None] = None,
+    log_prompt_and_response: Union[bool, None] = None,
 ) -> Dict[str, str]:
     headers: Dict[str, str] = {}
 
@@ -113,6 +115,8 @@ def create_headers(
         headers.update({ PayiHeaderNames.price_as_resource: price_as_resource})
     if resource_scope:
         headers.update({ PayiHeaderNames.resource_scope: resource_scope })
+    if log_prompt_and_response is not None and log_prompt_and_response is False:
+        headers.update({ PayiHeaderNames.logging_disable: "True" })
     return headers
 
 def _resolve_payi_base_url(payi_base_url: Union[str, None]) -> str:

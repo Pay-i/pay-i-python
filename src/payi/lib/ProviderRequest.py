@@ -68,11 +68,12 @@ class _ProviderRequest:
         self._is_large_context: bool = False
         self._internal_request_properties: dict[str, Optional[str]] = {}
         self._price_as: PriceAs = PriceAs(category=None, resource=None, resource_scope=None)
+        self._log_prompt_and_response: bool = instrumentor._log_prompt_and_response
 
     def process_chunk(self, _chunk: Any) -> _ChunkResult:
         return _ChunkResult(send_chunk_to_caller=True)
 
-    def process_synchronous_response(self, response: Any, log_prompt_and_response: bool, kwargs: Any) -> Optional[object]:  # noqa: ARG002
+    def process_synchronous_response(self, response: Any, kwargs: Any) -> Optional[object]:  # noqa: ARG002
         return None
     
     @abstractmethod

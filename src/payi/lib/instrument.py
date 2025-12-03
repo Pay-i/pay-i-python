@@ -99,6 +99,7 @@ class PayiContext(TypedDict, total=False):
     price_as_category: Optional[str]
     price_as_resource: Optional[str]
     resource_scope: Optional[str]
+    log_prompt_and_response: Optional[bool]
     last_result: Optional[Union[XproxyResult, XproxyError]]
 
 class PayiInstanceDefaultContext(TypedDict, total=False):
@@ -128,6 +129,7 @@ class _Context(TypedDict, total=False):
     price_as_category: Optional[str]
     price_as_resource: Optional[str]
     resource_scope: Optional[str]
+    log_prompt_and_response: Optional[bool]
 
 class _IsStreaming(Enum):
     false = 0
@@ -853,6 +855,7 @@ class _PayiInstrumentor:
         use_case_step: Optional[str]= None,
         user_id: Optional[str]= None,
         account_name: Optional[str]= None,
+        log_prompt_and_response: Optional[bool] = None,
         request_properties: Optional["dict[str, Optional[str]]"] = None,
         use_case_properties: Optional["dict[str, Optional[str]]"] = None,
         price_as_category: Optional[str] = None,
@@ -865,7 +868,10 @@ class _PayiInstrumentor:
         parent_context: _Context = self._context_stack[-2] if len(self._context_stack) > 1 else {}
 
         parent_proxy = parent_context.get("proxy", self._proxy_default)
-        context["proxy"] = proxy if proxy else parent_proxy
+        context["proxy"] = proxy if proxy is not None else parent_proxy
+
+        parent_log_prompt_and_response = parent_context.get("log_prompt_and_response", None)
+        context["log_prompt_and_response"] = log_prompt_and_response if log_prompt_and_response is not None else parent_log_prompt_and_response
 
         parent_use_case_name = parent_context.get("use_case_name", None)
         parent_use_case_id = parent_context.get("use_case_id", None)
@@ -948,6 +954,7 @@ class _PayiInstrumentor:
         account_name: Optional[str],
         request_properties: Optional["dict[str, Optional[str]]"] = None,
         use_case_properties: Optional["dict[str, Optional[str]]"] = None,
+        log_prompt_and_response: Optional[bool] = None,
         *args: Any,
         **kwargs: Any,
     ) -> Any:
@@ -961,7 +968,8 @@ class _PayiInstrumentor:
                 user_id=user_id,
                 account_name=account_name,
                 request_properties=request_properties,
-                use_case_properties=use_case_properties
+                use_case_properties=use_case_properties,
+                log_prompt_and_response=log_prompt_and_response,
             )
             return await func(*args, **kwargs)
 
@@ -977,6 +985,7 @@ class _PayiInstrumentor:
         account_name: Optional[str],
         request_properties: Optional["dict[str, Optional[str]]"] = None,
         use_case_properties: Optional["dict[str, Optional[str]]"] = None,
+        log_prompt_and_response: Optional[bool] = None,
         *args: Any,
         **kwargs: Any,
     ) -> Any:
@@ -990,7 +999,8 @@ class _PayiInstrumentor:
                 user_id=user_id,
                 account_name=account_name,
                 request_properties=request_properties,
-                use_case_properties=use_case_properties)
+                use_case_properties=use_case_properties,
+                log_prompt_and_response=log_prompt_and_response,)
             return func(*args, **kwargs)
 
     def __enter__(self) -> Any:
@@ -1046,6 +1056,11 @@ class _PayiInstrumentor:
         request_properties = ingest_extra_headers.pop(PayiHeaderNames.request_properties, "")
         use_case_properties = ingest_extra_headers.pop(PayiHeaderNames.use_case_properties, "")
 
+        # the presence of the value indicates disabled logging
+        logging_disable = ingest_extra_headers.pop(PayiHeaderNames.logging_disable, None)
+
+        request._log_prompt_and_response = logging_disable is None and self._log_prompt_and_response
+
         if limit_ids:
             request._ingest["limit_ids"] = limit_ids.split(",")
         if use_case_name:
@@ -1086,7 +1101,7 @@ class _PayiInstrumentor:
 
         request.process_request_prompt(provider_prompt, args, kwargs)
 
-        if self._log_prompt_and_response:
+        if request._log_prompt_and_response:
             request._ingest["provider_request_json"] = _compact_json(provider_prompt)
 
         request._ingest["event_timestamp"] = datetime.now(timezone.utc)
@@ -1208,10 +1223,7 @@ class _PayiInstrumentor:
 
         request.add_instrumented_response_headers(response)
 
-        return_result: Any = request.process_synchronous_response(
-            response=response,
-            log_prompt_and_response=self._log_prompt_and_response,
-            kwargs=kwargs)
+        return_result: Any = request.process_synchronous_response(response=response, kwargs=kwargs)
 
         if return_result:
             self._logger.debug(f"async_invoke_wrapper: process sync response return")
@@ -1351,10 +1363,7 @@ class _PayiInstrumentor:
 
         request.add_instrumented_response_headers(response)
 
-        return_result: Any = request.process_synchronous_response(
-            response=response,
-            log_prompt_and_response=self._log_prompt_and_response,
-            kwargs=kwargs)
+        return_result: Any = request.process_synchronous_response(response=response, kwargs=kwargs)
 
         if return_result:
             self._logger.debug(f"invoke_wrapper: process sync response return")
@@ -1380,8 +1389,8 @@ class _PayiInstrumentor:
         self._last_result = response
         return response
 
-    @staticmethod
     def _update_extra_headers(
+        self,
         context: _Context,
         extra_headers: "dict[str, str]",
     ) -> None:
@@ -1401,6 +1410,8 @@ class _PayiInstrumentor:
 
         context_request_properties: Optional[dict[str, Optional[str]]] = context.get("request_properties")
         context_use_case_properties: Optional[dict[str, Optional[str]]] = context.get("use_case_properties")
+
+        context_log_prompt_and_response: Optional[bool] = context.get("log_prompt_and_response")
 
         if PayiHeaderNames.request_properties in extra_headers:
             headers_request_properties = extra_headers.get(PayiHeaderNames.request_properties, None)
@@ -1490,6 +1501,9 @@ class _PayiInstrumentor:
         if PayiHeaderNames.resource_scope not in extra_headers and context_resource_scope:
             extra_headers[PayiHeaderNames.resource_scope] = context_resource_scope
 
+        if PayiHeaderNames.logging_disable not in extra_headers and context_log_prompt_and_response is not None and context_log_prompt_and_response is False:
+            extra_headers[PayiHeaderNames.logging_disable] = "True"
+
     @staticmethod
     def payi_wrapper(func: Any) -> Any:
         def _payi_wrapper(o: Any) -> Any:
@@ -1577,6 +1591,7 @@ def track(
     request_tags: Optional["list[str]"] = None,
     request_properties: Optional["dict[str, str]"] = None,
     use_case_properties: Optional["dict[str, str]"] = None,
+    log_prompt_and_response: Optional[bool] = None,
     proxy: Optional[bool] = None,
 ) -> Any:
     _ = request_tags
@@ -1601,6 +1616,7 @@ def track(
                     account_name,
                     cast(Optional['dict[str, Optional[str]]'], request_properties),
                     cast(Optional['dict[str, Optional[str]]'], use_case_properties),
+                    log_prompt_and_response,
                     *args,
                     **kwargs,
                 )
@@ -1624,6 +1640,7 @@ def track(
                     account_name,
                     cast(Optional['dict[str, Optional[str]]'], request_properties),
                     cast(Optional['dict[str, Optional[str]]'], use_case_properties),
+                    log_prompt_and_response,
                     *args,
                     **kwargs,
                 )
@@ -1646,11 +1663,13 @@ def track_context(
     price_as_resource: Optional[str] = None,
     resource_scope: Optional[str] = None,
     proxy: Optional[bool] = None,
+    log_prompt_and_response: Optional[bool] = None,
 ) -> _InternalTrackContext:
     # Create a new context for tracking
     context: _Context = {}
 
     context["proxy"] = proxy
+    context["log_prompt_and_response"] = log_prompt_and_response
 
     context["limit_ids"] = limit_ids
 
