@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.0-alpha.144 (2025-12-03)
+
+Full Changelog: [v0.1.0-alpha.143...v0.1.0-alpha.144](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.143...v0.1.0-alpha.144)
+
+### Features
+
+* capture context state in asyncio.gather ([#407](https://github.com/Pay-i/pay-i-python/issues/407)) ([697b2cb](https://github.com/Pay-i/pay-i-python/commit/697b2cbd90ff6507424c5f3fa02bb978ad930088))
+* convert all property values to str ([#408](https://github.com/Pay-i/pay-i-python/issues/408)) ([34adf8b](https://github.com/Pay-i/pay-i-python/commit/34adf8bd1441a52db3c33a172d709df3bd2d4aad))
+* instrument log prompt and response setting in track and track_context ([#404](https://github.com/Pay-i/pay-i-python/issues/404)) ([5162564](https://github.com/Pay-i/pay-i-python/commit/516256455b5ba2292fad27d401e9abde3a53aed7))
+* instrument openai parse() ([#406](https://github.com/Pay-i/pay-i-python/issues/406)) ([78dd447](https://github.com/Pay-i/pay-i-python/commit/78dd4476a56d1c2d2fab5222badae98f63f4f0ba))
+
 ## 0.1.0-alpha.143 (2025-12-03)
 
 Full Changelog: [v0.1.0-alpha.142...v0.1.0-alpha.143](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.142...v0.1.0-alpha.143)
