@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.0-alpha.143 (2025-12-03)
+
+Full Changelog: [v0.1.0-alpha.142...v0.1.0-alpha.143](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.142...v0.1.0-alpha.143)
+
+### Bug Fixes
+
+* ensure streams are always closed ([89597a0](https://github.com/Pay-i/pay-i-python/commit/89597a0410de59dce92870023e3c291f90011bae))
+
+
+### Chores
+
+* **deps:** mypy 1.18.1 has a regression, pin to 1.17 ([b1319d6](https://github.com/Pay-i/pay-i-python/commit/b1319d6ae4ce91f84adf1d5cda1b4fcb7e7f2450))
+* **docs:** use environment variables for authentication in code snippets ([617a802](https://github.com/Pay-i/pay-i-python/commit/617a802563955d4095d3d219b19c250c4801890e))
+* update lockfile ([1107eb0](https://github.com/Pay-i/pay-i-python/commit/1107eb0dec90e15998b4e951b8b8aaaa56424ed0))
+
 ## 0.1.0-alpha.142 (2025-11-26)
 
 Full Changelog: [v0.1.0-alpha.141...v0.1.0-alpha.142](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.141...v0.1.0-alpha.142)

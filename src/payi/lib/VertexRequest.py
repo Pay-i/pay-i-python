@@ -117,7 +117,7 @@ class _VertexRequest(_ProviderRequest): # type: ignore
     def vertex_process_synchronous_response(
         self,
         response_dict: 'dict[str, Any]',
-        log_prompt_and_response: bool) -> Any:
+        ) -> Any:
 
         response_headers = response_dict.get('sdk_http_response', {}).get('headers', {})
         if response_headers:
@@ -144,7 +144,7 @@ class _VertexRequest(_ProviderRequest): # type: ignore
             streaming_candidates_characters=self._streaming_candidates_character_count
             )
         
-        if log_prompt_and_response:
+        if self._log_prompt_and_response:
             self._ingest["provider_response_json"] = [json.dumps(response_dict)]
 
         return None

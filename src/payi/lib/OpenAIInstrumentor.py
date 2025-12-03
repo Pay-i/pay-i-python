@@ -47,11 +47,21 @@ class OpenAiInstrumentor:
             ("openai._base_client", "AsyncAPIClient._process_response", _ProviderRequest.aprocess_response_wrapper),
             ("openai._base_client", "SyncAPIClient._process_response", _ProviderRequest.process_response_wrapper),
             ("openai.resources.chat.completions", "Completions.create", chat_wrapper(instrumentor)),
+            ("openai.resources.chat.completions", "Completions.parse", chat_wrapper(instrumentor)),
             ("openai.resources.chat.completions", "AsyncCompletions.create", achat_wrapper(instrumentor)),
+            ("openai.resources.chat.completions", "AsyncCompletions.parse", achat_wrapper(instrumentor)),
             ("openai.resources.embeddings", "Embeddings.create", embeddings_wrapper(instrumentor)),
             ("openai.resources.embeddings", "AsyncEmbeddings.create", aembeddings_wrapper(instrumentor)),
             ("openai.resources.responses", "Responses.create", responses_wrapper(instrumentor)),
+            ("openai.resources.responses", "Responses.parse", responses_wrapper(instrumentor)),
             ("openai.resources.responses", "AsyncResponses.create", aresponses_wrapper(instrumentor)),
+            ("openai.resources.responses", "AsyncResponses.parse", aresponses_wrapper(instrumentor)),
+
+            # In post beta openai moddule releases wrapping these will fail and gracefully handled
+            ("openai.resources.beta.chat.completions", "Completions.create", chat_wrapper(instrumentor)),
+            ("openai.resources.beta.chat.completions", "Completions.parse", chat_wrapper(instrumentor)),
+            ("openai.resources.beta.chat.completions", "AsyncCompletions.create", achat_wrapper(instrumentor)),
+            ("openai.resources.beta.chat.completions", "AsyncCompletions.parse", achat_wrapper(instrumentor)),
         ]
 
         for module, method, wrapper in wrappers:
@@ -276,7 +286,6 @@ class _OpenAiProviderRequest(_ProviderRequest):
     def process_synchronous_response_worker(
         self,
         response: str,
-        log_prompt_and_response: bool,
         ) -> Any:
         response_dict = model_to_dict(response)
 
@@ -284,7 +293,7 @@ class _OpenAiProviderRequest(_ProviderRequest):
         
         self.add_usage_units(response_dict.get("usage", {}))
 
-        if log_prompt_and_response:
+        if self._log_prompt_and_response:
             self._ingest["provider_response_json"] = [json.dumps(response_dict)]
 
         if "id" in response_dict:
@@ -355,9 +364,8 @@ class _OpenAiEmbeddingsProviderRequest(_OpenAiProviderRequest):
     def process_synchronous_response(
         self,
         response: Any,
-        log_prompt_and_response: bool,
         kwargs: Any) -> Any:
-        return self.process_synchronous_response_worker(response, log_prompt_and_response)
+        return self.process_synchronous_response_worker(response)
 
 class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, instance: Any):
@@ -463,7 +471,6 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
     def process_synchronous_response(
         self,
         response: Any,
-        log_prompt_and_response: bool,
         kwargs: Any) -> Any:
 
         response_dict = model_to_dict(response)
@@ -481,7 +488,7 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
                 if name:
                     self.add_synchronous_function_call(name=name, arguments=arguments)
 
-        return self.process_synchronous_response_worker(response, log_prompt_and_response)
+        return self.process_synchronous_response_worker(response)
 
 class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, instance: Any):
@@ -593,7 +600,6 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
     def process_synchronous_response(
         self,
         response: Any,
-        log_prompt_and_response: bool,
         kwargs: Any) -> Any:
 
         response_dict = model_to_dict(response)
@@ -610,7 +616,7 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
                 if name:
                     self.add_synchronous_function_call(name=name, arguments=arguments)
 
-        return self.process_synchronous_response_worker(response, log_prompt_and_response)
+        return self.process_synchronous_response_worker(response)
 
 def model_to_dict(model: Any) -> Any:
     if version("pydantic") < "2.0.0":
