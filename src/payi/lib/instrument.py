@@ -297,22 +297,30 @@ class _PayiInstrumentor:
 
     def _instrument_futures(self) -> None:
         """Install hooks for all common concurrent execution patterns."""
-        def _thread_wrapper(wrapped: Any, instance: Any, args: Any, kwargs: Any) -> Any:
+        def _thread_submit_wrapper(wrapped: Any, instance: Any, args: Any, kwargs: Any) -> Any:
             return self._thread_submit_wrapper(wrapped, instance, args, kwargs)
 
-        def _task_wrapper(wrapped: Any, instance: Any, args: Any, kwargs: Any) -> Any:
+        def _create_task_wrapper(wrapped: Any, instance: Any, args: Any, kwargs: Any) -> Any:
             return self._create_task_wrapper(wrapped, instance, args, kwargs)
 
+        def _gather_wrapper(wrapped: Any, instance: Any, args: Any, kwargs: Any) -> Any:
+            return self._gather_wrapper(wrapped, instance, args, kwargs)
+
         try:
-            wrap_function_wrapper("concurrent.futures", "ThreadPoolExecutor.submit", _thread_wrapper)
+            wrap_function_wrapper("concurrent.futures", "ThreadPoolExecutor.submit", _thread_submit_wrapper)
         except Exception as e:
             self._logger.debug(f"Error wrapping ThreadPoolExecutor.submit: {e}")
 
         try:
-            wrap_function_wrapper("asyncio", "create_task", _task_wrapper)
+            wrap_function_wrapper("asyncio", "create_task", _create_task_wrapper)
         except Exception as e:
             self._logger.debug(f"Error wrapping asyncio.create_task: {e}")
-        
+
+        try:
+            wrap_function_wrapper("asyncio", "gather", _gather_wrapper)
+        except Exception as e:
+            self._logger.debug(f"Error wrapping asyncio.create_task: {e}")
+
     def _instrument_all(self) -> None:
         self._instrument_openai()
         self._instrument_anthropic()
@@ -436,6 +444,49 @@ class _PayiInstrumentor:
         
         # If not a coroutine or no args, pass through unchanged
         return wrapped(*args, **kwargs)
+
+    def _gather_wrapper(
+        self,
+        wrapped: Any,
+        _instance: Any,
+        args: Any,
+        kwargs: Any,
+    ) -> Any:
+        # Handle asyncio.gather which accepts *coros_or_futures
+        # Signature across Python versions:
+        # Python 3.7-3.9: gather(*coros_or_futures, loop=None, return_exceptions=False)
+        # Python 3.10+: gather(*coros_or_futures, return_exceptions=False) - loop deprecated
+        # Python 3.12+: gather(*coros_or_futures, return_exceptions=False) - loop removed
+        
+        if not args:
+            # No coroutines/futures passed, call original
+            return wrapped(*args, **kwargs)
+        
+        # Capture the current context before wrapping
+        captured_context = copy.deepcopy(self._context_safe)
+        
+        # Wrap each coroutine with context preservation
+        wrapped_coros: list[Any] = []
+        
+        for coro_or_future in args:
+            if inspect.iscoroutine(coro_or_future):
+                # Create a wrapper coroutine that preserves context
+                # We need to capture coro_or_future in a closure properly
+                async def context_preserving_wrapper(coro: Any = coro_or_future, ctx: _Context = captured_context) -> Any:
+                    with self:
+                        self._init_current_context(**ctx)
+                        return await coro
+                
+                wrapped_coros.append(context_preserving_wrapper())
+            else:
+                # Futures, Tasks, or other awaitables - pass through unchanged
+                # They already have their execution context bound
+                wrapped_coros.append(coro_or_future)
+        
+        # Call the original gather with wrapped coroutines
+        # Pass through all kwargs (return_exceptions, and loop for older Python versions)
+        return wrapped(*wrapped_coros, **kwargs)
+        
     @staticmethod
     def _model_mapping_to_context_dict(model_mappings: Sequence[PayiInstrumentModelMapping]) -> 'dict[str, _Context]':
         context: dict[str, _Context] = {}
