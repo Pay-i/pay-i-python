@@ -152,14 +152,13 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
         response: 'dict[str, Any]',
         body: Any,
         request: '_BedrockInvokeProviderRequest',
-        log_prompt_and_response: bool
         ) -> None:
 
         super().__init__(body) # type: ignore
         self._response = response
         self._body = body
         self._request = request
-        self._log_prompt_and_response = log_prompt_and_response
+        self._log_prompt_and_response = request._log_prompt_and_response
 
     def read(self, amt: Any =None) -> Any: # type: ignore
         # data is array of bytes
@@ -547,7 +546,6 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
     def process_synchronous_response(
         self,
         response: Any,
-        log_prompt_and_response: bool,
         kwargs: Any) -> Any:
 
         self.process_response_metadata(response.get("ResponseMetadata", {}))
@@ -555,8 +553,7 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
         response["body"] = InvokeResponseWrapper(
             response=response,
             body=response["body"],
-            request=self,
-            log_prompt_and_response=log_prompt_and_response)
+            request=self)
 
         return response
 
@@ -611,7 +608,6 @@ class _BedrockConverseProviderRequest(_BedrockProviderRequest):
     def process_synchronous_response(
         self,
         response: 'dict[str, Any]',
-        log_prompt_and_response: bool,
         kwargs: Any) -> Any:
 
         usage = response.get("usage", {})
@@ -623,7 +619,7 @@ class _BedrockConverseProviderRequest(_BedrockProviderRequest):
 
         self.process_response_metadata(response.get("ResponseMetadata", {}))
 
-        if log_prompt_and_response:
+        if self._log_prompt_and_response:
             response_without_metadata = response.copy()
             response_without_metadata.pop("ResponseMetadata", None)
             self._ingest["provider_response_json"] = json.dumps(response_without_metadata)

@@ -179,11 +179,11 @@ class _AnthropicProviderRequest(_ProviderRequest):
         return anthropic_process_chunk(self, chunk.to_dict(), assign_id=True)
 
     @override
-    def process_synchronous_response(self, response: Any, log_prompt_and_response: bool, kwargs: Any) -> Any:
+    def process_synchronous_response(self, response: Any, kwargs: Any) -> Any:
         anthropic_process_synchronous_response(
             request=self,
             response=response.to_dict(),
-            log_prompt_and_response=log_prompt_and_response,
+            log_prompt_and_response=self._log_prompt_and_response,
             assign_id=True)
 
         return None
