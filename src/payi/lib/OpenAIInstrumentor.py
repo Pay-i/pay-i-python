@@ -286,7 +286,6 @@ class _OpenAiProviderRequest(_ProviderRequest):
     def process_synchronous_response_worker(
         self,
         response: str,
-        log_prompt_and_response: bool,
         ) -> Any:
         response_dict = model_to_dict(response)
 
@@ -294,7 +293,7 @@ class _OpenAiProviderRequest(_ProviderRequest):
         
         self.add_usage_units(response_dict.get("usage", {}))
 
-        if log_prompt_and_response:
+        if self._log_prompt_and_response:
             self._ingest["provider_response_json"] = [json.dumps(response_dict)]
 
         if "id" in response_dict:
@@ -365,9 +364,8 @@ class _OpenAiEmbeddingsProviderRequest(_OpenAiProviderRequest):
     def process_synchronous_response(
         self,
         response: Any,
-        log_prompt_and_response: bool,
         kwargs: Any) -> Any:
-        return self.process_synchronous_response_worker(response, log_prompt_and_response)
+        return self.process_synchronous_response_worker(response)
 
 class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, instance: Any):
@@ -473,7 +471,6 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
     def process_synchronous_response(
         self,
         response: Any,
-        log_prompt_and_response: bool,
         kwargs: Any) -> Any:
 
         response_dict = model_to_dict(response)
@@ -491,7 +488,7 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
                 if name:
                     self.add_synchronous_function_call(name=name, arguments=arguments)
 
-        return self.process_synchronous_response_worker(response, log_prompt_and_response)
+        return self.process_synchronous_response_worker(response)
 
 class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, instance: Any):
@@ -603,7 +600,6 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
     def process_synchronous_response(
         self,
         response: Any,
-        log_prompt_and_response: bool,
         kwargs: Any) -> Any:
 
         response_dict = model_to_dict(response)
@@ -620,7 +616,7 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
                 if name:
                     self.add_synchronous_function_call(name=name, arguments=arguments)
 
-        return self.process_synchronous_response_worker(response, log_prompt_and_response)
+        return self.process_synchronous_response_worker(response)
 
 def model_to_dict(model: Any) -> Any:
     if version("pydantic") < "2.0.0":
