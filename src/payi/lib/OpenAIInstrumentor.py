@@ -47,15 +47,25 @@ class OpenAiInstrumentor:
             ("openai._base_client", "AsyncAPIClient._process_response", _ProviderRequest.aprocess_response_wrapper),
             ("openai._base_client", "SyncAPIClient._process_response", _ProviderRequest.process_response_wrapper),
             ("openai.resources.chat.completions", "Completions.create", chat_wrapper(instrumentor)),
+            ("openai.resources.chat.completions", "Completions.parse", chat_wrapper(instrumentor)),
             ("openai.resources.chat.completions", "AsyncCompletions.create", achat_wrapper(instrumentor)),
+            ("openai.resources.chat.completions", "AsyncCompletions.parse", achat_wrapper(instrumentor)),
             ("openai.resources.embeddings", "Embeddings.create", embeddings_wrapper(instrumentor)),
             ("openai.resources.embeddings", "AsyncEmbeddings.create", aembeddings_wrapper(instrumentor)),
             ("openai.resources.responses", "Responses.create", responses_wrapper(instrumentor)),
+            ("openai.resources.responses", "Responses.parse", responses_wrapper(instrumentor)),
             ("openai.resources.responses", "AsyncResponses.create", aresponses_wrapper(instrumentor)),
             ("openai.resources.images", "Images.generate", images_wrapper(instrumentor)),
             ("openai.resources.images", "AsyncImages.generate", aimages_wrapper(instrumentor)),
             ("openai.resources.images", "Images.edit", images_wrapper(instrumentor)),
             ("openai.resources.images", "AsyncImages.edit", aimages_wrapper(instrumentor)),
+            ("openai.resources.responses", "AsyncResponses.parse", aresponses_wrapper(instrumentor)),
+
+            # In post beta openai moddule releases wrapping these will fail and gracefully handled
+            ("openai.resources.beta.chat.completions", "Completions.create", chat_wrapper(instrumentor)),
+            ("openai.resources.beta.chat.completions", "Completions.parse", chat_wrapper(instrumentor)),
+            ("openai.resources.beta.chat.completions", "AsyncCompletions.create", achat_wrapper(instrumentor)),
+            ("openai.resources.beta.chat.completions", "AsyncCompletions.parse", achat_wrapper(instrumentor)),
         ]
 
         for module, method, wrapper in wrappers:
@@ -316,7 +326,6 @@ class _OpenAiProviderRequest(_ProviderRequest):
     def process_synchronous_response_worker(
         self,
         response: str,
-        log_prompt_and_response: bool,
         process_usage: bool = True,
         ) -> Any:
         response_dict = model_to_dict(response)
@@ -326,7 +335,7 @@ class _OpenAiProviderRequest(_ProviderRequest):
         if process_usage:
             self.add_usage_units(response_dict.get("usage", {}))
 
-        if log_prompt_and_response:
+        if self._log_prompt_and_response:
             self._ingest["provider_response_json"] = [json.dumps(response_dict)]
 
         if "id" in response_dict:
@@ -397,9 +406,8 @@ class _OpenAiEmbeddingsProviderRequest(_OpenAiProviderRequest):
     def process_synchronous_response(
         self,
         response: Any,
-        log_prompt_and_response: bool,
         kwargs: Any) -> Any:
-        return self.process_synchronous_response_worker(response, log_prompt_and_response)
+        return self.process_synchronous_response_worker(response)
 
 class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, instance: Any):
@@ -505,7 +513,6 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
     def process_synchronous_response(
         self,
         response: Any,
-        log_prompt_and_response: bool,
         kwargs: Any) -> Any:
 
         response_dict = model_to_dict(response)
@@ -523,7 +530,7 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
                 if name:
                     self.add_synchronous_function_call(name=name, arguments=arguments)
 
-        return self.process_synchronous_response_worker(response, log_prompt_and_response)
+        return self.process_synchronous_response_worker(response)
 
 class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, instance: Any):
@@ -635,7 +642,6 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
     def process_synchronous_response(
         self,
         response: Any,
-        log_prompt_and_response: bool,
         kwargs: Any) -> Any:
 
         response_dict = model_to_dict(response)
@@ -652,7 +658,7 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
                 if name:
                     self.add_synchronous_function_call(name=name, arguments=arguments)
 
-        return self.process_synchronous_response_worker(response, log_prompt_and_response)
+        return self.process_synchronous_response_worker(response)
 
 class _OpenAiImagesProviderRequest(_OpenAiProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, instance: Any):
@@ -699,9 +705,81 @@ class _OpenAiImagesProviderRequest(_OpenAiProviderRequest):
     def process_synchronous_response(
         self,
         response: Any,
-        log_prompt_and_response: bool,
         kwargs: Any) -> Any:
-        result = self.process_synchronous_response_worker(response, log_prompt_and_response, process_usage=False)
+        result = self.process_synchronous_response_worker(response, process_usage=False)
+
+        response_dict = model_to_dict(response)
+
+        usage = response_dict.get("usage", {})
+        if usage:
+            self.process_usage(usage)
+        else:
+            image_size = response_dict.get("size", None) or "1024x1024"
+            image_quality = response_dict.get("quality", None) or "standard"
+
+            self._ingest["units"][f"image.{image_quality}.{image_size}"] = Units(input=0, output=self._nPrompt)
+
+        return result
+
+    @override
+    def process_chunk(self, chunk: Any) -> _ChunkResult:
+        ingest = False
+        model = model_to_dict(chunk)
+
+        usage = model.get("usage", {})
+        if usage:
+            self.process_usage(usage)
+            ingest = True
+
+        return _ChunkResult(send_chunk_to_caller=True, ingest=ingest)
+
+class _OpenAiImagesProviderRequest(_OpenAiProviderRequest):
+    def __init__(self, instrumentor: _PayiInstrumentor, instance: Any):
+        super().__init__(
+            instrumentor=instrumentor,
+            instance=instance,
+            input_tokens_key=_OpenAiProviderRequest.responses_input_tokens_key,
+            output_tokens_key=_OpenAiProviderRequest.responses_output_tokens_key,
+            input_tokens_details_key=_OpenAiProviderRequest.responses_input_tokens_details_key)
+        self._nPrompt: int = 1
+        self._image_size: str = ""
+
+    @override
+    def process_request(self, instance: Any, extra_headers: 'dict[str, str]',  args: Sequence[Any], kwargs: Any) -> bool: # type: ignore
+        super().process_request(instance, extra_headers, args, kwargs)
+        
+        model = self._ingest.get("resource", "")
+        if not model:
+            self._ingest["resource"] = "dall-e-2"
+
+        self._nPrompt = kwargs.get("n", 1)
+
+        return True
+
+    def process_usage(self, usage: dict[str, Any]) -> None:
+        input_token_details = usage.get("input_tokens_details", {})
+
+        text_input_tokens = input_token_details.get("text_tokens", 0)
+
+        image_input_tokens = input_token_details.get("image_tokens", 0)
+        image_output_tokens = usage.get("output_tokens", 0)
+
+        if text_input_tokens > 0:
+            self._ingest["units"]["text"] = Units(input=text_input_tokens, output=0)
+
+        self._ingest["units"]["image"] = Units(input=image_input_tokens, output=image_output_tokens)
+
+        # images apis do not return a response id, so a request id is better than no id at all
+        request_id = self.find_response_header_value("x-request-id")
+        if request_id:
+            self._ingest["provider_response_id"] = request_id
+
+    @override
+    def process_synchronous_response(
+        self,
+        response: Any,
+        kwargs: Any) -> Any:
+        result = self.process_synchronous_response_worker(response, process_usage=False)
 
         response_dict = model_to_dict(response)
 

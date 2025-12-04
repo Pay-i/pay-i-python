@@ -29,6 +29,18 @@ from ..types.pay_i_common_models_api_router_header_info_param import PayICommonM
 
 __all__ = ["IngestResource", "AsyncIngestResource"]
 
+def convert_property_values_to_str(properties: Dict[str, Optional[str]]) -> Dict[str, Optional[str]]:
+    converted_properties: Dict[str, Optional[str]] = {}
+    for k, v in properties.items():
+        if v is None:
+            converted_properties[k] = None
+        else:
+            try:
+                converted_properties[k] = str(v)
+            except Exception:
+                pass  # Skip this key-value pair if str() fails
+
+    return converted_properties
 
 class IngestResource(SyncAPIResource):
     @cached_property
@@ -194,6 +206,9 @@ class IngestResource(SyncAPIResource):
         else:
             use_case_version_str = str(use_case_version)
 
+        if use_case_properties and is_given(use_case_properties):
+            use_case_properties = convert_property_values_to_str(use_case_properties)
+
         if user_id is None or not is_given(user_id):
             user_id = omit
 
@@ -203,6 +218,9 @@ class IngestResource(SyncAPIResource):
         if account_name is None or not is_given(account_name):
             account_name = omit
 
+        if properties and is_given(properties):
+            properties = convert_property_values_to_str(properties)
+        
         extra_headers = {
             **strip_not_given(
                 {
@@ -420,6 +438,9 @@ class AsyncIngestResource(AsyncAPIResource):
         else:
             use_case_version_str = str(use_case_version)
 
+        if use_case_properties and is_given(use_case_properties):
+            use_case_properties = convert_property_values_to_str(use_case_properties)
+
         if user_id is None or not is_given(user_id):
             user_id = omit
 
@@ -429,6 +450,9 @@ class AsyncIngestResource(AsyncAPIResource):
         if account_name is None or not is_given(account_name):
             account_name = omit
 
+        if properties and is_given(properties):
+            properties = convert_property_values_to_str(properties)
+        
         extra_headers = {
             **strip_not_given(
                 {

@@ -190,10 +190,6 @@ class _GoogleVertexRequest(_VertexRequest):
     def process_synchronous_response(
         self,
         response: Any,
-        log_prompt_and_response: bool,
         kwargs: Any) -> Any:
-        return self.vertex_process_synchronous_response(
-            response_dict=response.to_dict(),
-            log_prompt_and_response=log_prompt_and_response,
-        )
+        return self.vertex_process_synchronous_response(response_dict=response.to_dict())
       
