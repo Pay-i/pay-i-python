@@ -31,6 +31,7 @@ class TestCategories:
     @parametrize
     def test_method_list_with_all_params(self, client: Payi) -> None:
         category = client.categories.list(
+            active=True,
             cursor="cursor",
             limit=0,
             sort_ascending=True,
@@ -206,6 +207,7 @@ class TestAsyncCategories:
     @parametrize
     async def test_method_list_with_all_params(self, async_client: AsyncPayi) -> None:
         category = await async_client.categories.list(
+            active=True,
             cursor="cursor",
             limit=0,
             sort_ascending=True,

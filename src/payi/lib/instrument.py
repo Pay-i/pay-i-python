@@ -608,6 +608,10 @@ class _PayiInstrumentor:
                 self._logger.info('ingesting with no token counts')
 
     def _process_ingest_units_response(self, ingest_response: IngestResponse) -> None:
+        if ingest_response.xproxy_result and ingest_response.xproxy_result.warnings and self._logger.isEnabledFor(logging.WARNING):
+            warning_message = "\n".join(ingest_response.xproxy_result.warnings)
+            self._logger.warning(f"Pay-i ingest result warnings:\n{warning_message}")
+
         if ingest_response.xproxy_result.limits:
             for limit_id, state in ingest_response.xproxy_result.limits.items():
                 removeBlockedId: bool = False
