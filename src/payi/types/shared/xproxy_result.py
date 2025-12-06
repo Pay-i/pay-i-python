@@ -28,6 +28,8 @@ class Limits(BaseModel):
 class XproxyResult(BaseModel):
     account_name: Optional[str] = None
 
+    actions: Optional[List[str]] = None
+
     blocked_limit_ids: Optional[List[str]] = None
 
     cost: Optional[Cost] = None
@@ -51,3 +53,5 @@ class XproxyResult(BaseModel):
     use_case_step: Optional[str] = None
 
     user_id: Optional[str] = None
+
+    warnings: Optional[List[str]] = None
