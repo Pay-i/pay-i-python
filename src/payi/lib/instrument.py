@@ -286,6 +286,9 @@ class _PayiInstrumentor:
                     context[key] = global_config[key] # type: ignore[literal-required]
 
             self._init_current_context(**context)
+            self._logger.debug(f"Pay-i global instrumented context: {self._create_logged_context(self._context_safe)}")
+        else:
+            self._logger.debug(f"Pay-i global instrumented context skipped")
 
     def _ensure_payi_clients(self) -> None:
         if self._offline_instrumentation is not None:
@@ -309,17 +312,17 @@ class _PayiInstrumentor:
         try:
             wrap_function_wrapper("concurrent.futures", "ThreadPoolExecutor.submit", _thread_submit_wrapper)
         except Exception as e:
-            self._logger.debug(f"Error wrapping ThreadPoolExecutor.submit: {e}")
+            self._logger.debug(f"Failed to wrap ThreadPoolExecutor.submit: {e}")
 
         try:
             wrap_function_wrapper("asyncio", "create_task", _create_task_wrapper)
         except Exception as e:
-            self._logger.debug(f"Error wrapping asyncio.create_task: {e}")
+            self._logger.debug(f"Failed to wrap asyncio.create_task: {e}")
 
         try:
             wrap_function_wrapper("asyncio", "gather", _gather_wrapper)
         except Exception as e:
-            self._logger.debug(f"Error wrapping asyncio.create_task: {e}")
+            self._logger.debug(f"Failed to wrap asyncio.create_task: {e}")
 
     def _instrument_all(self) -> None:
         self._instrument_openai()
@@ -532,6 +535,12 @@ class _PayiInstrumentor:
             
         except Exception as e:
             self._logger.error(f"Error writing offline ingest packets to {self._offline_instrumentation_file_name}: {e}")
+
+    @staticmethod
+    def _create_logged_context(
+            context: _Context
+    ) -> dict[str, Any]:
+        return {k: v for k, v in context.items() if v is not None}
 
     @staticmethod
     def _create_logged_ingest_units(
@@ -1552,7 +1561,16 @@ def payi_instrument(
     logger: Optional[logging.Logger] = None,
 ) -> None:
     global _instrumentor
+
+    logger = logger or _g_logger
+
+    frameinfo = inspect.stack()[1]
+    caller_filename = os.path.basename(frameinfo.filename).replace(' ', '_').lower()
+    if caller_filename.endswith('.py'):
+        caller_filename = caller_filename[:-3]
+
     if (_instrumentor):
+        logger.debug(f"payi_instrument() previously called, (current caller {caller_filename}.py)")
         return
     
     payi_param: Optional[Payi] = None
@@ -1568,10 +1586,6 @@ def payi_instrument(
                 payi_param = p
             elif isinstance(p, AsyncPayi): # type: ignore
                 apayi_param = p
-    frameinfo = inspect.stack()[1]
-    caller_filename = os.path.basename(frameinfo.filename).replace(' ', '_').lower()
-    if caller_filename.endswith('.py'):
-        caller_filename = caller_filename[:-3]
 
     # allow for both payi and apayi to be None for the @proxy case
     _instrumentor = _PayiInstrumentor(
