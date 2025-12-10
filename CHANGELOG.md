@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.146 (2025-12-10)
+
+Full Changelog: [v0.1.0-alpha.145...v0.1.0-alpha.146](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.145...v0.1.0-alpha.146)
+
+### Bug Fixes
+
+* **types:** allow pyright to infer TypedDict types within SequenceNotStr ([3c188bd](https://github.com/Pay-i/pay-i-python/commit/3c188bd9ab2a8e68977e32123e588b2becbf0d08))
+
+
+### Chores
+
+* payi_instrument logging ([e86d9ee](https://github.com/Pay-i/pay-i-python/commit/e86d9eec6dbc3dbc22bcd13d11af8222a114da6d))
+
 ## 0.1.0-alpha.145 (2025-12-06)
 
 Full Changelog: [v0.1.0-alpha.144...v0.1.0-alpha.145](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.144...v0.1.0-alpha.145)
