@@ -74,7 +74,7 @@ class AnthropicInstrumentor:
             try:
                 wrap_function_wrapper(module, method, wrapper)
             except Exception as e:
-                instrumentor._logger.debug(f"Error wrapping {module}.{method}: {e}")
+                instrumentor._logger.debug(f"Failed to wrap {module}.{method}: {e}")
 
 @_PayiInstrumentor.payi_wrapper
 def messages_wrapper(
