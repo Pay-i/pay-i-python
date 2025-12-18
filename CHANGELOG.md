@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.0-alpha.147 (2025-12-18)
+
+Full Changelog: [v0.1.0-alpha.146...v0.1.0-alpha.147](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.146...v0.1.0-alpha.147)
+
+### Bug Fixes
+
+* use async_to_httpx_files in patch method ([0f57419](https://github.com/Pay-i/pay-i-python/commit/0f57419ddac7a51b4cfb8e57f272738b56ba9b08))
+
+
+### Chores
+
+* **internal:** add missing files argument to base client ([d3c08cb](https://github.com/Pay-i/pay-i-python/commit/d3c08cb5dc8ca8d68a28985995cd3a5e5fa6d1fa))
+* speedup initial import ([c45e208](https://github.com/Pay-i/pay-i-python/commit/c45e208b496c9ac13f736b08c222b7eab86f97f9))
+
 ## 0.1.0-alpha.146 (2025-12-10)
 
 Full Changelog: [v0.1.0-alpha.145...v0.1.0-alpha.146](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.145...v0.1.0-alpha.146)
