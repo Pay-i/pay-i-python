@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.148 (2025-12-19)
+
+Full Changelog: [v0.1.0-alpha.147...v0.1.0-alpha.148](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.147...v0.1.0-alpha.148)
+
+### Chores
+
+* **internal:** add `--fix` argument to lint script ([1ad65fa](https://github.com/Pay-i/pay-i-python/commit/1ad65fa85e9a506c54aea1166b772ae320e81301))
+
 ## 0.1.0-alpha.147 (2025-12-18)
 
 Full Changelog: [v0.1.0-alpha.146...v0.1.0-alpha.147](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.146...v0.1.0-alpha.147)
