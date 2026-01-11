@@ -330,6 +330,10 @@ def anthropic_process_synchronous_response(request: _ProviderRequest, response: 
     if assign_id:
         request._ingest["provider_response_id"] = response.get('id', None)
     
+    web_search_requests = usage.get("server_tool_use", {}).get("web_search_requests", 0)
+    if web_search_requests > 0:
+        units["web_search_request"] = Units(output=web_search_requests)
+
     return None
 
 def anthropic_process_chunk(request: _ProviderRequest, chunk: 'dict[str, Any]', assign_id: bool) -> _ChunkResult:    
@@ -368,6 +372,10 @@ def anthropic_process_chunk(request: _ProviderRequest, chunk: 'dict[str, Any]', 
             request._ingest["units"]["text"+large_context]["input"] = input_tokens
 
         request._ingest["units"]["text"+large_context]["output"] = usage.get('output_tokens', 0)
+        
+        web_search_requests = usage.get("server_tool_use", {}).get("web_search_requests", 0)
+        if web_search_requests > 0:
+            request._ingest["units"]["web_search_request"] = Units(output=web_search_requests)
 
         request._instrumentor._logger.debug(f"Anthropic streaming finished: output tokens {usage.get('output_tokens', 0)} ")
 

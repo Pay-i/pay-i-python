@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.150 (2026-01-11)
+
+Full Changelog: [v0.1.0-alpha.149...v0.1.0-alpha.150](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.149...v0.1.0-alpha.150)
+
+### Features
+
+* anthropic web request ([#414](https://github.com/Pay-i/pay-i-python/issues/414)) ([496c20e](https://github.com/Pay-i/pay-i-python/commit/496c20e445a9b9607b25421d8ffc5c0ebe3967aa))
+
 ## 0.1.0-alpha.149 (2026-01-06)
 
 Full Changelog: [v0.1.0-alpha.148...v0.1.0-alpha.149](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.148...v0.1.0-alpha.149)
