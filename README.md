@@ -17,7 +17,7 @@ The REST API documentation can be found on [docs.payi.com](https://docs.payi.com
 
 ```sh
 # install from PyPI
-pip install --pre payi
+pip install '--pre payi'
 ```
 
 ## Usage
@@ -79,7 +79,7 @@ You can enable this by installing `aiohttp`:
 
 ```sh
 # install from PyPI
-pip install --pre payi[aiohttp]
+pip install '--pre payi[aiohttp]'
 ```
 
 Then you can enable it by instantiating the client with `http_client=DefaultAioHttpClient()`:
