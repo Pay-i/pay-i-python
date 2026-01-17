@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.0-alpha.151 (2026-01-17)
+
+Full Changelog: [v0.1.0-alpha.150...v0.1.0-alpha.151](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.150...v0.1.0-alpha.151)
+
+### Features
+
+* **client:** add support for binary request streaming ([724c4dc](https://github.com/Pay-i/pay-i-python/commit/724c4dc6bcc2cecea175170f0b0bdc535da292b7))
+
+
+### Chores
+
+* **internal:** codegen related update ([5f5c958](https://github.com/Pay-i/pay-i-python/commit/5f5c95805da320348580e25f966dd42d2492fc90))
+* **internal:** update `actions/checkout` version ([dc91d66](https://github.com/Pay-i/pay-i-python/commit/dc91d66917158c34465acd1d1422f64181935f11))
+
 ## 0.1.0-alpha.150 (2026-01-11)
 
 Full Changelog: [v0.1.0-alpha.149...v0.1.0-alpha.150](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.149...v0.1.0-alpha.150)
