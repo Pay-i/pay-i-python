@@ -4,8 +4,7 @@ from typing import TYPE_CHECKING, Any, Union, Optional
 
 from wrapt import ObjectProxy  # type: ignore
 
-from payi.lib.helpers import _compact_json
-from payi.lib.Stopwatch import Stopwatch
+from payi.lib.helpers import _compact_json, _set_attr_safe
 from payi.types.shared.xproxy_error import XproxyError
 from payi.types.shared.xproxy_result import XproxyResult
 
@@ -26,7 +25,6 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
         response: Any,
         instance: Any,
         instrumentor: '_PayiInstrumentor',
-        stopwatch: Stopwatch,
         request: _ProviderRequest,
     ) -> None:
 
@@ -51,7 +49,6 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
         self._instance = instance
 
         self._instrumentor = instrumentor
-        self._stopwatch: Stopwatch = stopwatch
         self._responses: list[str] = []
 
         self._request: _ProviderRequest = request
@@ -173,7 +170,7 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
 
     def _evaluate_chunk(self, chunk: Any) -> _ChunkResult:
         if self._first_token:
-            self._request._ingest["time_to_first_token_ms"] = self._stopwatch.elapsed_ms_int()
+            self._request._ingest["time_to_first_token_ms"] = self._request.stopwatch.elapsed_ms_int()
             self._first_token = False
 
         if self._log_prompt_and_response:
@@ -184,8 +181,8 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
     def _process_stop_iteration(self) -> None:
         self._instrumentor._logger.debug(f"StreamIteratorWrapper: process stop iteration")
 
-        self._stopwatch.stop()
-        self._request._ingest["end_to_end_latency_ms"] = self._stopwatch.elapsed_ms_int()
+        self._request.stopwatch.stop()
+        self._request._ingest["end_to_end_latency_ms"] = self._request.stopwatch.elapsed_ms_int()
         self._request._ingest["http_status_code"] = 200
 
         if self._log_prompt_and_response:
@@ -231,7 +228,6 @@ class _StreamManagerWrapper(ObjectProxy):  # type: ignore
         stream_manager: Any,  # type: ignore
         instance: Any,
         instrumentor: _PayiInstrumentor, 
-        stopwatch: Stopwatch,
         request: _ProviderRequest,
     ) -> None:
         instrumentor._logger.debug(f"StreamManagerWrapper: instance {instance}, category {request._category}")
@@ -241,21 +237,28 @@ class _StreamManagerWrapper(ObjectProxy):  # type: ignore
         self._stream_manager = stream_manager  
         self._instance = instance
         self._instrumentor = instrumentor
-        self._stopwatch: Stopwatch = stopwatch
         self._responses: list[str] = []
         self._request: _ProviderRequest = request
         self._first_token: bool = True
 
-    def __enter__(self) -> _StreamIteratorWrapper:
+    def __enter__(self) -> Any:
         self._instrumentor._logger.debug(f"_StreamManagerWrapper: __enter__")
 
-        return _StreamIteratorWrapper(
-            response=self.__wrapped__.__enter__(),  # type: ignore
-            instance=self._instance,
-            instrumentor=self._instrumentor,
-            stopwatch=self._stopwatch,
-            request=self._request,
-        )
+        # Underlying iterator is wrapped separately, expects attr _payi_request to be set
+        stream = self.__wrapped__.__enter__()  # type: ignore
+        
+        # Attach tracking info
+        _set_attr_safe(stream, '_payi_request', self._request)
+        return stream # type: ignore
+
+    async def __aenter__(self) -> Any:
+        self._instrumentor._logger.debug(f"_StreamManagerWrapper: __aenter__")
+
+        stream = await self.__wrapped__.__aenter__()  # type: ignore
+        
+        # Attach tracking info
+        _set_attr_safe(stream, '_payi_request', self._request)
+        return stream # type: ignore
 
 class _GeneratorWrapper:  # type: ignore
     def __init__(
@@ -263,7 +266,6 @@ class _GeneratorWrapper:  # type: ignore
         generator: Any,
         instance: Any,
         instrumentor: _PayiInstrumentor, 
-        stopwatch: Stopwatch,
         request: _ProviderRequest,
     ) -> None:
         instrumentor._logger.debug(f"GeneratorWrapper: instance {instance}, category {request._category}")
@@ -273,7 +275,6 @@ class _GeneratorWrapper:  # type: ignore
         self._generator = generator
         self._instance = instance
         self._instrumentor = instrumentor
-        self._stopwatch: Stopwatch = stopwatch
         self._log_prompt_and_response: bool = request._log_prompt_and_response
         self._responses: list[str] = []
         self._request: _ProviderRequest = request
@@ -292,7 +293,7 @@ class _GeneratorWrapper:  # type: ignore
 
     def _process_chunk(self, chunk: Any) -> _ChunkResult:
         if self._first_token:
-            self._request._ingest["time_to_first_token_ms"] = self._stopwatch.elapsed_ms_int()
+            self._request._ingest["time_to_first_token_ms"] = self._request.stopwatch.elapsed_ms_int()
             self._first_token = False
             
         if self._log_prompt_and_response:
@@ -371,8 +372,8 @@ class _GeneratorWrapper:  # type: ignore
     def _process_stop_iteration(self) -> None:
         self._instrumentor._logger.debug(f"GeneratorWrapper: stop iteration")
 
-        self._stopwatch.stop()
-        self._request._ingest["end_to_end_latency_ms"] = self._stopwatch.elapsed_ms_int()
+        self._request.stopwatch.stop()
+        self._request._ingest["end_to_end_latency_ms"] = self._request.stopwatch.elapsed_ms_int()
         self._request._ingest["http_status_code"] = 200
             
         if self._log_prompt_and_response:

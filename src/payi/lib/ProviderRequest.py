@@ -15,6 +15,7 @@ from payi.types.shared_params.ingest_units import IngestUnits
 from payi.types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
 from .helpers import _set_attr_safe
+from .Stopwatch import Stopwatch
 
 if TYPE_CHECKING:
     from .instrument import _PayiInstrumentor
@@ -69,6 +70,7 @@ class _ProviderRequest:
         self._internal_request_properties: dict[str, Optional[str]] = {}
         self._price_as: PriceAs = PriceAs(category=None, resource=None, resource_scope=None)
         self._log_prompt_and_response: bool = instrumentor._log_prompt_and_response
+        self._stopwatch: Stopwatch = Stopwatch()
 
     def process_chunk(self, _chunk: Any) -> _ChunkResult:
         return _ChunkResult(send_chunk_to_caller=True)
@@ -89,6 +91,10 @@ class _ProviderRequest:
     def remove_inline_data(self, prompt: 'dict[str, Any]') -> bool:# noqa: ARG002
         return False
 
+    @property
+    def stopwatch(self) -> Stopwatch:
+        return self._stopwatch
+    
     @property
     def is_aws_client(self) -> bool:
         return self._is_aws_client if self._is_aws_client is not None else False
