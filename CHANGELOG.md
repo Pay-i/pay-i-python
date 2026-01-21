@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.152 (2026-01-21)
+
+Full Changelog: [v0.1.0-alpha.151...v0.1.0-alpha.152](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.151...v0.1.0-alpha.152)
+
+### Features
+
+* instrument anthropic.messages.stream().text_stream ([#417](https://github.com/Pay-i/pay-i-python/issues/417)) ([d204045](https://github.com/Pay-i/pay-i-python/commit/d204045d1ab87a7a0752880bd1d2c999c2b32a9c))
+
 ## 0.1.0-alpha.151 (2026-01-17)
 
 Full Changelog: [v0.1.0-alpha.150...v0.1.0-alpha.151](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.150...v0.1.0-alpha.151)
