@@ -28,7 +28,6 @@ from payi.types.shared.xproxy_error import XproxyError
 from payi.types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
 from .helpers import PayiCategories
-from .Stopwatch import Stopwatch
 from .StreamWrappers import _GeneratorWrapper, _StreamManagerWrapper, _StreamIteratorWrapper
 from .ProviderRequest import PriceAs, _StreamingType, _ProviderRequest
 
@@ -257,22 +256,11 @@ class _PayiInstrumentor:
             if "proxy" not in global_config:
                 global_config["proxy"] = self._proxy_default
 
-            # Use default clients if not provided for global ingest instrumentation
-            self._ensure_payi_clients()
-
             if "use_case_name" not in global_config and caller_filename:
-                description = f"Default use case for {caller_filename}.py"
-                try:
-                    if self._payi:
-                        self._payi.use_cases.definitions.create(name=caller_filename, description=description)
-                    elif self._apayi:
-                        self._call_async_use_case_definition_create(use_case_name=caller_filename, use_case_description=description)
-                    else:
-                        # in the case of _local_instrumentation is not None
-                        pass
-                    global_config["use_case_name"] = caller_filename
-                except Exception as e:
-                    self._logger.error(f"Error creating default use case definition based on file name {caller_filename}: {e}")
+                global_config["use_case_name"] = caller_filename
+
+            # Use default clients if not provided for global instrumentation
+            self._ensure_payi_clients()
 
             self.__enter__()
 
@@ -1190,7 +1178,6 @@ class _PayiInstrumentor:
             self._logger.debug(f"async_invoke_wrapper: calling wrapped instance")
             return await wrapped(*args, **kwargs)
 
-        sw = Stopwatch()
         stream: bool = False
         
         if is_streaming == _IsStreaming.kwargs:
@@ -1208,12 +1195,12 @@ class _PayiInstrumentor:
                 # replace the original extra_headers with the updated copy which has all of the Pay-i headers removed
                 kwargs["extra_headers"] = extra_headers
 
-            sw.start()
+            request.stopwatch.start()
             response = await wrapped(*args, **kwargs)
 
         except Exception as e:  # pylint: disable=broad-except
-            sw.stop()
-            duration = sw.elapsed_ms_int()
+            request.stopwatch.stop()
+            duration = request.stopwatch.elapsed_ms_int()
 
             self._logger.debug(f"invoke_wrapper: calling wrapped instance exception {e}")
 
@@ -1229,7 +1216,6 @@ class _PayiInstrumentor:
                     generator=response,
                     instance=instance,
                     instrumentor=self,
-                    stopwatch=sw,
                     request=request,
                     )
             elif request.streaming_type == _StreamingType.stream_manager:
@@ -1237,7 +1223,6 @@ class _PayiInstrumentor:
                     stream_manager=response,
                     instance=instance,
                     instrumentor=self,
-                    stopwatch=sw,
                     request=request,
                 )
             else:
@@ -1245,12 +1230,11 @@ class _PayiInstrumentor:
                     response=response,
                     instance=instance,
                     instrumentor=self,
-                    stopwatch=sw,
                     request=request,
                 )
 
-        sw.stop()
-        duration = sw.elapsed_ms_int()
+        request.stopwatch.stop()
+        duration = request.stopwatch.elapsed_ms_int()
         request._ingest["end_to_end_latency_ms"] = duration
         request._ingest["http_status_code"] = 200
 
@@ -1320,7 +1304,6 @@ class _PayiInstrumentor:
             self._logger.debug(f"invoke_wrapper: calling wrapped instance")
             return wrapped(*args, **kwargs)
 
-        sw = Stopwatch()
         stream: bool = False
         
         if is_streaming == _IsStreaming.kwargs:
@@ -1338,12 +1321,12 @@ class _PayiInstrumentor:
                 # replace the original extra_headers with the updated copy which has all of the Pay-i headers removed
                 kwargs["extra_headers"] = extra_headers
 
-            sw.start()
+            request.stopwatch.start()
             response = wrapped(*args, **kwargs)
             
         except Exception as e:  # pylint: disable=broad-except
-            sw.stop()
-            duration = sw.elapsed_ms_int()
+            request.stopwatch.stop()
+            duration = request.stopwatch.elapsed_ms_int()
 
             self._logger.debug(f"invoke_wrapper: calling wrapped instance exception {e}")
 
@@ -1359,7 +1342,6 @@ class _PayiInstrumentor:
                     generator=response,
                     instance=instance,
                     instrumentor=self,
-                    stopwatch=sw,
                     request=request,
                 )
             elif request.streaming_type == _StreamingType.stream_manager:
@@ -1367,7 +1349,6 @@ class _PayiInstrumentor:
                     stream_manager=response,
                     instance=instance,
                     instrumentor=self,
-                    stopwatch=sw,
                     request=request,
                 )
             else:
@@ -1376,7 +1357,6 @@ class _PayiInstrumentor:
                     response=response,
                     instance=instance,
                     instrumentor=self,
-                    stopwatch=sw,
                     request=request,
                 )
 
@@ -1389,8 +1369,8 @@ class _PayiInstrumentor:
                 
                 return stream_result
 
-        sw.stop()
-        duration = sw.elapsed_ms_int()
+        request.stopwatch.stop()
+        duration = request.stopwatch.elapsed_ms_int()
         request._ingest["end_to_end_latency_ms"] = duration
         request._ingest["http_status_code"] = 200
 

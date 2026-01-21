@@ -11,6 +11,7 @@ from payi.lib.helpers import PayiCategories
 from payi.types.ingest_units_params import Units
 
 from .instrument import PayiInstrumentAnthropicConfig, _Context, _IsStreaming, _PayiInstrumentor
+from .StreamWrappers import _GeneratorWrapper
 from .version_helper import get_version_helper
 from .ProviderRequest import _ChunkResult, _StreamingType, _ProviderRequest
 
@@ -68,6 +69,10 @@ class AnthropicInstrumentor:
             ("anthropic.resources.messages", "AsyncMessages.stream", astream_messages_wrapper(instrumentor)),
             ("anthropic.resources.beta.messages", "AsyncMessages.create", amessages_wrapper(instrumentor)),
             ("anthropic.resources.beta.messages", "AsyncMessages.stream", astream_messages_wrapper(instrumentor)),
+
+            # Wrap MessageStream iteration to track state across chunks
+            ("anthropic.lib.streaming._messages", "MessageStream.__iter__", message_stream_iter_wrapper(instrumentor)),
+            ("anthropic.lib.streaming._messages", "AsyncMessageStream.__aiter__", async_message_stream_aiter_wrapper(instrumentor)),
         ]
 
         for module, method, wrapper in wrappers:
@@ -146,6 +151,66 @@ async def astream_messages_wrapper(
         instance,
         args,
         kwargs,
+    )
+
+@_PayiInstrumentor.payi_wrapper
+def message_stream_iter_wrapper(
+    instrumentor: _PayiInstrumentor,
+    wrapped: Any,
+    instance: Any,
+    *args: Any,
+    **kwargs: Any,
+) -> Any:
+    instrumentor._logger.debug("MessageStream.__iter__ wrapper")
+    
+    # Messages.stream wrapper is expected to set attr _payi_request so that context is propagated and tracked
+
+    # Get the stored request and tracking info
+    request = getattr(instance, '_payi_request', None)
+    
+    if not request:
+        instrumentor._logger.debug("MessageStream.__iter__ - missing request, returning original")
+        return wrapped(*args, **kwargs)
+    
+    # Call the original __iter__ to get the iterator
+    original_iterator = wrapped(*args, **kwargs)
+    
+    # Wrap it with GeneratorWrapper to track state across chunks
+    return _GeneratorWrapper(
+        generator=original_iterator,
+        instance=instance,
+        instrumentor=instrumentor,
+        request=request,
+    )
+
+@_PayiInstrumentor.payi_awrapper
+async def async_message_stream_aiter_wrapper(
+    instrumentor: _PayiInstrumentor,
+    wrapped: Any,
+    instance: Any,
+    *args: Any,
+    **kwargs: Any,
+) -> Any:
+    instrumentor._logger.debug("AsyncMessageStream.__aiter__ wrapper")
+    
+    # AsyncMessages.stream wrapper is expected to set attr _payi_request so that context is propagated and tracked
+
+    # Get the stored request and tracking info
+    request = getattr(instance, '_payi_request', None)
+    
+    if not request:
+        instrumentor._logger.debug("AsyncMessageStream.__aiter__ - missing request, returning original")
+        return wrapped(*args, **kwargs)
+    
+    # Call the original __aiter__ to get the async iterator
+    original_iterator = wrapped(*args, **kwargs)
+    
+    # Wrap it with GeneratorWrapper to track state across chunks
+    return _GeneratorWrapper(
+        generator=original_iterator,
+        instance=instance,
+        instrumentor=instrumentor,
+        request=request,
     )
 
 class _AnthropicProviderRequest(_ProviderRequest):
