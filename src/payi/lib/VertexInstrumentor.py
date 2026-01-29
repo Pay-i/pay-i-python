@@ -42,7 +42,7 @@ def generate_wrapper(
 ) -> Any:
     instrumentor._logger.debug("vertexai generate_content wrapper")
     return instrumentor.invoke_wrapper(
-        _GoogleVertexRequest(instrumentor),
+        _GoogleVertexRequest(instrumentor=instrumentor, instance=instance),
         _IsStreaming.kwargs,
         wrapped,
         instance,
@@ -60,7 +60,7 @@ async def agenerate_wrapper(
 ) -> Any:
     instrumentor._logger.debug("async vertexai generate_content wrapper")
     return await instrumentor.async_invoke_wrapper(
-        _GoogleVertexRequest(instrumentor),
+        _GoogleVertexRequest(instrumentor=instrumentor, instance=instance),
         _IsStreaming.kwargs,
         wrapped,
         instance,
@@ -69,9 +69,10 @@ async def agenerate_wrapper(
     )
 
 class _GoogleVertexRequest(_VertexRequest):
-    def __init__(self, instrumentor: _PayiInstrumentor):
+    def __init__(self, instrumentor: _PayiInstrumentor, instance: Any):
         super().__init__(
             instrumentor=instrumentor,
+            instance=instance,
             module_name=VertexInstrumentor._module_name,
             module_version=VertexInstrumentor._module_version,
             )
