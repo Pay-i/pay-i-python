@@ -8,7 +8,7 @@ from importlib.metadata import version
 import tiktoken  # type: ignore
 from wrapt import wrap_function_wrapper  # type: ignore
 
-from payi.lib.helpers import PayiCategories, _set_attr_safe
+from payi.lib.helpers import PayiCategories
 from payi.types.ingest_units_params import Units
 
 from .instrument import (
