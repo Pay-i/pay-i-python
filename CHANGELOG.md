@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.153 (2026-01-24)
+
+Full Changelog: [v0.1.0-alpha.152...v0.1.0-alpha.153](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.152...v0.1.0-alpha.153)
+
+### Chores
+
+* **ci:** upgrade `actions/github-script` ([7677659](https://github.com/Pay-i/pay-i-python/commit/7677659e5ffe9828ed987f562f479a6fc1565a92))
+
 ## 0.1.0-alpha.152 (2026-01-21)
 
 Full Changelog: [v0.1.0-alpha.151...v0.1.0-alpha.152](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.151...v0.1.0-alpha.152)
