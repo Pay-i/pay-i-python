@@ -2,12 +2,20 @@
 
 from typing import Dict, Optional
 from datetime import datetime
+from typing_extensions import Literal
 
 from pydantic import Field as FieldInfo
 
 from .._models import BaseModel
 
-__all__ = ["CategoryResourceResponse", "Units", "AwsBedrockResource", "AzureResource", "GoogleVertexResource"]
+__all__ = [
+    "CategoryResourceResponse",
+    "Units",
+    "AwsBedrockResource",
+    "AzureResource",
+    "GoogleVertexResource",
+    "MappedResource",
+]
 
 
 class Units(BaseModel):
@@ -26,6 +34,16 @@ class AzureResource(BaseModel):
 
 class GoogleVertexResource(BaseModel):
     gsus: int
+
+
+class MappedResource(BaseModel):
+    category: Optional[str] = None
+
+    resource: Optional[str] = None
+
+    scope: Optional[Literal["global", "datazone", "region"]] = None
+
+    sub_scope: Optional[str] = None
 
 
 class CategoryResourceResponse(BaseModel):
@@ -62,6 +80,8 @@ class CategoryResourceResponse(BaseModel):
     google_vertex_resource: Optional[GoogleVertexResource] = None
 
     large_context_threshold: Optional[int] = None
+
+    mapped_resource: Optional[MappedResource] = None
 
     max_input_units: Optional[int] = None
 

@@ -289,7 +289,7 @@ def wrap_converse(instrumentor: _PayiInstrumentor, wrapped: Any, instance: Any) 
 
         instrumentor._logger.debug(f"bedrock converse wrapper, modelId: {modelId}")
         return instrumentor.invoke_wrapper(
-            _BedrockConverseProviderRequest(instrumentor=instrumentor),
+            _BedrockConverseProviderRequest(instrumentor=instrumentor, instance=instance),
             _IsStreaming.false,
             wrapped,
             instance,
@@ -306,7 +306,7 @@ def wrap_converse_stream(instrumentor: _PayiInstrumentor, wrapped: Any, instance
 
         instrumentor._logger.debug(f"bedrock converse stream wrapper, modelId: {modelId}")
         return instrumentor.invoke_wrapper(
-            _BedrockConverseProviderRequest(instrumentor=instrumentor),
+            _BedrockConverseProviderRequest(instrumentor=instrumentor, instance=instance),
             _IsStreaming.true,
             wrapped,
             instance,
@@ -318,7 +318,7 @@ def wrap_converse_stream(instrumentor: _PayiInstrumentor, wrapped: Any, instance
 
 class _BedrockProviderRequest(_ProviderRequest):
 
-    def __init__(self, instrumentor: _PayiInstrumentor):
+    def __init__(self, instrumentor: _PayiInstrumentor, instance: Any = None) -> None:
         super().__init__(
             instrumentor=instrumentor,
             category=PayiCategories.aws_bedrock,
@@ -327,6 +327,11 @@ class _BedrockProviderRequest(_ProviderRequest):
             module_version=BedrockInstrumentor._module_version,
             is_aws_client=True,
             )
+
+        try:
+            self._ingest['provider_uri'] = instance._endpoint.host
+        except Exception:
+            pass
 
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]',  args: Sequence[Any], kwargs: Any) -> bool:
