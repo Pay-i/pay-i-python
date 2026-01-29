@@ -42,7 +42,7 @@ def generate_wrapper(
 ) -> Any:
     instrumentor._logger.debug("genai generate_content wrapper")
     return instrumentor.invoke_wrapper(
-        _GoogleGenAiRequest(instrumentor),
+        _GoogleGenAiRequest(instrumentor=instrumentor, instance=instance),
         _IsStreaming.false,
         wrapped,
         instance,
@@ -60,7 +60,7 @@ def generate_stream_wrapper(
 ) -> Any:
     instrumentor._logger.debug("genai generate_content_stream wrapper")
     return instrumentor.invoke_wrapper(
-        _GoogleGenAiRequest(instrumentor),
+        _GoogleGenAiRequest(instrumentor=instrumentor, instance=instance),
         _IsStreaming.true,
         wrapped,
         instance,
@@ -78,7 +78,7 @@ async def agenerate_wrapper(
 ) -> Any:
     instrumentor._logger.debug("async genai generate_content wrapper")
     return await instrumentor.async_invoke_wrapper(
-        _GoogleGenAiRequest(instrumentor),
+        _GoogleGenAiRequest(instrumentor=instrumentor, instance=instance),
         _IsStreaming.false,
         wrapped,
         instance,
@@ -96,7 +96,7 @@ async def agenerate_stream_wrapper(
 ) -> Any:
     instrumentor._logger.debug("async genai generate_content_stream wrapper")
     return await instrumentor.async_invoke_wrapper(
-        _GoogleGenAiRequest(instrumentor),
+        _GoogleGenAiRequest(instrumentor=instrumentor, instance=instance),
         _IsStreaming.true,
         wrapped,
         instance,
@@ -105,9 +105,10 @@ async def agenerate_stream_wrapper(
     )
 
 class _GoogleGenAiRequest(_VertexRequest):
-    def __init__(self, instrumentor: _PayiInstrumentor):
+    def __init__(self, instrumentor: _PayiInstrumentor, instance: Any):
         super().__init__(
             instrumentor=instrumentor,
+            instance=instance,
             module_name=GoogleGenAiInstrumentor._module_name,
             module_version=GoogleGenAiInstrumentor._module_version,
             )
