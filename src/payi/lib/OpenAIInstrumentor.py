@@ -28,10 +28,10 @@ class OpenAiInstrumentor:
     _azure_openai_deployments: Dict[str, _Context] = {}
 
     @staticmethod
-    def is_azure(instance: Any) -> bool:
+    def is_azure(openai_client: Any) -> bool:
         from openai import AzureOpenAI, AsyncAzureOpenAI # type: ignore # noqa: I001
 
-        return isinstance(instance._client, (AsyncAzureOpenAI, AzureOpenAI))
+        return isinstance(openai_client, (AsyncAzureOpenAI, AzureOpenAI))
 
     @staticmethod
     def configure(azure_openai_config: Optional[PayiInstrumentOpenAiAzureConfig]) -> None:
@@ -190,9 +190,14 @@ class _OpenAiProviderRequest(_ProviderRequest):
     responses_output_tokens_details_key: str = "output_tokens_details"
 
     def __init__(self, instrumentor: _PayiInstrumentor, instance: Any, input_tokens_key: str, output_tokens_key: str, input_tokens_details_key: str, output_tokens_details_key: str) -> None:
+        self._openai_client = instance._client if instance and hasattr(instance, "_client") else None
+        self._is_azure = self._openai_client and OpenAiInstrumentor.is_azure(self._openai_client)
+
+        category = PayiCategories.azure_openai if self._is_azure else PayiCategories.openai
+
         super().__init__(
             instrumentor=instrumentor,
-            category=PayiCategories.openai,
+            category=category,
             streaming_type=_StreamingType.iterator,
             module_name=OpenAiInstrumentor._module_name,
             module_version=OpenAiInstrumentor._module_version,
@@ -201,21 +206,21 @@ class _OpenAiProviderRequest(_ProviderRequest):
         self._output_tokens_key = output_tokens_key
         self._input_tokens_details_key = input_tokens_details_key
         self._output_tokens_details_key = output_tokens_details_key
-        self._is_azure = instance and hasattr(instance, "_client") and OpenAiInstrumentor.is_azure(instance)
+
+        if hasattr(self._openai_client, "base_url"):
+           try:
+               self._ingest["provider_uri"] = str(self._openai_client.base_url) # type: ignore
+           except Exception:
+               pass
 
     @override
     def process_request(self, instance: Any, extra_headers: 'dict[str, str]',  args: Sequence[Any], kwargs: Any) -> bool: # type: ignore
         model = kwargs.get("model", "")
 
         if self._is_azure:
-            if hasattr(instance._client, "_base_url"):
-               self._ingest["provider_uri"] = str(instance._client._base_url)
-
-            self._category = PayiCategories.azure_openai
-
             # model is technically optional as it is part of the URL path
-            if not model and hasattr(instance._client, "_azure_deployment"):
-                model = instance._client._azure_deployment
+            if not model and hasattr(self._openai_client, "_azure_deployment"):
+                model = self._openai_client._azure_deployment # type: ignore
 
             self.map_deployment(model)
 
@@ -277,14 +282,24 @@ class _OpenAiProviderRequest(_ProviderRequest):
 
         return True
 
-    def update_deployment_name(self) -> None:
+    def update_model_name(self, model_name: str) -> None:
+        resource = self._ingest.get("resource", None)
+
+        if (resource is None or len(resource) == 0) and len(model_name) > 0:
+            self.map_deployment(model_name)
+            self.apply_price_as(model_name)
+
+    def update_deployment_name(self) -> bool:
         if self._ingest.get("resource", None):
-            return
+            return False
 
         deployment_name = self.find_response_header_value("x-ms-deployment-name")
         if deployment_name:
             self.map_deployment(deployment_name)
             self.apply_price_as(deployment_name)
+            return True
+
+        return False
 
     def process_synchronous_response_worker(
         self,
@@ -292,7 +307,8 @@ class _OpenAiProviderRequest(_ProviderRequest):
         ) -> Any:
         response_dict = model_to_dict(response)
 
-        self.update_deployment_name()
+        if self.update_deployment_name() is False:
+            self.update_model_name(response_dict.get("model", ""))
         
         self.add_usage_units(response_dict.get("usage", {}))
 
@@ -417,7 +433,8 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
 
         usage = model.get("usage")
         if usage:
-            self.update_deployment_name()
+            if self.update_deployment_name() is False:
+                self.update_model_name(model.get("model", ""))                
             self.add_usage_units(usage)
 
             # If we added "include_usage" in the request on behalf of the client, do not return the extra 
@@ -535,7 +552,9 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
 
         usage = response.get("usage")
         if usage:
-            self.update_deployment_name()
+            if self.update_deployment_name() is False:
+                self.update_model_name(response.get("model", ""))                
+
             self.add_usage_units(usage)
             ingest = True
 
@@ -547,7 +566,7 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
         if result is False:
             return result
         
-        input: ResponseInputParam  = kwargs.get("input", None) # type: ignore
+        input = kwargs.get("input", None) # type: ignore
         if not input or isinstance(input, str) or not isinstance(input, list):
             return True
         

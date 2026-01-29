@@ -4,11 +4,10 @@ from typing import Dict, List, Optional
 from typing_extensions import Literal
 
 from ..._models import BaseModel
-from .ingest_units import IngestUnits
 from ..cost_details import CostDetails
 from .pay_i_common_models_budget_management_cost_details_base import PayICommonModelsBudgetManagementCostDetailsBase
 
-__all__ = ["XproxyResult", "Cost", "Limits"]
+__all__ = ["XproxyResult", "Cost", "Limits", "UnknownUnits"]
 
 
 class Cost(BaseModel):
@@ -23,6 +22,12 @@ class Cost(BaseModel):
 
 class Limits(BaseModel):
     state: Optional[Literal["ok", "blocked", "blocked_external", "exceeded", "overrun", "failed"]] = None
+
+
+class UnknownUnits(BaseModel):
+    input: Optional[int] = None
+
+    output: Optional[int] = None
 
 
 class XproxyResult(BaseModel):
@@ -44,7 +49,7 @@ class XproxyResult(BaseModel):
 
     resource_id: Optional[str] = None
 
-    unknown_units: Optional[Dict[str, IngestUnits]] = None
+    unknown_units: Optional[Dict[str, UnknownUnits]] = None
 
     use_case_id: Optional[str] = None
 

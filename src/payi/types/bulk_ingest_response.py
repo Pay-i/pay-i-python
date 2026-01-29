@@ -26,4 +26,6 @@ class BulkIngestResponse(BaseModel):
 
     errors: Optional[List[Error]] = None
 
+    item_error_count: Optional[int] = None
+
     total_count: Optional[int] = None

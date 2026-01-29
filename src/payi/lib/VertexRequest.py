@@ -18,6 +18,7 @@ class _VertexRequest(_ProviderRequest): # type: ignore
     def __init__(
             self,
             instrumentor: _PayiInstrumentor,
+            instance: Any,
             module_name: str,
             module_version: str
             ) -> None:
@@ -32,6 +33,20 @@ class _VertexRequest(_ProviderRequest): # type: ignore
         self._prompt_character_count = 0
         self._streaming_candidates_character_count: Optional[int] = None
         self._model_name: Optional[str] = None
+
+        try:
+            if instance:
+                if hasattr(instance, "_api_client"):
+                    self._ingest['provider_uri'] = instance._api_client._http_options.base_url
+                else:
+                    uri = instance._endpoint_client._api_endpoint
+                    if 'https://' not in uri:
+                        uri = 'https://' + uri
+                    if uri.endswith('/') is False:
+                        uri = uri
+                    self._ingest['provider_uri'] = uri
+        except Exception:
+            pass
 
     def _get_model_name(self, response: 'dict[str, Any]') -> Optional[str]:
         model: Optional[str] = response.get("model_version", None)

@@ -24,25 +24,25 @@ class AnthropicInstrumentor:
     _azure_foundry_clients_supported: bool = True
 
     @staticmethod
-    def is_vertex(instance: Any) -> bool:
+    def is_vertex(anthropic_client: Any) -> bool:
         from anthropic import AnthropicVertex, AsyncAnthropicVertex  # type: ignore # noqa: I001
 
-        return isinstance(instance._client, (AsyncAnthropicVertex, AnthropicVertex))
+        return isinstance(anthropic_client, (AsyncAnthropicVertex, AnthropicVertex))
 
     @staticmethod
-    def is_bedrock(instance: Any) -> bool:
+    def is_bedrock(anthropic_client: Any) -> bool:
         from anthropic import AnthropicBedrock, AsyncAnthropicBedrock  # type: ignore # noqa: I001
 
-        return isinstance(instance._client, (AsyncAnthropicBedrock, AnthropicBedrock))
+        return isinstance(anthropic_client, (AsyncAnthropicBedrock, AnthropicBedrock))
 
     @staticmethod
-    def is_azure(instance: Any) -> bool:
+    def is_azure(anthropic_client: Any) -> bool:
         if not AnthropicInstrumentor._azure_foundry_clients_supported:
             return False
 
         try:
             from anthropic import AnthropicFoundry, AsyncAnthropicFoundry  # type: ignore # noqa: I001
-            return isinstance(instance._client, (AsyncAnthropicFoundry, AnthropicFoundry))
+            return isinstance(anthropic_client, (AsyncAnthropicFoundry, AnthropicFoundry))
         except Exception:
             AnthropicInstrumentor._azure_foundry_clients_supported = False
             return False
@@ -215,9 +215,10 @@ async def async_message_stream_aiter_wrapper(
 
 class _AnthropicProviderRequest(_ProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, streaming_type: _StreamingType, instance: Any = None) -> None:
-        self._is_vertex: bool = AnthropicInstrumentor.is_vertex(instance)
-        self._is_bedrock: bool = AnthropicInstrumentor.is_bedrock(instance)
-        self._is_azure: bool = AnthropicInstrumentor.is_azure(instance)
+        self._anthropic_client = instance._client if instance and hasattr(instance, "_client") else None
+        self._is_vertex: bool = AnthropicInstrumentor.is_vertex(self._anthropic_client)
+        self._is_bedrock: bool = AnthropicInstrumentor.is_bedrock(self._anthropic_client)
+        self._is_azure: bool = AnthropicInstrumentor.is_azure(self._anthropic_client)
     
         category: str = ""
         if self._is_vertex:
@@ -238,6 +239,12 @@ class _AnthropicProviderRequest(_ProviderRequest):
             module_name=AnthropicInstrumentor._module_name,
             module_version=AnthropicInstrumentor._module_version,
             )
+
+        if hasattr(self._anthropic_client, "base_url"):
+           try:
+               self._ingest["provider_uri"] = str(self._anthropic_client.base_url) # type: ignore
+           except Exception:
+               pass
 
     @override
     def process_chunk(self, chunk: Any) -> _ChunkResult:
@@ -285,10 +292,6 @@ class _AnthropicProviderRequest(_ProviderRequest):
         messages = kwargs.get("messages")
         if messages:
             anthropic_has_image_and_get_texts(self, messages)
-
-        # provider uri is only interesting for hosted providers
-        if (self._is_azure or self._is_vertex or self._is_bedrock) and hasattr(instance._client, "_base_url"):
-           self._ingest["provider_uri"] = str(instance._client._base_url)
 
         return True
 
