@@ -57,6 +57,8 @@ class BulkIngestRequestParam(TypedDict, total=False):
 
     resource: Optional[str]
 
+    scope: Optional[str]
+
     time_to_first_completion_token_ms: Optional[int]
 
     time_to_first_token_ms: Optional[int]
