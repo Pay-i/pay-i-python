@@ -15,6 +15,7 @@ from enum import Enum
 from typing import Any, Set, Union, Optional, Sequence, TypedDict, cast
 from datetime import datetime, timezone
 
+import httpx
 import nest_asyncio  # type: ignore
 from wrapt import wrap_function_wrapper  # type: ignore
 
@@ -64,6 +65,9 @@ class PayiInstrumentAnthropicConfig(TypedDict, total=False):
 class PayiInstrumentOfflineInstrumentationConfig(TypedDict, total=False):
     file_name: str
 
+class PayiInstrumentHostMappingConfig(TypedDict, total=False):
+    price_as_category: Optional[str]
+
 class PayiInstrumentConfig(TypedDict, total=False):
     proxy: bool
     global_instrumentation: bool
@@ -78,6 +82,7 @@ class PayiInstrumentConfig(TypedDict, total=False):
     account_name: Optional[str]
     request_tags: Optional["list[str]"]
     request_properties: Optional["dict[str, Optional[str]]"]
+    host_mappings: Optional[dict[Union[str, httpx.URL], PayiInstrumentHostMappingConfig]]
     aws_config: Optional[PayiInstrumentAwsBedrockConfig]
     azure_openai_config: Optional[PayiInstrumentOpenAiAzureConfig]
     openai_config: Optional[PayiInstrumentOpenAiConfig]
@@ -224,6 +229,25 @@ class _PayiInstrumentor:
             atexit.register(lambda: self._write_offline_ingest_packets())
 
         global_instrumentation = global_config.pop("global_instrumentation", True)
+
+        self._host_mappings: dict[str, str] = {}
+
+        host_mappings = global_config.get("host_mappings", None)
+        if host_mappings is not None and len(host_mappings) > 0:
+            for (host, mapping_config) in host_mappings.items():
+                if isinstance(host, str):
+                    # Add scheme if missing to ensure proper URL parsing
+                    if not host.startswith(('http://', 'https://')):
+                        host = f'https://{host}'
+                    host = httpx.URL(host)
+                host_name = host.host
+
+                if not host_name:
+                    self._logger.warning(f"Invalid host mapping host: {host}, skipping")
+                    continue
+                price_as_category = mapping_config.get("price_as_category", None)
+                if price_as_category:
+                    self._host_mappings[host_name] = price_as_category
 
         # configure first, then instrument
         aws_config = global_config.get("aws_config", None)

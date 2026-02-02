@@ -37,14 +37,14 @@ class _VertexRequest(_ProviderRequest): # type: ignore
         try:
             if instance:
                 if hasattr(instance, "_api_client"):
-                    self._ingest['provider_uri'] = instance._api_client._http_options.base_url
+                    self.provider_uri = instance._api_client._http_options.base_url
                 else:
                     uri = instance._endpoint_client._api_endpoint
                     if 'https://' not in uri:
                         uri = 'https://' + uri
                     if uri.endswith('/') is False:
                         uri = uri
-                    self._ingest['provider_uri'] = uri
+                    self.provider_uri = uri
         except Exception:
             pass
 
