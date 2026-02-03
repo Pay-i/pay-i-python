@@ -209,7 +209,7 @@ class _OpenAiProviderRequest(_ProviderRequest):
 
         if hasattr(self._openai_client, "base_url"):
            try:
-               self._ingest["provider_uri"] = str(self._openai_client.base_url) # type: ignore
+               self.provider_uri = str(self._openai_client.base_url) # type: ignore
            except Exception:
                pass
 

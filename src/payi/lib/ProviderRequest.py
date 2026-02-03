@@ -3,8 +3,10 @@ from __future__ import annotations
 import inspect
 from abc import abstractmethod
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Optional, Sequence
+from typing import TYPE_CHECKING, Any, Union, Optional, Sequence
 from dataclasses import dataclass
+
+import httpx
 
 from payi.types import IngestUnitsParams
 from payi.lib.helpers import PayiPropertyNames
@@ -93,6 +95,31 @@ class _ProviderRequest:
 
     def remove_responses_inline_data(self, responses: 'list[dict[str, Any]]') -> bool:# noqa: ARG002
         return False
+    
+    def get_host(self, url: Union[str, httpx.URL, Any]) -> Optional[str]:
+        try:
+            if isinstance(url, str):
+                url = httpx.URL(url)
+            elif not isinstance(url, httpx.URL):
+                return None
+            return url.host
+        except Exception:
+            return None
+
+    def category_from_host(self, host: str) -> str:
+        return self._instrumentor._host_mappings.get(host, self._category)
+
+    @property
+    def provider_uri(self) -> Optional[str]:
+        return self._ingest.get("provider_uri") if "provider_uri" in self._ingest else None
+    
+    @provider_uri.setter
+    def provider_uri(self, value: str) -> None:
+        self._ingest["provider_uri"] = value
+        host = self.get_host(value)
+        if host:
+            self._category = self.category_from_host(host)
+            self._ingest["category"] = self._category
 
     @property
     def stopwatch(self) -> Stopwatch:
