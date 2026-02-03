@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-alpha.155 (2026-02-02)
+
+Full Changelog: [v0.1.0-alpha.154...v0.1.0-alpha.155](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.154...v0.1.0-alpha.155)
+
+### Features
+
+* **client:** add custom JSON encoder for extended type support ([3488c8c](https://github.com/Pay-i/pay-i-python/commit/3488c8cd335c8dea8cb0c5edac138be259547502))
+* map host name to default category ([#423](https://github.com/Pay-i/pay-i-python/issues/423)) ([9fb8826](https://github.com/Pay-i/pay-i-python/commit/9fb88268a8b55495aa0020305cd2f8f1cc917dfb))
+
 ## 0.1.0-alpha.154 (2026-01-29)
 
 Full Changelog: [v0.1.0-alpha.153...v0.1.0-alpha.154](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.153...v0.1.0-alpha.154)

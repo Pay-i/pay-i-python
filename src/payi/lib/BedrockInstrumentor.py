@@ -329,7 +329,7 @@ class _BedrockProviderRequest(_ProviderRequest):
             )
 
         try:
-            self._ingest['provider_uri'] = instance._endpoint.host
+            self.provider_uri = instance._endpoint.host
         except Exception:
             pass
 
