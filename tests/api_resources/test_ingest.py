@@ -158,6 +158,10 @@ class TestIngest:
             use_case_version=0,
             resource_scope="datazone",
             user_id="UserName123",
+            x_proxy_logging_disable="xProxy-Logging-Disable",
+            x_proxy_use_case_id="use_case_id",
+            x_proxy_use_case_name="use_case_name",
+            x_proxy_use_case_step="step_1",
         )
         assert_matches_type(IngestResponse, ingest, path=["response"])
 
@@ -333,6 +337,10 @@ class TestAsyncIngest:
             use_case_version=0,
             resource_scope="datazone",
             user_id="UserName123",
+            x_proxy_logging_disable="xProxy-Logging-Disable",
+            x_proxy_use_case_id="use_case_id",
+            x_proxy_use_case_name="use_case_name",
+            x_proxy_use_case_step="step_1",
         )
         assert_matches_type(IngestResponse, ingest, path=["response"])
 
