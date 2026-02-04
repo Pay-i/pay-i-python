@@ -2,18 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Dict, List, Union, Iterable, Optional
+from typing import Dict, Union, Iterable, Optional
 from datetime import datetime
 
 import httpx
 
 from ..types import ingest_units_params
-from .._types import NOT_GIVEN, Body, Query, Headers, NotGiven
-from .._utils import (
-    maybe_transform,
-    strip_not_given,
-    async_maybe_transform,
-)
+from .._types import Body, Omit, Query, Headers, NotGiven, SequenceNotStr, omit, not_given
+from .._utils import is_given, maybe_transform, strip_not_given, async_maybe_transform
 from .._compat import cached_property
 from .._resource import SyncAPIResource, AsyncAPIResource
 from .._response import (
@@ -24,8 +20,10 @@ from .._response import (
 )
 from .._base_client import make_request_options
 from ..types.ingest_response import IngestResponse
-from ..types.ingest_event_param import IngestEventParam
 from ..types.bulk_ingest_response import BulkIngestResponse
+from ..types.bulk_ingest_request_param import BulkIngestRequestParam
+from ..types.shared_params.ingest_units import IngestUnits
+from ..types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
 __all__ = ["IngestResource", "AsyncIngestResource"]
 
@@ -53,13 +51,13 @@ class IngestResource(SyncAPIResource):
     def bulk(
         self,
         *,
-        events: Iterable[IngestEventParam],
+        events: Iterable[BulkIngestRequestParam] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> BulkIngestResponse:
         """
         Bulk Ingest
@@ -75,7 +73,7 @@ class IngestResource(SyncAPIResource):
         """
         return self._post(
             "/api/v1/ingest/bulk",
-            body=maybe_transform(events, Iterable[IngestEventParam]),
+            body=maybe_transform(events, Iterable[BulkIngestRequestParam]),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -86,31 +84,38 @@ class IngestResource(SyncAPIResource):
         self,
         *,
         category: str,
-        resource: str,
-        units: Dict[str, ingest_units_params.Units],
-        end_to_end_latency_ms: Optional[int] | NotGiven = NOT_GIVEN,
-        event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
-        experience_properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
-        http_status_code: Optional[int] | NotGiven = NOT_GIVEN,
-        properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
-        provider_request_headers: Optional[Iterable[ingest_units_params.ProviderRequestHeader]] | NotGiven = NOT_GIVEN,
-        provider_request_json: Optional[str] | NotGiven = NOT_GIVEN,
-        provider_response_headers: Optional[Iterable[ingest_units_params.ProviderResponseHeader]]
-        | NotGiven = NOT_GIVEN,
-        provider_response_json: Union[str, List[str], None] | NotGiven = NOT_GIVEN,
-        provider_uri: Optional[str] | NotGiven = NOT_GIVEN,
-        time_to_first_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
-        x_proxy_experience_id: str | NotGiven = NOT_GIVEN,
-        x_proxy_experience_name: str | NotGiven = NOT_GIVEN,
-        x_proxy_limit_ids: str | NotGiven = NOT_GIVEN,
-        x_proxy_request_tags: str | NotGiven = NOT_GIVEN,
-        x_proxy_user_id: str | NotGiven = NOT_GIVEN,
+        units: Dict[str, IngestUnits],
+        end_to_end_latency_ms: Optional[int] | Omit = omit,
+        event_timestamp: Union[str, datetime, None] | Omit = omit,
+        http_status_code: Optional[int] | Omit = omit,
+        properties: Optional[Dict[str, Optional[str]]] | Omit = omit,
+        provider_request_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | Omit = omit,
+        provider_request_json: Optional[str] | Omit = omit,
+        provider_request_reasoning_json: Optional[str] | Omit = omit,
+        provider_response_function_calls: Optional[Iterable[ingest_units_params.ProviderResponseFunctionCall]]
+        | Omit = omit,
+        provider_response_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | Omit = omit,
+        provider_response_id: Optional[str] | Omit = omit,
+        provider_response_json: Union[str, SequenceNotStr[str], None] | Omit = omit,
+        provider_uri: Optional[str] | Omit = omit,
+        resource: Optional[str] | Omit = omit,
+        time_to_first_completion_token_ms: Optional[int] | Omit = omit,
+        time_to_first_token_ms: Optional[int] | Omit = omit,
+        use_case_properties: Optional[Dict[str, Optional[str]]] | Omit = omit,
+        x_proxy_account_name: str | Omit = omit,
+        x_proxy_limit_ids: str | Omit = omit,
+        x_proxy_logging_disable: str | Omit = omit,
+        x_proxy_use_case_id: str | Omit = omit,
+        x_proxy_use_case_name: str | Omit = omit,
+        x_proxy_use_case_step: str | Omit = omit,
+        x_proxy_use_case_version: int | Omit = omit,
+        x_proxy_user_id: str | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> IngestResponse:
         """
         Ingest an Event
@@ -127,10 +132,15 @@ class IngestResource(SyncAPIResource):
         extra_headers = {
             **strip_not_given(
                 {
-                    "xProxy-Experience-ID": x_proxy_experience_id,
-                    "xProxy-Experience-Name": x_proxy_experience_name,
+                    "xProxy-Account-Name": x_proxy_account_name,
                     "xProxy-Limit-IDs": x_proxy_limit_ids,
-                    "xProxy-Request-Tags": x_proxy_request_tags,
+                    "xProxy-Logging-Disable": x_proxy_logging_disable,
+                    "xProxy-UseCase-ID": x_proxy_use_case_id,
+                    "xProxy-UseCase-Name": x_proxy_use_case_name,
+                    "xProxy-UseCase-Step": x_proxy_use_case_step,
+                    "xProxy-UseCase-Version": str(x_proxy_use_case_version)
+                    if is_given(x_proxy_use_case_version)
+                    else not_given,
                     "xProxy-User-ID": x_proxy_user_id,
                 }
             ),
@@ -141,19 +151,23 @@ class IngestResource(SyncAPIResource):
             body=maybe_transform(
                 {
                     "category": category,
-                    "resource": resource,
                     "units": units,
                     "end_to_end_latency_ms": end_to_end_latency_ms,
                     "event_timestamp": event_timestamp,
-                    "experience_properties": experience_properties,
                     "http_status_code": http_status_code,
                     "properties": properties,
                     "provider_request_headers": provider_request_headers,
                     "provider_request_json": provider_request_json,
+                    "provider_request_reasoning_json": provider_request_reasoning_json,
+                    "provider_response_function_calls": provider_response_function_calls,
                     "provider_response_headers": provider_response_headers,
+                    "provider_response_id": provider_response_id,
                     "provider_response_json": provider_response_json,
                     "provider_uri": provider_uri,
+                    "resource": resource,
+                    "time_to_first_completion_token_ms": time_to_first_completion_token_ms,
                     "time_to_first_token_ms": time_to_first_token_ms,
+                    "use_case_properties": use_case_properties,
                 },
                 ingest_units_params.IngestUnitsParams,
             ),
@@ -187,13 +201,13 @@ class AsyncIngestResource(AsyncAPIResource):
     async def bulk(
         self,
         *,
-        events: Iterable[IngestEventParam],
+        events: Iterable[BulkIngestRequestParam] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> BulkIngestResponse:
         """
         Bulk Ingest
@@ -209,7 +223,7 @@ class AsyncIngestResource(AsyncAPIResource):
         """
         return await self._post(
             "/api/v1/ingest/bulk",
-            body=await async_maybe_transform(events, Iterable[IngestEventParam]),
+            body=await async_maybe_transform(events, Iterable[BulkIngestRequestParam]),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -220,31 +234,38 @@ class AsyncIngestResource(AsyncAPIResource):
         self,
         *,
         category: str,
-        resource: str,
-        units: Dict[str, ingest_units_params.Units],
-        end_to_end_latency_ms: Optional[int] | NotGiven = NOT_GIVEN,
-        event_timestamp: Union[str, datetime, None] | NotGiven = NOT_GIVEN,
-        experience_properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
-        http_status_code: Optional[int] | NotGiven = NOT_GIVEN,
-        properties: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
-        provider_request_headers: Optional[Iterable[ingest_units_params.ProviderRequestHeader]] | NotGiven = NOT_GIVEN,
-        provider_request_json: Optional[str] | NotGiven = NOT_GIVEN,
-        provider_response_headers: Optional[Iterable[ingest_units_params.ProviderResponseHeader]]
-        | NotGiven = NOT_GIVEN,
-        provider_response_json: Union[str, List[str], None] | NotGiven = NOT_GIVEN,
-        provider_uri: Optional[str] | NotGiven = NOT_GIVEN,
-        time_to_first_token_ms: Optional[int] | NotGiven = NOT_GIVEN,
-        x_proxy_experience_id: str | NotGiven = NOT_GIVEN,
-        x_proxy_experience_name: str | NotGiven = NOT_GIVEN,
-        x_proxy_limit_ids: str | NotGiven = NOT_GIVEN,
-        x_proxy_request_tags: str | NotGiven = NOT_GIVEN,
-        x_proxy_user_id: str | NotGiven = NOT_GIVEN,
+        units: Dict[str, IngestUnits],
+        end_to_end_latency_ms: Optional[int] | Omit = omit,
+        event_timestamp: Union[str, datetime, None] | Omit = omit,
+        http_status_code: Optional[int] | Omit = omit,
+        properties: Optional[Dict[str, Optional[str]]] | Omit = omit,
+        provider_request_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | Omit = omit,
+        provider_request_json: Optional[str] | Omit = omit,
+        provider_request_reasoning_json: Optional[str] | Omit = omit,
+        provider_response_function_calls: Optional[Iterable[ingest_units_params.ProviderResponseFunctionCall]]
+        | Omit = omit,
+        provider_response_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | Omit = omit,
+        provider_response_id: Optional[str] | Omit = omit,
+        provider_response_json: Union[str, SequenceNotStr[str], None] | Omit = omit,
+        provider_uri: Optional[str] | Omit = omit,
+        resource: Optional[str] | Omit = omit,
+        time_to_first_completion_token_ms: Optional[int] | Omit = omit,
+        time_to_first_token_ms: Optional[int] | Omit = omit,
+        use_case_properties: Optional[Dict[str, Optional[str]]] | Omit = omit,
+        x_proxy_account_name: str | Omit = omit,
+        x_proxy_limit_ids: str | Omit = omit,
+        x_proxy_logging_disable: str | Omit = omit,
+        x_proxy_use_case_id: str | Omit = omit,
+        x_proxy_use_case_name: str | Omit = omit,
+        x_proxy_use_case_step: str | Omit = omit,
+        x_proxy_use_case_version: int | Omit = omit,
+        x_proxy_user_id: str | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> IngestResponse:
         """
         Ingest an Event
@@ -261,10 +282,15 @@ class AsyncIngestResource(AsyncAPIResource):
         extra_headers = {
             **strip_not_given(
                 {
-                    "xProxy-Experience-ID": x_proxy_experience_id,
-                    "xProxy-Experience-Name": x_proxy_experience_name,
+                    "xProxy-Account-Name": x_proxy_account_name,
                     "xProxy-Limit-IDs": x_proxy_limit_ids,
-                    "xProxy-Request-Tags": x_proxy_request_tags,
+                    "xProxy-Logging-Disable": x_proxy_logging_disable,
+                    "xProxy-UseCase-ID": x_proxy_use_case_id,
+                    "xProxy-UseCase-Name": x_proxy_use_case_name,
+                    "xProxy-UseCase-Step": x_proxy_use_case_step,
+                    "xProxy-UseCase-Version": str(x_proxy_use_case_version)
+                    if is_given(x_proxy_use_case_version)
+                    else not_given,
                     "xProxy-User-ID": x_proxy_user_id,
                 }
             ),
@@ -275,19 +301,23 @@ class AsyncIngestResource(AsyncAPIResource):
             body=await async_maybe_transform(
                 {
                     "category": category,
-                    "resource": resource,
                     "units": units,
                     "end_to_end_latency_ms": end_to_end_latency_ms,
                     "event_timestamp": event_timestamp,
-                    "experience_properties": experience_properties,
                     "http_status_code": http_status_code,
                     "properties": properties,
                     "provider_request_headers": provider_request_headers,
                     "provider_request_json": provider_request_json,
+                    "provider_request_reasoning_json": provider_request_reasoning_json,
+                    "provider_response_function_calls": provider_response_function_calls,
                     "provider_response_headers": provider_response_headers,
+                    "provider_response_id": provider_response_id,
                     "provider_response_json": provider_response_json,
                     "provider_uri": provider_uri,
+                    "resource": resource,
+                    "time_to_first_completion_token_ms": time_to_first_completion_token_ms,
                     "time_to_first_token_ms": time_to_first_token_ms,
+                    "use_case_properties": use_case_properties,
                 },
                 ingest_units_params.IngestUnitsParams,
             ),

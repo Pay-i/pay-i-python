@@ -2,68 +2,73 @@
 
 from __future__ import annotations
 
-from typing import Dict, List, Union, Iterable, Optional
+from typing import Dict, Union, Iterable, Optional
 from datetime import datetime
 from typing_extensions import Required, Annotated, TypedDict
 
+from .._types import SequenceNotStr
 from .._utils import PropertyInfo
+from .shared_params.ingest_units import IngestUnits
+from .pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
-__all__ = ["IngestUnitsParams", "Units", "ProviderRequestHeader", "ProviderResponseHeader"]
+__all__ = ["IngestUnitsParams", "ProviderResponseFunctionCall"]
 
 
 class IngestUnitsParams(TypedDict, total=False):
     category: Required[str]
 
-    resource: Required[str]
-
-    units: Required[Dict[str, Units]]
+    units: Required[Dict[str, IngestUnits]]
 
     end_to_end_latency_ms: Optional[int]
 
     event_timestamp: Annotated[Union[str, datetime, None], PropertyInfo(format="iso8601")]
 
-    experience_properties: Optional[Dict[str, str]]
-
     http_status_code: Optional[int]
 
-    properties: Optional[Dict[str, str]]
+    properties: Optional[Dict[str, Optional[str]]]
 
-    provider_request_headers: Optional[Iterable[ProviderRequestHeader]]
+    provider_request_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]]
 
     provider_request_json: Optional[str]
 
-    provider_response_headers: Optional[Iterable[ProviderResponseHeader]]
+    provider_request_reasoning_json: Optional[str]
 
-    provider_response_json: Union[str, List[str], None]
+    provider_response_function_calls: Optional[Iterable[ProviderResponseFunctionCall]]
+
+    provider_response_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]]
+
+    provider_response_id: Optional[str]
+
+    provider_response_json: Union[str, SequenceNotStr[str], None]
 
     provider_uri: Optional[str]
 
+    resource: Optional[str]
+
+    time_to_first_completion_token_ms: Optional[int]
+
     time_to_first_token_ms: Optional[int]
 
-    x_proxy_experience_id: Annotated[str, PropertyInfo(alias="xProxy-Experience-ID")]
+    use_case_properties: Optional[Dict[str, Optional[str]]]
 
-    x_proxy_experience_name: Annotated[str, PropertyInfo(alias="xProxy-Experience-Name")]
+    x_proxy_account_name: Annotated[str, PropertyInfo(alias="xProxy-Account-Name")]
 
     x_proxy_limit_ids: Annotated[str, PropertyInfo(alias="xProxy-Limit-IDs")]
 
-    x_proxy_request_tags: Annotated[str, PropertyInfo(alias="xProxy-Request-Tags")]
+    x_proxy_logging_disable: Annotated[str, PropertyInfo(alias="xProxy-Logging-Disable")]
+
+    x_proxy_use_case_id: Annotated[str, PropertyInfo(alias="xProxy-UseCase-ID")]
+
+    x_proxy_use_case_name: Annotated[str, PropertyInfo(alias="xProxy-UseCase-Name")]
+
+    x_proxy_use_case_step: Annotated[str, PropertyInfo(alias="xProxy-UseCase-Step")]
+
+    x_proxy_use_case_version: Annotated[int, PropertyInfo(alias="xProxy-UseCase-Version")]
 
     x_proxy_user_id: Annotated[str, PropertyInfo(alias="xProxy-User-ID")]
 
 
-class Units(TypedDict, total=False):
-    input: int
-
-    output: int
-
-
-class ProviderRequestHeader(TypedDict, total=False):
+class ProviderResponseFunctionCall(TypedDict, total=False):
     name: Required[str]
 
-    value: Optional[str]
-
-
-class ProviderResponseHeader(TypedDict, total=False):
-    name: Required[str]
-
-    value: Optional[str]
+    arguments: Optional[str]

@@ -1,12 +1,13 @@
 # Payi Python API library
 
-[![PyPI version](https://img.shields.io/pypi/v/payi.svg)](https://pypi.org/project/payi/)
+<!-- prettier-ignore -->
+[![PyPI version](https://img.shields.io/pypi/v/payi.svg?label=pypi%20(stable))](https://pypi.org/project/payi/)
 
-The Payi Python library provides convenient access to the Payi REST API from any Python 3.8+
+The Payi Python library provides convenient access to the Payi REST API from any Python 3.9+
 application. The library includes type definitions for all request params and response fields,
 and offers both synchronous and asynchronous clients powered by [httpx](https://github.com/encode/httpx).
 
-It is generated with [Stainless](https://www.stainlessapi.com/).
+It is generated with [Stainless](https://www.stainless.com/).
 
 ## Documentation
 
@@ -16,7 +17,7 @@ The REST API documentation can be found on [docs.payi.com](https://docs.payi.com
 
 ```sh
 # install from PyPI
-pip install --pre payi
+pip install '--pre payi'
 ```
 
 ## Usage
@@ -31,11 +32,11 @@ client = Payi(
     api_key=os.environ.get("PAYI_API_KEY"),  # This is the default and can be omitted
 )
 
-limit_response = client.limits.create(
-    limit_name="x",
-    max=0,
+use_case_definition_response = client.use_cases.definitions.create(
+    description="Sample Use Case Definition Description",
+    name="SampleUseCaseDefinition",
 )
-print(limit_response.request_id)
+print(use_case_definition_response.request_id)
 ```
 
 While you can provide an `api_key` keyword argument,
@@ -58,17 +59,52 @@ client = AsyncPayi(
 
 
 async def main() -> None:
-    limit_response = await client.limits.create(
-        limit_name="x",
-        max=0,
+    use_case_definition_response = await client.use_cases.definitions.create(
+        description="Sample Use Case Definition Description",
+        name="SampleUseCaseDefinition",
     )
-    print(limit_response.request_id)
+    print(use_case_definition_response.request_id)
 
 
 asyncio.run(main())
 ```
 
 Functionality between the synchronous and asynchronous clients is otherwise identical.
+
+### With aiohttp
+
+By default, the async client uses `httpx` for HTTP requests. However, for improved concurrency performance you may also use `aiohttp` as the HTTP backend.
+
+You can enable this by installing `aiohttp`:
+
+```sh
+# install from PyPI
+pip install '--pre payi[aiohttp]'
+```
+
+Then you can enable it by instantiating the client with `http_client=DefaultAioHttpClient()`:
+
+```python
+import os
+import asyncio
+from payi import DefaultAioHttpClient
+from payi import AsyncPayi
+
+
+async def main() -> None:
+    async with AsyncPayi(
+        api_key=os.environ.get("PAYI_API_KEY"),  # This is the default and can be omitted
+        http_client=DefaultAioHttpClient(),
+    ) as client:
+        use_case_definition_response = await client.use_cases.definitions.create(
+            description="Sample Use Case Definition Description",
+            name="SampleUseCaseDefinition",
+        )
+        print(use_case_definition_response.request_id)
+
+
+asyncio.run(main())
+```
 
 ## Using types
 
@@ -78,6 +114,86 @@ Nested request parameters are [TypedDicts](https://docs.python.org/3/library/typ
 - Converting to a dictionary, `model.to_dict()`
 
 Typed requests and responses provide autocomplete and documentation within your editor. If you would like to see type errors in VS Code to help catch bugs earlier, set `python.analysis.typeCheckingMode` to `basic`.
+
+## Pagination
+
+List methods in the Payi API are paginated.
+
+This library provides auto-paginating iterators with each list response, so you do not have to request successive pages manually:
+
+```python
+from payi import Payi
+
+client = Payi()
+
+all_definitions = []
+# Automatically fetches more pages as needed.
+for definition in client.use_cases.definitions.list():
+    # Do something with definition here
+    all_definitions.append(definition)
+print(all_definitions)
+```
+
+Or, asynchronously:
+
+```python
+import asyncio
+from payi import AsyncPayi
+
+client = AsyncPayi()
+
+
+async def main() -> None:
+    all_definitions = []
+    # Iterate through items across all pages, issuing requests as needed.
+    async for definition in client.use_cases.definitions.list():
+        all_definitions.append(definition)
+    print(all_definitions)
+
+
+asyncio.run(main())
+```
+
+Alternatively, you can use the `.has_next_page()`, `.next_page_info()`, or `.get_next_page()` methods for more granular control working with pages:
+
+```python
+first_page = await client.use_cases.definitions.list()
+if first_page.has_next_page():
+    print(f"will fetch next page using these details: {first_page.next_page_info()}")
+    next_page = await first_page.get_next_page()
+    print(f"number of items we just fetched: {len(next_page.items)}")
+
+# Remove `await` for non-async usage.
+```
+
+Or just work directly with the returned data:
+
+```python
+first_page = await client.use_cases.definitions.list()
+
+print(f"next page cursor: {first_page.cursor}")  # => "next page cursor: ..."
+for definition in first_page.items:
+    print(definition.request_id)
+
+# Remove `await` for non-async usage.
+```
+
+## Nested params
+
+Nested parameters are dictionaries, typed using `TypedDict`, for example:
+
+```python
+from payi import Payi
+
+client = Payi()
+
+use_case_definition_response = client.use_cases.definitions.create(
+    description="x",
+    name="x",
+    limit_config={"max": 0},
+)
+print(use_case_definition_response.limit_config)
+```
 
 ## Handling errors
 
@@ -95,9 +211,9 @@ from payi import Payi
 client = Payi()
 
 try:
-    client.limits.create(
-        limit_name="x",
-        max=0,
+    client.use_cases.definitions.create(
+        description="Sample Use Case Definition Description",
+        name="SampleUseCaseDefinition",
     )
 except payi.APIConnectionError as e:
     print("The server could not be reached")
@@ -141,16 +257,16 @@ client = Payi(
 )
 
 # Or, configure per-request:
-client.with_options(max_retries=5).limits.create(
-    limit_name="x",
-    max=0,
+client.with_options(max_retries=5).use_cases.definitions.create(
+    description="Sample Use Case Definition Description",
+    name="SampleUseCaseDefinition",
 )
 ```
 
 ### Timeouts
 
 By default requests time out after 1 minute. You can configure this with a `timeout` option,
-which accepts a float or an [`httpx.Timeout`](https://www.python-httpx.org/advanced/#fine-tuning-the-configuration) object:
+which accepts a float or an [`httpx.Timeout`](https://www.python-httpx.org/advanced/timeouts/#fine-tuning-the-configuration) object:
 
 ```python
 from payi import Payi
@@ -167,9 +283,9 @@ client = Payi(
 )
 
 # Override per-request:
-client.with_options(timeout=5.0).limits.create(
-    limit_name="x",
-    max=0,
+client.with_options(timeout=5.0).use_cases.definitions.create(
+    description="Sample Use Case Definition Description",
+    name="SampleUseCaseDefinition",
 )
 ```
 
@@ -211,14 +327,14 @@ The "raw" Response object can be accessed by prefixing `.with_raw_response.` to 
 from payi import Payi
 
 client = Payi()
-response = client.limits.with_raw_response.create(
-    limit_name="x",
-    max=0,
+response = client.use_cases.definitions.with_raw_response.create(
+    description="Sample Use Case Definition Description",
+    name="SampleUseCaseDefinition",
 )
 print(response.headers.get('X-My-Header'))
 
-limit = response.parse()  # get the object that `limits.create()` would have returned
-print(limit.request_id)
+definition = response.parse()  # get the object that `use_cases.definitions.create()` would have returned
+print(definition.request_id)
 ```
 
 These methods return an [`APIResponse`](https://github.com/Pay-i/pay-i-python/tree/main/src/payi/_response.py) object.
@@ -232,9 +348,9 @@ The above interface eagerly reads the full response body when you make the reque
 To stream the response body, use `.with_streaming_response` instead, which requires a context manager and only reads the response body once you call `.read()`, `.text()`, `.json()`, `.iter_bytes()`, `.iter_text()`, `.iter_lines()` or `.parse()`. In the async client, these are async methods.
 
 ```python
-with client.limits.with_streaming_response.create(
-    limit_name="x",
-    max=0,
+with client.use_cases.definitions.with_streaming_response.create(
+    description="Sample Use Case Definition Description",
+    name="SampleUseCaseDefinition",
 ) as response:
     print(response.headers.get("X-My-Header"))
 
@@ -345,7 +461,7 @@ print(payi.__version__)
 
 ## Requirements
 
-Python 3.8 or higher.
+Python 3.9 or higher.
 
 ## Contributing
 

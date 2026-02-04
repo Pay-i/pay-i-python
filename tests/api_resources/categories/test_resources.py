@@ -11,7 +11,7 @@ from payi import Payi, AsyncPayi
 from payi.types import CategoryResourceResponse
 from payi._utils import parse_datetime
 from tests.utils import assert_matches_type
-from payi.types.categories import ResourceListResponse
+from payi.pagination import SyncCursorPage, AsyncCursorPage
 
 base_url = os.environ.get("TEST_API_BASE_URL", "http://127.0.0.1:4010")
 
@@ -24,12 +24,7 @@ class TestResources:
         resource = client.categories.resources.create(
             resource="resource",
             category="category",
-            units={
-                "foo": {
-                    "input_price": 0,
-                    "output_price": 0,
-                }
-            },
+            units={"foo": {}},
         )
         assert_matches_type(CategoryResourceResponse, resource, path=["response"])
 
@@ -56,12 +51,7 @@ class TestResources:
         response = client.categories.resources.with_raw_response.create(
             resource="resource",
             category="category",
-            units={
-                "foo": {
-                    "input_price": 0,
-                    "output_price": 0,
-                }
-            },
+            units={"foo": {}},
         )
 
         assert response.is_closed is True
@@ -74,12 +64,7 @@ class TestResources:
         with client.categories.resources.with_streaming_response.create(
             resource="resource",
             category="category",
-            units={
-                "foo": {
-                    "input_price": 0,
-                    "output_price": 0,
-                }
-            },
+            units={"foo": {}},
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -95,24 +80,14 @@ class TestResources:
             client.categories.resources.with_raw_response.create(
                 resource="resource",
                 category="",
-                units={
-                    "foo": {
-                        "input_price": 0,
-                        "output_price": 0,
-                    }
-                },
+                units={"foo": {}},
             )
 
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `resource` but received ''"):
             client.categories.resources.with_raw_response.create(
                 resource="",
                 category="category",
-                units={
-                    "foo": {
-                        "input_price": 0,
-                        "output_price": 0,
-                    }
-                },
+                units={"foo": {}},
             )
 
     @parametrize
@@ -181,7 +156,19 @@ class TestResources:
             resource="resource",
             category="category",
         )
-        assert_matches_type(ResourceListResponse, resource, path=["response"])
+        assert_matches_type(SyncCursorPage[CategoryResourceResponse], resource, path=["response"])
+
+    @parametrize
+    def test_method_list_with_all_params(self, client: Payi) -> None:
+        resource = client.categories.resources.list(
+            resource="resource",
+            category="category",
+            active=True,
+            cursor="cursor",
+            limit=0,
+            sort_ascending=True,
+        )
+        assert_matches_type(SyncCursorPage[CategoryResourceResponse], resource, path=["response"])
 
     @parametrize
     def test_raw_response_list(self, client: Payi) -> None:
@@ -193,7 +180,7 @@ class TestResources:
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
         resource = response.parse()
-        assert_matches_type(ResourceListResponse, resource, path=["response"])
+        assert_matches_type(SyncCursorPage[CategoryResourceResponse], resource, path=["response"])
 
     @parametrize
     def test_streaming_response_list(self, client: Payi) -> None:
@@ -205,7 +192,7 @@ class TestResources:
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
             resource = response.parse()
-            assert_matches_type(ResourceListResponse, resource, path=["response"])
+            assert_matches_type(SyncCursorPage[CategoryResourceResponse], resource, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
@@ -285,19 +272,16 @@ class TestResources:
 
 
 class TestAsyncResources:
-    parametrize = pytest.mark.parametrize("async_client", [False, True], indirect=True, ids=["loose", "strict"])
+    parametrize = pytest.mark.parametrize(
+        "async_client", [False, True, {"http_client": "aiohttp"}], indirect=True, ids=["loose", "strict", "aiohttp"]
+    )
 
     @parametrize
     async def test_method_create(self, async_client: AsyncPayi) -> None:
         resource = await async_client.categories.resources.create(
             resource="resource",
             category="category",
-            units={
-                "foo": {
-                    "input_price": 0,
-                    "output_price": 0,
-                }
-            },
+            units={"foo": {}},
         )
         assert_matches_type(CategoryResourceResponse, resource, path=["response"])
 
@@ -324,12 +308,7 @@ class TestAsyncResources:
         response = await async_client.categories.resources.with_raw_response.create(
             resource="resource",
             category="category",
-            units={
-                "foo": {
-                    "input_price": 0,
-                    "output_price": 0,
-                }
-            },
+            units={"foo": {}},
         )
 
         assert response.is_closed is True
@@ -342,12 +321,7 @@ class TestAsyncResources:
         async with async_client.categories.resources.with_streaming_response.create(
             resource="resource",
             category="category",
-            units={
-                "foo": {
-                    "input_price": 0,
-                    "output_price": 0,
-                }
-            },
+            units={"foo": {}},
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -363,24 +337,14 @@ class TestAsyncResources:
             await async_client.categories.resources.with_raw_response.create(
                 resource="resource",
                 category="",
-                units={
-                    "foo": {
-                        "input_price": 0,
-                        "output_price": 0,
-                    }
-                },
+                units={"foo": {}},
             )
 
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `resource` but received ''"):
             await async_client.categories.resources.with_raw_response.create(
                 resource="",
                 category="category",
-                units={
-                    "foo": {
-                        "input_price": 0,
-                        "output_price": 0,
-                    }
-                },
+                units={"foo": {}},
             )
 
     @parametrize
@@ -449,7 +413,19 @@ class TestAsyncResources:
             resource="resource",
             category="category",
         )
-        assert_matches_type(ResourceListResponse, resource, path=["response"])
+        assert_matches_type(AsyncCursorPage[CategoryResourceResponse], resource, path=["response"])
+
+    @parametrize
+    async def test_method_list_with_all_params(self, async_client: AsyncPayi) -> None:
+        resource = await async_client.categories.resources.list(
+            resource="resource",
+            category="category",
+            active=True,
+            cursor="cursor",
+            limit=0,
+            sort_ascending=True,
+        )
+        assert_matches_type(AsyncCursorPage[CategoryResourceResponse], resource, path=["response"])
 
     @parametrize
     async def test_raw_response_list(self, async_client: AsyncPayi) -> None:
@@ -461,7 +437,7 @@ class TestAsyncResources:
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
         resource = await response.parse()
-        assert_matches_type(ResourceListResponse, resource, path=["response"])
+        assert_matches_type(AsyncCursorPage[CategoryResourceResponse], resource, path=["response"])
 
     @parametrize
     async def test_streaming_response_list(self, async_client: AsyncPayi) -> None:
@@ -473,7 +449,7 @@ class TestAsyncResources:
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
             resource = await response.parse()
-            assert_matches_type(ResourceListResponse, resource, path=["response"])
+            assert_matches_type(AsyncCursorPage[CategoryResourceResponse], resource, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 

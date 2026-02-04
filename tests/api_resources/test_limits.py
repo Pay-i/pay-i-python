@@ -10,12 +10,13 @@ import pytest
 from payi import Payi, AsyncPayi
 from payi.types import (
     LimitResponse,
-    PagedLimitList,
     DefaultResponse,
+    LimitListResponse,
     LimitHistoryResponse,
 )
 from payi._utils import parse_datetime
 from tests.utils import assert_matches_type
+from payi.pagination import SyncCursorPage, AsyncCursorPage
 
 base_url = os.environ.get("TEST_API_BASE_URL", "http://127.0.0.1:4010")
 
@@ -36,11 +37,9 @@ class TestLimits:
         limit = client.limits.create(
             limit_name="x",
             max=0,
-            billing_model_id="billing_model_id",
-            cost_basis="base",
-            currency="usd",
-            limit_tags=["tag1", "tag2"],
+            limit_id="limit_id",
             limit_type="block",
+            properties={"foo": "string"},
             threshold=0,
         )
         assert_matches_type(LimitResponse, limit, path=["response"])
@@ -159,19 +158,17 @@ class TestLimits:
     @parametrize
     def test_method_list(self, client: Payi) -> None:
         limit = client.limits.list()
-        assert_matches_type(PagedLimitList, limit, path=["response"])
+        assert_matches_type(SyncCursorPage[LimitListResponse], limit, path=["response"])
 
     @parametrize
     def test_method_list_with_all_params(self, client: Payi) -> None:
         limit = client.limits.list(
+            cursor="cursor",
+            limit=0,
             limit_name="limit_name",
-            page_number=0,
-            page_size=0,
             sort_ascending=True,
-            sort_by="sort_by",
-            tags="tags",
         )
-        assert_matches_type(PagedLimitList, limit, path=["response"])
+        assert_matches_type(SyncCursorPage[LimitListResponse], limit, path=["response"])
 
     @parametrize
     def test_raw_response_list(self, client: Payi) -> None:
@@ -180,7 +177,7 @@ class TestLimits:
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
         limit = response.parse()
-        assert_matches_type(PagedLimitList, limit, path=["response"])
+        assert_matches_type(SyncCursorPage[LimitListResponse], limit, path=["response"])
 
     @parametrize
     def test_streaming_response_list(self, client: Payi) -> None:
@@ -189,7 +186,7 @@ class TestLimits:
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
             limit = response.parse()
-            assert_matches_type(PagedLimitList, limit, path=["response"])
+            assert_matches_type(SyncCursorPage[LimitListResponse], limit, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
@@ -279,7 +276,9 @@ class TestLimits:
 
 
 class TestAsyncLimits:
-    parametrize = pytest.mark.parametrize("async_client", [False, True], indirect=True, ids=["loose", "strict"])
+    parametrize = pytest.mark.parametrize(
+        "async_client", [False, True, {"http_client": "aiohttp"}], indirect=True, ids=["loose", "strict", "aiohttp"]
+    )
 
     @parametrize
     async def test_method_create(self, async_client: AsyncPayi) -> None:
@@ -294,11 +293,9 @@ class TestAsyncLimits:
         limit = await async_client.limits.create(
             limit_name="x",
             max=0,
-            billing_model_id="billing_model_id",
-            cost_basis="base",
-            currency="usd",
-            limit_tags=["tag1", "tag2"],
+            limit_id="limit_id",
             limit_type="block",
+            properties={"foo": "string"},
             threshold=0,
         )
         assert_matches_type(LimitResponse, limit, path=["response"])
@@ -417,19 +414,17 @@ class TestAsyncLimits:
     @parametrize
     async def test_method_list(self, async_client: AsyncPayi) -> None:
         limit = await async_client.limits.list()
-        assert_matches_type(PagedLimitList, limit, path=["response"])
+        assert_matches_type(AsyncCursorPage[LimitListResponse], limit, path=["response"])
 
     @parametrize
     async def test_method_list_with_all_params(self, async_client: AsyncPayi) -> None:
         limit = await async_client.limits.list(
+            cursor="cursor",
+            limit=0,
             limit_name="limit_name",
-            page_number=0,
-            page_size=0,
             sort_ascending=True,
-            sort_by="sort_by",
-            tags="tags",
         )
-        assert_matches_type(PagedLimitList, limit, path=["response"])
+        assert_matches_type(AsyncCursorPage[LimitListResponse], limit, path=["response"])
 
     @parametrize
     async def test_raw_response_list(self, async_client: AsyncPayi) -> None:
@@ -438,7 +433,7 @@ class TestAsyncLimits:
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
         limit = await response.parse()
-        assert_matches_type(PagedLimitList, limit, path=["response"])
+        assert_matches_type(AsyncCursorPage[LimitListResponse], limit, path=["response"])
 
     @parametrize
     async def test_streaming_response_list(self, async_client: AsyncPayi) -> None:
@@ -447,7 +442,7 @@ class TestAsyncLimits:
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
             limit = await response.parse()
-            assert_matches_type(PagedLimitList, limit, path=["response"])
+            assert_matches_type(AsyncCursorPage[LimitListResponse], limit, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 

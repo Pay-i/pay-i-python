@@ -8,14 +8,10 @@ __all__ = ["LimitListParams"]
 
 
 class LimitListParams(TypedDict, total=False):
+    cursor: str
+
+    limit: int
+
     limit_name: str
 
-    page_number: int
-
-    page_size: int
-
     sort_ascending: bool
-
-    sort_by: str
-
-    tags: str

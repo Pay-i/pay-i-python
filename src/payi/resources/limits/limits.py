@@ -2,27 +2,24 @@
 
 from __future__ import annotations
 
-from typing import List, Union, Optional
+from typing import Dict, Union, Optional
 from datetime import datetime
 from typing_extensions import Literal
 
 import httpx
 
-from .tags import (
-    TagsResource,
-    AsyncTagsResource,
-    TagsResourceWithRawResponse,
-    AsyncTagsResourceWithRawResponse,
-    TagsResourceWithStreamingResponse,
-    AsyncTagsResourceWithStreamingResponse,
-)
 from ...types import limit_list_params, limit_reset_params, limit_create_params, limit_update_params
-from ..._types import NOT_GIVEN, Body, Query, Headers, NotGiven
-from ..._utils import (
-    maybe_transform,
-    async_maybe_transform,
-)
+from ..._types import Body, Omit, Query, Headers, NotGiven, omit, not_given
+from ..._utils import maybe_transform, async_maybe_transform
 from ..._compat import cached_property
+from .properties import (
+    PropertiesResource,
+    AsyncPropertiesResource,
+    PropertiesResourceWithRawResponse,
+    AsyncPropertiesResourceWithRawResponse,
+    PropertiesResourceWithStreamingResponse,
+    AsyncPropertiesResourceWithStreamingResponse,
+)
 from ..._resource import SyncAPIResource, AsyncAPIResource
 from ..._response import (
     to_raw_response_wrapper,
@@ -30,10 +27,11 @@ from ..._response import (
     async_to_raw_response_wrapper,
     async_to_streamed_response_wrapper,
 )
-from ..._base_client import make_request_options
+from ...pagination import SyncCursorPage, AsyncCursorPage
+from ..._base_client import AsyncPaginator, make_request_options
 from ...types.limit_response import LimitResponse
 from ...types.default_response import DefaultResponse
-from ...types.paged_limit_list import PagedLimitList
+from ...types.limit_list_response import LimitListResponse
 from ...types.limit_history_response import LimitHistoryResponse
 
 __all__ = ["LimitsResource", "AsyncLimitsResource"]
@@ -41,8 +39,8 @@ __all__ = ["LimitsResource", "AsyncLimitsResource"]
 
 class LimitsResource(SyncAPIResource):
     @cached_property
-    def tags(self) -> TagsResource:
-        return TagsResource(self._client)
+    def properties(self) -> PropertiesResource:
+        return PropertiesResource(self._client)
 
     @cached_property
     def with_raw_response(self) -> LimitsResourceWithRawResponse:
@@ -68,18 +66,16 @@ class LimitsResource(SyncAPIResource):
         *,
         limit_name: str,
         max: float,
-        billing_model_id: Optional[str] | NotGiven = NOT_GIVEN,
-        cost_basis: Literal["base", "billed"] | NotGiven = NOT_GIVEN,
-        currency: Literal["usd"] | NotGiven = NOT_GIVEN,
-        limit_tags: Optional[List[str]] | NotGiven = NOT_GIVEN,
-        limit_type: Literal["block", "allow"] | NotGiven = NOT_GIVEN,
-        threshold: Optional[float] | NotGiven = NOT_GIVEN,
+        limit_id: Optional[str] | Omit = omit,
+        limit_type: Literal["block", "allow"] | Omit = omit,
+        properties: Optional[Dict[str, Optional[str]]] | Omit = omit,
+        threshold: Optional[float] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> LimitResponse:
         """
         Create a Limit
@@ -99,11 +95,9 @@ class LimitsResource(SyncAPIResource):
                 {
                     "limit_name": limit_name,
                     "max": max,
-                    "billing_model_id": billing_model_id,
-                    "cost_basis": cost_basis,
-                    "currency": currency,
-                    "limit_tags": limit_tags,
+                    "limit_id": limit_id,
                     "limit_type": limit_type,
+                    "properties": properties,
                     "threshold": threshold,
                 },
                 limit_create_params.LimitCreateParams,
@@ -123,7 +117,7 @@ class LimitsResource(SyncAPIResource):
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> LimitResponse:
         """
         Get Limit details
@@ -151,14 +145,14 @@ class LimitsResource(SyncAPIResource):
         self,
         limit_id: str,
         *,
-        limit_name: Optional[str] | NotGiven = NOT_GIVEN,
-        max: Optional[float] | NotGiven = NOT_GIVEN,
+        limit_name: Optional[str] | Omit = omit,
+        max: Optional[float] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> LimitResponse:
         """
         Update a Limit
@@ -192,19 +186,17 @@ class LimitsResource(SyncAPIResource):
     def list(
         self,
         *,
-        limit_name: str | NotGiven = NOT_GIVEN,
-        page_number: int | NotGiven = NOT_GIVEN,
-        page_size: int | NotGiven = NOT_GIVEN,
-        sort_ascending: bool | NotGiven = NOT_GIVEN,
-        sort_by: str | NotGiven = NOT_GIVEN,
-        tags: str | NotGiven = NOT_GIVEN,
+        cursor: str | Omit = omit,
+        limit: int | Omit = omit,
+        limit_name: str | Omit = omit,
+        sort_ascending: bool | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> PagedLimitList:
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SyncCursorPage[LimitListResponse]:
         """
         Get all Limits
 
@@ -217,8 +209,9 @@ class LimitsResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        return self._get(
+        return self._get_api_list(
             "/api/v1/limits",
+            page=SyncCursorPage[LimitListResponse],
             options=make_request_options(
                 extra_headers=extra_headers,
                 extra_query=extra_query,
@@ -226,17 +219,15 @@ class LimitsResource(SyncAPIResource):
                 timeout=timeout,
                 query=maybe_transform(
                     {
+                        "cursor": cursor,
+                        "limit": limit,
                         "limit_name": limit_name,
-                        "page_number": page_number,
-                        "page_size": page_size,
                         "sort_ascending": sort_ascending,
-                        "sort_by": sort_by,
-                        "tags": tags,
                     },
                     limit_list_params.LimitListParams,
                 ),
             ),
-            cast_to=PagedLimitList,
+            model=LimitListResponse,
         )
 
     def delete(
@@ -248,7 +239,7 @@ class LimitsResource(SyncAPIResource):
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> DefaultResponse:
         """
         Delete a Limit
@@ -276,13 +267,13 @@ class LimitsResource(SyncAPIResource):
         self,
         limit_id: str,
         *,
-        reset_date: Union[str, datetime] | NotGiven = NOT_GIVEN,
+        reset_date: Union[str, datetime] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> LimitHistoryResponse:
         """
         Reset a Limit
@@ -315,8 +306,8 @@ class LimitsResource(SyncAPIResource):
 
 class AsyncLimitsResource(AsyncAPIResource):
     @cached_property
-    def tags(self) -> AsyncTagsResource:
-        return AsyncTagsResource(self._client)
+    def properties(self) -> AsyncPropertiesResource:
+        return AsyncPropertiesResource(self._client)
 
     @cached_property
     def with_raw_response(self) -> AsyncLimitsResourceWithRawResponse:
@@ -342,18 +333,16 @@ class AsyncLimitsResource(AsyncAPIResource):
         *,
         limit_name: str,
         max: float,
-        billing_model_id: Optional[str] | NotGiven = NOT_GIVEN,
-        cost_basis: Literal["base", "billed"] | NotGiven = NOT_GIVEN,
-        currency: Literal["usd"] | NotGiven = NOT_GIVEN,
-        limit_tags: Optional[List[str]] | NotGiven = NOT_GIVEN,
-        limit_type: Literal["block", "allow"] | NotGiven = NOT_GIVEN,
-        threshold: Optional[float] | NotGiven = NOT_GIVEN,
+        limit_id: Optional[str] | Omit = omit,
+        limit_type: Literal["block", "allow"] | Omit = omit,
+        properties: Optional[Dict[str, Optional[str]]] | Omit = omit,
+        threshold: Optional[float] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> LimitResponse:
         """
         Create a Limit
@@ -373,11 +362,9 @@ class AsyncLimitsResource(AsyncAPIResource):
                 {
                     "limit_name": limit_name,
                     "max": max,
-                    "billing_model_id": billing_model_id,
-                    "cost_basis": cost_basis,
-                    "currency": currency,
-                    "limit_tags": limit_tags,
+                    "limit_id": limit_id,
                     "limit_type": limit_type,
+                    "properties": properties,
                     "threshold": threshold,
                 },
                 limit_create_params.LimitCreateParams,
@@ -397,7 +384,7 @@ class AsyncLimitsResource(AsyncAPIResource):
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> LimitResponse:
         """
         Get Limit details
@@ -425,14 +412,14 @@ class AsyncLimitsResource(AsyncAPIResource):
         self,
         limit_id: str,
         *,
-        limit_name: Optional[str] | NotGiven = NOT_GIVEN,
-        max: Optional[float] | NotGiven = NOT_GIVEN,
+        limit_name: Optional[str] | Omit = omit,
+        max: Optional[float] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> LimitResponse:
         """
         Update a Limit
@@ -463,22 +450,20 @@ class AsyncLimitsResource(AsyncAPIResource):
             cast_to=LimitResponse,
         )
 
-    async def list(
+    def list(
         self,
         *,
-        limit_name: str | NotGiven = NOT_GIVEN,
-        page_number: int | NotGiven = NOT_GIVEN,
-        page_size: int | NotGiven = NOT_GIVEN,
-        sort_ascending: bool | NotGiven = NOT_GIVEN,
-        sort_by: str | NotGiven = NOT_GIVEN,
-        tags: str | NotGiven = NOT_GIVEN,
+        cursor: str | Omit = omit,
+        limit: int | Omit = omit,
+        limit_name: str | Omit = omit,
+        sort_ascending: bool | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> PagedLimitList:
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> AsyncPaginator[LimitListResponse, AsyncCursorPage[LimitListResponse]]:
         """
         Get all Limits
 
@@ -491,26 +476,25 @@ class AsyncLimitsResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        return await self._get(
+        return self._get_api_list(
             "/api/v1/limits",
+            page=AsyncCursorPage[LimitListResponse],
             options=make_request_options(
                 extra_headers=extra_headers,
                 extra_query=extra_query,
                 extra_body=extra_body,
                 timeout=timeout,
-                query=await async_maybe_transform(
+                query=maybe_transform(
                     {
+                        "cursor": cursor,
+                        "limit": limit,
                         "limit_name": limit_name,
-                        "page_number": page_number,
-                        "page_size": page_size,
                         "sort_ascending": sort_ascending,
-                        "sort_by": sort_by,
-                        "tags": tags,
                     },
                     limit_list_params.LimitListParams,
                 ),
             ),
-            cast_to=PagedLimitList,
+            model=LimitListResponse,
         )
 
     async def delete(
@@ -522,7 +506,7 @@ class AsyncLimitsResource(AsyncAPIResource):
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> DefaultResponse:
         """
         Delete a Limit
@@ -550,13 +534,13 @@ class AsyncLimitsResource(AsyncAPIResource):
         self,
         limit_id: str,
         *,
-        reset_date: Union[str, datetime] | NotGiven = NOT_GIVEN,
+        reset_date: Union[str, datetime] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
         extra_query: Query | None = None,
         extra_body: Body | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> LimitHistoryResponse:
         """
         Reset a Limit
@@ -611,8 +595,8 @@ class LimitsResourceWithRawResponse:
         )
 
     @cached_property
-    def tags(self) -> TagsResourceWithRawResponse:
-        return TagsResourceWithRawResponse(self._limits.tags)
+    def properties(self) -> PropertiesResourceWithRawResponse:
+        return PropertiesResourceWithRawResponse(self._limits.properties)
 
 
 class AsyncLimitsResourceWithRawResponse:
@@ -639,8 +623,8 @@ class AsyncLimitsResourceWithRawResponse:
         )
 
     @cached_property
-    def tags(self) -> AsyncTagsResourceWithRawResponse:
-        return AsyncTagsResourceWithRawResponse(self._limits.tags)
+    def properties(self) -> AsyncPropertiesResourceWithRawResponse:
+        return AsyncPropertiesResourceWithRawResponse(self._limits.properties)
 
 
 class LimitsResourceWithStreamingResponse:
@@ -667,8 +651,8 @@ class LimitsResourceWithStreamingResponse:
         )
 
     @cached_property
-    def tags(self) -> TagsResourceWithStreamingResponse:
-        return TagsResourceWithStreamingResponse(self._limits.tags)
+    def properties(self) -> PropertiesResourceWithStreamingResponse:
+        return PropertiesResourceWithStreamingResponse(self._limits.properties)
 
 
 class AsyncLimitsResourceWithStreamingResponse:
@@ -695,5 +679,5 @@ class AsyncLimitsResourceWithStreamingResponse:
         )
 
     @cached_property
-    def tags(self) -> AsyncTagsResourceWithStreamingResponse:
-        return AsyncTagsResourceWithStreamingResponse(self._limits.tags)
+    def properties(self) -> AsyncPropertiesResourceWithStreamingResponse:
+        return AsyncPropertiesResourceWithStreamingResponse(self._limits.properties)

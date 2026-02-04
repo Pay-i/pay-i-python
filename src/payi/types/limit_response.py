@@ -1,6 +1,6 @@
 # File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-from typing import List, Optional
+from typing import Optional
 from datetime import datetime
 from typing_extensions import Literal
 
@@ -11,8 +11,6 @@ __all__ = ["LimitResponse", "Limit"]
 
 
 class Limit(BaseModel):
-    currency: Literal["usd"]
-
     limit_creation_timestamp: datetime
 
     limit_id: str
@@ -26,8 +24,6 @@ class Limit(BaseModel):
     max: float
 
     totals: TotalCostData
-
-    limit_tags: Optional[List[str]] = None
 
     threshold: Optional[float] = None
 

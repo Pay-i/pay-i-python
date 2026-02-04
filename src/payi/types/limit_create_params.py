@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Dict, Optional
 from typing_extensions import Literal, Required, TypedDict
 
 __all__ = ["LimitCreateParams"]
@@ -13,14 +13,10 @@ class LimitCreateParams(TypedDict, total=False):
 
     max: Required[float]
 
-    billing_model_id: Optional[str]
-
-    cost_basis: Literal["base", "billed"]
-
-    currency: Literal["usd"]
-
-    limit_tags: Optional[List[str]]
+    limit_id: Optional[str]
 
     limit_type: Literal["block", "allow"]
+
+    properties: Optional[Dict[str, Optional[str]]]
 
     threshold: Optional[float]

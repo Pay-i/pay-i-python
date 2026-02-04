@@ -3,38 +3,16 @@
 from typing import List, Optional
 from datetime import datetime
 
-from pydantic import Field as FieldInfo
-
 from .._models import BaseModel
+from .shared.api_error import APIError
 
-__all__ = ["BulkIngestResponse", "Error", "ErrorXproxyResult", "ErrorXproxyResultXproxyError"]
-
-
-class ErrorXproxyResultXproxyError(BaseModel):
-    code: Optional[str] = None
-
-    message: Optional[str] = None
-
-
-class ErrorXproxyResult(BaseModel):
-    message: str
-
-    status_code: int = FieldInfo(alias="statusCode")
-
-    xproxy_error: Optional[ErrorXproxyResultXproxyError] = None
+__all__ = ["BulkIngestResponse", "Error"]
 
 
 class Error(BaseModel):
     item_index: Optional[int] = None
 
-    xproxy_result: Optional[ErrorXproxyResult] = None
-    """
-    Represents an generic error that occurred as a result of processing a request.
-    APIM returns an (not customizable) error response body of { "statusCode",
-    "message" } and this class matches this schema. Derived classes may add
-    additional required fields if these classes are specified as produced as a
-    return type specific endpoints.
-    """
+    xproxy_result: Optional[APIError] = None
 
 
 class BulkIngestResponse(BaseModel):
@@ -47,5 +25,7 @@ class BulkIngestResponse(BaseModel):
     error_count: Optional[int] = None
 
     errors: Optional[List[Error]] = None
+
+    item_error_count: Optional[int] = None
 
     total_count: Optional[int] = None

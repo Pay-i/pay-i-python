@@ -7,7 +7,7 @@
     "context": ".."
   },
 
-  "postStartCommand": "rye sync --all-features",
+  "postStartCommand": "uv sync --all-extras",
 
   "customizations": {
     "vscode": {
@@ -20,10 +20,13 @@
         "python.defaultInterpreterPath": ".venv/bin/python",
         "python.typeChecking": "basic",
         "terminal.integrated.env.linux": {
-          "PATH": "/home/vscode/.rye/shims:${env:PATH}"
+          "PATH": "${env:PATH}"
         }
       }
     }
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {}
   }
 
   // Features to add to the dev container. More info: https://containers.dev/features.
