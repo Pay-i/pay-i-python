@@ -73,8 +73,3 @@ class ProviderResponseFunctionCall(TypedDict, total=False):
     name: Required[str]
 
     arguments: Optional[str]
-
-class Units(TypedDict, total=False):
-    input: int
-
-    output: int
