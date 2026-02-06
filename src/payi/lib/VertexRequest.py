@@ -6,7 +6,7 @@ from typing import Any, Optional
 from typing_extensions import override
 
 from payi.lib.helpers import PayiCategories
-from payi.types.ingest_units_params import Units
+from payi.types.ingest_units_params import IngestUnits
 
 from .instrument import _PayiInstrumentor
 from .ProviderRequest import _ChunkResult, _StreamingType, _ProviderRequest
@@ -228,7 +228,7 @@ class _VertexRequest(_ProviderRequest): # type: ignore
                     else:
                         output = streaming_candidates_characters
 
-                    self._ingest["units"]["text"+large_context] = Units(input=input, output=output)
+                    self._ingest["units"]["text"+large_context] = IngestUnits(input=input, output=output)
 
                 elif modality == "IMAGE":
                     num_images = math.ceil(modality_token_count / 258)
@@ -309,7 +309,7 @@ class _VertexRequest(_ProviderRequest): # type: ignore
                     input *= 4
 
                 # if no units were added, add a default unit and assume 4 characters per token
-                self._ingest["units"]["text"+large_context] = Units(input=input, output=output)
+                self._ingest["units"]["text"+large_context] = IngestUnits(input=input, output=output)
             else:
                 # if no units were added, add a default unit
-                self._ingest["units"]["text"] = Units(input=input, output=output)
+                self._ingest["units"]["text"] = IngestUnits(input=input, output=output)

@@ -9,7 +9,7 @@ import tiktoken  # type: ignore
 from wrapt import wrap_function_wrapper  # type: ignore
 
 from payi.lib.helpers import PayiCategories
-from payi.types.ingest_units_params import Units
+from payi.types.ingest_units_params import IngestUnits
 
 from .instrument import (
     PayiInstrumentOpenAiAzureConfig,
@@ -331,7 +331,7 @@ class _OpenAiProviderRequest(_ProviderRequest):
         if prompt_tokens_details:
             input_cache = prompt_tokens_details.get("cached_tokens", 0)
             if input_cache != 0:
-                units["text_cache_read"] = Units(input=input_cache, output=0)
+                units["text_cache_read"] = IngestUnits(input=input_cache, output=0)
 
         output_tokens_details = usage.get(self._output_tokens_details_key, {})
         if output_tokens_details:
@@ -342,7 +342,7 @@ class _OpenAiProviderRequest(_ProviderRequest):
 
         input = self.update_for_vision(input - input_cache)
 
-        units["text"] = Units(input=input, output=output)
+        units["text"] = IngestUnits(input=input, output=output)
 
     @staticmethod
     def has_image_and_get_texts(encoding: tiktoken.Encoding, content: Union[str, 'list[Any]'], image_type: str, text_type: str) -> 'tuple[bool, int]':
