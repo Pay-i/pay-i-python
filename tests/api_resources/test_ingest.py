@@ -158,6 +158,7 @@ class TestIngest:
             use_case_version=0,
             resource_scope="datazone",
             user_id="UserName123",
+            disable_logging=True,
         )
         assert_matches_type(IngestResponse, ingest, path=["response"])
 
@@ -333,6 +334,7 @@ class TestAsyncIngest:
             use_case_version=0,
             resource_scope="datazone",
             user_id="UserName123",
+            disable_logging=True,
         )
         assert_matches_type(IngestResponse, ingest, path=["response"])
 

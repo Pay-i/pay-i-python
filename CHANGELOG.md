@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.1.0-alpha.156 (2026-02-09)
+
+Full Changelog: [v0.1.0-alpha.155...v0.1.0-alpha.156](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.155...v0.1.0-alpha.156)
+
+### Features
+
+* inference geo ([#426](https://github.com/Pay-i/pay-i-python/issues/426)) ([ebf9a95](https://github.com/Pay-i/pay-i-python/commit/ebf9a953f745a19eb2e9ef8f6272ab19e402bdd5))
+* openai reasoning tokens ([#428](https://github.com/Pay-i/pay-i-python/issues/428)) ([a6aa218](https://github.com/Pay-i/pay-i-python/commit/a6aa218b9d0a266b1e2b946b06b5628e01a334d4))
+
+
+### Bug Fixes
+
+* bad merge ([#424](https://github.com/Pay-i/pay-i-python/issues/424)) ([79ceca7](https://github.com/Pay-i/pay-i-python/commit/79ceca77caf1f6af2c9a4cf0d40bf61410ded104))
+
+
+### Chores
+
+* **internal:** codegen related update ([ad093ed](https://github.com/Pay-i/pay-i-python/commit/ad093edd6566e9e0385c0760220722ddab6631aa))
+
 ## 0.1.0-alpha.155 (2026-02-02)
 
 Full Changelog: [v0.1.0-alpha.154...v0.1.0-alpha.155](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.154...v0.1.0-alpha.155)

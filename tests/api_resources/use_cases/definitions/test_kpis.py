@@ -29,20 +29,9 @@ class TestKpis:
         kpi = client.use_cases.definitions.kpis.create(
             use_case_name="use_case_name",
             description="x",
-            name="x",
             goal=0,
             kpi_type="boolean",
-        )
-        assert_matches_type(KpiCreateResponse, kpi, path=["response"])
-
-    @parametrize
-    def test_method_create_with_all_params(self, client: Payi) -> None:
-        kpi = client.use_cases.definitions.kpis.create(
-            use_case_name="use_case_name",
-            description="x",
             name="x",
-            goal=0,
-            kpi_type="boolean",
         )
         assert_matches_type(KpiCreateResponse, kpi, path=["response"])
 
@@ -303,20 +292,9 @@ class TestAsyncKpis:
         kpi = await async_client.use_cases.definitions.kpis.create(
             use_case_name="use_case_name",
             description="x",
-            name="x",
             goal=0,
             kpi_type="boolean",
-        )
-        assert_matches_type(KpiCreateResponse, kpi, path=["response"])
-
-    @parametrize
-    async def test_method_create_with_all_params(self, async_client: AsyncPayi) -> None:
-        kpi = await async_client.use_cases.definitions.kpis.create(
-            use_case_name="use_case_name",
-            description="x",
             name="x",
-            goal=0,
-            kpi_type="boolean",
         )
         assert_matches_type(KpiCreateResponse, kpi, path=["response"])
 

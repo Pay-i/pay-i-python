@@ -9,7 +9,7 @@ from typing_extensions import override
 from wrapt import ObjectProxy, wrap_function_wrapper  # type: ignore
 
 from payi.lib.helpers import PayiCategories, PayiHeaderNames, PayiPropertyNames, payi_aws_bedrock_url
-from payi.types.ingest_units_params import Units
+from payi.types.ingest_units_params import IngestUnits
 
 from .instrument import (
     PayiInstrumentAwsBedrockConfig,
@@ -173,7 +173,7 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
         
         input: int = 0
         output: int = 0
-        units: dict[str, Units] = ingest["units"]
+        units: dict[str, IngestUnits] = ingest["units"]
 
         if self._request._is_anthropic:
             from .AnthropicInstrumentor import anthropic_process_synchronous_response
@@ -187,14 +187,14 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
         elif self._request._is_meta:
             input = response.get('prompt_token_count', 0)
             output = response.get('generation_token_count', 0)
-            units["text"] = Units(input=input, output=output)
+            units["text"] = IngestUnits(input=input, output=output)
 
         elif self._request._is_nova:
             usage = response.get("usage", {})
 
             input = usage.get("inputTokens", 0)
             output = usage.get("outputTokens", 0)
-            units["text"] = Units(input=input, output=output)
+            units["text"] = IngestUnits(input=input, output=output)
 
             text_cache_read = usage.get("cacheReadInputTokenCount", None)
             if text_cache_read:
@@ -208,7 +208,7 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
 
         elif self._request._is_amazon_titan_embed_text_v1:
             input = response.get('inputTextTokenCount', 0)
-            units["text"] = Units(input=input, output=0)
+            units["text"] = IngestUnits(input=input, output=0)
 
         elif self._request._is_cohere_embed_english_v3:
             texts: list[str] = response.get("texts", [])
@@ -227,7 +227,7 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
                         tokens: list = self._cohere_embed_english_v3_tokenizer.encode(text, add_special_tokens=False).tokens # type: ignore
 
                         if tokens and isinstance(tokens, list):
-                            units["text"] = Units(input=len(tokens), output=0) # type: ignore
+                            units["text"] = IngestUnits(input=len(tokens), output=0) # type: ignore
 
                 except ImportError:
                     self._request._instrumentor._logger.warning("tokenizers module not found, caller must install the tokenizers module. Cannot record text tokens for Cohere embed english v3")
@@ -409,35 +409,35 @@ class _BedrockProviderRequest(_ProviderRequest):
 
             topicPolicyUnits: int  = usage.get("topicPolicyUnits", 0) # type: ignore
             if topicPolicyUnits > 0:
-                units["guardrail_topic"] = Units(input=topicPolicyUnits, output=0) # type: ignore
+                units["guardrail_topic"] = IngestUnits(input=topicPolicyUnits, output=0) # type: ignore
 
             contentPolicyUnits = usage.get("contentPolicyUnits", 0) # type: ignore
             if contentPolicyUnits > 0:
-                units["guardrail_content"] = Units(input=contentPolicyUnits, output=0) # type: ignore
+                units["guardrail_content"] = IngestUnits(input=contentPolicyUnits, output=0) # type: ignore
 
             wordPolicyUnits = usage.get("wordPolicyUnits", 0) # type: ignore    
             if wordPolicyUnits > 0:
-                units["guardrail_word_free"] = Units(input=wordPolicyUnits, output=0) # type: ignore
+                units["guardrail_word_free"] = IngestUnits(input=wordPolicyUnits, output=0) # type: ignore
 
             automatedReasoningPolicyUnits = usage.get("automatedReasoningPolicyUnits", 0) # type: ignore
             if automatedReasoningPolicyUnits > 0:
-                units["guardrail_automated_reasoning"] = Units(input=automatedReasoningPolicyUnits, output=0) # type: ignore
+                units["guardrail_automated_reasoning"] = IngestUnits(input=automatedReasoningPolicyUnits, output=0) # type: ignore
 
             sensitiveInformationPolicyUnits = usage.get("sensitiveInformationPolicyUnits", 0) # type: ignore
             if sensitiveInformationPolicyUnits > 0:
-                units["guardrail_sensitive_information"] = Units(input=sensitiveInformationPolicyUnits, output=0) # type: ignore
+                units["guardrail_sensitive_information"] = IngestUnits(input=sensitiveInformationPolicyUnits, output=0) # type: ignore
 
             sensitiveInformationPolicyFreeUnits = usage.get("sensitiveInformationPolicyFreeUnits", 0) # type: ignore
             if sensitiveInformationPolicyFreeUnits > 0:
-                units["guardrail_sensitive_information_free"] = Units(input=sensitiveInformationPolicyFreeUnits, output=0) # type: ignore
+                units["guardrail_sensitive_information_free"] = IngestUnits(input=sensitiveInformationPolicyFreeUnits, output=0) # type: ignore
 
             contextualGroundingPolicyUnits = usage.get("contextualGroundingPolicyUnits", 0) # type: ignore
             if contextualGroundingPolicyUnits > 0:
-                units["guardrail_contextual_grounding"] = Units(input=contextualGroundingPolicyUnits, output=0) # type: ignore
+                units["guardrail_contextual_grounding"] = IngestUnits(input=contextualGroundingPolicyUnits, output=0) # type: ignore
 
             contentPolicyImageUnits = usage.get("contentPolicyImageUnits", 0) # type: ignore
             if contentPolicyImageUnits > 0:
-                units["guardrail_content_image"] = Units(input=contentPolicyImageUnits, output=0) # type: ignore
+                units["guardrail_content_image"] = IngestUnits(input=contentPolicyImageUnits, output=0) # type: ignore
 
 class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, model_id: str):
@@ -501,7 +501,7 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
                     images = body.get("images", [])
                     if (len(images) > 0):
                         # only supports one image according to docs
-                        self._ingest["units"]["vision"] = Units(input=1, output=0)
+                        self._ingest["units"]["vision"] = IngestUnits(input=1, output=0)
             except Exception as e:
                 self._instrumentor._logger.debug(f"Bedrock invoke error processing request body: {e}")
         return True
@@ -533,7 +533,7 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
         if metrics:
             input = metrics.get("inputTokenCount", 0)
             output = metrics.get("outputTokenCount", 0)
-            self._ingest["units"]["text"] = Units(input=input, output=output)
+            self._ingest["units"]["text"] = IngestUnits(input=input, output=output)
 
             text_cache_read = metrics.get("cacheReadInputTokenCount", None)
             if text_cache_read:
@@ -570,7 +570,7 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
             self.add_internal_request_property(PayiPropertyNames.aws_bedrock_guardrail_action, action)
 
     @override
-    def remove_inline_data(self, prompt: 'dict[str, Any]') -> bool:# noqa: ARG002
+    def remove_prompt_inline_data(self, prompt: 'dict[str, Any]') -> bool:# noqa: ARG002
         if not self._is_anthropic:
             return False
 
@@ -619,8 +619,8 @@ class _BedrockConverseProviderRequest(_BedrockProviderRequest):
         input = usage.get("inputTokens", 0)
         output = usage.get("outputTokens", 0)
 
-        units: dict[str, Units] = self._ingest["units"]
-        units["text"] = Units(input=input, output=output)
+        units: dict[str, IngestUnits] = self._ingest["units"]
+        units["text"] = IngestUnits(input=input, output=output)
 
         self.process_response_metadata(response.get("ResponseMetadata", {}))
 
@@ -648,7 +648,7 @@ class _BedrockConverseProviderRequest(_BedrockProviderRequest):
             usage = metadata.get('usage', {})
             input = usage.get("inputTokens", 0)
             output = usage.get("outputTokens", 0)
-            self._ingest["units"]["text"] = Units(input=input, output=output)
+            self._ingest["units"]["text"] = IngestUnits(input=input, output=output)
 
             guardrail = metadata.get("trace", {}).get("guardrail", {}).get("inputAssessment", {})
             if guardrail:

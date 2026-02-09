@@ -9,7 +9,7 @@ import tiktoken  # type: ignore
 from wrapt import wrap_function_wrapper  # type: ignore
 
 from payi.lib.helpers import PayiCategories
-from payi.types.ingest_units_params import Units
+from payi.types.ingest_units_params import IngestUnits
 
 from .instrument import (
     PayiInstrumentOpenAiAzureConfig,
@@ -182,12 +182,14 @@ class _OpenAiProviderRequest(_ProviderRequest):
     chat_input_tokens_key: str = "prompt_tokens"
     chat_output_tokens_key: str = "completion_tokens"
     chat_input_tokens_details_key: str = "prompt_tokens_details"
+    chat_completion_tokens_details_key: str = "completion_tokens_details"
 
     responses_input_tokens_key: str = "input_tokens"
     responses_output_tokens_key: str = "output_tokens"
     responses_input_tokens_details_key: str = "input_tokens_details"
+    responses_output_tokens_details_key: str = "output_tokens_details"
 
-    def __init__(self, instrumentor: _PayiInstrumentor, instance: Any, input_tokens_key: str, output_tokens_key: str, input_tokens_details_key: str) -> None:
+    def __init__(self, instrumentor: _PayiInstrumentor, instance: Any, input_tokens_key: str, output_tokens_key: str, input_tokens_details_key: str, output_tokens_details_key: str) -> None:
         self._openai_client = instance._client if instance and hasattr(instance, "_client") else None
         self._is_azure = self._openai_client and OpenAiInstrumentor.is_azure(self._openai_client)
 
@@ -203,6 +205,7 @@ class _OpenAiProviderRequest(_ProviderRequest):
         self._input_tokens_key = input_tokens_key
         self._output_tokens_key = output_tokens_key
         self._input_tokens_details_key = input_tokens_details_key
+        self._output_tokens_details_key = output_tokens_details_key
 
         if hasattr(self._openai_client, "base_url"):
            try:
@@ -324,15 +327,22 @@ class _OpenAiProviderRequest(_ProviderRequest):
         output = usage[self._output_tokens_key] if self._output_tokens_key in usage else 0
         input_cache = 0
 
-        prompt_tokens_details = usage.get(self._input_tokens_details_key)
+        prompt_tokens_details = usage.get(self._input_tokens_details_key, {})
         if prompt_tokens_details:
             input_cache = prompt_tokens_details.get("cached_tokens", 0)
             if input_cache != 0:
-                units["text_cache_read"] = Units(input=input_cache, output=0)
+                units["text_cache_read"] = IngestUnits(input=input_cache, output=0)
+
+        output_tokens_details = usage.get(self._output_tokens_details_key, {})
+        if output_tokens_details:
+            reasoning_tokens = output_tokens_details.get("reasoning_tokens", 0)
+            if reasoning_tokens != 0:
+                units["reasoning"] = IngestUnits(input=0, output=reasoning_tokens)
+                output -= reasoning_tokens
 
         input = self.update_for_vision(input - input_cache)
 
-        units["text"] = Units(input=input, output=output)
+        units["text"] = IngestUnits(input=input, output=output)
 
     @staticmethod
     def has_image_and_get_texts(encoding: tiktoken.Encoding, content: Union[str, 'list[Any]'], image_type: str, text_type: str) -> 'tuple[bool, int]':
@@ -374,7 +384,8 @@ class _OpenAiEmbeddingsProviderRequest(_OpenAiProviderRequest):
             instance=instance,
             input_tokens_key=_OpenAiProviderRequest.chat_input_tokens_key,
             output_tokens_key=_OpenAiProviderRequest.chat_output_tokens_key,
-            input_tokens_details_key=_OpenAiProviderRequest.chat_input_tokens_details_key)
+            input_tokens_details_key=_OpenAiProviderRequest.chat_input_tokens_details_key,
+            output_tokens_details_key=_OpenAiProviderRequest.chat_completion_tokens_details_key)
 
     @override
     def process_synchronous_response(
@@ -390,7 +401,8 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
             instance=instance,
             input_tokens_key=_OpenAiProviderRequest.chat_input_tokens_key,
             output_tokens_key=_OpenAiProviderRequest.chat_output_tokens_key,
-            input_tokens_details_key=_OpenAiProviderRequest.chat_input_tokens_details_key)
+            input_tokens_details_key=_OpenAiProviderRequest.chat_input_tokens_details_key,
+            output_tokens_details_key=_OpenAiProviderRequest.chat_completion_tokens_details_key)
 
         self._include_usage_added = False
 
@@ -478,7 +490,7 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
         return True
 
     @override
-    def remove_inline_data(self, prompt: 'dict[str, Any]') -> bool:
+    def remove_prompt_inline_data(self, prompt: 'dict[str, Any]') -> bool:
         messages = prompt.get("messages", None)
         if not messages:
             return False
@@ -514,7 +526,8 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
             instance=instance,
             input_tokens_key=_OpenAiProviderRequest.responses_input_tokens_key,
             output_tokens_key=_OpenAiProviderRequest.responses_output_tokens_key,
-            input_tokens_details_key=_OpenAiProviderRequest.responses_input_tokens_details_key)
+            input_tokens_details_key=_OpenAiProviderRequest.responses_input_tokens_details_key,
+            output_tokens_details_key=_OpenAiProviderRequest.responses_output_tokens_details_key)
 
     @override
     def process_chunk(self, chunk: Any) -> _ChunkResult:
@@ -601,7 +614,7 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
         return True
 
     @override
-    def remove_inline_data(self, prompt: 'dict[str, Any]') -> bool:
+    def remove_prompt_inline_data(self, prompt: 'dict[str, Any]') -> bool:
         modified = False
         input = prompt.get("input", [])
         for item in input:
@@ -612,6 +625,39 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
                 if key == "content":
                     if isinstance(value, list):
                         modified = self.post_process_request_prompt(value, image_type="input_image", url_subkey=False) | modified # type: ignore
+
+        return modified
+
+    @override
+    def remove_responses_inline_data(self, responses: 'list[dict[str, Any]]') -> bool:# noqa: ARG002
+        modified = False
+        def remove_from_output_array(outputs: 'list[dict[str, Any]]') -> bool:
+            modified = False
+            for output in outputs:
+                response_type = output.get("type", "")
+                if response_type == "image_generation_call" and 'result' in output:
+                    output["result"] = _PayiInstrumentor._not_instrumented
+                    modified = True
+            return modified
+
+        for response in responses:
+            output = response.get("output", [])
+            if output:
+                modified |= remove_from_output_array(output)
+
+            response_type = response.get("type", "")
+            if response_type == "response.image_generation_call.partial_image" and 'partial_image_b64' in response:
+                response["partial_image_b64"] = _PayiInstrumentor._not_instrumented
+                modified = True
+            elif response_type == "response.output_item.done":
+                item = response.get("item", {})
+                if item and item.get("type", "") == "image_generation_call" and 'result' in item:
+                    item["result"] = _PayiInstrumentor._not_instrumented
+                    modified = True
+            elif response_type == "response.completed":
+                completed_output = response.get("response", {}).get("output", [])
+                if completed_output:
+                    modified |= remove_from_output_array(completed_output)
 
         return modified
 

@@ -7,8 +7,8 @@ from typing_extensions import override
 import tiktoken
 from wrapt import wrap_function_wrapper  # type: ignore
 
-from payi.lib.helpers import PayiCategories
-from payi.types.ingest_units_params import Units
+from payi.lib.helpers import PayiCategories, PayiResourceScopes
+from payi.types.ingest_units_params import IngestUnits
 
 from .instrument import PayiInstrumentAnthropicConfig, _Context, _IsStreaming, _PayiInstrumentor
 from .StreamWrappers import _GeneratorWrapper
@@ -219,7 +219,8 @@ class _AnthropicProviderRequest(_ProviderRequest):
         self._is_vertex: bool = AnthropicInstrumentor.is_vertex(self._anthropic_client)
         self._is_bedrock: bool = AnthropicInstrumentor.is_bedrock(self._anthropic_client)
         self._is_azure: bool = AnthropicInstrumentor.is_azure(self._anthropic_client)
-    
+        self._is_anthropic_saas: bool = False
+
         category: str = ""
         if self._is_vertex:
             category = PayiCategories.google_vertex
@@ -229,6 +230,7 @@ class _AnthropicProviderRequest(_ProviderRequest):
             category = PayiCategories.azure
         else:
             category = PayiCategories.anthropic
+            self._is_anthropic_saas = True
 
         instrumentor._logger.debug(f"Anthropic messages instrumenting category {category}")
 
@@ -296,7 +298,7 @@ class _AnthropicProviderRequest(_ProviderRequest):
         return True
 
     @override
-    def remove_inline_data(self, prompt: 'dict[str, Any]') -> bool:
+    def remove_prompt_inline_data(self, prompt: 'dict[str, Any]') -> bool:
         return anthropic_remove_inline_data(prompt)
 
     @override
@@ -333,7 +335,7 @@ class _AnthropicProviderRequest(_ProviderRequest):
 
 def anthropic_process_compute_input_cost(request: _ProviderRequest, usage: 'dict[str, Any]') -> int:
     input = usage.get('input_tokens', 0)
-    units: dict[str, Units] = request._ingest["units"]
+    units: dict[str, IngestUnits] = request._ingest["units"]
 
     cache_creation_input_tokens = usage.get("cache_creation_input_tokens", 0)
     cache_read_input_tokens = usage.get("cache_read_input_tokens", 0)
@@ -352,31 +354,44 @@ def anthropic_process_compute_input_cost(request: _ProviderRequest, usage: 'dict
         ephemeral_5m_input_tokens = cache_creation.get("ephemeral_5m_input_tokens", 0)
         if ephemeral_5m_input_tokens > 0:
             textCacheWriteAdded = True
-            units["text_cache_write"+large_context] = Units(input=ephemeral_5m_input_tokens, output=0)
+            units["text_cache_write"+large_context] = IngestUnits(input=ephemeral_5m_input_tokens, output=0)
 
         ephemeral_1h_input_tokens = cache_creation.get("ephemeral_1h_input_tokens", 0)
         if ephemeral_1h_input_tokens > 0:
             textCacheWriteAdded = True
-            units["text_cache_write_1h"+large_context] = Units(input=ephemeral_1h_input_tokens, output=0)
+            units["text_cache_write_1h"+large_context] = IngestUnits(input=ephemeral_1h_input_tokens, output=0)
 
     if textCacheWriteAdded is False and cache_creation_input_tokens > 0:
-        units["text_cache_write"+large_context] = Units(input=cache_creation_input_tokens, output=0)
+        units["text_cache_write"+large_context] = IngestUnits(input=cache_creation_input_tokens, output=0)
 
     cache_read_input_tokens = usage.get("cache_read_input_tokens", 0)
     if cache_read_input_tokens > 0:
-        units["text_cache_read"+large_context] = Units(input=cache_read_input_tokens, output=0)
+        units["text_cache_read"+large_context] = IngestUnits(input=cache_read_input_tokens, output=0)
 
     return request.update_for_vision(input)
 
+def process_inference_geo(request: _ProviderRequest, inference_geo: Optional[str]) -> None:
+    if not isinstance(request, _AnthropicProviderRequest):
+        return
+
+    anthropic_request: _AnthropicProviderRequest = request
+    if not anthropic_request._is_anthropic_saas:
+        return
+
+    if inference_geo and inference_geo not in ('global', 'not_available'):
+        request._ingest["resource_scope"] = f'{PayiResourceScopes.datazone_scope}.{inference_geo}'
+
 def anthropic_process_synchronous_response(request: _ProviderRequest, response: 'dict[str, Any]', log_prompt_and_response: bool, assign_id: bool) -> Any:
     usage = response.get('usage', {})
-    units: dict[str, Units] = request._ingest["units"]
+    units: dict[str, IngestUnits] = request._ingest["units"]
 
     input_tokens = anthropic_process_compute_input_cost(request, usage)
     output = usage.get('output_tokens', 0)
 
     large_context = "_large_context" if request._is_large_context else ""
-    units["text"+large_context] = Units(input=input_tokens, output=output)
+    units["text"+large_context] = IngestUnits(input=input_tokens, output=output)
+
+    process_inference_geo(request, usage.get("inference_geo", ''))
 
     content = response.get('content', [])
     if content:
@@ -400,7 +415,7 @@ def anthropic_process_synchronous_response(request: _ProviderRequest, response: 
     
     web_search_requests = usage.get("server_tool_use", {}).get("web_search_requests", 0)
     if web_search_requests > 0:
-        units["web_search_request"] = Units(output=web_search_requests)
+        units["web_search_request"] = IngestUnits(output=web_search_requests)
 
     return None
 
@@ -424,7 +439,9 @@ def anthropic_process_chunk(request: _ProviderRequest, chunk: 'dict[str, Any]', 
         input = anthropic_process_compute_input_cost(request, usage)
 
         large_context = "_large_context" if request._is_large_context else ""
-        units["text"+large_context] = Units(input=input, output=0)
+        units["text"+large_context] = IngestUnits(input=input, output=0)
+
+        process_inference_geo(request, usage.get("inference_geo", ''))
 
         request._instrumentor._logger.debug(f"Anthropic streaming captured {input} input tokens, ")
 
@@ -443,7 +460,7 @@ def anthropic_process_chunk(request: _ProviderRequest, chunk: 'dict[str, Any]', 
         
         web_search_requests = usage.get("server_tool_use", {}).get("web_search_requests", 0)
         if web_search_requests > 0:
-            request._ingest["units"]["web_search_request"] = Units(output=web_search_requests)
+            request._ingest["units"]["web_search_request"] = IngestUnits(output=web_search_requests)
 
         request._instrumentor._logger.debug(f"Anthropic streaming finished: output tokens {usage.get('output_tokens', 0)} ")
 
