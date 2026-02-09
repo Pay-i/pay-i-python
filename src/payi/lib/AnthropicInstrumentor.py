@@ -7,7 +7,7 @@ from typing_extensions import override
 import tiktoken
 from wrapt import wrap_function_wrapper  # type: ignore
 
-from payi.lib.helpers import PayiCategories
+from payi.lib.helpers import PayiCategories, PayiResourceScopes
 from payi.types.ingest_units_params import IngestUnits
 
 from .instrument import PayiInstrumentAnthropicConfig, _Context, _IsStreaming, _PayiInstrumentor
@@ -219,7 +219,8 @@ class _AnthropicProviderRequest(_ProviderRequest):
         self._is_vertex: bool = AnthropicInstrumentor.is_vertex(self._anthropic_client)
         self._is_bedrock: bool = AnthropicInstrumentor.is_bedrock(self._anthropic_client)
         self._is_azure: bool = AnthropicInstrumentor.is_azure(self._anthropic_client)
-    
+        self._is_anthropic_saas: bool = False
+
         category: str = ""
         if self._is_vertex:
             category = PayiCategories.google_vertex
@@ -229,6 +230,7 @@ class _AnthropicProviderRequest(_ProviderRequest):
             category = PayiCategories.azure
         else:
             category = PayiCategories.anthropic
+            self._is_anthropic_saas = True
 
         instrumentor._logger.debug(f"Anthropic messages instrumenting category {category}")
 
@@ -368,6 +370,17 @@ def anthropic_process_compute_input_cost(request: _ProviderRequest, usage: 'dict
 
     return request.update_for_vision(input)
 
+def process_inference_geo(request: _ProviderRequest, inference_geo: Optional[str]) -> None:
+    if not isinstance(request, _AnthropicProviderRequest):
+        return
+
+    anthropic_request: _AnthropicProviderRequest = request
+    if not anthropic_request._is_anthropic_saas:
+        return
+
+    if inference_geo and inference_geo not in ('global', 'not_available'):
+        request._ingest["resource_scope"] = f'{PayiResourceScopes.datazone_scope}.{inference_geo}'
+
 def anthropic_process_synchronous_response(request: _ProviderRequest, response: 'dict[str, Any]', log_prompt_and_response: bool, assign_id: bool) -> Any:
     usage = response.get('usage', {})
     units: dict[str, IngestUnits] = request._ingest["units"]
@@ -377,6 +390,8 @@ def anthropic_process_synchronous_response(request: _ProviderRequest, response: 
 
     large_context = "_large_context" if request._is_large_context else ""
     units["text"+large_context] = IngestUnits(input=input_tokens, output=output)
+
+    process_inference_geo(request, usage.get("inference_geo", ''))
 
     content = response.get('content', [])
     if content:
@@ -425,6 +440,8 @@ def anthropic_process_chunk(request: _ProviderRequest, chunk: 'dict[str, Any]', 
 
         large_context = "_large_context" if request._is_large_context else ""
         units["text"+large_context] = IngestUnits(input=input, output=0)
+
+        process_inference_geo(request, usage.get("inference_geo", ''))
 
         request._instrumentor._logger.debug(f"Anthropic streaming captured {input} input tokens, ")
 
