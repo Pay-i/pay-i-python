@@ -337,7 +337,7 @@ class _OpenAiProviderRequest(_ProviderRequest):
         if output_tokens_details:
             reasoning_tokens = output_tokens_details.get("reasoning_tokens", 0)
             if reasoning_tokens != 0:
-                units["reasoning"] = Units(input=0, output=reasoning_tokens)
+                units["reasoning"] = IngestUnits(input=0, output=reasoning_tokens)
                 output -= reasoning_tokens
 
         input = self.update_for_vision(input - input_cache)
