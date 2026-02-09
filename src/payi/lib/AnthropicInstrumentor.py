@@ -298,7 +298,7 @@ class _AnthropicProviderRequest(_ProviderRequest):
         return True
 
     @override
-    def remove_inline_data(self, prompt: 'dict[str, Any]') -> bool:
+    def remove_prompt_inline_data(self, prompt: 'dict[str, Any]') -> bool:
         return anthropic_remove_inline_data(prompt)
 
     @override

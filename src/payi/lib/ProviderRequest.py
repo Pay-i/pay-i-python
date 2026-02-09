@@ -90,7 +90,10 @@ class _ProviderRequest:
     def process_initial_stream_response(self, response: Any) -> None:
         self.add_instrumented_response_headers(response)
 
-    def remove_inline_data(self, prompt: 'dict[str, Any]') -> bool:# noqa: ARG002
+    def remove_prompt_inline_data(self, prompt: 'dict[str, Any]') -> bool:# noqa: ARG002
+        return False
+
+    def remove_responses_inline_data(self, responses: 'list[dict[str, Any]]') -> bool:# noqa: ARG002
         return False
     
     def get_host(self, url: Union[str, httpx.URL, Any]) -> Optional[str]:
