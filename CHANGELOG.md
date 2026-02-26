@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.0-alpha.157 (2026-02-26)
+
+Full Changelog: [v0.1.0-alpha.156...v0.1.0-alpha.157](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.156...v0.1.0-alpha.157)
+
+### Chores
+
+* format all `api.md` files ([61edc0d](https://github.com/Pay-i/pay-i-python/commit/61edc0ddc3394ef60ec0c8d48d78ea5ca25db4d0))
+* **internal:** add request options to SSE classes ([f479eb2](https://github.com/Pay-i/pay-i-python/commit/f479eb2d2f6668563cb1009cf2fc16ca83a85806))
+* **internal:** bump dependencies ([825d17a](https://github.com/Pay-i/pay-i-python/commit/825d17ad4982b5ffd2c4b2509b1bc4adf0b2a369))
+* **internal:** codegen related update ([d970db1](https://github.com/Pay-i/pay-i-python/commit/d970db1b6e8a5b18e14ed1a8b1b360c00272adbe))
+* **internal:** fix lint error on Python 3.14 ([fca699f](https://github.com/Pay-i/pay-i-python/commit/fca699f6c9ebc10c88a97b55079858d610caaa6f))
+* **internal:** make `test_proxy_environment_variables` more resilient ([52fdb2e](https://github.com/Pay-i/pay-i-python/commit/52fdb2ef7310f89606d206a7e5bd2eef13b5fa4d))
+* **internal:** make `test_proxy_environment_variables` more resilient to env ([a0c8f0c](https://github.com/Pay-i/pay-i-python/commit/a0c8f0ced53176511db36484c926f1b28a04f779))
+* update mock server docs ([7608ea2](https://github.com/Pay-i/pay-i-python/commit/7608ea20cc668e0ebcd2fc6806e3e40252230808))
+
 ## 0.1.0-alpha.156 (2026-02-09)
 
 Full Changelog: [v0.1.0-alpha.155...v0.1.0-alpha.156](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.155...v0.1.0-alpha.156)

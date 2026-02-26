@@ -69,6 +69,8 @@ class IngestUnitsParams(TypedDict, total=False):
 
     account_name: Annotated[str, PropertyInfo(alias="xProxy-Account-Name")]
 
+    disable_logging: Optional[bool]
+
 class ProviderResponseFunctionCall(TypedDict, total=False):
     name: Required[str]
 
