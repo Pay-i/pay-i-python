@@ -54,8 +54,8 @@ mypy-extensions==1.1.0
     # via mypy
 nest-asyncio==1.6.0
     # via payi
-nodeenv==1.8.0
     # via pyright
+nodeenv==1.9.1
 packaging==25.0
     # via pytest
 pathspec==0.12.1
