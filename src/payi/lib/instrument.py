@@ -16,6 +16,7 @@ from typing import Any, Set, Union, Optional, Sequence, TypedDict, cast
 from datetime import datetime, timezone
 
 import httpx
+import httpcore
 import nest_asyncio  # type: ignore
 from wrapt import wrap_function_wrapper  # type: ignore
 
@@ -34,6 +35,29 @@ from .ProviderRequest import PriceAs, _StreamingType, _ProviderRequest
 
 global _g_logger
 _g_logger: logging.Logger = logging.getLogger("payi.instrument")
+
+# Retry defaults for ingest calls at the instrumentation layer.
+# These retries are on top of the SDK's built-in retries (DEFAULT_MAX_RETRIES=2).
+# When httpx connection pools contain stale connections (common behind Azure App Gateway
+# or other reverse proxies), the SDK's retries may all hit stale connections from the
+# same pool. The instrumentation-layer retry gives the pool time to evict dead connections,
+# so subsequent attempts are more likely to get a fresh connection.
+# Callers can override via PayiInstrumentConfig keys ingest_max_retries / ingest_retry_initial_delay.
+_INGEST_MAX_RETRIES_DEFAULT = 2
+_INGEST_RETRY_INITIAL_DELAY_DEFAULT = 0.5  # seconds, doubles on each retry
+
+# Transport-level exceptions that indicate a stale or broken pooled connection.
+# Only these warrant an instrumentation-layer retry — other APIConnectionError causes
+# (e.g. DNS resolution failure, TLS certificate errors) should not be retried here.
+_RETRYABLE_CONNECTION_EXCEPTIONS = (
+    httpx.ReadError,
+    httpx.WriteError,
+    httpx.RemoteProtocolError,
+    httpx.ConnectError,
+    httpcore.ReadError,
+    httpcore.WriteError,
+    ConnectionResetError,
+)
 
 class PayiInstrumentModelMapping(TypedDict, total=False):
     model: str
@@ -89,6 +113,8 @@ class PayiInstrumentConfig(TypedDict, total=False):
     openai_config: Optional[PayiInstrumentOpenAiConfig]
     anthropic_config: Optional[PayiInstrumentAnthropicConfig]
     offline_instrumentation: Optional[PayiInstrumentOfflineInstrumentationConfig]
+    ingest_max_retries: int
+    ingest_retry_initial_delay: float
 
 class PayiContext(TypedDict, total=False):
     use_case_name: Optional[str]
@@ -210,6 +236,14 @@ class _PayiInstrumentor:
         self._api_connection_error_window: int = global_config.get("connection_error_logging_window", 60)
         if self._api_connection_error_window < 0:
             raise ValueError("connection_error_logging_window must be a non-negative integer")
+
+        self._ingest_max_retries: int = global_config.get("ingest_max_retries", _INGEST_MAX_RETRIES_DEFAULT)
+        if self._ingest_max_retries < 0:
+            raise ValueError("ingest_max_retries must be a non-negative integer")
+
+        self._ingest_retry_initial_delay: float = global_config.get("ingest_retry_initial_delay", _INGEST_RETRY_INITIAL_DELAY_DEFAULT)
+        if self._ingest_retry_initial_delay < 0:
+            raise ValueError("ingest_retry_initial_delay must be a non-negative number")
 
         # default is instrument and ingest metrics
         self._proxy_default: bool = global_config.get("proxy", False)
@@ -668,6 +702,74 @@ class _PayiInstrumentor:
 
         return XproxyError(code="api_connection_error", message=str(e))
 
+    @staticmethod
+    def _is_retryable_connection_error(e: APIConnectionError) -> bool:
+        """Check whether the root cause of an APIConnectionError is a transport-level
+        error that indicates a stale or broken pooled connection."""
+        cause = e.__cause__
+        return isinstance(cause, _RETRYABLE_CONNECTION_EXCEPTIONS)
+
+    def _ingest_with_retry(
+        self,
+        ingest_units: IngestUnitsParams,
+        extra_headers: 'dict[str, str]',
+    ) -> IngestResponse:
+        """Call sync ingest.units() with retry on transport-level connection errors.
+
+        When the httpx connection pool contains stale connections (e.g. closed by an Azure App
+        Gateway idle timeout), the SDK's built-in retries may all draw from the same poisoned
+        pool.  This outer retry gives the pool time to evict dead connections between attempts.
+
+        Only retries when the inner cause is a known transport error (ReadError, WriteError,
+        RemoteProtocolError, ConnectError, ConnectionResetError).  Other APIConnectionError
+        causes (DNS failure, TLS certificate errors, etc.) are raised immediately.
+        """
+        max_retries = self._ingest_max_retries
+        last_error: Optional[APIConnectionError] = None
+
+        for attempt in range(1 + max_retries):
+            try:
+                return self._payi.ingest.units(**ingest_units, extra_headers=extra_headers)  # type: ignore[union-attr]
+            except APIConnectionError as e:
+                last_error = e
+                if attempt < max_retries and self._is_retryable_connection_error(e):
+                    delay = self._ingest_retry_initial_delay * (2 ** attempt)
+                    self._logger.warning(
+                        f"Pay-i ingest connection error (attempt {attempt + 1}/{1 + max_retries}), "
+                        f"retrying in {delay:.1f}s: {e.__cause__ or e}"
+                    )
+                    time.sleep(delay)
+                    continue
+                raise
+
+        raise last_error  # type: ignore[misc]
+
+    async def _aingest_with_retry(
+        self,
+        ingest_units: IngestUnitsParams,
+        extra_headers: 'dict[str, str]',
+    ) -> IngestResponse:
+        """Async variant of _ingest_with_retry."""
+        max_retries = self._ingest_max_retries
+        last_error: Optional[APIConnectionError] = None
+
+        for attempt in range(1 + max_retries):
+            try:
+                return await self._apayi.ingest.units(**ingest_units, extra_headers=extra_headers)  # type: ignore[union-attr]
+            except APIConnectionError as e:
+                last_error = e
+                if attempt < max_retries and self._is_retryable_connection_error(e):
+                    delay = self._ingest_retry_initial_delay * (2 ** attempt)
+                    self._logger.warning(
+                        f"Pay-i ingest connection error (attempt {attempt + 1}/{1 + max_retries}), "
+                        f"retrying in {delay:.1f}s: {e.__cause__ or e}"
+                    )
+                    await asyncio.sleep(delay)
+                    continue
+                raise
+
+        raise last_error  # type: ignore[misc]
+
     async def _aingest_units_worker(self, request: _ProviderRequest) -> Optional[Union[XproxyResult, XproxyError]]:
         ingest_response: Optional[IngestResponse] = None
         ingest_units = request._ingest
@@ -681,10 +783,10 @@ class _PayiInstrumentor:
             if self._logger.isEnabledFor(logging.DEBUG):
                 self._logger.debug(f"_aingest_units: sending ({self._create_logged_ingest_units(ingest_units)})")
 
-            if self._apayi:    
-                ingest_response = await self._apayi.ingest.units(**ingest_units, extra_headers=extra_headers)
+            if self._apayi:
+                ingest_response = await self._aingest_with_retry(ingest_units, extra_headers)
             elif self._payi:
-                ingest_response = self._payi.ingest.units(**ingest_units, extra_headers=extra_headers)
+                ingest_response = self._ingest_with_retry(ingest_units, extra_headers)
             elif self._offline_instrumentation is not None:
                 self._offline_ingest_packets.append(ingest_units.copy())
 
@@ -806,7 +908,7 @@ class _PayiInstrumentor:
                 if self._logger.isEnabledFor(logging.DEBUG):
                     self._logger.debug(f"_ingest_units: sending ({self._create_logged_ingest_units(ingest_units)})")
 
-                ingest_response = self._payi.ingest.units(**ingest_units, extra_headers=extra_headers)
+                ingest_response = self._ingest_with_retry(ingest_units, extra_headers)
                 self._logger.debug(f"_ingest_units: success ({ingest_response})")
 
                 self._process_ingest_units_response(ingest_response)

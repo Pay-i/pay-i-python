@@ -15,3 +15,5 @@ codegen.log
 Brewfile.lock.json
 
 .vscode/
+
+.claude/settings.local.json
