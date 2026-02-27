@@ -6,6 +6,7 @@ import json
 import time
 import uuid
 import atexit
+import base64
 import asyncio
 import inspect
 import logging
@@ -29,11 +30,18 @@ from payi.types.shared.xproxy_error import XproxyError
 from payi.types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
 from .helpers import PayiCategories
+from .ingest_retry import IngestRetryManager, is_retryable_connection_error
 from .StreamWrappers import _GeneratorWrapper, _StreamManagerWrapper, _StreamIteratorWrapper
 from .ProviderRequest import PriceAs, _StreamingType, _ProviderRequest
 
 global _g_logger
 _g_logger: logging.Logger = logging.getLogger("payi.instrument")
+
+def _qualified_exception_name(exc: BaseException | None) -> str:
+    if exc is None:
+        return "None"
+    exc_type = type(exc)
+    return f"{exc_type.__module__}.{exc_type.__qualname__}"
 
 class PayiInstrumentModelMapping(TypedDict, total=False):
     model: str
@@ -69,6 +77,13 @@ class PayiInstrumentOfflineInstrumentationConfig(TypedDict, total=False):
 class PayiInstrumentHostMappingConfig(TypedDict, total=False):
     price_as_category: Optional[str]
 
+class PayiInstrumentIngestRetryConfig(TypedDict, total=False):
+    max_inline_retries: Optional[int]
+    inline_retry_initial_delay: Optional[float]
+    queue_enabled: Optional[bool]
+    queue_max_size: Optional[int]
+    queue_interval: Optional[float]
+
 class PayiInstrumentConfig(TypedDict, total=False):
     proxy: bool
     global_instrumentation: bool
@@ -89,6 +104,7 @@ class PayiInstrumentConfig(TypedDict, total=False):
     openai_config: Optional[PayiInstrumentOpenAiConfig]
     anthropic_config: Optional[PayiInstrumentAnthropicConfig]
     offline_instrumentation: Optional[PayiInstrumentOfflineInstrumentationConfig]
+    ingest_retry: Optional[PayiInstrumentIngestRetryConfig]
 
 class PayiContext(TypedDict, total=False):
     use_case_name: Optional[str]
@@ -185,7 +201,6 @@ class _PayiInstrumentor:
     ):
         global _g_logger
         self._logger: logging.Logger = logger if logger else _g_logger
-
         self._logger.info(f"Pay-i instrumentor version: {_payi_version}")
 
         self._payi: Optional[Payi] = payi
@@ -210,6 +225,16 @@ class _PayiInstrumentor:
         self._api_connection_error_window: int = global_config.get("connection_error_logging_window", 60)
         if self._api_connection_error_window < 0:
             raise ValueError("connection_error_logging_window must be a non-negative integer")
+
+        self._retry_manager = IngestRetryManager(
+            sync_ingest_fn=self._payi.ingest.units if self._payi else None,
+            async_ingest_fn=self._apayi.ingest.units if self._apayi else None,
+            on_success=self._process_ingest_units_response,
+            on_connection_error=self._process_ingest_connection_error,
+            on_api_status_error=self._process_api_status_error,
+            config=global_config.get("ingest_retry", {}) or {},
+            logger=self._logger,
+        )
 
         # default is instrument and ingest metrics
         self._proxy_default: bool = global_config.get("proxy", False)
@@ -659,7 +684,7 @@ class _PayiInstrumentor:
                 append = f", {self._api_connection_error_count} APIConnectionError exceptions in the last {self._api_connection_error_window} seconds"
 
             # Log the current error
-            self._logger.error(f"Error Pay-i ingesting: connection exception {e}, request {ingest_units}{append}")
+            self._logger.error(f"Error Pay-i ingesting: connection exception {e}, cause {_qualified_exception_name(e.__cause__)}, request {ingest_units}{append}")
             self._api_connection_error_last_log_time = now
             self._api_connection_error_count = 0
         else:
@@ -681,10 +706,10 @@ class _PayiInstrumentor:
             if self._logger.isEnabledFor(logging.DEBUG):
                 self._logger.debug(f"_aingest_units: sending ({self._create_logged_ingest_units(ingest_units)})")
 
-            if self._apayi:    
-                ingest_response = await self._apayi.ingest.units(**ingest_units, extra_headers=extra_headers)
+            if self._apayi:
+                ingest_response = await self._retry_manager.aingest_with_inline_retry(ingest_units, extra_headers)
             elif self._payi:
-                ingest_response = self._payi.ingest.units(**ingest_units, extra_headers=extra_headers)
+                ingest_response = self._retry_manager.ingest_with_inline_retry(ingest_units, extra_headers)
             elif self._offline_instrumentation is not None:
                 self._offline_ingest_packets.append(ingest_units.copy())
 
@@ -696,7 +721,7 @@ class _PayiInstrumentor:
                     request_id="local_instrumentation",
                     xproxy_result=XproxyResult(request_id="local_instrumentation"))
                 pass
-                
+
             else:
                 self._logger.error("No payi instance to ingest units")
                 return XproxyError(code="configuration_error", message="No Payi or AsyncPayi instance configured for ingesting units")
@@ -708,16 +733,18 @@ class _PayiInstrumentor:
 
             return ingest_response.xproxy_result
 
-        except APIConnectionError as api_ex:
-            return self._process_ingest_connection_error(api_ex, ingest_units)
-
-        except APIStatusError as api_status_ex:
-            return self._process_api_status_error(api_status_ex)      
+        except (APIConnectionError, APIStatusError) as api_ex:
+            if is_retryable_connection_error(api_ex):
+                if self._retry_manager.enqueue_failed_ingest(ingest_units, extra_headers, api_ex):
+                    return XproxyError(code="ingest_retry_enqueued", message="Ingest request enqueued for retry due to connection error")
+            if isinstance(api_ex, APIConnectionError):
+                return self._process_ingest_connection_error(api_ex, ingest_units)
+            return self._process_api_status_error(api_ex)
 
         except Exception as ex:
-            self._logger.error(f"Error Pay-i async ingesting: exception {ex}, request {ingest_units}")
+            self._logger.error(f"Error Pay-i async ingesting: exception {ex}, cause {_qualified_exception_name(ex.__cause__)}, request {ingest_units}")
             return XproxyError(code="unknown_error", message=str(ex))
-    
+
     async def _aingest_units(self, request: _ProviderRequest) -> Optional[Union[XproxyResult, XproxyError]]:
         return self.set_xproxy_result(await self._aingest_units_worker(request))
 
@@ -806,7 +833,7 @@ class _PayiInstrumentor:
                 if self._logger.isEnabledFor(logging.DEBUG):
                     self._logger.debug(f"_ingest_units: sending ({self._create_logged_ingest_units(ingest_units)})")
 
-                ingest_response = self._payi.ingest.units(**ingest_units, extra_headers=extra_headers)
+                ingest_response = self._retry_manager.ingest_with_inline_retry(ingest_units, extra_headers)
                 self._logger.debug(f"_ingest_units: success ({ingest_response})")
 
                 self._process_ingest_units_response(ingest_response)
@@ -827,16 +854,18 @@ class _PayiInstrumentor:
                 self._logger.error("No payi instance to ingest units")
                 return XproxyError(code="configuration_error", message="No Payi or AsyncPayi instance configured for ingesting units")
 
-        except APIConnectionError as api_ex:
-            return self._process_ingest_connection_error(api_ex, ingest_units)
-
-        except APIStatusError as api_status_ex:
-            return self._process_api_status_error(api_status_ex)      
+        except (APIConnectionError, APIStatusError) as api_ex:
+            if is_retryable_connection_error(api_ex):
+                if self._retry_manager.enqueue_failed_ingest(ingest_units, extra_headers, api_ex):
+                    return XproxyError(code="ingest_retry_enqueued", message="Ingest request enqueued for retry due to connection error")
+            if isinstance(api_ex, APIConnectionError):
+                return self._process_ingest_connection_error(api_ex, ingest_units)
+            return self._process_api_status_error(api_ex)
 
         except Exception as ex:
-            self._logger.error(f"Error Pay-i async ingesting: exception {ex}, request {ingest_units}")
+            self._logger.error(f"Error Pay-i async ingesting: exception {ex}, cause {_qualified_exception_name(ex.__cause__)}, request {ingest_units}")
             return XproxyError(code="unknown_error", message=str(ex))
-        
+
     def _ingest_units(self, request: _ProviderRequest) -> Optional[Union[XproxyResult, XproxyError]]:
         return self.set_xproxy_result(self._ingest_units_worker(request))
 
@@ -1172,12 +1201,15 @@ class _PayiInstrumentor:
             # wrapped function invoked outside of decorator scope
             return await wrapped(*args, **kwargs)
 
+        context_proxy = context.get("proxy")
+        proxy = context_proxy if context_proxy is not None else self._proxy_default
+
         # after _udpate_headers, all metadata to add to ingest is in extra_headers, keyed by the xproxy-xxx header name
         extra_headers: Optional[dict[str, str]] = kwargs.get("extra_headers")
         extra_headers = (extra_headers or {}).copy()
-        self._update_extra_headers(context, extra_headers)
+        self._update_extra_headers(context, extra_headers, proxy)
 
-        if context.get("proxy", self._proxy_default):
+        if proxy:
             if not request.supports_extra_headers:
                 kwargs.pop("extra_headers", None)
             elif extra_headers:
@@ -1198,7 +1230,7 @@ class _PayiInstrumentor:
 
         request._ingest['properties'] = { 'system.stack_trace': _compact_json(stack) }
 
-        if request.process_request(instance, extra_headers, args, kwargs) is False:
+        if request.process_request(instance, args, kwargs) is False:
             self._logger.debug(f"async_invoke_wrapper: calling wrapped instance")
             return await wrapped(*args, **kwargs)
 
@@ -1298,12 +1330,15 @@ class _PayiInstrumentor:
             # wrapped function invoked outside of decorator scope
             return wrapped(*args, **kwargs)
 
+        context_proxy = context.get("proxy")
+        proxy = context_proxy if context_proxy is not None else self._proxy_default
+
         # after _udpate_headers, all metadata to add to ingest is in extra_headers, keyed by the xproxy-xxx header name
         extra_headers: Optional[dict[str, str]] = kwargs.get("extra_headers")
         extra_headers = (extra_headers or {}).copy()
-        self._update_extra_headers(context, extra_headers)
+        self._update_extra_headers(context, extra_headers, proxy)
 
-        if context.get("proxy", self._proxy_default):
+        if proxy:
             if not request.supports_extra_headers:
                 kwargs.pop("extra_headers", None)
             elif extra_headers:
@@ -1324,7 +1359,7 @@ class _PayiInstrumentor:
 
         request._ingest['properties'] = { 'system.stack_trace': _compact_json(stack) }
 
-        if request.process_request(instance, extra_headers, args, kwargs) is False:
+        if request.process_request(instance, args, kwargs) is False:
             self._logger.debug(f"invoke_wrapper: calling wrapped instance")
             return wrapped(*args, **kwargs)
 
@@ -1418,7 +1453,7 @@ class _PayiInstrumentor:
         extra_headers: dict[str, str] = {}
         context = self._context
         if context:
-            self._update_extra_headers(context, extra_headers)
+            self._update_extra_headers(context, extra_headers, proxy=True)
 
         return extra_headers
 
@@ -1430,6 +1465,7 @@ class _PayiInstrumentor:
         self,
         context: _Context,
         extra_headers: "dict[str, str]",
+        proxy: bool,
     ) -> None:
         context_limit_ids: Optional[list[str]] = context.get("limit_ids")
 
@@ -1458,9 +1494,12 @@ class _PayiInstrumentor:
                 extra_headers.pop(PayiHeaderNames.request_properties, None)
             else:
                 # leave the value in extra_headers
-                ...
+                if proxy:
+                        # if proxy is enabled, base64 encode
+                    extra_headers[PayiHeaderNames.request_properties] = base64.b64encode(headers_request_properties.encode()).decode()
         elif context_request_properties:
-            extra_headers[PayiHeaderNames.request_properties] = _compact_json(context_request_properties)
+            context_request_properties_json = _compact_json(context_request_properties)
+            extra_headers[PayiHeaderNames.request_properties] = context_request_properties_json if not proxy else base64.b64encode(context_request_properties_json.encode()).decode()
 
         if PayiHeaderNames.use_case_properties in extra_headers:
             headers_use_case_properties = extra_headers.get(PayiHeaderNames.use_case_properties, None)
@@ -1470,9 +1509,12 @@ class _PayiInstrumentor:
                 extra_headers.pop(PayiHeaderNames.use_case_properties, None)
             else:
                 # leave the value in extra_headers
-                ...
+                if proxy:
+                    # if proxy is enabled, base64 encode
+                    extra_headers[PayiHeaderNames.use_case_properties] = base64.b64encode(headers_use_case_properties.encode()).decode()
         elif context_use_case_properties:
-            extra_headers[PayiHeaderNames.use_case_properties] = _compact_json(context_use_case_properties)
+            context_use_case_properties_json = _compact_json(context_use_case_properties)
+            extra_headers[PayiHeaderNames.use_case_properties] = context_use_case_properties_json if not proxy else base64.b64encode(context_use_case_properties_json.encode()).decode()
 
         # If the caller specifies limit_ids in extra_headers, it takes precedence over the decorator
         if PayiHeaderNames.limit_ids in extra_headers:

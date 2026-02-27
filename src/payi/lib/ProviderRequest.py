@@ -81,7 +81,7 @@ class _ProviderRequest:
         return None
     
     @abstractmethod
-    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
+    def process_request(self, instance: Any, args: Sequence[Any], kwargs: Any) -> bool:
         ...
     
     def process_request_prompt(self, prompt: 'dict[str, Any]', args: Sequence[Any], kwargs: 'dict[str, Any]') -> None:
