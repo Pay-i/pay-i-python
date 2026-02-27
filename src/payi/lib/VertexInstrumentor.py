@@ -80,7 +80,7 @@ class _GoogleVertexRequest(_VertexRequest):
         self._candidates_character_count = 0
 
     @override
-    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
+    def process_request(self, instance: Any, args: Sequence[Any], kwargs: Any) -> bool:
         from vertexai.generative_models import Content, Image, Part # type: ignore #  noqa: F401  I001
 
         # Try to extra the model name as a backup if the response does not provide it (older vertexai versions do not)

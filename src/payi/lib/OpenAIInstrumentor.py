@@ -214,7 +214,7 @@ class _OpenAiProviderRequest(_ProviderRequest):
                pass
 
     @override
-    def process_request(self, instance: Any, extra_headers: 'dict[str, str]',  args: Sequence[Any], kwargs: Any) -> bool: # type: ignore
+    def process_request(self, instance: Any, args: Sequence[Any], kwargs: Any) -> bool: # type: ignore
         model = kwargs.get("model", "")
 
         if self._is_azure:
@@ -446,8 +446,8 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
         return _ChunkResult(send_chunk_to_caller=send_chunk_to_client, ingest=ingest)
 
     @override
-    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
-        result = super().process_request(instance, extra_headers, args, kwargs)
+    def process_request(self, instance: Any, args: Sequence[Any], kwargs: Any) -> bool:
+        result = super().process_request(instance, args, kwargs)
         if result is False:
             return result
         
@@ -561,8 +561,8 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
         return _ChunkResult(send_chunk_to_caller=True, ingest=ingest)
 
     @override
-    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
-        result = super().process_request(instance, extra_headers, args, kwargs)
+    def process_request(self, instance: Any, args: Sequence[Any], kwargs: Any) -> bool:
+        result = super().process_request(instance, args, kwargs)
         if result is False:
             return result
         

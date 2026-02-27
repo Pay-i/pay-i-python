@@ -6,6 +6,7 @@ import json
 import time
 import uuid
 import atexit
+import base64
 import random
 import asyncio
 import inspect
@@ -1560,12 +1561,15 @@ class _PayiInstrumentor:
             # wrapped function invoked outside of decorator scope
             return await wrapped(*args, **kwargs)
 
+        context_proxy = context.get("proxy")
+        proxy = context_proxy if context_proxy is not None else self._proxy_default
+
         # after _udpate_headers, all metadata to add to ingest is in extra_headers, keyed by the xproxy-xxx header name
         extra_headers: Optional[dict[str, str]] = kwargs.get("extra_headers")
         extra_headers = (extra_headers or {}).copy()
-        self._update_extra_headers(context, extra_headers)
+        self._update_extra_headers(context, extra_headers, proxy)
 
-        if context.get("proxy", self._proxy_default):
+        if proxy:
             if not request.supports_extra_headers:
                 kwargs.pop("extra_headers", None)
             elif extra_headers:
@@ -1586,7 +1590,7 @@ class _PayiInstrumentor:
 
         request._ingest['properties'] = { 'system.stack_trace': _compact_json(stack) }
 
-        if request.process_request(instance, extra_headers, args, kwargs) is False:
+        if request.process_request(instance, args, kwargs) is False:
             self._logger.debug(f"async_invoke_wrapper: calling wrapped instance")
             return await wrapped(*args, **kwargs)
 
@@ -1686,12 +1690,15 @@ class _PayiInstrumentor:
             # wrapped function invoked outside of decorator scope
             return wrapped(*args, **kwargs)
 
+        context_proxy = context.get("proxy")
+        proxy = context_proxy if context_proxy is not None else self._proxy_default
+
         # after _udpate_headers, all metadata to add to ingest is in extra_headers, keyed by the xproxy-xxx header name
         extra_headers: Optional[dict[str, str]] = kwargs.get("extra_headers")
         extra_headers = (extra_headers or {}).copy()
-        self._update_extra_headers(context, extra_headers)
+        self._update_extra_headers(context, extra_headers, proxy)
 
-        if context.get("proxy", self._proxy_default):
+        if proxy:
             if not request.supports_extra_headers:
                 kwargs.pop("extra_headers", None)
             elif extra_headers:
@@ -1712,7 +1719,7 @@ class _PayiInstrumentor:
 
         request._ingest['properties'] = { 'system.stack_trace': _compact_json(stack) }
 
-        if request.process_request(instance, extra_headers, args, kwargs) is False:
+        if request.process_request(instance, args, kwargs) is False:
             self._logger.debug(f"invoke_wrapper: calling wrapped instance")
             return wrapped(*args, **kwargs)
 
@@ -1806,7 +1813,7 @@ class _PayiInstrumentor:
         extra_headers: dict[str, str] = {}
         context = self._context
         if context:
-            self._update_extra_headers(context, extra_headers)
+            self._update_extra_headers(context, extra_headers, proxy=True)
 
         return extra_headers
 
@@ -1818,6 +1825,7 @@ class _PayiInstrumentor:
         self,
         context: _Context,
         extra_headers: "dict[str, str]",
+        proxy: bool,
     ) -> None:
         context_limit_ids: Optional[list[str]] = context.get("limit_ids")
 
@@ -1846,9 +1854,12 @@ class _PayiInstrumentor:
                 extra_headers.pop(PayiHeaderNames.request_properties, None)
             else:
                 # leave the value in extra_headers
-                ...
+                if proxy:
+                        # if proxy is enabled, base64 encode
+                    extra_headers[PayiHeaderNames.request_properties] = base64.b64encode(headers_request_properties.encode()).decode()
         elif context_request_properties:
-            extra_headers[PayiHeaderNames.request_properties] = _compact_json(context_request_properties)
+            context_request_properties_json = _compact_json(context_request_properties)
+            extra_headers[PayiHeaderNames.request_properties] = context_request_properties_json if not proxy else base64.b64encode(context_request_properties_json.encode()).decode()
 
         if PayiHeaderNames.use_case_properties in extra_headers:
             headers_use_case_properties = extra_headers.get(PayiHeaderNames.use_case_properties, None)
@@ -1858,9 +1869,12 @@ class _PayiInstrumentor:
                 extra_headers.pop(PayiHeaderNames.use_case_properties, None)
             else:
                 # leave the value in extra_headers
-                ...
+                if proxy:
+                    # if proxy is enabled, base64 encode
+                    extra_headers[PayiHeaderNames.use_case_properties] = base64.b64encode(headers_use_case_properties.encode()).decode()
         elif context_use_case_properties:
-            extra_headers[PayiHeaderNames.use_case_properties] = _compact_json(context_use_case_properties)
+            context_use_case_properties_json = _compact_json(context_use_case_properties)
+            extra_headers[PayiHeaderNames.use_case_properties] = context_use_case_properties_json if not proxy else base64.b64encode(context_use_case_properties_json.encode()).decode()
 
         # If the caller specifies limit_ids in extra_headers, it takes precedence over the decorator
         if PayiHeaderNames.limit_ids in extra_headers:
