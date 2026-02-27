@@ -44,13 +44,18 @@ _INGEST_RETRY_INITIAL_DELAY_DEFAULT = 0.5  # seconds, doubles on each retry
 # Only these warrant an instrumentation-layer retry — other APIConnectionError causes
 # (e.g. DNS resolution failure, TLS certificate errors) should not be retried here.
 _RETRYABLE_CONNECTION_EXCEPTIONS = (
+    httpx.TimeoutException,
     httpx.ReadError,
     httpx.WriteError,
     httpx.RemoteProtocolError,
     httpx.ConnectError,
+
+    httpcore.TimeoutException,
     httpcore.ReadError,
     httpcore.WriteError,
     httpcore.RemoteProtocolError,
+    httpcore.ConnectError,
+
     ConnectionResetError,
 )
 
@@ -432,10 +437,7 @@ class IngestRetryManager:
         self._retry_queue_worker_thread.join(timeout=_RETRY_QUEUE_DRAIN_TIMEOUT)
 
         if self._retry_queue_worker_thread.is_alive():
-            self._logger.warning(
-                "Pay-i retry queue worker did not exit within %.1f seconds",
-                _RETRY_QUEUE_DRAIN_TIMEOUT,
-            )
+            self._logger.warning("Pay-i retry queue worker did not exit within %.1f seconds", _RETRY_QUEUE_DRAIN_TIMEOUT)
 
         # Final best-effort drain: send each item once without retry,
         # stop on the first APIConnectionError.
@@ -459,6 +461,4 @@ class IngestRetryManager:
                 self._logger.debug("Pay-i retry queue shutdown: error sending item: %s", e)
 
         if remaining > 0:
-            self._logger.debug(
-                "Pay-i retry queue shutdown: sent %d/%d remaining items", sent, remaining
-            )
+            self._logger.debug("Pay-i retry queue shutdown: sent %d/%d remaining items", sent, remaining)
