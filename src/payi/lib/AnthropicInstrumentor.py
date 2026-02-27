@@ -266,7 +266,7 @@ class _AnthropicProviderRequest(_ProviderRequest):
         return ("anthropic." if self._is_vertex else "") + model
 
     @override
-    def process_request(self, instance: Any, extra_headers: 'dict[str, str]',  args: Sequence[Any], kwargs: Any) -> bool:
+    def process_request(self, instance: Any, args: Sequence[Any], kwargs: Any) -> bool:
         model = self._update_resource_name(kwargs.get("model", ""))
         self._ingest["resource"] = model
 

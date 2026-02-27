@@ -334,7 +334,7 @@ class _BedrockProviderRequest(_ProviderRequest):
             pass
 
     @override
-    def process_request(self, instance: Any, extra_headers: 'dict[str, str]',  args: Sequence[Any], kwargs: Any) -> bool:
+    def process_request(self, instance: Any, args: Sequence[Any], kwargs: Any) -> bool:
         modelId =  kwargs.get("modelId", "")
         self._ingest["resource"] = modelId
 
@@ -463,10 +463,10 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
         self._is_cohere_embed_english_v3 = 'cohere.embed-english-v3' == model_id
 
     @override
-    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
+    def process_request(self, instance: Any, args: Sequence[Any], kwargs: Any) -> bool:
         from .AnthropicInstrumentor import anthropic_has_image_and_get_texts
 
-        super().process_request(instance, extra_headers, args, kwargs)
+        super().process_request(instance, args, kwargs)
     
         # super().process_request will assign price_as mapping from global state, so evaluate afterwards
         if self._price_as.resource:
@@ -589,8 +589,8 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
 
 class _BedrockConverseProviderRequest(_BedrockProviderRequest):
     @override
-    def process_request(self, instance: Any, extra_headers: 'dict[str, str]', args: Sequence[Any], kwargs: Any) -> bool:
-        super().process_request(instance, extra_headers, args, kwargs)
+    def process_request(self, instance: Any, args: Sequence[Any], kwargs: Any) -> bool:
+        super().process_request(instance, args, kwargs)
 
         guardrail_config = kwargs.get("guardrailConfig", {})
         if guardrail_config:

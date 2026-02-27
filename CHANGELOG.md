@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.158 (2026-02-27)
+
+Full Changelog: [v0.1.0-alpha.157...v0.1.0-alpha.158](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.157...v0.1.0-alpha.158)
+
+### Features
+
+* background retry of failed ingest requests ([#431](https://github.com/Pay-i/pay-i-python/issues/431)) ([d548df0](https://github.com/Pay-i/pay-i-python/commit/d548df0645612537c118b1b37a82eef0022e506e))
+
+
+### Chores
+
+* **ci:** bump uv version ([5a5080b](https://github.com/Pay-i/pay-i-python/commit/5a5080bd6ad9e902a1423e0af357ff90ec31628c))
+
 ## 0.1.0-alpha.157 (2026-02-26)
 
 Full Changelog: [v0.1.0-alpha.156...v0.1.0-alpha.157](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.156...v0.1.0-alpha.157)
