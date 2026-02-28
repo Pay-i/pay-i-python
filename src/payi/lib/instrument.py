@@ -598,10 +598,10 @@ class _PayiInstrumentor:
         
     def _after_invoke_update_request(
         self,
-        request: _ProviderRequest,
-        extra_headers: 'dict[str, str]') -> None:
+        request: _ProviderRequest) -> 'dict[str, str]':
         ingest_units = request._ingest
 
+        extra_headers: 'dict[str, str]' = {}
         if request._module_version:
             extra_headers[_PayiInstrumentor._instrumented_module_header_name] = f'{request._module_name}/{request._module_version}'
 
@@ -652,7 +652,13 @@ class _PayiInstrumentor:
             units = ingest_units.get("units", {})
             if not units or all(unit.get("input", 0) == 0 and unit.get("output", 0) == 0 for unit in units.values()):
                 self._logger.info('ingesting with no token counts')
+        
+        return extra_headers
 
+    def _create_query_parms(self, request: _ProviderRequest) -> Optional[dict[str, str]]:
+        provider_response_id = request._ingest.get("provider_response_id", None)
+        return { "id": provider_response_id } if provider_response_id else None
+    
     def _process_ingest_units_response(self, ingest_response: IngestResponse) -> None:
         if ingest_response.xproxy_result and ingest_response.xproxy_result.warnings and self._logger.isEnabledFor(logging.WARNING):
             warning_message = "\n".join(ingest_response.xproxy_result.warnings)
@@ -699,17 +705,17 @@ class _PayiInstrumentor:
 
         self._logger.debug(f"_aingest_units")
 
-        extra_headers: 'dict[str, str]' = {}
-        self._after_invoke_update_request(request, extra_headers=extra_headers)
+        extra_headers = self._after_invoke_update_request(request)
+        query = self._create_query_parms(request)
 
         try:
             if self._logger.isEnabledFor(logging.DEBUG):
                 self._logger.debug(f"_aingest_units: sending ({self._create_logged_ingest_units(ingest_units)})")
 
             if self._apayi:
-                ingest_response = await self._retry_manager.aingest_with_inline_retry(ingest_units, extra_headers)
+                ingest_response = await self._retry_manager.aingest_with_inline_retry(ingest_units=ingest_units, extra_headers=extra_headers, query=query)
             elif self._payi:
-                ingest_response = self._retry_manager.ingest_with_inline_retry(ingest_units, extra_headers)
+                ingest_response = self._retry_manager.ingest_with_inline_retry(ingest_units=ingest_units, extra_headers=extra_headers, query=query)
             elif self._offline_instrumentation is not None:
                 self._offline_ingest_packets.append(ingest_units.copy())
 
@@ -735,7 +741,7 @@ class _PayiInstrumentor:
 
         except (APIConnectionError, APIStatusError) as api_ex:
             if is_retryable_connection_error(api_ex):
-                if self._retry_manager.enqueue_failed_ingest(ingest_units, extra_headers, api_ex):
+                if self._retry_manager.enqueue_failed_ingest(ingest_units=ingest_units, extra_headers=extra_headers, query=query, api_ex=api_ex):
                     return XproxyError(code="ingest_retry_enqueued", message="Ingest request enqueued for retry due to connection error")
             if isinstance(api_ex, APIConnectionError):
                 return self._process_ingest_connection_error(api_ex, ingest_units)
@@ -825,15 +831,15 @@ class _PayiInstrumentor:
 
         self._logger.debug(f"_ingest_units")
 
-        extra_headers: 'dict[str, str]' = {}
-        self._after_invoke_update_request(request, extra_headers=extra_headers)
-
+        extra_headers = self._after_invoke_update_request(request)
+        query=self._create_query_parms(request)
+        
         try:
             if self._payi:
                 if self._logger.isEnabledFor(logging.DEBUG):
                     self._logger.debug(f"_ingest_units: sending ({self._create_logged_ingest_units(ingest_units)})")
 
-                ingest_response = self._retry_manager.ingest_with_inline_retry(ingest_units, extra_headers)
+                ingest_response = self._retry_manager.ingest_with_inline_retry(ingest_units=ingest_units, extra_headers=extra_headers, query=query)
                 self._logger.debug(f"_ingest_units: success ({ingest_response})")
 
                 self._process_ingest_units_response(ingest_response)
@@ -856,7 +862,7 @@ class _PayiInstrumentor:
 
         except (APIConnectionError, APIStatusError) as api_ex:
             if is_retryable_connection_error(api_ex):
-                if self._retry_manager.enqueue_failed_ingest(ingest_units, extra_headers, api_ex):
+                if self._retry_manager.enqueue_failed_ingest(ingest_units=ingest_units, extra_headers=extra_headers, query=query, api_ex=api_ex):
                     return XproxyError(code="ingest_retry_enqueued", message="Ingest request enqueued for retry due to connection error")
             if isinstance(api_ex, APIConnectionError):
                 return self._process_ingest_connection_error(api_ex, ingest_units)
