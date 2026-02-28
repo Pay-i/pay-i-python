@@ -97,12 +97,13 @@ def is_retryable_connection_error(e: Union[APIConnectionError, APIStatusError]) 
 
 class _RetryQueueItem:
     """An ingest call that exhausted immediate retries and is awaiting background retry."""
-    __slots__ = ('ingest_units', 'extra_headers', 'retry_count')
+    __slots__ = ('ingest_units', 'extra_headers', 'retry_count', 'query')
 
-    def __init__(self, ingest_units: IngestUnitsParams, extra_headers: 'dict[str, str]') -> None:
+    def __init__(self, ingest_units: IngestUnitsParams, extra_headers: 'dict[str, str]', query: Optional[dict[str, str]]) -> None:
         self.ingest_units = ingest_units
         self.extra_headers = extra_headers
         self.retry_count = 0
+        self.query = query
 
 
 # ---------------------------------------------------------------------------
@@ -189,6 +190,7 @@ class IngestRetryManager:
         self,
         ingest_units: IngestUnitsParams,
         extra_headers: 'dict[str, str]',
+        query: Optional[dict[str, str]],
         no_retry: bool = False,
     ) -> IngestResponse:
         """Call sync ingest.units() with retry on transport-level connection errors.
@@ -206,7 +208,7 @@ class IngestRetryManager:
 
         for attempt in range(1 + max_retries):
             try:
-                return self._sync_ingest_fn(**ingest_units, extra_headers=extra_headers)  # type: ignore[misc]
+                return self._sync_ingest_fn(**ingest_units, extra_headers=extra_headers, extra_query=query)  # type: ignore[misc]
             except (APIConnectionError, APIStatusError) as e:
                 if not is_retryable_connection_error(e):
                     raise
@@ -227,6 +229,7 @@ class IngestRetryManager:
         self,
         ingest_units: IngestUnitsParams,
         extra_headers: 'dict[str, str]',
+        query: Optional[dict[str, str]],
         no_retry: bool = False,
     ) -> IngestResponse:
         """Async variant of ingest_with_inline_retry."""
@@ -235,7 +238,7 @@ class IngestRetryManager:
 
         for attempt in range(1 + max_retries):
             try:
-                return await self._async_ingest_fn(**ingest_units, extra_headers=extra_headers)  # type: ignore[misc]
+                return await self._async_ingest_fn(**ingest_units, extra_headers=extra_headers, extra_query=query)  # type: ignore[misc]
             except (APIConnectionError, APIStatusError) as e:
                 if not is_retryable_connection_error(e):
                     raise
@@ -260,6 +263,7 @@ class IngestRetryManager:
         self,
         ingest_units: IngestUnitsParams,
         extra_headers: 'dict[str, str]',
+        query: Optional[dict[str, str]],
         api_ex: Union[APIConnectionError, APIStatusError],
     ) -> bool:
         """Enqueue a failed ingest call for background retry.
@@ -273,6 +277,7 @@ class IngestRetryManager:
         item = _RetryQueueItem(
             ingest_units=copy.deepcopy(ingest_units),
             extra_headers=extra_headers.copy(),
+            query=query.copy() if query else None,
         )
 
         with self._retry_queue_lock:
@@ -284,7 +289,7 @@ class IngestRetryManager:
                 return False
             self._retry_queue.append(item)
 
-        self._retry_logger.error(f"Delayed retry of Pay-i ingest exception {api_ex}, cause {_qualified_exception_name(api_ex.__cause__)}, request {ingest_units}")
+        self._retry_logger.error(f"Delayed retry of Pay-i ingest exception {api_ex}, cause {_qualified_exception_name(api_ex.__cause__)}, request {ingest_units}, query {query}")
 
         self._retry_logger.debug(
             "Pay-i enqueued failed ingest for background retry (queue depth ~%d)",
@@ -365,9 +370,9 @@ class IngestRetryManager:
         """
         try:
             if self._sync_ingest_fn:
-                response = self.ingest_with_inline_retry(item.ingest_units, item.extra_headers, no_retry=True)
+                response = self.ingest_with_inline_retry(item.ingest_units, item.extra_headers, query=item.query, no_retry=True)
             else:
-                response = self._run_async_ingest_from_thread(item.ingest_units, item.extra_headers)
+                response = self._run_async_ingest_from_thread(item.ingest_units, item.extra_headers, query=item.query)
 
             self._retry_logger.debug(
                 "Pay-i retry queue: successfully re-sent ingest request (retry_count=%d)",
@@ -409,12 +414,13 @@ class IngestRetryManager:
         self,
         ingest_units: IngestUnitsParams,
         extra_headers: 'dict[str, str]',
+        query: Optional[dict[str, str]],
     ) -> IngestResponse:
         """Run async ingest-with-retry from the background worker thread."""
         loop = asyncio.new_event_loop()
         try:
             return loop.run_until_complete(
-                self.aingest_with_inline_retry(ingest_units, extra_headers, no_retry=True)
+                self.aingest_with_inline_retry(ingest_units, extra_headers, query=query, no_retry=True)
             )
         finally:
             loop.close()
@@ -450,9 +456,9 @@ class IngestRetryManager:
         for item in items:
             try:
                 if self._sync_ingest_fn:
-                    self._sync_ingest_fn(**item.ingest_units, extra_headers=item.extra_headers)
+                    self._sync_ingest_fn(**item.ingest_units, extra_headers=item.extra_headers, query=item.query)
                 else:
-                    self._run_async_ingest_from_thread(item.ingest_units, item.extra_headers)
+                    self._run_async_ingest_from_thread(item.ingest_units, item.extra_headers, query=item.query)
                 sent += 1
             except APIConnectionError:
                 self._logger.debug("Pay-i retry queue shutdown: connection error, stopping final drain")
