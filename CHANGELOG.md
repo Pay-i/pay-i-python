@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.159 (2026-02-28)
+
+Full Changelog: [v0.1.0-alpha.158...v0.1.0-alpha.159](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.158...v0.1.0-alpha.159)
+
+### Features
+
+* id in query ([#432](https://github.com/Pay-i/pay-i-python/issues/432)) ([670d13b](https://github.com/Pay-i/pay-i-python/commit/670d13b012f661c8a5799645535e276311b4d874))
+
 ## 0.1.0-alpha.158 (2026-02-27)
 
 Full Changelog: [v0.1.0-alpha.157...v0.1.0-alpha.158](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.157...v0.1.0-alpha.158)
