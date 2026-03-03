@@ -25,6 +25,8 @@ __all__ = ["LimitConfigResource", "AsyncLimitConfigResource"]
 
 
 class LimitConfigResource(SyncAPIResource):
+    """Use Cases"""
+
     @cached_property
     def with_raw_response(self) -> LimitConfigResourceWithRawResponse:
         """
@@ -125,6 +127,8 @@ class LimitConfigResource(SyncAPIResource):
 
 
 class AsyncLimitConfigResource(AsyncAPIResource):
+    """Use Cases"""
+
     @cached_property
     def with_raw_response(self) -> AsyncLimitConfigResourceWithRawResponse:
         """

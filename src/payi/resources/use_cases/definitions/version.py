@@ -20,6 +20,8 @@ __all__ = ["VersionResource", "AsyncVersionResource"]
 
 
 class VersionResource(SyncAPIResource):
+    """Use Cases"""
+
     @cached_property
     def with_raw_response(self) -> VersionResourceWithRawResponse:
         """
@@ -74,6 +76,8 @@ class VersionResource(SyncAPIResource):
 
 
 class AsyncVersionResource(AsyncAPIResource):
+    """Use Cases"""
+
     @cached_property
     def with_raw_response(self) -> AsyncVersionResourceWithRawResponse:
         """

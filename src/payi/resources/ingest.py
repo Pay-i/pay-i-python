@@ -43,6 +43,8 @@ def convert_property_values_to_str(properties: Dict[str, Optional[str]]) -> Dict
     return converted_properties
 
 class IngestResource(SyncAPIResource):
+    """Ingest Requests"""
+
     @cached_property
     def with_raw_response(self) -> IngestResourceWithRawResponse:
         """
@@ -276,6 +278,8 @@ class IngestResource(SyncAPIResource):
 
 
 class AsyncIngestResource(AsyncAPIResource):
+    """Ingest Requests"""
+
     @cached_property
     def with_raw_response(self) -> AsyncIngestResourceWithRawResponse:
         """
