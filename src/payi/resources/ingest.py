@@ -29,6 +29,8 @@ __all__ = ["IngestResource", "AsyncIngestResource"]
 
 
 class IngestResource(SyncAPIResource):
+    """Ingest Requests"""
+
     @cached_property
     def with_raw_response(self) -> IngestResourceWithRawResponse:
         """
@@ -179,6 +181,8 @@ class IngestResource(SyncAPIResource):
 
 
 class AsyncIngestResource(AsyncAPIResource):
+    """Ingest Requests"""
+
     @cached_property
     def with_raw_response(self) -> AsyncIngestResourceWithRawResponse:
         """

@@ -52,16 +52,21 @@ __all__ = ["DefinitionsResource", "AsyncDefinitionsResource"]
 
 
 class DefinitionsResource(SyncAPIResource):
+    """Use Cases"""
+
     @cached_property
     def kpis(self) -> KpisResource:
+        """KPIs"""
         return KpisResource(self._client)
 
     @cached_property
     def limit_config(self) -> LimitConfigResource:
+        """Use Cases"""
         return LimitConfigResource(self._client)
 
     @cached_property
     def version(self) -> VersionResource:
+        """Use Cases"""
         return VersionResource(self._client)
 
     @cached_property
@@ -283,16 +288,21 @@ class DefinitionsResource(SyncAPIResource):
 
 
 class AsyncDefinitionsResource(AsyncAPIResource):
+    """Use Cases"""
+
     @cached_property
     def kpis(self) -> AsyncKpisResource:
+        """KPIs"""
         return AsyncKpisResource(self._client)
 
     @cached_property
     def limit_config(self) -> AsyncLimitConfigResource:
+        """Use Cases"""
         return AsyncLimitConfigResource(self._client)
 
     @cached_property
     def version(self) -> AsyncVersionResource:
+        """Use Cases"""
         return AsyncVersionResource(self._client)
 
     @cached_property
@@ -535,14 +545,17 @@ class DefinitionsResourceWithRawResponse:
 
     @cached_property
     def kpis(self) -> KpisResourceWithRawResponse:
+        """KPIs"""
         return KpisResourceWithRawResponse(self._definitions.kpis)
 
     @cached_property
     def limit_config(self) -> LimitConfigResourceWithRawResponse:
+        """Use Cases"""
         return LimitConfigResourceWithRawResponse(self._definitions.limit_config)
 
     @cached_property
     def version(self) -> VersionResourceWithRawResponse:
+        """Use Cases"""
         return VersionResourceWithRawResponse(self._definitions.version)
 
 
@@ -568,14 +581,17 @@ class AsyncDefinitionsResourceWithRawResponse:
 
     @cached_property
     def kpis(self) -> AsyncKpisResourceWithRawResponse:
+        """KPIs"""
         return AsyncKpisResourceWithRawResponse(self._definitions.kpis)
 
     @cached_property
     def limit_config(self) -> AsyncLimitConfigResourceWithRawResponse:
+        """Use Cases"""
         return AsyncLimitConfigResourceWithRawResponse(self._definitions.limit_config)
 
     @cached_property
     def version(self) -> AsyncVersionResourceWithRawResponse:
+        """Use Cases"""
         return AsyncVersionResourceWithRawResponse(self._definitions.version)
 
 
@@ -601,14 +617,17 @@ class DefinitionsResourceWithStreamingResponse:
 
     @cached_property
     def kpis(self) -> KpisResourceWithStreamingResponse:
+        """KPIs"""
         return KpisResourceWithStreamingResponse(self._definitions.kpis)
 
     @cached_property
     def limit_config(self) -> LimitConfigResourceWithStreamingResponse:
+        """Use Cases"""
         return LimitConfigResourceWithStreamingResponse(self._definitions.limit_config)
 
     @cached_property
     def version(self) -> VersionResourceWithStreamingResponse:
+        """Use Cases"""
         return VersionResourceWithStreamingResponse(self._definitions.version)
 
 
@@ -634,12 +653,15 @@ class AsyncDefinitionsResourceWithStreamingResponse:
 
     @cached_property
     def kpis(self) -> AsyncKpisResourceWithStreamingResponse:
+        """KPIs"""
         return AsyncKpisResourceWithStreamingResponse(self._definitions.kpis)
 
     @cached_property
     def limit_config(self) -> AsyncLimitConfigResourceWithStreamingResponse:
+        """Use Cases"""
         return AsyncLimitConfigResourceWithStreamingResponse(self._definitions.limit_config)
 
     @cached_property
     def version(self) -> AsyncVersionResourceWithStreamingResponse:
+        """Use Cases"""
         return AsyncVersionResourceWithStreamingResponse(self._definitions.version)

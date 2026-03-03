@@ -34,8 +34,11 @@ __all__ = ["CategoriesResource", "AsyncCategoriesResource"]
 
 
 class CategoriesResource(SyncAPIResource):
+    """System and Custom Categories"""
+
     @cached_property
     def resources(self) -> ResourcesResource:
+        """Resources"""
         return ResourcesResource(self._client)
 
     @cached_property
@@ -225,8 +228,11 @@ class CategoriesResource(SyncAPIResource):
 
 
 class AsyncCategoriesResource(AsyncAPIResource):
+    """System and Custom Categories"""
+
     @cached_property
     def resources(self) -> AsyncResourcesResource:
+        """Resources"""
         return AsyncResourcesResource(self._client)
 
     @cached_property
@@ -434,6 +440,7 @@ class CategoriesResourceWithRawResponse:
 
     @cached_property
     def resources(self) -> ResourcesResourceWithRawResponse:
+        """Resources"""
         return ResourcesResourceWithRawResponse(self._categories.resources)
 
 
@@ -456,6 +463,7 @@ class AsyncCategoriesResourceWithRawResponse:
 
     @cached_property
     def resources(self) -> AsyncResourcesResourceWithRawResponse:
+        """Resources"""
         return AsyncResourcesResourceWithRawResponse(self._categories.resources)
 
 
@@ -478,6 +486,7 @@ class CategoriesResourceWithStreamingResponse:
 
     @cached_property
     def resources(self) -> ResourcesResourceWithStreamingResponse:
+        """Resources"""
         return ResourcesResourceWithStreamingResponse(self._categories.resources)
 
 
@@ -500,4 +509,5 @@ class AsyncCategoriesResourceWithStreamingResponse:
 
     @cached_property
     def resources(self) -> AsyncResourcesResourceWithStreamingResponse:
+        """Resources"""
         return AsyncResourcesResourceWithStreamingResponse(self._categories.resources)

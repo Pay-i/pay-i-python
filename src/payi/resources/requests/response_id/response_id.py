@@ -27,10 +27,12 @@ __all__ = ["ResponseIDResource", "AsyncResponseIDResource"]
 class ResponseIDResource(SyncAPIResource):
     @cached_property
     def result(self) -> ResultResource:
+        """Requests"""
         return ResultResource(self._client)
 
     @cached_property
     def properties(self) -> PropertiesResource:
+        """Requests"""
         return PropertiesResource(self._client)
 
     @cached_property
@@ -56,10 +58,12 @@ class ResponseIDResource(SyncAPIResource):
 class AsyncResponseIDResource(AsyncAPIResource):
     @cached_property
     def result(self) -> AsyncResultResource:
+        """Requests"""
         return AsyncResultResource(self._client)
 
     @cached_property
     def properties(self) -> AsyncPropertiesResource:
+        """Requests"""
         return AsyncPropertiesResource(self._client)
 
     @cached_property
@@ -88,10 +92,12 @@ class ResponseIDResourceWithRawResponse:
 
     @cached_property
     def result(self) -> ResultResourceWithRawResponse:
+        """Requests"""
         return ResultResourceWithRawResponse(self._response_id.result)
 
     @cached_property
     def properties(self) -> PropertiesResourceWithRawResponse:
+        """Requests"""
         return PropertiesResourceWithRawResponse(self._response_id.properties)
 
 
@@ -101,10 +107,12 @@ class AsyncResponseIDResourceWithRawResponse:
 
     @cached_property
     def result(self) -> AsyncResultResourceWithRawResponse:
+        """Requests"""
         return AsyncResultResourceWithRawResponse(self._response_id.result)
 
     @cached_property
     def properties(self) -> AsyncPropertiesResourceWithRawResponse:
+        """Requests"""
         return AsyncPropertiesResourceWithRawResponse(self._response_id.properties)
 
 
@@ -114,10 +122,12 @@ class ResponseIDResourceWithStreamingResponse:
 
     @cached_property
     def result(self) -> ResultResourceWithStreamingResponse:
+        """Requests"""
         return ResultResourceWithStreamingResponse(self._response_id.result)
 
     @cached_property
     def properties(self) -> PropertiesResourceWithStreamingResponse:
+        """Requests"""
         return PropertiesResourceWithStreamingResponse(self._response_id.properties)
 
 
@@ -127,8 +137,10 @@ class AsyncResponseIDResourceWithStreamingResponse:
 
     @cached_property
     def result(self) -> AsyncResultResourceWithStreamingResponse:
+        """Requests"""
         return AsyncResultResourceWithStreamingResponse(self._response_id.result)
 
     @cached_property
     def properties(self) -> AsyncPropertiesResourceWithStreamingResponse:
+        """Requests"""
         return AsyncPropertiesResourceWithStreamingResponse(self._response_id.properties)
