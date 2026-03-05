@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, Sequence
 from functools import wraps
 from typing_extensions import override
 
-from wrapt import ObjectProxy, wrap_function_wrapper  # type: ignore
+from wrapt import ObjectProxy  # type: ignore
 
 from payi.lib.helpers import PayiCategories, PayiHeaderNames, PayiPropertyNames, payi_aws_bedrock_url
 from payi.types.ingest_units_params import IngestUnits
@@ -70,22 +70,12 @@ class BedrockInstrumentor:
 
         BedrockInstrumentor._module_version = get_version_helper(BedrockInstrumentor._module_name)
 
-        try:
-            wrap_function_wrapper(
-                "botocore.client",
-                "ClientCreator.create_client",
-                create_client_wrapper(instrumentor),
-            )
+        wrappers = [
+            ("botocore.client", "ClientCreator.create_client", create_client_wrapper(instrumentor)),
+            ("botocore.session", "Session.create_client", create_client_wrapper(instrumentor)),
+        ]
 
-            wrap_function_wrapper(
-                "botocore.session",
-                "Session.create_client",
-                create_client_wrapper(instrumentor),
-            )
-
-        except Exception as e:
-            instrumentor._logger.debug(f"Error instrumenting bedrock: {e}")
-            return
+        instrumentor._wrap_functions(wrappers)
 
 @_PayiInstrumentor.payi_wrapper
 def create_client_wrapper(instrumentor: _PayiInstrumentor, wrapped: Any, instance: Any, *args: Any, **kwargs: Any) -> Any: #  noqa: ARG001
