@@ -38,8 +38,11 @@ __all__ = ["LimitsResource", "AsyncLimitsResource"]
 
 
 class LimitsResource(SyncAPIResource):
+    """Limits"""
+
     @cached_property
     def properties(self) -> PropertiesResource:
+        """Limits"""
         return PropertiesResource(self._client)
 
     @cached_property
@@ -305,8 +308,11 @@ class LimitsResource(SyncAPIResource):
 
 
 class AsyncLimitsResource(AsyncAPIResource):
+    """Limits"""
+
     @cached_property
     def properties(self) -> AsyncPropertiesResource:
+        """Limits"""
         return AsyncPropertiesResource(self._client)
 
     @cached_property
@@ -596,6 +602,7 @@ class LimitsResourceWithRawResponse:
 
     @cached_property
     def properties(self) -> PropertiesResourceWithRawResponse:
+        """Limits"""
         return PropertiesResourceWithRawResponse(self._limits.properties)
 
 
@@ -624,6 +631,7 @@ class AsyncLimitsResourceWithRawResponse:
 
     @cached_property
     def properties(self) -> AsyncPropertiesResourceWithRawResponse:
+        """Limits"""
         return AsyncPropertiesResourceWithRawResponse(self._limits.properties)
 
 
@@ -652,6 +660,7 @@ class LimitsResourceWithStreamingResponse:
 
     @cached_property
     def properties(self) -> PropertiesResourceWithStreamingResponse:
+        """Limits"""
         return PropertiesResourceWithStreamingResponse(self._limits.properties)
 
 
@@ -680,4 +689,5 @@ class AsyncLimitsResourceWithStreamingResponse:
 
     @cached_property
     def properties(self) -> AsyncPropertiesResourceWithStreamingResponse:
+        """Limits"""
         return AsyncPropertiesResourceWithStreamingResponse(self._limits.properties)

@@ -44,16 +44,21 @@ __all__ = ["UseCasesResource", "AsyncUseCasesResource"]
 
 
 class UseCasesResource(SyncAPIResource):
+    """Use Cases"""
+
     @cached_property
     def kpis(self) -> KpisResource:
+        """KPIs"""
         return KpisResource(self._client)
 
     @cached_property
     def definitions(self) -> DefinitionsResource:
+        """Use Cases"""
         return DefinitionsResource(self._client)
 
     @cached_property
     def properties(self) -> PropertiesResource:
+        """Use Cases"""
         return PropertiesResource(self._client)
 
     @cached_property
@@ -182,16 +187,21 @@ class UseCasesResource(SyncAPIResource):
 
 
 class AsyncUseCasesResource(AsyncAPIResource):
+    """Use Cases"""
+
     @cached_property
     def kpis(self) -> AsyncKpisResource:
+        """KPIs"""
         return AsyncKpisResource(self._client)
 
     @cached_property
     def definitions(self) -> AsyncDefinitionsResource:
+        """Use Cases"""
         return AsyncDefinitionsResource(self._client)
 
     @cached_property
     def properties(self) -> AsyncPropertiesResource:
+        """Use Cases"""
         return AsyncPropertiesResource(self._client)
 
     @cached_property
@@ -335,14 +345,17 @@ class UseCasesResourceWithRawResponse:
 
     @cached_property
     def kpis(self) -> KpisResourceWithRawResponse:
+        """KPIs"""
         return KpisResourceWithRawResponse(self._use_cases.kpis)
 
     @cached_property
     def definitions(self) -> DefinitionsResourceWithRawResponse:
+        """Use Cases"""
         return DefinitionsResourceWithRawResponse(self._use_cases.definitions)
 
     @cached_property
     def properties(self) -> PropertiesResourceWithRawResponse:
+        """Use Cases"""
         return PropertiesResourceWithRawResponse(self._use_cases.properties)
 
 
@@ -362,14 +375,17 @@ class AsyncUseCasesResourceWithRawResponse:
 
     @cached_property
     def kpis(self) -> AsyncKpisResourceWithRawResponse:
+        """KPIs"""
         return AsyncKpisResourceWithRawResponse(self._use_cases.kpis)
 
     @cached_property
     def definitions(self) -> AsyncDefinitionsResourceWithRawResponse:
+        """Use Cases"""
         return AsyncDefinitionsResourceWithRawResponse(self._use_cases.definitions)
 
     @cached_property
     def properties(self) -> AsyncPropertiesResourceWithRawResponse:
+        """Use Cases"""
         return AsyncPropertiesResourceWithRawResponse(self._use_cases.properties)
 
 
@@ -389,14 +405,17 @@ class UseCasesResourceWithStreamingResponse:
 
     @cached_property
     def kpis(self) -> KpisResourceWithStreamingResponse:
+        """KPIs"""
         return KpisResourceWithStreamingResponse(self._use_cases.kpis)
 
     @cached_property
     def definitions(self) -> DefinitionsResourceWithStreamingResponse:
+        """Use Cases"""
         return DefinitionsResourceWithStreamingResponse(self._use_cases.definitions)
 
     @cached_property
     def properties(self) -> PropertiesResourceWithStreamingResponse:
+        """Use Cases"""
         return PropertiesResourceWithStreamingResponse(self._use_cases.properties)
 
 
@@ -416,12 +435,15 @@ class AsyncUseCasesResourceWithStreamingResponse:
 
     @cached_property
     def kpis(self) -> AsyncKpisResourceWithStreamingResponse:
+        """KPIs"""
         return AsyncKpisResourceWithStreamingResponse(self._use_cases.kpis)
 
     @cached_property
     def definitions(self) -> AsyncDefinitionsResourceWithStreamingResponse:
+        """Use Cases"""
         return AsyncDefinitionsResourceWithStreamingResponse(self._use_cases.definitions)
 
     @cached_property
     def properties(self) -> AsyncPropertiesResourceWithStreamingResponse:
+        """Use Cases"""
         return AsyncPropertiesResourceWithStreamingResponse(self._use_cases.properties)

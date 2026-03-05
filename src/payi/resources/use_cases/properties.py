@@ -24,6 +24,8 @@ __all__ = ["PropertiesResource", "AsyncPropertiesResource"]
 
 
 class PropertiesResource(SyncAPIResource):
+    """Use Cases"""
+
     @cached_property
     def with_raw_response(self) -> PropertiesResourceWithRawResponse:
         """
@@ -83,6 +85,8 @@ class PropertiesResource(SyncAPIResource):
 
 
 class AsyncPropertiesResource(AsyncAPIResource):
+    """Use Cases"""
+
     @cached_property
     def with_raw_response(self) -> AsyncPropertiesResourceWithRawResponse:
         """

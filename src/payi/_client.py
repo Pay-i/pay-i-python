@@ -98,24 +98,28 @@ class Payi(SyncAPIClient):
 
     @cached_property
     def limits(self) -> LimitsResource:
+        """Limits"""
         from .resources.limits import LimitsResource
 
         return LimitsResource(self)
 
     @cached_property
     def ingest(self) -> IngestResource:
+        """Ingest Requests"""
         from .resources.ingest import IngestResource
 
         return IngestResource(self)
 
     @cached_property
     def categories(self) -> CategoriesResource:
+        """System and Custom Categories"""
         from .resources.categories import CategoriesResource
 
         return CategoriesResource(self)
 
     @cached_property
     def use_cases(self) -> UseCasesResource:
+        """Use Cases"""
         from .resources.use_cases import UseCasesResource
 
         return UseCasesResource(self)
@@ -296,24 +300,28 @@ class AsyncPayi(AsyncAPIClient):
 
     @cached_property
     def limits(self) -> AsyncLimitsResource:
+        """Limits"""
         from .resources.limits import AsyncLimitsResource
 
         return AsyncLimitsResource(self)
 
     @cached_property
     def ingest(self) -> AsyncIngestResource:
+        """Ingest Requests"""
         from .resources.ingest import AsyncIngestResource
 
         return AsyncIngestResource(self)
 
     @cached_property
     def categories(self) -> AsyncCategoriesResource:
+        """System and Custom Categories"""
         from .resources.categories import AsyncCategoriesResource
 
         return AsyncCategoriesResource(self)
 
     @cached_property
     def use_cases(self) -> AsyncUseCasesResource:
+        """Use Cases"""
         from .resources.use_cases import AsyncUseCasesResource
 
         return AsyncUseCasesResource(self)
@@ -445,24 +453,28 @@ class PayiWithRawResponse:
 
     @cached_property
     def limits(self) -> limits.LimitsResourceWithRawResponse:
+        """Limits"""
         from .resources.limits import LimitsResourceWithRawResponse
 
         return LimitsResourceWithRawResponse(self._client.limits)
 
     @cached_property
     def ingest(self) -> ingest.IngestResourceWithRawResponse:
+        """Ingest Requests"""
         from .resources.ingest import IngestResourceWithRawResponse
 
         return IngestResourceWithRawResponse(self._client.ingest)
 
     @cached_property
     def categories(self) -> categories.CategoriesResourceWithRawResponse:
+        """System and Custom Categories"""
         from .resources.categories import CategoriesResourceWithRawResponse
 
         return CategoriesResourceWithRawResponse(self._client.categories)
 
     @cached_property
     def use_cases(self) -> use_cases.UseCasesResourceWithRawResponse:
+        """Use Cases"""
         from .resources.use_cases import UseCasesResourceWithRawResponse
 
         return UseCasesResourceWithRawResponse(self._client.use_cases)
@@ -482,24 +494,28 @@ class AsyncPayiWithRawResponse:
 
     @cached_property
     def limits(self) -> limits.AsyncLimitsResourceWithRawResponse:
+        """Limits"""
         from .resources.limits import AsyncLimitsResourceWithRawResponse
 
         return AsyncLimitsResourceWithRawResponse(self._client.limits)
 
     @cached_property
     def ingest(self) -> ingest.AsyncIngestResourceWithRawResponse:
+        """Ingest Requests"""
         from .resources.ingest import AsyncIngestResourceWithRawResponse
 
         return AsyncIngestResourceWithRawResponse(self._client.ingest)
 
     @cached_property
     def categories(self) -> categories.AsyncCategoriesResourceWithRawResponse:
+        """System and Custom Categories"""
         from .resources.categories import AsyncCategoriesResourceWithRawResponse
 
         return AsyncCategoriesResourceWithRawResponse(self._client.categories)
 
     @cached_property
     def use_cases(self) -> use_cases.AsyncUseCasesResourceWithRawResponse:
+        """Use Cases"""
         from .resources.use_cases import AsyncUseCasesResourceWithRawResponse
 
         return AsyncUseCasesResourceWithRawResponse(self._client.use_cases)
@@ -519,24 +535,28 @@ class PayiWithStreamedResponse:
 
     @cached_property
     def limits(self) -> limits.LimitsResourceWithStreamingResponse:
+        """Limits"""
         from .resources.limits import LimitsResourceWithStreamingResponse
 
         return LimitsResourceWithStreamingResponse(self._client.limits)
 
     @cached_property
     def ingest(self) -> ingest.IngestResourceWithStreamingResponse:
+        """Ingest Requests"""
         from .resources.ingest import IngestResourceWithStreamingResponse
 
         return IngestResourceWithStreamingResponse(self._client.ingest)
 
     @cached_property
     def categories(self) -> categories.CategoriesResourceWithStreamingResponse:
+        """System and Custom Categories"""
         from .resources.categories import CategoriesResourceWithStreamingResponse
 
         return CategoriesResourceWithStreamingResponse(self._client.categories)
 
     @cached_property
     def use_cases(self) -> use_cases.UseCasesResourceWithStreamingResponse:
+        """Use Cases"""
         from .resources.use_cases import UseCasesResourceWithStreamingResponse
 
         return UseCasesResourceWithStreamingResponse(self._client.use_cases)
@@ -556,24 +576,28 @@ class AsyncPayiWithStreamedResponse:
 
     @cached_property
     def limits(self) -> limits.AsyncLimitsResourceWithStreamingResponse:
+        """Limits"""
         from .resources.limits import AsyncLimitsResourceWithStreamingResponse
 
         return AsyncLimitsResourceWithStreamingResponse(self._client.limits)
 
     @cached_property
     def ingest(self) -> ingest.AsyncIngestResourceWithStreamingResponse:
+        """Ingest Requests"""
         from .resources.ingest import AsyncIngestResourceWithStreamingResponse
 
         return AsyncIngestResourceWithStreamingResponse(self._client.ingest)
 
     @cached_property
     def categories(self) -> categories.AsyncCategoriesResourceWithStreamingResponse:
+        """System and Custom Categories"""
         from .resources.categories import AsyncCategoriesResourceWithStreamingResponse
 
         return AsyncCategoriesResourceWithStreamingResponse(self._client.categories)
 
     @cached_property
     def use_cases(self) -> use_cases.AsyncUseCasesResourceWithStreamingResponse:
+        """Use Cases"""
         from .resources.use_cases import AsyncUseCasesResourceWithStreamingResponse
 
         return AsyncUseCasesResourceWithStreamingResponse(self._client.use_cases)

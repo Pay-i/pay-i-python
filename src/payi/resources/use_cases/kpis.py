@@ -25,6 +25,8 @@ __all__ = ["KpisResource", "AsyncKpisResource"]
 
 
 class KpisResource(SyncAPIResource):
+    """KPIs"""
+
     @cached_property
     def with_raw_response(self) -> KpisResourceWithRawResponse:
         """
@@ -141,6 +143,8 @@ class KpisResource(SyncAPIResource):
 
 
 class AsyncKpisResource(AsyncAPIResource):
+    """KPIs"""
+
     @cached_property
     def with_raw_response(self) -> AsyncKpisResourceWithRawResponse:
         """
