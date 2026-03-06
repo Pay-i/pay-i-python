@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.162 (2026-03-06)
+
+Full Changelog: [v0.1.0-alpha.161...v0.1.0-alpha.162](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.161...v0.1.0-alpha.162)
+
+### Chores
+
+* **test:** do not count install time for mock server timeout ([a860241](https://github.com/Pay-i/pay-i-python/commit/a86024132620d4b9f744cd7295e49546cf393b73))
+
 ## 0.1.0-alpha.161 (2026-03-06)
 
 Full Changelog: [v0.1.0-alpha.160...v0.1.0-alpha.161](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.160...v0.1.0-alpha.161)
