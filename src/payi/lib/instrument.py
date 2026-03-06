@@ -388,16 +388,20 @@ class _PayiInstrumentor:
             PayiCategories.azure_openai,
             PayiCategories.azure)):
             self._instrument_openai()
-        if PayiCategories.anthropic in instruments or PayiCategories.azure in instruments:
+
+        if any(category in instruments for category in (
+            PayiCategories.anthropic,
+            PayiCategories.azure)):
             self._instrument_anthropic()
+
         if PayiCategories.aws_bedrock in instruments:
             self._instrument_aws_bedrock()
+
         if PayiCategories.google_vertex in instruments:
             self._instrument_google_vertex()
             self._instrument_google_genai()
-        if any(
-            category in instruments
-            for category in (
+
+        if any(category in instruments for category in (
             "system.databricks",
             PayiCategories.databricks_azure,
             PayiCategories.databricks_aws,
