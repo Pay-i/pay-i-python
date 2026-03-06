@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.161 (2026-03-06)
+
+Full Changelog: [v0.1.0-alpha.160...v0.1.0-alpha.161](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.160...v0.1.0-alpha.161)
+
+### Features
+
+* instrument databricks ([#435](https://github.com/Pay-i/pay-i-python/issues/435)) ([0bbb63e](https://github.com/Pay-i/pay-i-python/commit/0bbb63e00b2c3742bd6a6b98762468dcccd2b84d))
+
 ## 0.1.0-alpha.160 (2026-03-03)
 
 Full Changelog: [v0.1.0-alpha.159...v0.1.0-alpha.160](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.159...v0.1.0-alpha.160)
