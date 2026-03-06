@@ -33,6 +33,9 @@ class PayiCategories:
     azure:str = "system.azure"
     aws_bedrock:str = "system.aws.bedrock"
     google_vertex:str = "system.google.vertex"
+    databricks_azure:str = "system.databricks.azure"
+    databricks_aws:str = "system.databricks.aws"
+    databricks_google:str = "system.databricks.google"
 
 class PayiPropertyNames:
     failure:str = "system.failure"
