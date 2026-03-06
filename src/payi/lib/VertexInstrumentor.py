@@ -3,8 +3,6 @@ from __future__ import annotations
 from typing import Any, List, Union, Optional, Sequence
 from typing_extensions import override
 
-from wrapt import wrap_function_wrapper  # type: ignore
-
 from .instrument import _IsStreaming, _PayiInstrumentor
 from .VertexRequest import _VertexRequest
 from .version_helper import get_version_helper
@@ -26,11 +24,7 @@ class VertexInstrumentor:
             ("vertexai.preview.generative_models", "GenerativeModel.generate_content_async", agenerate_wrapper(instrumentor)),
         ]
 
-        for module, method, wrapper in wrappers:
-            try:
-                wrap_function_wrapper(module, method, wrapper)
-            except Exception as e:
-                instrumentor._logger.debug(f"Failed to wrap {module}.{method}: {e}")
+        instrumentor._wrap_functions(wrappers)
 
 @_PayiInstrumentor.payi_wrapper
 def generate_wrapper(

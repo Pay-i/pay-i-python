@@ -939,8 +939,6 @@ class TestPayi:
         assert response.http_request.headers.get("x-stainless-retry-count") == "42"
 
     def test_proxy_environment_variables(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        # Test that the proxy environment variables are set correctly
-        monkeypatch.setenv("HTTPS_PROXY", "https://example.org")
         # Delete in case our environment has any proxy env vars set
         monkeypatch.delenv("HTTP_PROXY", raising=False)
         monkeypatch.delenv("ALL_PROXY", raising=False)
@@ -949,6 +947,8 @@ class TestPayi:
         monkeypatch.delenv("https_proxy", raising=False)
         monkeypatch.delenv("all_proxy", raising=False)
         monkeypatch.delenv("no_proxy", raising=False)
+        # Test that the proxy environment variables are set correctly
+        monkeypatch.setenv("HTTPS_PROXY", "https://example.org")
 
         client = DefaultHttpxClient()
 
@@ -1847,8 +1847,6 @@ class TestAsyncPayi:
         assert isinstance(platform, (str, OtherPlatform))
 
     async def test_proxy_environment_variables(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        # Test that the proxy environment variables are set correctly
-        monkeypatch.setenv("HTTPS_PROXY", "https://example.org")
         # Delete in case our environment has any proxy env vars set
         monkeypatch.delenv("HTTP_PROXY", raising=False)
         monkeypatch.delenv("ALL_PROXY", raising=False)
@@ -1857,6 +1855,8 @@ class TestAsyncPayi:
         monkeypatch.delenv("https_proxy", raising=False)
         monkeypatch.delenv("all_proxy", raising=False)
         monkeypatch.delenv("no_proxy", raising=False)
+        # Test that the proxy environment variables are set correctly
+        monkeypatch.setenv("HTTPS_PROXY", "https://example.org")
 
         client = DefaultAsyncHttpxClient()
 

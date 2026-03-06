@@ -5,7 +5,6 @@ from typing import Any, Dict, Union, Optional, Sequence
 from typing_extensions import override
 
 import tiktoken
-from wrapt import wrap_function_wrapper  # type: ignore
 
 from payi.lib.helpers import PayiCategories, PayiResourceScopes
 from payi.types.ingest_units_params import IngestUnits
@@ -75,11 +74,7 @@ class AnthropicInstrumentor:
             ("anthropic.lib.streaming._messages", "AsyncMessageStream.__aiter__", async_message_stream_aiter_wrapper(instrumentor)),
         ]
 
-        for module, method, wrapper in wrappers:
-            try:
-                wrap_function_wrapper(module, method, wrapper)
-            except Exception as e:
-                instrumentor._logger.debug(f"Failed to wrap {module}.{method}: {e}")
+        instrumentor._wrap_functions(wrappers)
 
 @_PayiInstrumentor.payi_wrapper
 def messages_wrapper(

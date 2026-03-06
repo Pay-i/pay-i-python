@@ -43,6 +43,18 @@ def _qualified_exception_name(exc: BaseException | None) -> str:
     exc_type = type(exc)
     return f"{exc_type.__module__}.{exc_type.__qualname__}"
 
+def _model_to_dict(model: Any) -> Any:
+    if hasattr(model, "model_dump"):
+        return model.model_dump()
+    elif hasattr(model, "dict"):
+        return model.dict()
+    elif hasattr(model, "parse"):  # Raw API response
+        return _model_to_dict(model.parse())
+    elif hasattr(model, "as_dict"):
+        return model.as_dict()
+    else:
+        return model
+
 class PayiInstrumentModelMapping(TypedDict, total=False):
     model: str
     price_as_category: Optional[str]
@@ -368,23 +380,49 @@ class _PayiInstrumentor:
         self._instrument_aws_bedrock()
         self._instrument_google_vertex()
         self._instrument_google_genai()
+        self._instrument_databricks()
 
     def _instrument_specific(self, instruments: Set[str]) -> None:
-        if PayiCategories.openai in instruments or PayiCategories.azure_openai in instruments:
+        if any(category in instruments for category in (
+            PayiCategories.openai,
+            PayiCategories.azure_openai,
+            PayiCategories.azure)):
             self._instrument_openai()
-        if PayiCategories.anthropic in instruments:
+
+        if any(category in instruments for category in (
+            PayiCategories.anthropic,
+            PayiCategories.azure)):
             self._instrument_anthropic()
+
         if PayiCategories.aws_bedrock in instruments:
             self._instrument_aws_bedrock()
+
         if PayiCategories.google_vertex in instruments:
             self._instrument_google_vertex()
             self._instrument_google_genai()
+
+        if any(category in instruments for category in (
+            "system.databricks",
+            PayiCategories.databricks_azure,
+            PayiCategories.databricks_aws,
+            PayiCategories.databricks_google,
+            )):
+            self._instrument_databricks()
 
     def _instrument_openai(self) -> None:
         from .OpenAIInstrumentor import OpenAiInstrumentor
 
         try:
             OpenAiInstrumentor.instrument(self)
+
+        except Exception as e:
+            self._logger.error(f"Error instrumenting OpenAI: {e}")
+
+    def _instrument_databricks(self) -> None:
+        from .OpenAIInstrumentor import OpenAiInstrumentor
+
+        try:
+            OpenAiInstrumentor.instrument_databricks(self)
 
         except Exception as e:
             self._logger.error(f"Error instrumenting OpenAI: {e}")
@@ -424,6 +462,13 @@ class _PayiInstrumentor:
 
         except Exception as e:
             self._logger.error(f"Error instrumenting Google GenAi: {e}")
+
+    def _wrap_functions(self, wrappers: list[tuple[str, str, Any]]) -> None:
+        for module, method, wrapper in wrappers:
+            try:
+                wrap_function_wrapper(module, method, wrapper)
+            except Exception as e:
+                self._logger.debug(f"Failed to wrap {module}.{method}: {e}")
 
     def _thread_submit_wrapper(
         self,
@@ -1166,7 +1211,7 @@ class _PayiInstrumentor:
         provider_prompt: "dict[str, Any]" = {}
         for k, v in kwargs.items():
             if k == "messages":
-                provider_prompt[k] = [m.model_dump() if hasattr(m, "model_dump") else m for m in v]
+                provider_prompt[k] = [_model_to_dict(m) for m in v]
             elif k in ["extra_headers", "extra_query"]:
                 pass
             else:
