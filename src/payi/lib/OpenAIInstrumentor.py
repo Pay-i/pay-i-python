@@ -337,9 +337,8 @@ class _OpenAiProviderRequest(_ProviderRequest):
 
     def process_synchronous_response_worker(
         self,
-        response: str,
+        response_dict: dict[str, Any],
         ) -> Any:
-        response_dict = _model_to_dict(response)
 
         if self.update_deployment_name() is False:
             self.update_model_name(response_dict.get("model", ""))
@@ -426,7 +425,7 @@ class _OpenAiEmbeddingsProviderRequest(_OpenAiProviderRequest):
         self,
         response: Any,
         kwargs: Any) -> Any:
-        return self.process_synchronous_response_worker(response)
+        return self.process_synchronous_response_worker(_model_to_dict(response))
 
 class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, instance: Any):
@@ -439,6 +438,37 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
             output_tokens_details_key=_OpenAiProviderRequest.chat_completion_tokens_details_key)
 
         self._include_usage_added = False
+
+    @staticmethod
+    def process_synchronous_response_choices(request: _ProviderRequest, response: dict[str, Any]) -> None:
+        choices = response.get("choices", [])
+        if choices:
+            for choice in choices:
+                function = choice.get("message", {}).get("function_call", {})
+
+                if not function:
+                    continue
+
+                name = function.get("name", None)
+                arguments = function.get("arguments", None)
+
+                if name:
+                    request.add_synchronous_function_call(name=name, arguments=arguments)
+
+    @staticmethod
+    def process_chunk_choices(request: _ProviderRequest, chunk: dict[str, Any]) -> None:
+        choices = chunk.get("choices", [])
+        if choices:
+            for choice in choices:
+                function = choice.get("delta", {}).get("function_call", {})
+                index = choice.get("index", None)
+
+                if function and index is not None:
+                    name = function.get("name", None)
+                    arguments = function.get("arguments", None)
+
+                    if name or arguments:
+                        request.add_streaming_function_call(index=index, name=name, arguments=arguments)
 
     def add_stream_options(self) -> bool:
         return True
@@ -455,20 +485,9 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
 
         send_chunk_to_client = True
 
-        choices = model.get("choices", [])
-        if choices:
-            for choice in choices:
-                function = choice.get("delta", {}).get("function_call", {})
-                index = choice.get("index", None)
+        self.process_chunk_choices(self, model)
 
-                if function and index is not None:
-                    name = function.get("name", None)
-                    arguments = function.get("arguments", None)
-
-                    if name or arguments:
-                        self.add_streaming_function_call(index=index, name=name, arguments=arguments)
-
-        usage = model.get("usage")
+        usage = model.get("usage", {})
         if usage:
             if self.update_deployment_name() is False:
                 self.update_model_name(model.get("model", ""))                
@@ -540,21 +559,9 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
         kwargs: Any) -> Any:
 
         response_dict = _model_to_dict(response)
-        choices = response_dict.get("choices", [])
-        if choices:
-            for choice in choices:
-                function = choice.get("message", {}).get("function_call", {})
+        self.process_synchronous_response_choices(self, response_dict)
 
-                if not function:
-                    continue
-
-                name = function.get("name", None)
-                arguments = function.get("arguments", None)
-
-                if name:
-                    self.add_synchronous_function_call(name=name, arguments=arguments)
-
-        return self.process_synchronous_response_worker(response)
+        return self.process_synchronous_response_worker(response_dict)
 
 class _DatabricksOpenAiChatProviderRequest(_OpenAiChatProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, instance: Any):
@@ -759,4 +766,4 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
                 if name:
                     self.add_synchronous_function_call(name=name, arguments=arguments)
 
-        return self.process_synchronous_response_worker(response)
+        return self.process_synchronous_response_worker(response_dict)
