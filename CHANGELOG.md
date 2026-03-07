@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.163 (2026-03-07)
+
+Full Changelog: [v0.1.0-alpha.162...v0.1.0-alpha.163](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.162...v0.1.0-alpha.163)
+
+### Features
+
+* instrument Bedrock hosted openai gpt oss ([#439](https://github.com/Pay-i/pay-i-python/issues/439)) ([4e569c8](https://github.com/Pay-i/pay-i-python/commit/4e569c879de99d007cc11bf3a11e4bae82d768fa))
+
 ## 0.1.0-alpha.162 (2026-03-06)
 
 Full Changelog: [v0.1.0-alpha.161...v0.1.0-alpha.162](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.161...v0.1.0-alpha.162)

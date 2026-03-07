@@ -172,6 +172,19 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
                 log_prompt_and_response=False, # will evaluate logging later
                 assign_id=False)
 
+        elif self._request._is_openai:
+            from .OpenAIInstrumentor import _OpenAiChatProviderRequest
+
+            _OpenAiChatProviderRequest.process_synchronous_response_choices(self._request, response)
+
+            usage = response.get("usage", {})
+            input = usage.get("prompt_tokens", 0)
+            output = usage.get("completion_tokens", 0)
+            units["text"] = IngestUnits(input=input, output=output)
+
+            # keep the bedrock response id in the ingest request to be consistent with other providers in bedrock
+            # ingest["provider_response_id"] = response.get("id", None)
+
         elif self._request._is_meta:
             input = response.get('prompt_token_count', 0)
             output = response.get('generation_token_count', 0)
@@ -436,6 +449,7 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
             model_id = price_as_resource
 
         self._is_anthropic: bool = False
+        self._is_openai: bool = False
         self._is_nova: bool = False
         self._is_meta: bool = False
         self._is_amazon_titan_embed_text_v1: bool = False
@@ -445,6 +459,7 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
 
     def _assign_model_state(self, model_id: str) -> None:
         self._is_anthropic = 'anthropic' in model_id
+        self._is_openai = model_id.startswith("openai.")
         self._is_nova = 'nova' in model_id
         self._is_meta = 'meta' in model_id
         self._is_amazon_titan_embed_text_v1 = 'amazon.titan-embed-text-v1' == model_id
@@ -508,10 +523,19 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
             from .AnthropicInstrumentor import anthropic_process_chunk
             return anthropic_process_chunk(self, chunk_dict, assign_id=False)
         
-        if self._is_nova:
+        if self._is_openai:
+            from .OpenAIInstrumentor import _OpenAiChatProviderRequest
+
+            # gpt oss models follow the same behavior as private models where usage is only returned if the prompt includes
+            #   'stream_options': {"include_usage": True}
+            # Unlike SaaS OpenAI, stream_options does not send an extra chunk, it just adds a "usage" property to the final stop chunk.
+            # 'amazon-bedrock-invocationMetrics' contains the same usage data without requiring the 'stream_options' property
+            _OpenAiChatProviderRequest.process_chunk_choices(self, chunk_dict)
+
+        elif self._is_nova:
             bedrock_converse_process_streaming_for_function_call(self, chunk_dict)
 
-        # meta and nova
+        # meta and nova and openai
         return self.process_invoke_other_provider_chunk(chunk_dict)
 
     def process_invoke_other_provider_chunk(self, chunk_dict: 'dict[str, Any]') -> _ChunkResult:
@@ -525,11 +549,11 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
 
             text_cache_read = metrics.get("cacheReadInputTokenCount", None)
             if text_cache_read:
-                self._ingest["units"]["text_cache_read"] = text_cache_read
+                self._ingest["units"]["text_cache_read"] = IngestUnits(input=text_cache_read, output=0)
 
             text_cache_write = metrics.get("cacheWriteInputTokenCount", None)
             if text_cache_write:
-                self._ingest["units"]["text_cache_write"] = text_cache_write
+                self._ingest["units"]["text_cache_write"] = IngestUnits(input=text_cache_write, output=0)
 
             ingest = True
 
