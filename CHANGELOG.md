@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.164 (2026-03-10)
+
+Full Changelog: [v0.1.0-alpha.163...v0.1.0-alpha.164](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.163...v0.1.0-alpha.164)
+
+### Bug Fixes
+
+* init retry manager once payi clients are valid ([#442](https://github.com/Pay-i/pay-i-python/issues/442)) ([7b25f66](https://github.com/Pay-i/pay-i-python/commit/7b25f6671833cfbad87406f01ae3fbe988891ee0))
+
+
+### Chores
+
+* **ci:** skip uploading artifacts on stainless-internal branches ([b4adaea](https://github.com/Pay-i/pay-i-python/commit/b4adaead13932ac1c84a94cc2d3c2f5829b7bf0d))
+
 ## 0.1.0-alpha.163 (2026-03-07)
 
 Full Changelog: [v0.1.0-alpha.162...v0.1.0-alpha.163](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.162...v0.1.0-alpha.163)
