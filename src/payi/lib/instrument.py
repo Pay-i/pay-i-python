@@ -238,16 +238,6 @@ class _PayiInstrumentor:
         if self._api_connection_error_window < 0:
             raise ValueError("connection_error_logging_window must be a non-negative integer")
 
-        self._retry_manager = IngestRetryManager(
-            sync_ingest_fn=self._payi.ingest.units if self._payi else None,
-            async_ingest_fn=self._apayi.ingest.units if self._apayi else None,
-            on_success=self._process_ingest_units_response,
-            on_connection_error=self._process_ingest_connection_error,
-            on_api_status_error=self._process_api_status_error,
-            config=global_config.get("ingest_retry", {}) or {},
-            logger=self._logger,
-        )
-
         # default is instrument and ingest metrics
         self._proxy_default: bool = global_config.get("proxy", False)
 
@@ -339,6 +329,18 @@ class _PayiInstrumentor:
             self._logger.debug(f"Pay-i global instrumented context: {self._create_logged_context(self._context_safe)}")
         else:
             self._logger.debug(f"Pay-i global instrumented context skipped")
+
+        # Finally create retry manager after all possible paths where a _(a)payi client have been assigned
+        if self._payi or self._apayi:
+            self._retry_manager = IngestRetryManager(
+                sync_ingest_fn=self._payi.ingest.units if self._payi else None,
+                async_ingest_fn=self._apayi.ingest.units if self._apayi else None,
+                on_success=self._process_ingest_units_response,
+                on_connection_error=self._process_ingest_connection_error,
+                on_api_status_error=self._process_api_status_error,
+                config=global_config.get("ingest_retry", {}) or {},
+                logger=self._logger,
+            )
 
     def _ensure_payi_clients(self) -> None:
         if self._offline_instrumentation is not None:
