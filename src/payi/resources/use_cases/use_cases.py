@@ -13,6 +13,7 @@ from .kpis import (
     AsyncKpisResourceWithStreamingResponse,
 )
 from ..._types import Body, Query, Headers, NotGiven, not_given
+from ..._utils import path_template
 from ..._compat import cached_property
 from .properties import (
     PropertiesResource,
@@ -106,7 +107,7 @@ class UseCasesResource(SyncAPIResource):
         if not use_case_name:
             raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return self._post(
-            f"/api/v1/use_cases/instances/{use_case_name}",
+            path_template("/api/v1/use_cases/instances/{use_case_name}", use_case_name=use_case_name),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -142,7 +143,11 @@ class UseCasesResource(SyncAPIResource):
         if not use_case_id:
             raise ValueError(f"Expected a non-empty value for `use_case_id` but received {use_case_id!r}")
         return self._get(
-            f"/api/v1/use_cases/instances/{use_case_name}/{use_case_id}",
+            path_template(
+                "/api/v1/use_cases/instances/{use_case_name}/{use_case_id}",
+                use_case_name=use_case_name,
+                use_case_id=use_case_id,
+            ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -178,7 +183,11 @@ class UseCasesResource(SyncAPIResource):
         if not use_case_id:
             raise ValueError(f"Expected a non-empty value for `use_case_id` but received {use_case_id!r}")
         return self._delete(
-            f"/api/v1/use_cases/instances/{use_case_name}/{use_case_id}",
+            path_template(
+                "/api/v1/use_cases/instances/{use_case_name}/{use_case_id}",
+                use_case_name=use_case_name,
+                use_case_id=use_case_id,
+            ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -249,7 +258,7 @@ class AsyncUseCasesResource(AsyncAPIResource):
         if not use_case_name:
             raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return await self._post(
-            f"/api/v1/use_cases/instances/{use_case_name}",
+            path_template("/api/v1/use_cases/instances/{use_case_name}", use_case_name=use_case_name),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -285,7 +294,11 @@ class AsyncUseCasesResource(AsyncAPIResource):
         if not use_case_id:
             raise ValueError(f"Expected a non-empty value for `use_case_id` but received {use_case_id!r}")
         return await self._get(
-            f"/api/v1/use_cases/instances/{use_case_name}/{use_case_id}",
+            path_template(
+                "/api/v1/use_cases/instances/{use_case_name}/{use_case_id}",
+                use_case_name=use_case_name,
+                use_case_id=use_case_id,
+            ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -321,7 +334,11 @@ class AsyncUseCasesResource(AsyncAPIResource):
         if not use_case_id:
             raise ValueError(f"Expected a non-empty value for `use_case_id` but received {use_case_id!r}")
         return await self._delete(
-            f"/api/v1/use_cases/instances/{use_case_name}/{use_case_id}",
+            path_template(
+                "/api/v1/use_cases/instances/{use_case_name}/{use_case_id}",
+                use_case_name=use_case_name,
+                use_case_id=use_case_id,
+            ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),

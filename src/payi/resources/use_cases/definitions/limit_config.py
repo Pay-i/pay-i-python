@@ -8,7 +8,7 @@ from typing_extensions import Literal
 import httpx
 
 from ...._types import Body, Omit, Query, Headers, NotGiven, omit, not_given
-from ...._utils import maybe_transform, async_maybe_transform
+from ...._utils import path_template, maybe_transform, async_maybe_transform
 from ...._compat import cached_property
 from ...._resource import SyncAPIResource, AsyncAPIResource
 from ...._response import (
@@ -76,7 +76,7 @@ class LimitConfigResource(SyncAPIResource):
         if not use_case_name:
             raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return self._post(
-            f"/api/v1/use_cases/definitions/{use_case_name}/limit_config",
+            path_template("/api/v1/use_cases/definitions/{use_case_name}/limit_config", use_case_name=use_case_name),
             body=maybe_transform(
                 {
                     "max": max,
@@ -118,7 +118,7 @@ class LimitConfigResource(SyncAPIResource):
         if not use_case_name:
             raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return self._delete(
-            f"/api/v1/use_cases/definitions/{use_case_name}/limit_config",
+            path_template("/api/v1/use_cases/definitions/{use_case_name}/limit_config", use_case_name=use_case_name),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -178,7 +178,7 @@ class AsyncLimitConfigResource(AsyncAPIResource):
         if not use_case_name:
             raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return await self._post(
-            f"/api/v1/use_cases/definitions/{use_case_name}/limit_config",
+            path_template("/api/v1/use_cases/definitions/{use_case_name}/limit_config", use_case_name=use_case_name),
             body=await async_maybe_transform(
                 {
                     "max": max,
@@ -220,7 +220,7 @@ class AsyncLimitConfigResource(AsyncAPIResource):
         if not use_case_name:
             raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return await self._delete(
-            f"/api/v1/use_cases/definitions/{use_case_name}/limit_config",
+            path_template("/api/v1/use_cases/definitions/{use_case_name}/limit_config", use_case_name=use_case_name),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),

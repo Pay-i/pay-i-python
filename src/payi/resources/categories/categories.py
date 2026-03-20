@@ -6,7 +6,7 @@ import httpx
 
 from ...types import category_list_params, category_list_resources_params
 from ..._types import Body, Omit, Query, Headers, NotGiven, omit, not_given
-from ..._utils import maybe_transform
+from ..._utils import path_template, maybe_transform
 from ..._compat import cached_property
 from .resources import (
     ResourcesResource,
@@ -133,7 +133,7 @@ class CategoriesResource(SyncAPIResource):
         if not category:
             raise ValueError(f"Expected a non-empty value for `category` but received {category!r}")
         return self._delete(
-            f"/api/v1/categories/{category}",
+            path_template("/api/v1/categories/{category}", category=category),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -169,7 +169,7 @@ class CategoriesResource(SyncAPIResource):
         if not resource:
             raise ValueError(f"Expected a non-empty value for `resource` but received {resource!r}")
         return self._delete(
-            f"/api/v1/categories/{category}/resources/{resource}",
+            path_template("/api/v1/categories/{category}/resources/{resource}", category=category, resource=resource),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -206,7 +206,7 @@ class CategoriesResource(SyncAPIResource):
         if not category:
             raise ValueError(f"Expected a non-empty value for `category` but received {category!r}")
         return self._get_api_list(
-            f"/api/v1/categories/{category}/resources",
+            path_template("/api/v1/categories/{category}/resources", category=category),
             page=SyncCursorPage[CategoryResourceResponse],
             options=make_request_options(
                 extra_headers=extra_headers,
@@ -327,7 +327,7 @@ class AsyncCategoriesResource(AsyncAPIResource):
         if not category:
             raise ValueError(f"Expected a non-empty value for `category` but received {category!r}")
         return await self._delete(
-            f"/api/v1/categories/{category}",
+            path_template("/api/v1/categories/{category}", category=category),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -363,7 +363,7 @@ class AsyncCategoriesResource(AsyncAPIResource):
         if not resource:
             raise ValueError(f"Expected a non-empty value for `resource` but received {resource!r}")
         return await self._delete(
-            f"/api/v1/categories/{category}/resources/{resource}",
+            path_template("/api/v1/categories/{category}/resources/{resource}", category=category, resource=resource),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -400,7 +400,7 @@ class AsyncCategoriesResource(AsyncAPIResource):
         if not category:
             raise ValueError(f"Expected a non-empty value for `category` but received {category!r}")
         return self._get_api_list(
-            f"/api/v1/categories/{category}/resources",
+            path_template("/api/v1/categories/{category}/resources", category=category),
             page=AsyncCursorPage[CategoryResourceResponse],
             options=make_request_options(
                 extra_headers=extra_headers,
