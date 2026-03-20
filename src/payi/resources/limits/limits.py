@@ -10,7 +10,7 @@ import httpx
 
 from ...types import limit_list_params, limit_reset_params, limit_create_params, limit_update_params
 from ..._types import Body, Omit, Query, Headers, NotGiven, omit, not_given
-from ..._utils import maybe_transform, async_maybe_transform
+from ..._utils import path_template, maybe_transform, async_maybe_transform
 from ..._compat import cached_property
 from .properties import (
     PropertiesResource,
@@ -137,7 +137,7 @@ class LimitsResource(SyncAPIResource):
         if not limit_id:
             raise ValueError(f"Expected a non-empty value for `limit_id` but received {limit_id!r}")
         return self._get(
-            f"/api/v1/limits/{limit_id}",
+            path_template("/api/v1/limits/{limit_id}", limit_id=limit_id),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -172,7 +172,7 @@ class LimitsResource(SyncAPIResource):
         if not limit_id:
             raise ValueError(f"Expected a non-empty value for `limit_id` but received {limit_id!r}")
         return self._put(
-            f"/api/v1/limits/{limit_id}",
+            path_template("/api/v1/limits/{limit_id}", limit_id=limit_id),
             body=maybe_transform(
                 {
                     "limit_name": limit_name,
@@ -259,7 +259,7 @@ class LimitsResource(SyncAPIResource):
         if not limit_id:
             raise ValueError(f"Expected a non-empty value for `limit_id` but received {limit_id!r}")
         return self._delete(
-            f"/api/v1/limits/{limit_id}",
+            path_template("/api/v1/limits/{limit_id}", limit_id=limit_id),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -295,7 +295,7 @@ class LimitsResource(SyncAPIResource):
         if not limit_id:
             raise ValueError(f"Expected a non-empty value for `limit_id` but received {limit_id!r}")
         return self._post(
-            f"/api/v1/limits/{limit_id}/reset",
+            path_template("/api/v1/limits/{limit_id}/reset", limit_id=limit_id),
             options=make_request_options(
                 extra_headers=extra_headers,
                 extra_query=extra_query,
@@ -407,7 +407,7 @@ class AsyncLimitsResource(AsyncAPIResource):
         if not limit_id:
             raise ValueError(f"Expected a non-empty value for `limit_id` but received {limit_id!r}")
         return await self._get(
-            f"/api/v1/limits/{limit_id}",
+            path_template("/api/v1/limits/{limit_id}", limit_id=limit_id),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -442,7 +442,7 @@ class AsyncLimitsResource(AsyncAPIResource):
         if not limit_id:
             raise ValueError(f"Expected a non-empty value for `limit_id` but received {limit_id!r}")
         return await self._put(
-            f"/api/v1/limits/{limit_id}",
+            path_template("/api/v1/limits/{limit_id}", limit_id=limit_id),
             body=await async_maybe_transform(
                 {
                     "limit_name": limit_name,
@@ -529,7 +529,7 @@ class AsyncLimitsResource(AsyncAPIResource):
         if not limit_id:
             raise ValueError(f"Expected a non-empty value for `limit_id` but received {limit_id!r}")
         return await self._delete(
-            f"/api/v1/limits/{limit_id}",
+            path_template("/api/v1/limits/{limit_id}", limit_id=limit_id),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -565,7 +565,7 @@ class AsyncLimitsResource(AsyncAPIResource):
         if not limit_id:
             raise ValueError(f"Expected a non-empty value for `limit_id` but received {limit_id!r}")
         return await self._post(
-            f"/api/v1/limits/{limit_id}/reset",
+            path_template("/api/v1/limits/{limit_id}/reset", limit_id=limit_id),
             options=make_request_options(
                 extra_headers=extra_headers,
                 extra_query=extra_query,

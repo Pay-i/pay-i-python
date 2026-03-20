@@ -7,7 +7,7 @@ from typing import Union
 import httpx
 
 from ..._types import Body, Omit, Query, Headers, NoneType, NotGiven, omit, not_given
-from ..._utils import maybe_transform, async_maybe_transform
+from ..._utils import path_template, maybe_transform, async_maybe_transform
 from ..._compat import cached_property
 from ..._resource import SyncAPIResource, AsyncAPIResource
 from ..._response import (
@@ -80,7 +80,12 @@ class KpisResource(SyncAPIResource):
             raise ValueError(f"Expected a non-empty value for `kpi_name` but received {kpi_name!r}")
         extra_headers = {"Accept": "*/*", **(extra_headers or {})}
         return self._put(
-            f"/api/v1/use_cases/instances/{use_case_name}/{use_case_id}/kpis/{kpi_name}",
+            path_template(
+                "/api/v1/use_cases/instances/{use_case_name}/{use_case_id}/kpis/{kpi_name}",
+                use_case_name=use_case_name,
+                use_case_id=use_case_id,
+                kpi_name=kpi_name,
+            ),
             body=maybe_transform({"score": score}, kpi_update_params.KpiUpdateParams),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
@@ -121,7 +126,11 @@ class KpisResource(SyncAPIResource):
         if not use_case_id:
             raise ValueError(f"Expected a non-empty value for `use_case_id` but received {use_case_id!r}")
         return self._get_api_list(
-            f"/api/v1/use_cases/instances/{use_case_name}/{use_case_id}/kpis",
+            path_template(
+                "/api/v1/use_cases/instances/{use_case_name}/{use_case_id}/kpis",
+                use_case_name=use_case_name,
+                use_case_id=use_case_id,
+            ),
             page=SyncCursorPage[KpiListResponse],
             options=make_request_options(
                 extra_headers=extra_headers,
@@ -198,7 +207,12 @@ class AsyncKpisResource(AsyncAPIResource):
             raise ValueError(f"Expected a non-empty value for `kpi_name` but received {kpi_name!r}")
         extra_headers = {"Accept": "*/*", **(extra_headers or {})}
         return await self._put(
-            f"/api/v1/use_cases/instances/{use_case_name}/{use_case_id}/kpis/{kpi_name}",
+            path_template(
+                "/api/v1/use_cases/instances/{use_case_name}/{use_case_id}/kpis/{kpi_name}",
+                use_case_name=use_case_name,
+                use_case_id=use_case_id,
+                kpi_name=kpi_name,
+            ),
             body=await async_maybe_transform({"score": score}, kpi_update_params.KpiUpdateParams),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
@@ -239,7 +253,11 @@ class AsyncKpisResource(AsyncAPIResource):
         if not use_case_id:
             raise ValueError(f"Expected a non-empty value for `use_case_id` but received {use_case_id!r}")
         return self._get_api_list(
-            f"/api/v1/use_cases/instances/{use_case_name}/{use_case_id}/kpis",
+            path_template(
+                "/api/v1/use_cases/instances/{use_case_name}/{use_case_id}/kpis",
+                use_case_name=use_case_name,
+                use_case_id=use_case_id,
+            ),
             page=AsyncCursorPage[KpiListResponse],
             options=make_request_options(
                 extra_headers=extra_headers,

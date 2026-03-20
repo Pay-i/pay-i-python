@@ -8,7 +8,7 @@ from typing_extensions import Literal
 import httpx
 
 from ...._types import Body, Omit, Query, Headers, NotGiven, omit, not_given
-from ...._utils import maybe_transform, async_maybe_transform
+from ...._utils import path_template, maybe_transform, async_maybe_transform
 from ...._compat import cached_property
 from ...._resource import SyncAPIResource, AsyncAPIResource
 from ...._response import (
@@ -81,7 +81,7 @@ class KpisResource(SyncAPIResource):
         if not use_case_name:
             raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return self._post(
-            f"/api/v1/use_cases/definitions/{use_case_name}/kpis",
+            path_template("/api/v1/use_cases/definitions/{use_case_name}/kpis", use_case_name=use_case_name),
             body=maybe_transform(
                 {
                     "description": description,
@@ -126,7 +126,11 @@ class KpisResource(SyncAPIResource):
         if not kpi_name:
             raise ValueError(f"Expected a non-empty value for `kpi_name` but received {kpi_name!r}")
         return self._get(
-            f"/api/v1/use_cases/definitions/{use_case_name}/kpis/{kpi_name}",
+            path_template(
+                "/api/v1/use_cases/definitions/{use_case_name}/kpis/{kpi_name}",
+                use_case_name=use_case_name,
+                kpi_name=kpi_name,
+            ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -164,7 +168,11 @@ class KpisResource(SyncAPIResource):
         if not kpi_name:
             raise ValueError(f"Expected a non-empty value for `kpi_name` but received {kpi_name!r}")
         return self._put(
-            f"/api/v1/use_cases/definitions/{use_case_name}/kpis/{kpi_name}",
+            path_template(
+                "/api/v1/use_cases/definitions/{use_case_name}/kpis/{kpi_name}",
+                use_case_name=use_case_name,
+                kpi_name=kpi_name,
+            ),
             body=maybe_transform(
                 {
                     "description": description,
@@ -208,7 +216,7 @@ class KpisResource(SyncAPIResource):
         if not use_case_name:
             raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return self._get_api_list(
-            f"/api/v1/use_cases/definitions/{use_case_name}/kpis",
+            path_template("/api/v1/use_cases/definitions/{use_case_name}/kpis", use_case_name=use_case_name),
             page=SyncCursorPage[KpiListResponse],
             options=make_request_options(
                 extra_headers=extra_headers,
@@ -257,7 +265,11 @@ class KpisResource(SyncAPIResource):
         if not kpi_name:
             raise ValueError(f"Expected a non-empty value for `kpi_name` but received {kpi_name!r}")
         return self._delete(
-            f"/api/v1/use_cases/definitions/{use_case_name}/kpis/{kpi_name}",
+            path_template(
+                "/api/v1/use_cases/definitions/{use_case_name}/kpis/{kpi_name}",
+                use_case_name=use_case_name,
+                kpi_name=kpi_name,
+            ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -317,7 +329,7 @@ class AsyncKpisResource(AsyncAPIResource):
         if not use_case_name:
             raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return await self._post(
-            f"/api/v1/use_cases/definitions/{use_case_name}/kpis",
+            path_template("/api/v1/use_cases/definitions/{use_case_name}/kpis", use_case_name=use_case_name),
             body=await async_maybe_transform(
                 {
                     "description": description,
@@ -362,7 +374,11 @@ class AsyncKpisResource(AsyncAPIResource):
         if not kpi_name:
             raise ValueError(f"Expected a non-empty value for `kpi_name` but received {kpi_name!r}")
         return await self._get(
-            f"/api/v1/use_cases/definitions/{use_case_name}/kpis/{kpi_name}",
+            path_template(
+                "/api/v1/use_cases/definitions/{use_case_name}/kpis/{kpi_name}",
+                use_case_name=use_case_name,
+                kpi_name=kpi_name,
+            ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -400,7 +416,11 @@ class AsyncKpisResource(AsyncAPIResource):
         if not kpi_name:
             raise ValueError(f"Expected a non-empty value for `kpi_name` but received {kpi_name!r}")
         return await self._put(
-            f"/api/v1/use_cases/definitions/{use_case_name}/kpis/{kpi_name}",
+            path_template(
+                "/api/v1/use_cases/definitions/{use_case_name}/kpis/{kpi_name}",
+                use_case_name=use_case_name,
+                kpi_name=kpi_name,
+            ),
             body=await async_maybe_transform(
                 {
                     "description": description,
@@ -444,7 +464,7 @@ class AsyncKpisResource(AsyncAPIResource):
         if not use_case_name:
             raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return self._get_api_list(
-            f"/api/v1/use_cases/definitions/{use_case_name}/kpis",
+            path_template("/api/v1/use_cases/definitions/{use_case_name}/kpis", use_case_name=use_case_name),
             page=AsyncCursorPage[KpiListResponse],
             options=make_request_options(
                 extra_headers=extra_headers,
@@ -493,7 +513,11 @@ class AsyncKpisResource(AsyncAPIResource):
         if not kpi_name:
             raise ValueError(f"Expected a non-empty value for `kpi_name` but received {kpi_name!r}")
         return await self._delete(
-            f"/api/v1/use_cases/definitions/{use_case_name}/kpis/{kpi_name}",
+            path_template(
+                "/api/v1/use_cases/definitions/{use_case_name}/kpis/{kpi_name}",
+                use_case_name=use_case_name,
+                kpi_name=kpi_name,
+            ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
