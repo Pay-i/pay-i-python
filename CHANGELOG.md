@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.166 (2026-04-07)
+
+Full Changelog: [v0.1.0-alpha.165...v0.1.0-alpha.166](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.165...v0.1.0-alpha.166)
+
+### Features
+
+* remove hard dependency on tokenizers ([#444](https://github.com/Pay-i/pay-i-python/issues/444)) ([873ea81](https://github.com/Pay-i/pay-i-python/commit/873ea818ceaf6e5f60b01abe4536e9a54220464d))
+
 ## 0.1.0-alpha.165 (2026-04-07)
 
 Full Changelog: [v0.1.0-alpha.164...v0.1.0-alpha.165](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.164...v0.1.0-alpha.165)
