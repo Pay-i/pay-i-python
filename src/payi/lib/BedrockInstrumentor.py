@@ -14,8 +14,8 @@ from payi.lib.helpers import PayiCategories, PayiHeaderNames, PayiPropertyNames,
 from payi.types.ingest_units_params import IngestUnits
 
 from .instrument import (
-    PayiInstrumentAwsBedrockConfig,
     PayiInstrumentModelConfig,
+    PayiInstrumentAwsBedrockConfig,
     _Context,
     _IsStreaming,
     _PayiInstrumentor,
