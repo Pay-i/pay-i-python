@@ -5,6 +5,7 @@ from __future__ import annotations
 import httpx
 
 from ...._types import Body, Query, Headers, NotGiven, not_given
+from ...._utils import path_template
 from ...._compat import cached_property
 from ...._resource import SyncAPIResource, AsyncAPIResource
 from ...._response import (
@@ -67,7 +68,9 @@ class VersionResource(SyncAPIResource):
         if not use_case_name:
             raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return self._post(
-            f"/api/v1/use_cases/definitions/{use_case_name}/increment_version",
+            path_template(
+                "/api/v1/use_cases/definitions/{use_case_name}/increment_version", use_case_name=use_case_name
+            ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -123,7 +126,9 @@ class AsyncVersionResource(AsyncAPIResource):
         if not use_case_name:
             raise ValueError(f"Expected a non-empty value for `use_case_name` but received {use_case_name!r}")
         return await self._post(
-            f"/api/v1/use_cases/definitions/{use_case_name}/increment_version",
+            path_template(
+                "/api/v1/use_cases/definitions/{use_case_name}/increment_version", use_case_name=use_case_name
+            ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),

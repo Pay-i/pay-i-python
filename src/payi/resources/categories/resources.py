@@ -8,7 +8,7 @@ from datetime import datetime
 import httpx
 
 from ..._types import Body, Omit, Query, Headers, NotGiven, omit, not_given
-from ..._utils import maybe_transform, async_maybe_transform
+from ..._utils import path_template, maybe_transform, async_maybe_transform
 from ..._compat import cached_property
 from ..._resource import SyncAPIResource, AsyncAPIResource
 from ..._response import (
@@ -81,7 +81,7 @@ class ResourcesResource(SyncAPIResource):
         if not resource:
             raise ValueError(f"Expected a non-empty value for `resource` but received {resource!r}")
         return self._post(
-            f"/api/v1/categories/{category}/resources/{resource}",
+            path_template("/api/v1/categories/{category}/resources/{resource}", category=category, resource=resource),
             body=maybe_transform(
                 {
                     "units": units,
@@ -130,7 +130,12 @@ class ResourcesResource(SyncAPIResource):
         if not resource_id:
             raise ValueError(f"Expected a non-empty value for `resource_id` but received {resource_id!r}")
         return self._get(
-            f"/api/v1/categories/{category}/resources/{resource}/{resource_id}",
+            path_template(
+                "/api/v1/categories/{category}/resources/{resource}/{resource_id}",
+                category=category,
+                resource=resource,
+                resource_id=resource_id,
+            ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -170,7 +175,7 @@ class ResourcesResource(SyncAPIResource):
         if not resource:
             raise ValueError(f"Expected a non-empty value for `resource` but received {resource!r}")
         return self._get_api_list(
-            f"/api/v1/categories/{category}/resources/{resource}",
+            path_template("/api/v1/categories/{category}/resources/{resource}", category=category, resource=resource),
             page=SyncCursorPage[CategoryResourceResponse],
             options=make_request_options(
                 extra_headers=extra_headers,
@@ -222,7 +227,12 @@ class ResourcesResource(SyncAPIResource):
         if not resource_id:
             raise ValueError(f"Expected a non-empty value for `resource_id` but received {resource_id!r}")
         return self._delete(
-            f"/api/v1/categories/{category}/resources/{resource}/{resource_id}",
+            path_template(
+                "/api/v1/categories/{category}/resources/{resource}/{resource_id}",
+                category=category,
+                resource=resource,
+                resource_id=resource_id,
+            ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -286,7 +296,7 @@ class AsyncResourcesResource(AsyncAPIResource):
         if not resource:
             raise ValueError(f"Expected a non-empty value for `resource` but received {resource!r}")
         return await self._post(
-            f"/api/v1/categories/{category}/resources/{resource}",
+            path_template("/api/v1/categories/{category}/resources/{resource}", category=category, resource=resource),
             body=await async_maybe_transform(
                 {
                     "units": units,
@@ -335,7 +345,12 @@ class AsyncResourcesResource(AsyncAPIResource):
         if not resource_id:
             raise ValueError(f"Expected a non-empty value for `resource_id` but received {resource_id!r}")
         return await self._get(
-            f"/api/v1/categories/{category}/resources/{resource}/{resource_id}",
+            path_template(
+                "/api/v1/categories/{category}/resources/{resource}/{resource_id}",
+                category=category,
+                resource=resource,
+                resource_id=resource_id,
+            ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -375,7 +390,7 @@ class AsyncResourcesResource(AsyncAPIResource):
         if not resource:
             raise ValueError(f"Expected a non-empty value for `resource` but received {resource!r}")
         return self._get_api_list(
-            f"/api/v1/categories/{category}/resources/{resource}",
+            path_template("/api/v1/categories/{category}/resources/{resource}", category=category, resource=resource),
             page=AsyncCursorPage[CategoryResourceResponse],
             options=make_request_options(
                 extra_headers=extra_headers,
@@ -427,7 +442,12 @@ class AsyncResourcesResource(AsyncAPIResource):
         if not resource_id:
             raise ValueError(f"Expected a non-empty value for `resource_id` but received {resource_id!r}")
         return await self._delete(
-            f"/api/v1/categories/{category}/resources/{resource}/{resource_id}",
+            path_template(
+                "/api/v1/categories/{category}/resources/{resource}/{resource_id}",
+                category=category,
+                resource=resource,
+                resource_id=resource_id,
+            ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),

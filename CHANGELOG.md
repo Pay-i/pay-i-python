@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.1.0-alpha.165 (2026-04-07)
+
+Full Changelog: [v0.1.0-alpha.164...v0.1.0-alpha.165](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.164...v0.1.0-alpha.165)
+
+### Features
+
+* **internal:** implement indices array format for query and form serialization ([84a43e0](https://github.com/Pay-i/pay-i-python/commit/84a43e02b4cd8b8baa32b712716eb37d50c1702f))
+
+
+### Bug Fixes
+
+* **deps:** bump minimum typing-extensions version ([898f9fd](https://github.com/Pay-i/pay-i-python/commit/898f9fd82d2a81a3187ab48001b349d4c155e53f))
+* **pydantic:** do not pass `by_alias` unless set ([6a52f3c](https://github.com/Pay-i/pay-i-python/commit/6a52f3ca5c9f1c4787da14b991a31f1c83387cda))
+* sanitize endpoint path params ([bffad2e](https://github.com/Pay-i/pay-i-python/commit/bffad2ed7ff11d26839e94ed98bb3aad305636c8))
+
+
+### Chores
+
+* **ci:** skip lint on metadata-only changes ([e96a61b](https://github.com/Pay-i/pay-i-python/commit/e96a61b1ff1bbcfb1428edfa359ae99deb8d9c76))
+* **internal:** tweak CI branches ([276666e](https://github.com/Pay-i/pay-i-python/commit/276666e641fa74058f19fe935efd4b9c0057fd28))
+* **internal:** update gitignore ([586ef83](https://github.com/Pay-i/pay-i-python/commit/586ef8355608c763fe83950d494ac3255ea11af7))
+* **tests:** bump steady to v0.19.4 ([9305d0d](https://github.com/Pay-i/pay-i-python/commit/9305d0dbbebece5f27589f562b257cd23f8deeb2))
+* **tests:** bump steady to v0.19.5 ([a7d503b](https://github.com/Pay-i/pay-i-python/commit/a7d503ba8fadb77c5389fc6b7c720a9eaec2e207))
+* **tests:** bump steady to v0.19.6 ([c7e5e8f](https://github.com/Pay-i/pay-i-python/commit/c7e5e8f580b2e64cd9f6070d23f21cdf684307cd))
+* **tests:** bump steady to v0.19.7 ([c956da4](https://github.com/Pay-i/pay-i-python/commit/c956da48a2faa4e04b181c4c3570a19892e7a14f))
+* **tests:** bump steady to v0.20.1 ([3dd6830](https://github.com/Pay-i/pay-i-python/commit/3dd683004254139805cf607dcb7a483194e153e8))
+* **tests:** bump steady to v0.20.2 ([4a44dbd](https://github.com/Pay-i/pay-i-python/commit/4a44dbd078e4eefc1277bfdbc6b0878374f159a8))
+
+
+### Refactors
+
+* **tests:** switch from prism to steady ([9d27751](https://github.com/Pay-i/pay-i-python/commit/9d27751ff9ee3ecf05520a52dfe70b6829fa3539))
+
 ## 0.1.0-alpha.164 (2026-03-10)
 
 Full Changelog: [v0.1.0-alpha.163...v0.1.0-alpha.164](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.163...v0.1.0-alpha.164)
