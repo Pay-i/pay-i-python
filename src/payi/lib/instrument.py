@@ -62,10 +62,14 @@ class PayiInstrumentModelMapping(TypedDict, total=False):
     # "global", "datazone", "region", "region.<region_name>"
     resource_scope: Optional[str]   
 
+class PayiInstrumentModelConfig(TypedDict, total=False):
+    tokenizer_path: Optional[str]
+
 class PayiInstrumentAwsBedrockConfig(TypedDict, total=False):
     guardrail_trace: Optional[bool]
     add_streaming_xproxy_result: Optional[bool]
     model_mappings: Optional[Sequence[PayiInstrumentModelMapping]]
+    model_config: Optional[dict[str, PayiInstrumentModelConfig]]
 
 class PayiInstrumentOpenAiAzureConfig(TypedDict, total=False):
     # map deployment name known model
