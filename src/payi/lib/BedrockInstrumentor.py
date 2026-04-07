@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import copy
 import json
 from typing import TYPE_CHECKING, Any, Dict, Optional, Sequence
 from functools import wraps
@@ -14,6 +15,7 @@ from payi.types.ingest_units_params import IngestUnits
 
 from .instrument import (
     PayiInstrumentAwsBedrockConfig,
+    PayiInstrumentModelConfig,
     _Context,
     _IsStreaming,
     _PayiInstrumentor,
@@ -40,6 +42,8 @@ class BedrockInstrumentor:
 
     _add_streaming_xproxy_result: bool = False
 
+    _model_config: Dict[str, PayiInstrumentModelConfig] = {}
+
     @staticmethod
     def get_mapping(model_id: Optional[str]) -> _Context:
         if not model_id:
@@ -60,6 +64,10 @@ class BedrockInstrumentor:
         add_streaming_xproxy_result = aws_config.get("add_streaming_xproxy_result", False)
         if add_streaming_xproxy_result:
             BedrockInstrumentor._add_streaming_xproxy_result = add_streaming_xproxy_result
+
+        model_config = aws_config.get("model_config", None)
+        if model_config:
+            BedrockInstrumentor._model_config = copy.deepcopy(model_config)
 
         model_mappings = aws_config.get("model_mappings", [])
         if model_mappings:
@@ -216,26 +224,29 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
             if texts and len(texts) > 0:
                 text = " ".join(texts)
 
-                try:
-                    from tokenizers import Tokenizer  # type: ignore
+                cohere_config = BedrockInstrumentor._model_config.get("cohere.embed-english-v3", {})
+                tokenizer_path = cohere_config.get("tokenizer_path", None) if cohere_config else None
+                if not tokenizer_path:
+                    self._request._instrumentor._logger.warning("tokenizer_path not configured in aws_config.model_config['cohere.embed-english-v3']. Cannot record text tokens for Cohere embed english v3")
+                else:
+                    try:
+                        from tokenizers import Tokenizer  # type: ignore
 
-                    if self._cohere_embed_english_v3_tokenizer is None: # type: ignore
-                        current_dir = os.path.dirname(os.path.abspath(__file__))
-                        tokenizer_path = os.path.join(current_dir, "data", "cohere_embed_english_v3.json")
-                        self._cohere_embed_english_v3_tokenizer = Tokenizer.from_file(tokenizer_path) # type: ignore
+                        if self._cohere_embed_english_v3_tokenizer is None: # type: ignore
+                            self._cohere_embed_english_v3_tokenizer = Tokenizer.from_file(tokenizer_path) # type: ignore
 
-                    if self._cohere_embed_english_v3_tokenizer is not None and isinstance(self._cohere_embed_english_v3_tokenizer, Tokenizer): # type: ignore
-                        tokens: list = self._cohere_embed_english_v3_tokenizer.encode(text, add_special_tokens=False).tokens # type: ignore
+                        if self._cohere_embed_english_v3_tokenizer is not None and isinstance(self._cohere_embed_english_v3_tokenizer, Tokenizer): # type: ignore
+                            tokens: list = self._cohere_embed_english_v3_tokenizer.encode(text, add_special_tokens=False).tokens # type: ignore
 
-                        if tokens and isinstance(tokens, list):
-                            units["text"] = IngestUnits(input=len(tokens), output=0) # type: ignore
+                            if tokens and isinstance(tokens, list):
+                                units["text"] = IngestUnits(input=len(tokens), output=0) # type: ignore
 
-                except ImportError:
-                    self._request._instrumentor._logger.warning("tokenizers module not found, caller must install the tokenizers module. Cannot record text tokens for Cohere embed english v3")
-                    pass
-                except Exception as e:
-                    self._request._instrumentor._logger.warning(f"Error processing Cohere embed english v3 response: {e}")
-                    pass
+                    except ImportError:
+                        self._request._instrumentor._logger.warning("tokenizers module not found, caller must install the tokenizers module and configure payi with the tokenizer file. Cannot count prompt tokens for Cohere embed english v3")
+                    except (FileNotFoundError, OSError) as e:
+                        self._request._instrumentor._logger.warning(f"Not counting cohere prompt tokens due to failed to load tokenizer file '{tokenizer_path}': {e}")
+                    except Exception as e:
+                        self._request._instrumentor._logger.warning(f"Not counting cohere prompt tokens due to error processing Cohere embed english v3 response: {e}")
 
         if self._log_prompt_and_response:
             ingest["provider_response_json"] = data.decode('utf-8') # type: ignore
