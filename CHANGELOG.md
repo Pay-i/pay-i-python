@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.168 (2026-04-09)
+
+Full Changelog: [v0.1.0-alpha.167...v0.1.0-alpha.168](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.167...v0.1.0-alpha.168)
+
+### Bug Fixes
+
+* **dependency:** Pygments&gt;=2.20.0 ([4a4b899](https://github.com/Pay-i/pay-i-python/commit/4a4b899af4de375a44dcf703841d8d8f6207c3e9))
+
 ## 0.1.0-alpha.167 (2026-04-09)
 
 Full Changelog: [v0.1.0-alpha.166...v0.1.0-alpha.167](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.166...v0.1.0-alpha.167)
