@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.169 (2026-04-09)
+
+Full Changelog: [v0.1.0-alpha.168...v0.1.0-alpha.169](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.168...v0.1.0-alpha.169)
+
+### Bug Fixes
+
+* **cicd:** update uv to v7 and node 24 ([6e59528](https://github.com/Pay-i/pay-i-python/commit/6e595287e45326866e45c7714724eb4feab5febe))
+
 ## 0.1.0-alpha.168 (2026-04-09)
 
 Full Changelog: [v0.1.0-alpha.167...v0.1.0-alpha.168](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.167...v0.1.0-alpha.168)
