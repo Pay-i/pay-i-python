@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-alpha.167 (2026-04-09)
+
+Full Changelog: [v0.1.0-alpha.166...v0.1.0-alpha.167](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.166...v0.1.0-alpha.167)
+
+### Bug Fixes
+
+* **client:** preserve hardcoded query params when merging with user params ([4c3f0a8](https://github.com/Pay-i/pay-i-python/commit/4c3f0a813b942bee088b65c9290f7a861a1999a8))
+* require python 3.10 ([eb2979d](https://github.com/Pay-i/pay-i-python/commit/eb2979d6cdbe84ef51beb7a8cc6d00465e32ee6e))
+
 ## 0.1.0-alpha.166 (2026-04-07)
 
 Full Changelog: [v0.1.0-alpha.165...v0.1.0-alpha.166](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.165...v0.1.0-alpha.166)
