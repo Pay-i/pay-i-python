@@ -17,14 +17,14 @@ dependencies = [
   "sniffio",
     "wrapt>=1.17.2",
     "tiktoken>=0.8.0",
-    "nest-asyncio>=1.6.0"
+    "nest-asyncio>=1.6.0",
+    "requests>=2.33.0"
 ]
 
-requires-python = ">= 3.9"
+requires-python = ">= 3.10"
 classifiers = [
   "Typing :: Typed",
   "Intended Audience :: Developers",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
@@ -44,7 +44,7 @@ Homepage = "https://github.com/Pay-i/pay-i-python"
 Repository = "https://github.com/Pay-i/pay-i-python"
 
 [project.optional-dependencies]
-aiohttp = ["aiohttp", "httpx_aiohttp>=0.1.9"]
+aiohttp = ["aiohttp>=3.13.4", "httpx_aiohttp>=0.1.9"]
 
 [tool.uv]
 managed = true
@@ -133,7 +133,7 @@ filterwarnings = [
 # there are a couple of flags that are still disabled by
 # default in strict mode as they are experimental and niche.
 typeCheckingMode = "strict"
-pythonVersion = "3.9"
+pythonVersion = "3.10"
 
 exclude = [
     "_dev",
