@@ -1,6 +1,6 @@
 [project]
 name = "payi"
-version = "0.1.0-alpha.167"
+version = "0.1.0-alpha.168"
 description = "The official Python library for the payi API"
 dynamic = ["readme"]
 license = "Apache-2.0"
@@ -18,7 +18,8 @@ dependencies = [
     "wrapt>=1.17.2",
     "tiktoken>=0.8.0",
     "nest-asyncio>=1.6.0",
-    "requests>=2.33.0"
+    "requests>=2.33.0",
+    "Pygments>=2.20.0"
 ]
 
 requires-python = ">= 3.10"
