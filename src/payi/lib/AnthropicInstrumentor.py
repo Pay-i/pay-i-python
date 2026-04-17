@@ -21,6 +21,7 @@ class AnthropicInstrumentor:
 
     _azure_deployments: Dict[str, _Context] = {}
     _azure_foundry_clients_supported: bool = True
+    _bedrock_mantle_clients_supported: bool = True
 
     @staticmethod
     def is_vertex(anthropic_client: Any) -> bool:
@@ -33,6 +34,18 @@ class AnthropicInstrumentor:
         from anthropic import AnthropicBedrock, AsyncAnthropicBedrock  # type: ignore # noqa: I001
 
         return isinstance(anthropic_client, (AsyncAnthropicBedrock, AnthropicBedrock))
+
+    @staticmethod
+    def is_bedrock_mantle(anthropic_client: Any) -> bool:
+        if not AnthropicInstrumentor._bedrock_mantle_clients_supported:
+            return False
+
+        try:
+            from anthropic import AnthropicBedrockMantle, AsyncAnthropicBedrockMantle  # type: ignore # noqa: I001
+            return isinstance(anthropic_client, (AsyncAnthropicBedrockMantle, AnthropicBedrockMantle))
+        except Exception:
+            AnthropicInstrumentor._bedrock_mantle_clients_supported = False
+            return False
 
     @staticmethod
     def is_azure(anthropic_client: Any) -> bool:
@@ -213,13 +226,14 @@ class _AnthropicProviderRequest(_ProviderRequest):
         self._anthropic_client = instance._client if instance and hasattr(instance, "_client") else None
         self._is_vertex: bool = AnthropicInstrumentor.is_vertex(self._anthropic_client)
         self._is_bedrock: bool = AnthropicInstrumentor.is_bedrock(self._anthropic_client)
+        self._is_bedrock_mantle: bool = AnthropicInstrumentor.is_bedrock_mantle(self._anthropic_client)
         self._is_azure: bool = AnthropicInstrumentor.is_azure(self._anthropic_client)
         self._is_anthropic_saas: bool = False
 
         category: str = ""
         if self._is_vertex:
             category = PayiCategories.google_vertex
-        elif self._is_bedrock:
+        elif self._is_bedrock or self._is_bedrock_mantle:
             category = PayiCategories.aws_bedrock
         elif self._is_azure:
             category = PayiCategories.azure
