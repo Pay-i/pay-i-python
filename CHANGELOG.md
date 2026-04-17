@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.170 (2026-04-17)
+
+Full Changelog: [v0.1.0-alpha.169...v0.1.0-alpha.170](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.169...v0.1.0-alpha.170)
+
+### Features
+
+* instrument AWS Bedrock Mantle ([dd86e75](https://github.com/Pay-i/pay-i-python/commit/dd86e7593f355abe8de6ef97e50cfdf233cdf7a0))
+
+
+### Bug Fixes
+
+* ensure file data are only sent as 1 parameter ([f350fbe](https://github.com/Pay-i/pay-i-python/commit/f350fbe879ed36c2032c3554c1d6e8dbb70df973))
+
 ## 0.1.0-alpha.169 (2026-04-09)
 
 Full Changelog: [v0.1.0-alpha.168...v0.1.0-alpha.169](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.168...v0.1.0-alpha.169)
