@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.171 (2026-04-18)
+
+Full Changelog: [v0.1.0-alpha.170...v0.1.0-alpha.171](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.170...v0.1.0-alpha.171)
+
+### Performance Improvements
+
+* **client:** optimize file structure copying in multipart requests ([a7953d0](https://github.com/Pay-i/pay-i-python/commit/a7953d0d1460eeefd8ca484541b0dea25d8b3860))
+
+
+### Chores
+
+* **tests:** bump steady to v0.22.1 ([6953383](https://github.com/Pay-i/pay-i-python/commit/6953383fb380d5d939149de01917ecdabf0c3e4e))
+
 ## 0.1.0-alpha.170 (2026-04-17)
 
 Full Changelog: [v0.1.0-alpha.169...v0.1.0-alpha.170](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.169...v0.1.0-alpha.170)
