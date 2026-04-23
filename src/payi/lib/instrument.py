@@ -112,7 +112,6 @@ class PayiInstrumentConfig(TypedDict, total=False):
     use_case_properties: Optional["dict[str, Optional[str]]"]
     user_id: Optional[str]
     account_name: Optional[str]
-    request_tags: Optional["list[str]"]
     request_properties: Optional["dict[str, Optional[str]]"]
     host_mappings: Optional[dict[Union[str, httpx.URL], PayiInstrumentHostMappingConfig]]
     aws_config: Optional[PayiInstrumentAwsBedrockConfig]
@@ -131,7 +130,6 @@ class PayiContext(TypedDict, total=False):
     limit_ids: Optional['list[str]']
     user_id: Optional[str]
     account_name: Optional[str]
-    request_tags: Optional["list[str]"]
     request_properties: Optional["dict[str, Optional[str]]"]
     price_as_category: Optional[str]
     price_as_resource: Optional[str]
@@ -1040,11 +1038,11 @@ class _PayiInstrumentor:
 
         if assign_use_case_values:
             context["use_case_version"] = use_case_version if use_case_version is not None else parent_use_case_version
-            context["use_case_id"] =  self._valid_str_or_none(use_case_id, parent_use_case_id)
-            context["use_case_step"] = self._valid_str_or_none(use_case_step, parent_use_case_step)
+            context["use_case_id"] =  self._valid_str_or_none(value=use_case_id, default=parent_use_case_id)
+            context["use_case_step"] = self._valid_str_or_none(value=use_case_step, default=parent_use_case_step)
 
             parent_use_case_properties = parent_context.get("use_case_properties", None)
-            context["use_case_properties"] = self._valid_properties_or_none(use_case_properties, parent_use_case_properties)
+            context["use_case_properties"] = self._valid_properties_or_none(value=use_case_properties, default=parent_use_case_properties)
 
         parent_limit_ids = parent_context.get("limit_ids", None)
         if limit_ids is None:
@@ -1058,20 +1056,22 @@ class _PayiInstrumentor:
             context["limit_ids"] = list(set(limit_ids) | set(parent_limit_ids)) if parent_limit_ids else limit_ids.copy()
 
         parent_user_id = parent_context.get("user_id", None)
-        context["user_id"] = self._valid_str_or_none(user_id, parent_user_id)
+        context["user_id"] = self._valid_str_or_none(value=user_id, default=parent_user_id)
 
         parent_account_name = parent_context.get("account_name", None)
-        context["account_name"] = self._valid_str_or_none(account_name, parent_account_name)
+        context["account_name"] = self._valid_str_or_none(value=account_name, default=parent_account_name)
 
         parent_request_properties = parent_context.get("request_properties", None)
-        context["request_properties"] = self._valid_properties_or_none(request_properties, parent_request_properties)
+        context["request_properties"] = self._valid_properties_or_none(value=request_properties, default=parent_request_properties)
 
-        if price_as_category:
-            context["price_as_category"] = price_as_category
-        if price_as_resource:
-            context["price_as_resource"] = price_as_resource
-        if resource_scope:
-            context["resource_scope"] = resource_scope
+        parent_price_as_category = parent_context.get("price_as_category", None)
+        context["price_as_category"] = self._valid_str_or_none(value=price_as_category, default=parent_price_as_category)
+
+        parent_price_as_resource = parent_context.get("price_as_resource", None)
+        context["price_as_resource"] = self._valid_str_or_none(value=price_as_resource, default=parent_price_as_resource)
+
+        parent_resource_scope = parent_context.get("resource_scope", None)
+        context["resource_scope"] = self._valid_str_or_none(value=resource_scope, default=parent_resource_scope)
         
     async def _acall_func(
         self,
@@ -1170,10 +1170,6 @@ class _PayiInstrumentor:
         args: Sequence[Any],
         kwargs: 'dict[str, Any]',
     ) -> None:
-
-        # pop and ignore the request tags header since it is no longer processed
-        ingest_extra_headers.pop(PayiHeaderNames.request_tags, None)
-
         limit_ids = ingest_extra_headers.pop(PayiHeaderNames.limit_ids, None)
 
         use_case_name = ingest_extra_headers.pop(PayiHeaderNames.use_case_name, None)
@@ -1729,14 +1725,11 @@ def track(
     use_case_version: Optional[int] = None,
     user_id: Optional[str] = None,
     account_name: Optional[str] = None,
-    request_tags: Optional["list[str]"] = None,
     request_properties: Optional["dict[str, str]"] = None,
     use_case_properties: Optional["dict[str, str]"] = None,
     log_prompt_and_response: Optional[bool] = None,
     proxy: Optional[bool] = None,
 ) -> Any:
-    _ = request_tags
-
     def _track(func: Any) -> Any:
         if asyncio.iscoroutinefunction(func):
             async def awrapper(*args: Any, **kwargs: Any) -> Any:
@@ -1797,7 +1790,6 @@ def track_context(
     use_case_step: Optional[str] = None,
     user_id: Optional[str] = None,
     account_name: Optional[str] = None,
-    request_tags: Optional["list[str]"] = None,
     request_properties: Optional["dict[str, str]"] = None,
     use_case_properties: Optional["dict[str, str]"] = None,
     price_as_category: Optional[str] = None,
@@ -1828,8 +1820,6 @@ def track_context(
 
     context["request_properties"] = cast(Optional['dict[str, Optional[str]]'], request_properties)
     context["use_case_properties"] = cast(Optional['dict[str, Optional[str]]'], use_case_properties)
-
-    _ = request_tags
 
     return _InternalTrackContext(context)
 

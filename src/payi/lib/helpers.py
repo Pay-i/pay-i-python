@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import os
 import json
+import logging
 from typing import Any, Dict, List, Union
+
+from payi._client import Payi, AsyncPayi
 
 __all__ = ['_set_attr_safe'] 
 
@@ -10,7 +13,6 @@ PAYI_BASE_URL = "https://api.pay-i.com"
 
 class PayiHeaderNames:
     limit_ids:str  = "xProxy-Limit-IDs"
-    request_tags:str = "xProxy-Request-Tags"
     request_properties:str = "xProxy-Request-Properties"
     use_case_id:str = "xProxy-UseCase-ID"
     use_case_name:str = "xProxy-UseCase-Name"
@@ -62,21 +64,12 @@ def create_limit_header_from_ids(*, limit_ids: List[str]) -> Dict[str, str]:
 
     return { PayiHeaderNames.limit_ids: ",".join(valid_ids) } if valid_ids else {}
 
-def create_request_header_from_tags(*, request_tags: List[str]) -> Dict[str, str]:
-    if not isinstance(request_tags, list):  # type: ignore
-        raise TypeError("request_tags must be a list")
-
-    valid_tags = [tag.strip() for tag in request_tags if isinstance(tag, str) and tag.strip()]  # type: ignore
-
-    return { PayiHeaderNames.request_tags: ",".join(valid_tags) } if valid_tags else {}
-
 def _compact_json(data: Any) -> str:
     return json.dumps(data, separators=(',', ':'))  
 
 def create_headers(
     *,
     limit_ids: Union[List[str], None] = None,
-    request_tags: Union[List[str], None] = None,
     user_id: Union[str, None] = None,
     account_name: Union[str, None] = None,
     use_case_id: Union[str, None] = None,
@@ -94,8 +87,7 @@ def create_headers(
 
     if limit_ids:
         headers.update(create_limit_header_from_ids(limit_ids=limit_ids))
-    if request_tags:
-        headers.update(create_request_header_from_tags(request_tags=request_tags))
+
     if user_id:
         headers.update({ PayiHeaderNames.user_id: user_id})
     if account_name:
@@ -169,3 +161,62 @@ def _set_attr_safe(o: Any, attr_name: str, attr_value: Any) -> None:
         # _g_logger.debug(f"Could not set attribute {attr_name}: {e}")
         pass
 
+def increment_kpi_score(payi: Payi, kpi_name: str, use_case_name: str, use_case_id: str, increment: int = 1) -> bool:
+    try:
+        current_kpi_value = 0
+
+        # if the KPI has already been set, len(list) == 1
+        kpis = payi.use_cases.kpis.list(use_case_id=use_case_id, use_case_name=use_case_name, kpi_name=kpi_name)
+        for kpi in kpis:
+            if kpi.kpi_name == kpi_name:
+                current_kpi_value = int(kpi.score) if kpi.score is not None else 0
+                break
+        
+        payi.use_cases.kpis.update(
+            kpi_name=kpi_name, use_case_name=use_case_name, use_case_id=use_case_id, score=float(current_kpi_value + increment))
+        
+        return True
+
+    except Exception as e:
+        logger: Union[logging.Logger, None] = None
+        from .instrument import _g_logger, _instrumentor
+        
+        if _instrumentor:
+            logger = _instrumentor._logger
+        elif _g_logger:
+            logger = _g_logger
+        
+        if logger:
+            logger.debug(f"Failed to increment KPI {kpi_name}, use_case_name {use_case_name}, use_case_id {use_case_id}: {e}")
+
+        return False
+    
+async def increment_kpi_score_async(payi: AsyncPayi, kpi_name: str, use_case_name: str, use_case_id: str, increment: int = 1) -> bool:
+    try:
+        current_kpi_value = 0
+
+        # if the KPI has already been set, len(list) == 1
+        kpis = await payi.use_cases.kpis.list(use_case_id=use_case_id, use_case_name=use_case_name, kpi_name=kpi_name)
+        async for kpi in kpis:
+            if kpi.kpi_name == kpi_name:
+                current_kpi_value = int(kpi.score) if kpi.score is not None else 0
+                break
+        
+        await payi.use_cases.kpis.update(
+            kpi_name=kpi_name, use_case_name=use_case_name, use_case_id=use_case_id, score=float(current_kpi_value + increment))
+        
+        return True
+
+    except Exception as e:
+        logger: Union[logging.Logger, None] = None
+        from .instrument import _g_logger, _instrumentor
+        
+        if _instrumentor:
+            logger = _instrumentor._logger
+        elif _g_logger:
+            logger = _g_logger
+        
+        if logger:
+            logger.debug(f"Failed to increment KPI {kpi_name}, use_case_name {use_case_name}, use_case_id {use_case_id}: {e}")
+
+        return False    
