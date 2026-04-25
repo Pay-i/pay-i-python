@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.0-alpha.175 (2026-04-25)
+
+Full Changelog: [v0.1.0-alpha.174...v0.1.0-alpha.175](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.174...v0.1.0-alpha.175)
+
 ## 0.1.0-alpha.174 (2026-04-25)
 
 Full Changelog: [v0.1.0-alpha.173...v0.1.0-alpha.174](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.173...v0.1.0-alpha.174)
