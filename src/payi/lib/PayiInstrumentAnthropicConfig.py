@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import TypedDict
+from typing import Optional, Sequence, TypedDict
 
-from .PayiInstrumentAnthropicAzureConfig import PayiInstrumentAnthropicAzureConfig
+from .PayiInstrumentModelMapping import PayiInstrumentModelMapping
 
 
 class PayiInstrumentAnthropicConfig(TypedDict, total=False):
-    # map deployment name known model
-    azure: PayiInstrumentAnthropicAzureConfig
+    model_mappings: Optional[Sequence[PayiInstrumentModelMapping]]
+
