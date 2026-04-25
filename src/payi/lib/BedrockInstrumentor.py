@@ -14,14 +14,14 @@ from payi.lib.helpers import PayiCategories, PayiHeaderNames, PayiPropertyNames,
 from payi.types.ingest_units_params import IngestUnits
 
 from .instrument import (
-    PayiInstrumentModelConfig,
-    PayiInstrumentAwsBedrockConfig,
-    _Context,
     _IsStreaming,
     _PayiInstrumentor,
 )
 from .version_helper import get_version_helper
 from .ProviderRequest import _ChunkResult, _StreamingType, _ProviderRequest
+from .ModelMappingEntry import _ModelMappingEntry
+from .PayiInstrumentModelConfig import PayiInstrumentModelConfig
+from .PayiInstrumentAwsBedrockConfig import PayiInstrumentAwsBedrockConfig
 
 if TYPE_CHECKING:
     from tokenizers import Tokenizer  # type: ignore
@@ -38,18 +38,11 @@ class BedrockInstrumentor:
 
     _guardrail_trace: bool = True
 
-    _model_mapping: Dict[str, _Context] = {}
+    _model_mappings: list[_ModelMappingEntry] = []
 
     _add_streaming_xproxy_result: bool = False
 
     _model_config: Dict[str, PayiInstrumentModelConfig] = {}
-
-    @staticmethod
-    def get_mapping(model_id: Optional[str]) -> _Context:
-        if not model_id:
-            return  {}
-
-        return BedrockInstrumentor._model_mapping.get(model_id, {})
 
     @staticmethod
     def configure(aws_config: Optional[PayiInstrumentAwsBedrockConfig]) -> None:
@@ -71,7 +64,7 @@ class BedrockInstrumentor:
 
         model_mappings = aws_config.get("model_mappings", [])
         if model_mappings:
-            BedrockInstrumentor._model_mapping = _PayiInstrumentor._model_mapping_to_context_dict(model_mappings)
+            BedrockInstrumentor._model_mappings = _ProviderRequest._model_mappings_to_entries(model_mappings)
 
     @staticmethod
     def instrument(instrumentor: _PayiInstrumentor) -> None:
@@ -350,11 +343,12 @@ class _BedrockProviderRequest(_ProviderRequest):
         modelId =  kwargs.get("modelId", "")
         self._ingest["resource"] = modelId
 
-        if not self._price_as.resource and not self._price_as.category and modelId in BedrockInstrumentor._model_mapping:
-            deployment = BedrockInstrumentor._model_mapping.get(modelId, {})
-            self._price_as.category = deployment.get("price_as_category", "")
-            self._price_as.resource = deployment.get("price_as_resource", "")
-            self._price_as.resource_scope = deployment.get("resource_scope", None)
+        if not self._price_as.resource and not self._price_as.category:
+            entry = self.find_model_mapping(modelId, BedrockInstrumentor._model_mappings)
+            if entry:
+                self._price_as.category = entry.price_as_category
+                self._price_as.resource = entry.price_as_resource
+                self._price_as.resource_scope = entry.resource_scope
 
         if self._price_as.resource_scope:
             self._ingest["resource_scope"] = self._price_as.resource_scope
@@ -455,9 +449,9 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, model_id: str):
         super().__init__(instrumentor=instrumentor)
 
-        price_as_resource = BedrockInstrumentor._model_mapping.get(model_id, {}).get("price_as_resource", None)
-        if price_as_resource:
-            model_id = price_as_resource
+        entry = self.find_model_mapping(model_id, BedrockInstrumentor._model_mappings)
+        if entry and entry.price_as_resource:
+            model_id = entry.price_as_resource
 
         self._is_anthropic: bool = False
         self._is_openai: bool = False

@@ -18,6 +18,8 @@ from payi.types.pay_i_common_models_api_router_header_info_param import PayIComm
 
 from .helpers import _set_attr_safe
 from .Stopwatch import Stopwatch
+from .ModelMappingEntry import _ModelMappingEntry
+from .PayiInstrumentModelMapping import PayiInstrumentModelMapping
 
 if TYPE_CHECKING:
     from .instrument import _PayiInstrumentor
@@ -73,6 +75,7 @@ class _ProviderRequest:
         self._price_as: PriceAs = PriceAs(category=None, resource=None, resource_scope=None)
         self._log_prompt_and_response: bool = instrumentor._log_prompt_and_response
         self._stopwatch: Stopwatch = Stopwatch()
+        self._provider_host: Optional[str] = None
 
     def process_chunk(self, _chunk: Any) -> _ChunkResult:
         return _ChunkResult(send_chunk_to_caller=True)
@@ -118,13 +121,67 @@ class _ProviderRequest:
         self._ingest["provider_uri"] = value
         host = self.get_host(value)
         if host:
+            self._provider_host = host
             self._category = self.category_from_host(host)
             self._ingest["category"] = self._category
+
+    @staticmethod
+    def _normalize_host(host: Optional[Union[str, httpx.URL]]) -> Optional[str]:
+        if host is None:
+            return None
+        if isinstance(host, str):
+            if not host.startswith(('http://', 'https://')):
+                host = f'https://{host}'
+            host = httpx.URL(host)
+        return host.host or None
+
+    @staticmethod
+    def _model_mappings_to_entries(model_mappings: 'Sequence[PayiInstrumentModelMapping]') -> list[_ModelMappingEntry]:
+        entries: list[_ModelMappingEntry] = []
+        for mapping in model_mappings:
+            model = mapping.get("model", "")
+            if not model:
+                continue
+
+            price_as_category = mapping.get("price_as_category", None)
+            price_as_resource = mapping.get("price_as_resource", None)
+            resource_scope = mapping.get("resource_scope", None)
+
+            if not price_as_category and not price_as_resource:
+                continue
+
+            host = _ProviderRequest._normalize_host(mapping.get("host", None))
+
+            entries.append(_ModelMappingEntry(
+                model=model,
+                host=host,
+                price_as_category=price_as_category,
+                price_as_resource=price_as_resource,
+                resource_scope=resource_scope,
+            ))
+        return entries
+
+    def find_model_mapping(
+        self,
+        model: Optional[str],
+        model_mappings: list[_ModelMappingEntry],
+    ) -> Optional[_ModelMappingEntry]:
+        if not model or not model_mappings:
+            return None
+
+        for entry in model_mappings:
+            if entry.model != model:
+                continue
+            if entry.host is not None and entry.host != self._provider_host:
+                continue
+            return entry
+
+        return None
 
     @property
     def stopwatch(self) -> Stopwatch:
         return self._stopwatch
-    
+
     @property
     def is_aws_client(self) -> bool:
         return self._is_aws_client if self._is_aws_client is not None else False
