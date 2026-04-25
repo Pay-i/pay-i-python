@@ -55,37 +55,11 @@ def _model_to_dict(model: Any) -> Any:
     else:
         return model
 
-class PayiInstrumentModelMapping(TypedDict, total=False):
-    model: str
-    price_as_category: Optional[str]
-    price_as_resource: Optional[str]
-    # "global", "datazone", "region", "region.<region_name>"
-    resource_scope: Optional[str]   
+from .PayiInstrumentOpenAiConfig import PayiInstrumentOpenAiConfig
+from .PayiInstrumentAnthropicConfig import PayiInstrumentAnthropicConfig
+from .PayiInstrumentAwsBedrockConfig import PayiInstrumentAwsBedrockConfig
+from .PayiInstrumentOpenAiAzureConfig import PayiInstrumentOpenAiAzureConfig
 
-class PayiInstrumentModelConfig(TypedDict, total=False):
-    tokenizer_path: Optional[str]
-
-class PayiInstrumentAwsBedrockConfig(TypedDict, total=False):
-    guardrail_trace: Optional[bool]
-    add_streaming_xproxy_result: Optional[bool]
-    model_mappings: Optional[Sequence[PayiInstrumentModelMapping]]
-    model_config: Optional[dict[str, PayiInstrumentModelConfig]]
-
-class PayiInstrumentOpenAiAzureConfig(TypedDict, total=False):
-    # map deployment name known model
-    model_mappings: Sequence[PayiInstrumentModelMapping] 
-
-class PayiInstrumentAnthropicAzureConfig(TypedDict, total=False):
-    # map deployment name known model
-    model_mappings: Sequence[PayiInstrumentModelMapping] 
-
-class PayiInstrumentOpenAiConfig(TypedDict, total=False):
-    # map deployment name known model
-    azure: PayiInstrumentOpenAiAzureConfig
-
-class PayiInstrumentAnthropicConfig(TypedDict, total=False):
-    # map deployment name known model
-    azure: PayiInstrumentAnthropicAzureConfig
 
 class PayiInstrumentOfflineInstrumentationConfig(TypedDict, total=False):
     file_name: str
@@ -168,7 +142,7 @@ class _Context(TypedDict, total=False):
 
 class _IsStreaming(Enum):
     false = 0
-    true = 1 
+    true = 1
     kwargs = 2
 
 class _ThreadLocalContextStorage(threading.local):
@@ -285,13 +259,11 @@ class _PayiInstrumentor:
             from .BedrockInstrumentor import BedrockInstrumentor
             BedrockInstrumentor.configure(aws_config=aws_config)
 
-        azure_openai_config = (global_config.get("openai_config", None) or {}).get("azure", None)
-        if not azure_openai_config:
-            # azure_openai_config will be deprecated in the future
-            azure_openai_config = global_config.get("azure_openai_config", None)
-        if azure_openai_config:
+        openai_config = global_config.get("openai_config", None) or {}
+        azure_openai_config = global_config.get("azure_openai_config", None)
+        if openai_config or azure_openai_config:
             from .OpenAIInstrumentor import OpenAiInstrumentor
-            OpenAiInstrumentor.configure(azure_openai_config=azure_openai_config)
+            OpenAiInstrumentor.configure(openai_config=openai_config, azure_openai_config=azure_openai_config)
 
         anthropic_config = global_config.get("anthropic_config", None)
         if anthropic_config:
@@ -577,28 +549,6 @@ class _PayiInstrumentor:
         # Pass through all kwargs (return_exceptions, and loop for older Python versions)
         return wrapped(*wrapped_coros, **kwargs)
         
-    @staticmethod
-    def _model_mapping_to_context_dict(model_mappings: Sequence[PayiInstrumentModelMapping]) -> 'dict[str, _Context]':
-        context: dict[str, _Context] = {}
-        for mapping in model_mappings:
-            model = mapping.get("model", "")
-            if not model:
-                continue
-
-            price_as_category = mapping.get("price_as_category", None)
-            price_as_resource = mapping.get("price_as_resource", None)
-            resource_scope = mapping.get("resource_scope", None)
-
-            if not price_as_category and not price_as_resource:
-                continue
-
-            context[model] = _Context(
-                price_as_category=price_as_category,
-                price_as_resource=price_as_resource,
-                resource_scope=resource_scope,
-            )
-        return context
-
     def _write_offline_ingest_packets(self) -> None:
         if not self._offline_instrumentation_file_name or not self._offline_ingest_packets:
             return

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, Union, Optional, Sequence
+from typing import Any, Union, Optional, Sequence
 from typing_extensions import override
 
 import tiktoken
@@ -9,17 +9,19 @@ import tiktoken
 from payi.lib.helpers import PayiCategories, PayiResourceScopes
 from payi.types.ingest_units_params import IngestUnits
 
-from .instrument import PayiInstrumentAnthropicConfig, _Context, _IsStreaming, _PayiInstrumentor
+from .instrument import _IsStreaming, _PayiInstrumentor
 from .StreamWrappers import _GeneratorWrapper
 from .version_helper import get_version_helper
 from .ProviderRequest import _ChunkResult, _StreamingType, _ProviderRequest
+from .ModelMappingEntry import _ModelMappingEntry
+from .PayiInstrumentAnthropicConfig import PayiInstrumentAnthropicConfig
 
 
 class AnthropicInstrumentor:
     _module_name: str = "anthropic"
     _module_version: str = ""
 
-    _azure_deployments: Dict[str, _Context] = {}
+    _model_mappings: list[_ModelMappingEntry] = []
     _azure_foundry_clients_supported: bool = True
     _bedrock_mantle_clients_supported: bool = True
 
@@ -64,7 +66,8 @@ class AnthropicInstrumentor:
         azure_config = anthropic_config.get("azure", {})
         if azure_config:
             model_mappings = azure_config.get("model_mappings", [])
-            AnthropicInstrumentor._azure_deployments = _PayiInstrumentor._model_mapping_to_context_dict(model_mappings)
+            if model_mappings:
+                AnthropicInstrumentor._model_mappings = _ProviderRequest._model_mappings_to_entries(model_mappings)
 
     @staticmethod
     def instrument(instrumentor: _PayiInstrumentor) -> None:
@@ -279,14 +282,15 @@ class _AnthropicProviderRequest(_ProviderRequest):
         model = self._update_resource_name(kwargs.get("model", ""))
         self._ingest["resource"] = model
 
-        if not self._price_as.resource and not self._price_as.category and AnthropicInstrumentor._azure_deployments:
-            deployment = AnthropicInstrumentor._azure_deployments.get(model, {})
-            self._price_as.category = deployment.get("price_as_category", None)
-            self._price_as.resource = deployment.get("price_as_resource", None)
-            self._price_as.resource_scope = deployment.get("resource_scope", None)
+        if not self._price_as.resource and not self._price_as.category:
+            entry = self.find_model_mapping(model, AnthropicInstrumentor._model_mappings)
+            if entry:
+                self._price_as.category = entry.price_as_category
+                self._price_as.resource = entry.price_as_resource
+                self._price_as.resource_scope = entry.resource_scope
 
         if self._is_azure and not self._price_as.resource and not self._price_as.category:
-            self._instrumentor._logger.debug(f"Azure Anthropic model {model}, available mappings: {list(AnthropicInstrumentor._azure_deployments.keys())}")
+            self._instrumentor._logger.debug(f"Azure Anthropic model {model}, available mappings: {[(e.model, e.host) for e in AnthropicInstrumentor._model_mappings]}")
             self._instrumentor._logger.warning("Azure Anthropic requires price as resource and/or category to be specified unless mapped in the Pay-i service")
 
         if self._price_as.resource_scope:

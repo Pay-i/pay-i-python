@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.174 (2026-04-25)
+
+Full Changelog: [v0.1.0-alpha.173...v0.1.0-alpha.174](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.173...v0.1.0-alpha.174)
+
+### Chores
+
+* **internal:** more robust bootstrap script ([5417bec](https://github.com/Pay-i/pay-i-python/commit/5417becf5b11ef3c62abef5cd9b6c2c14ad861b7))
+
 ## 0.1.0-alpha.173 (2026-04-23)
 
 Full Changelog: [v0.1.0-alpha.172...v0.1.0-alpha.173](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.172...v0.1.0-alpha.173)
