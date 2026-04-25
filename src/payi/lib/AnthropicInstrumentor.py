@@ -63,11 +63,9 @@ class AnthropicInstrumentor:
 
     @staticmethod
     def configure(anthropic_config: PayiInstrumentAnthropicConfig) -> None:
-        azure_config = anthropic_config.get("azure", {})
-        if azure_config:
-            model_mappings = azure_config.get("model_mappings", [])
-            if model_mappings:
-                AnthropicInstrumentor._model_mappings = _ProviderRequest._model_mappings_to_entries(model_mappings)
+        mappings = anthropic_config.get("model_mappings", [])
+        if mappings:
+            AnthropicInstrumentor._model_mappings = _ProviderRequest._model_mappings_to_entries(mappings)
 
     @staticmethod
     def instrument(instrumentor: _PayiInstrumentor) -> None:
