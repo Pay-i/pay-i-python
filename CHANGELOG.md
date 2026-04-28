@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.176 (2026-04-28)
+
+Full Changelog: [v0.1.0-alpha.175...v0.1.0-alpha.176](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.175...v0.1.0-alpha.176)
+
+### Features
+
+* support setting headers via env ([1ef8a3d](https://github.com/Pay-i/pay-i-python/commit/1ef8a3ded8dccca7a31e9f26d3368a478e85fb56))
+
+
+### Bug Fixes
+
+* use correct field name format for multipart file arrays ([fd3fd9b](https://github.com/Pay-i/pay-i-python/commit/fd3fd9b4050650987d1f962acd43e0bc40734055))
+
 ## 0.1.0-alpha.175 (2026-04-25)
 
 Full Changelog: [v0.1.0-alpha.174...v0.1.0-alpha.175](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.174...v0.1.0-alpha.175)
