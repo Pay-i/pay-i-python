@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.177 (2026-05-04)
+
+Full Changelog: [v0.1.0-alpha.176...v0.1.0-alpha.177](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.176...v0.1.0-alpha.177)
+
+### Bug Fixes
+
+* merge stack trace request property ([b7273eb](https://github.com/Pay-i/pay-i-python/commit/b7273eb9e59f967f6f1a5fe19544a172d6481931))
+
+
+### Chores
+
+* **internal:** reformat pyproject.toml ([b7b30a5](https://github.com/Pay-i/pay-i-python/commit/b7b30a5a5de207807a5cb3551a945e1f0a09e6b5))
+
 ## 0.1.0-alpha.176 (2026-04-30)
 
 Full Changelog: [v0.1.0-alpha.175...v0.1.0-alpha.176](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.175...v0.1.0-alpha.176)
