@@ -590,8 +590,10 @@ class _PayiInstrumentor:
         log_ingest_units.pop('provider_response_json', None)
 
         # Pop system.stack_trace from properties if it exists
-        if 'properties' in log_ingest_units and isinstance(log_ingest_units['properties'], dict):
-            log_ingest_units['properties'].pop('system.stack_trace', None)
+        if 'properties' in log_ingest_units and isinstance(log_ingest_units['properties'], dict) and 'system.stack_trace' in log_ingest_units['properties']:
+            properties = log_ingest_units['properties'].copy()
+            properties.pop('system.stack_trace')
+            log_ingest_units['properties'] = properties
 
         return log_ingest_units
         
@@ -831,7 +833,7 @@ class _PayiInstrumentor:
         self._logger.debug(f"_ingest_units")
 
         extra_headers = self._after_invoke_update_request(request)
-        query=self._create_query_parms(request)
+        query = self._create_query_parms(request)
         
         try:
             if self._payi:
@@ -1231,7 +1233,7 @@ class _PayiInstrumentor:
         # f_back excludes the current frame, strip() cleans up whitespace and newlines
         stack = [frame.strip() for frame in traceback.format_stack(current_frame.f_back)]  # type: ignore
 
-        request._ingest['properties'] = { 'system.stack_trace': _compact_json(stack) }
+        request.add_internal_request_property('system.stack_trace', _compact_json(stack))
 
         if request.process_request(instance, args, kwargs) is False:
             self._logger.debug(f"async_invoke_wrapper: calling wrapped instance")
@@ -1360,7 +1362,7 @@ class _PayiInstrumentor:
         # f_back excludes the current frame, strip() cleans up whitespace and newlines
         stack = [frame.strip() for frame in traceback.format_stack(current_frame.f_back)]  # type: ignore
 
-        request._ingest['properties'] = { 'system.stack_trace': _compact_json(stack) }
+        request.add_internal_request_property('system.stack_trace', _compact_json(stack))
 
         if request.process_request(instance, args, kwargs) is False:
             self._logger.debug(f"invoke_wrapper: calling wrapped instance")
