@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.178 (2026-05-12)
+
+Full Changelog: [v0.1.0-alpha.177...v0.1.0-alpha.178](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.177...v0.1.0-alpha.178)
+
+### Features
+
+* **internal/types:** support eagerly validating pydantic iterators ([5473d49](https://github.com/Pay-i/pay-i-python/commit/5473d49ee4314f550be48bc6f4030757a0b0f09b))
+
+
+### Bug Fixes
+
+* **client:** add missing f-string prefix in file type error message ([9de6c0b](https://github.com/Pay-i/pay-i-python/commit/9de6c0b429ee8204dde0ce24e82c59cd790d0728))
+
 ## 0.1.0-alpha.177 (2026-05-04)
 
 Full Changelog: [v0.1.0-alpha.176...v0.1.0-alpha.177](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.176...v0.1.0-alpha.177)
