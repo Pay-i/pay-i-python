@@ -29,7 +29,7 @@ class OpenAiInstrumentor:
 
     @staticmethod
     def is_azure(openai_client: Any) -> bool:
-        from openai import AzureOpenAI, AsyncAzureOpenAI # type: ignore # noqa: I001
+        from openai import AzureOpenAI, AsyncAzureOpenAI  # type: ignore # noqa: I001
 
         return isinstance(openai_client, (AsyncAzureOpenAI, AzureOpenAI))
 
@@ -62,6 +62,7 @@ class OpenAiInstrumentor:
     def assign_module_version() -> None:
         if not OpenAiInstrumentor._module_version:
             OpenAiInstrumentor._module_version = get_version_helper(OpenAiInstrumentor._module_name)
+
     @staticmethod
     def instrument(instrumentor: _PayiInstrumentor) -> None:
         OpenAiInstrumentor.assign_module_version()
@@ -79,7 +80,6 @@ class OpenAiInstrumentor:
             ("openai.resources.responses", "Responses.parse", responses_wrapper(instrumentor)),
             ("openai.resources.responses", "AsyncResponses.create", aresponses_wrapper(instrumentor)),
             ("openai.resources.responses", "AsyncResponses.parse", aresponses_wrapper(instrumentor)),
-
             # In post beta openai moddule releases wrapping these will fail and gracefully handled
             ("openai.resources.beta.chat.completions", "Completions.create", chat_wrapper(instrumentor)),
             ("openai.resources.beta.chat.completions", "Completions.parse", chat_wrapper(instrumentor)),
@@ -92,13 +92,18 @@ class OpenAiInstrumentor:
     @staticmethod
     def instrument_databricks(instrumentor: _PayiInstrumentor) -> None:
         OpenAiInstrumentor.assign_module_version()
-    
+
         wrappers = [
             ("databricks.sdk.service.serving", "ServingEndpointsAPI.query", databricks_query_wrapper(instrumentor)),
-            ("databricks.sdk.service.serving", "ServingEndpointsDataPlaneAPI.query", databricks_query_wrapper(instrumentor)),
+            (
+                "databricks.sdk.service.serving",
+                "ServingEndpointsDataPlaneAPI.query",
+                databricks_query_wrapper(instrumentor),
+            ),
         ]
 
         instrumentor._wrap_functions(wrappers)
+
 
 @_PayiInstrumentor.payi_wrapper
 def embeddings_wrapper(
@@ -118,6 +123,7 @@ def embeddings_wrapper(
         kwargs,
     )
 
+
 @_PayiInstrumentor.payi_wrapper
 async def aembeddings_wrapper(
     instrumentor: _PayiInstrumentor,
@@ -135,6 +141,7 @@ async def aembeddings_wrapper(
         args,
         kwargs,
     )
+
 
 @_PayiInstrumentor.payi_wrapper
 def chat_wrapper(
@@ -154,6 +161,7 @@ def chat_wrapper(
         kwargs,
     )
 
+
 @_PayiInstrumentor.payi_awrapper
 async def achat_wrapper(
     instrumentor: _PayiInstrumentor,
@@ -171,7 +179,8 @@ async def achat_wrapper(
         args,
         kwargs,
     )
-    
+
+
 @_PayiInstrumentor.payi_wrapper
 def responses_wrapper(
     instrumentor: _PayiInstrumentor,
@@ -189,6 +198,7 @@ def responses_wrapper(
         args,
         kwargs,
     )
+
 
 @_PayiInstrumentor.payi_awrapper
 async def aresponses_wrapper(
@@ -208,6 +218,7 @@ async def aresponses_wrapper(
         kwargs,
     )
 
+
 @_PayiInstrumentor.payi_wrapper
 def databricks_query_wrapper(
     instrumentor: _PayiInstrumentor,
@@ -226,6 +237,7 @@ def databricks_query_wrapper(
         kwargs,
     )
 
+
 class _OpenAiProviderRequest(_ProviderRequest):
     chat_input_tokens_key: str = "prompt_tokens"
     chat_output_tokens_key: str = "completion_tokens"
@@ -237,7 +249,15 @@ class _OpenAiProviderRequest(_ProviderRequest):
     responses_input_tokens_details_key: str = "input_tokens_details"
     responses_output_tokens_details_key: str = "output_tokens_details"
 
-    def __init__(self, instrumentor: _PayiInstrumentor, instance: Any, input_tokens_key: str, output_tokens_key: str, input_tokens_details_key: str, output_tokens_details_key: str) -> None:
+    def __init__(
+        self,
+        instrumentor: _PayiInstrumentor,
+        instance: Any,
+        input_tokens_key: str,
+        output_tokens_key: str,
+        input_tokens_details_key: str,
+        output_tokens_details_key: str,
+    ) -> None:
         self._openai_client = instance._client if instance and hasattr(instance, "_client") else None
         self._is_azure = self._openai_client and OpenAiInstrumentor.is_azure(self._openai_client)
 
@@ -249,17 +269,17 @@ class _OpenAiProviderRequest(_ProviderRequest):
             streaming_type=_StreamingType.iterator,
             module_name=OpenAiInstrumentor._module_name,
             module_version=OpenAiInstrumentor._module_version,
-            )
+        )
         self._input_tokens_key = input_tokens_key
         self._output_tokens_key = output_tokens_key
         self._input_tokens_details_key = input_tokens_details_key
         self._output_tokens_details_key = output_tokens_details_key
 
         if hasattr(self._openai_client, "base_url"):
-           try:
-               self.provider_uri = str(self._openai_client.base_url) # type: ignore
-           except Exception:
-               pass
+            try:
+                self.provider_uri = str(self._openai_client.base_url)  # type: ignore
+            except Exception:
+                pass
 
     def get_model(self, kwargs: Any) -> str:
         return kwargs.get("model", "") or ""
@@ -268,13 +288,13 @@ class _OpenAiProviderRequest(_ProviderRequest):
         return cast(Optional[list[Dict[str, Any]]], kwargs.get("messages", None))
 
     @override
-    def process_request(self, instance: Any, args: Sequence[Any], kwargs: Any) -> bool: # type: ignore
+    def process_request(self, instance: Any, args: Sequence[Any], kwargs: Any) -> bool:  # type: ignore
         model = self.get_model(kwargs)
 
         if self._is_azure:
             # model is technically optional as it is part of the URL path
             if not model and hasattr(self._openai_client, "_azure_deployment"):
-                model = self._openai_client._azure_deployment # type: ignore
+                model = self._openai_client._azure_deployment  # type: ignore
 
         self.map_deployment(model)
 
@@ -293,7 +313,9 @@ class _OpenAiProviderRequest(_ProviderRequest):
         self._ingest["resource"] = self._price_as.resource if self._price_as.resource else model
 
     def map_deployment(self, model: Optional[str]) -> None:
-        self._instrumentor._logger.debug(f"OpenAI model {model}, host {self._provider_host}, available mappings: {[(e.model, e.host) for e in OpenAiInstrumentor._model_mappings]}, price as before final mapping: resource={self._price_as.resource}, category={self._price_as.category}, resource_scope={self._price_as.resource_scope}")
+        self._instrumentor._logger.debug(
+            f"OpenAI model {model}, host {self._provider_host}, available mappings: {[(e.model, e.host) for e in OpenAiInstrumentor._model_mappings]}, price as before final mapping: resource={self._price_as.resource}, category={self._price_as.category}, resource_scope={self._price_as.resource_scope}"
+        )
 
         if model and not self._price_as.resource and not self._price_as.category:
             entry = self.find_model_mapping(model, OpenAiInstrumentor._model_mappings)
@@ -303,10 +325,16 @@ class _OpenAiProviderRequest(_ProviderRequest):
                 self._price_as.resource_scope = entry.resource_scope
 
         if self._is_azure and not self._price_as.resource and not self._price_as.category:
-            self._instrumentor._logger.warning("Azure OpenAI requires price as resource and/or category to be specified unless mapped in the Pay-i service")
+            self._instrumentor._logger.warning(
+                "Azure OpenAI requires price as resource and/or category to be specified unless mapped in the Pay-i service"
+            )
 
     @override
-    def process_exception(self, exception: Exception, kwargs: Any, ) -> bool:
+    def process_exception(
+        self,
+        exception: Exception,
+        kwargs: Any,
+    ) -> bool:
         try:
             status_code: Optional[int] = None
 
@@ -316,7 +344,9 @@ class _OpenAiProviderRequest(_ProviderRequest):
                     self._ingest["http_status_code"] = status_code
 
             if not status_code:
-                self.exception_to_semantic_failure(exception,)
+                self.exception_to_semantic_failure(
+                    exception,
+                )
                 return True
 
             if hasattr(exception, "request_id"):
@@ -359,11 +389,10 @@ class _OpenAiProviderRequest(_ProviderRequest):
     def process_synchronous_response_worker(
         self,
         response_dict: dict[str, Any],
-        ) -> Any:
-
+    ) -> Any:
         if self.update_deployment_name() is False:
             self.update_model_name(response_dict.get("model", ""))
-        
+
         self.add_usage_units(response_dict.get("usage", {}))
 
         if self._log_prompt_and_response:
@@ -374,7 +403,10 @@ class _OpenAiProviderRequest(_ProviderRequest):
 
         return None
 
-    def add_usage_units(self, usage: "dict[str, Any]",) -> None:
+    def add_usage_units(
+        self,
+        usage: "dict[str, Any]",
+    ) -> None:
         units = self._ingest["units"]
 
         input = usage[self._input_tokens_key] if self._input_tokens_key in usage else 0
@@ -399,20 +431,24 @@ class _OpenAiProviderRequest(_ProviderRequest):
         units["text"] = IngestUnits(input=input, output=output)
 
     @staticmethod
-    def has_image_and_get_texts(encoding: tiktoken.Encoding, content: Union[str, 'list[Any]'], image_type: str, text_type: str) -> 'tuple[bool, int]':
-        if isinstance(content, list): # type: ignore
+    def has_image_and_get_texts(
+        encoding: tiktoken.Encoding, content: Union[str, "list[Any]"], image_type: str, text_type: str
+    ) -> "tuple[bool, int]":
+        if isinstance(content, list):  # type: ignore
             has_image = any(item.get("type", "") == image_type for item in content)
             if has_image is False:
                 return has_image, 0
-            
-            token_count = sum(len(encoding.encode(item.get("text", ""))) for item in content if item.get("type") == text_type)
+
+            token_count = sum(
+                len(encoding.encode(item.get("text", ""))) for item in content if item.get("type") == text_type
+            )
             return has_image, token_count
         return False, 0
 
     @staticmethod
-    def post_process_request_prompt(content: Union[str, 'list[Any]'], image_type: str, url_subkey: bool) -> bool:
+    def post_process_request_prompt(content: Union[str, "list[Any]"], image_type: str, url_subkey: bool) -> bool:
         modified = False
-        if isinstance(content, list): # type: ignore
+        if isinstance(content, list):  # type: ignore
             for item in content:
                 type = item.get("type", "")
                 if type != image_type:
@@ -431,6 +467,7 @@ class _OpenAiProviderRequest(_ProviderRequest):
 
         return modified
 
+
 class _OpenAiEmbeddingsProviderRequest(_OpenAiProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, instance: Any):
         super().__init__(
@@ -439,14 +476,13 @@ class _OpenAiEmbeddingsProviderRequest(_OpenAiProviderRequest):
             input_tokens_key=_OpenAiProviderRequest.chat_input_tokens_key,
             output_tokens_key=_OpenAiProviderRequest.chat_output_tokens_key,
             input_tokens_details_key=_OpenAiProviderRequest.chat_input_tokens_details_key,
-            output_tokens_details_key=_OpenAiProviderRequest.chat_completion_tokens_details_key)
+            output_tokens_details_key=_OpenAiProviderRequest.chat_completion_tokens_details_key,
+        )
 
     @override
-    def process_synchronous_response(
-        self,
-        response: Any,
-        kwargs: Any) -> Any:
+    def process_synchronous_response(self, response: Any, kwargs: Any) -> Any:
         return self.process_synchronous_response_worker(_model_to_dict(response))
+
 
 class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, instance: Any):
@@ -456,7 +492,8 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
             input_tokens_key=_OpenAiProviderRequest.chat_input_tokens_key,
             output_tokens_key=_OpenAiProviderRequest.chat_output_tokens_key,
             input_tokens_details_key=_OpenAiProviderRequest.chat_input_tokens_details_key,
-            output_tokens_details_key=_OpenAiProviderRequest.chat_completion_tokens_details_key)
+            output_tokens_details_key=_OpenAiProviderRequest.chat_completion_tokens_details_key,
+        )
 
         self._include_usage_added = False
 
@@ -493,12 +530,12 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
 
     def add_stream_options(self) -> bool:
         return True
-    
+
     @override
     def process_chunk(self, chunk: Any) -> _ChunkResult:
         ingest = False
         model = _model_to_dict(chunk)
-        
+
         if "provider_response_id" not in self._ingest:
             response_id = model.get("id", None)
             if response_id:
@@ -511,10 +548,10 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
         usage = model.get("usage", {})
         if usage:
             if self.update_deployment_name() is False:
-                self.update_model_name(model.get("model", ""))                
+                self.update_model_name(model.get("model", ""))
             self.add_usage_units(usage)
 
-            # If we added "include_usage" in the request on behalf of the client, do not return the extra 
+            # If we added "include_usage" in the request on behalf of the client, do not return the extra
             # packet which contains the usage to the client as they are not expecting the data
             if self._include_usage_added:
                 send_chunk_to_client = False
@@ -527,29 +564,31 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
         result = super().process_request(instance, args, kwargs)
         if result is False:
             return result
-        
+
         messages = self.get_messages(kwargs)
         if messages:
-            estimated_token_count = 0 
+            estimated_token_count = 0
             has_image = False
             enc: Optional[tiktoken.Encoding] = None
 
-            try: 
-                enc = tiktoken.encoding_for_model(self.get_model(kwargs)) # type: ignore
+            try:
+                enc = tiktoken.encoding_for_model(self.get_model(kwargs))  # type: ignore
             except Exception:
                 try:
-                    enc = tiktoken.get_encoding("o200k_base") # type: ignore
+                    enc = tiktoken.get_encoding("o200k_base")  # type: ignore
                 except Exception:
                     self._instrumentor._logger.info("OpenAI skipping vision token calc, could not load o200k_base")
                     enc = None
-            
+
             if enc:
                 for message in messages:
-                    msg_has_image, msg_prompt_tokens = self.has_image_and_get_texts(enc, message.get('content', ''), image_type="image_url", text_type="text")
+                    msg_has_image, msg_prompt_tokens = self.has_image_and_get_texts(
+                        enc, message.get("content", ""), image_type="image_url", text_type="text"
+                    )
                     if msg_has_image:
                         has_image = True
                         estimated_token_count += msg_prompt_tokens
-            
+
                 if has_image and estimated_token_count > 0:
                     self._estimated_prompt_tokens = estimated_token_count
 
@@ -562,32 +601,29 @@ class _OpenAiChatProviderRequest(_OpenAiProviderRequest):
                     add_include_usage = stream_options["include_usage"] == False
 
                 if add_include_usage:
-                    kwargs['stream_options'] = {"include_usage": True}
+                    kwargs["stream_options"] = {"include_usage": True}
                     self._include_usage_added = True
         return True
 
     @override
-    def remove_prompt_inline_data(self, prompt: 'dict[str, Any]') -> bool:
+    def remove_prompt_inline_data(self, prompt: "dict[str, Any]") -> bool:
         messages = self.get_messages(prompt)
         if not messages:
             return False
         return self.post_process_request_prompt(messages, image_type="image_url", url_subkey=True)
 
     @override
-    def process_synchronous_response(
-        self,
-        response: Any,
-        kwargs: Any) -> Any:
-
+    def process_synchronous_response(self, response: Any, kwargs: Any) -> Any:
         response_dict = _model_to_dict(response)
         self.process_synchronous_response_choices(self, response_dict)
 
         return self.process_synchronous_response_worker(response_dict)
 
+
 class _DatabricksOpenAiChatProviderRequest(_OpenAiChatProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, instance: Any):
         super().__init__(instrumentor=instrumentor, instance=instance)
-    
+
         provider_uri = None
         try:
             provider_uri = str(instance._api._cfg.host)  # type: ignore
@@ -599,9 +635,9 @@ class _DatabricksOpenAiChatProviderRequest(_OpenAiChatProviderRequest):
                 provider_uri = str(instance._api._cfg.hostname)  # type: ignore
             except Exception:
                 pass
-        
+
         if provider_uri:
-            if 'https://' not in provider_uri:
+            if "https://" not in provider_uri:
                 provider_uri = f"https://{provider_uri}"
             self.provider_uri = provider_uri
 
@@ -612,7 +648,7 @@ class _DatabricksOpenAiChatProviderRequest(_OpenAiChatProviderRequest):
     @override
     def get_model(self, kwargs: Any) -> str:
         return kwargs.get("name", "") or ""
-    
+
     @override
     def get_messages(self, kwargs: Any) -> Optional[list[Dict[str, Any]]]:
         messages = kwargs.get("messages", None)
@@ -621,7 +657,7 @@ class _DatabricksOpenAiChatProviderRequest(_OpenAiChatProviderRequest):
             for message in messages:
                 result.append(cast(Dict[str, Any], message if isinstance(message, dict) else message.as_dict()))
             return result
-        
+
         return None
 
 
@@ -633,7 +669,8 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
             input_tokens_key=_OpenAiProviderRequest.responses_input_tokens_key,
             output_tokens_key=_OpenAiProviderRequest.responses_output_tokens_key,
             input_tokens_details_key=_OpenAiProviderRequest.responses_input_tokens_details_key,
-            output_tokens_details_key=_OpenAiProviderRequest.responses_output_tokens_details_key)
+            output_tokens_details_key=_OpenAiProviderRequest.responses_output_tokens_details_key,
+        )
 
     @override
     def process_chunk(self, chunk: Any) -> _ChunkResult:
@@ -659,7 +696,7 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
         usage = response.get("usage")
         if usage:
             if self.update_deployment_name() is False:
-                self.update_model_name(response.get("model", ""))                
+                self.update_model_name(response.get("model", ""))
 
             self.add_usage_units(usage)
             ingest = True
@@ -671,24 +708,24 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
         result = super().process_request(instance, args, kwargs)
         if result is False:
             return result
-        
-        input = kwargs.get("input", None) # type: ignore
+
+        input = kwargs.get("input", None)  # type: ignore
         if not input or isinstance(input, str) or not isinstance(input, list):
             return True
-        
-        estimated_token_count = 0 
+
+        estimated_token_count = 0
         has_image = False
         enc: Optional[tiktoken.Encoding] = None
 
-        try: 
-            enc = tiktoken.encoding_for_model(kwargs.get("model")) # type: ignore
+        try:
+            enc = tiktoken.encoding_for_model(kwargs.get("model"))  # type: ignore
         except Exception:
             try:
-                enc = tiktoken.get_encoding("o200k_base") # type: ignore
+                enc = tiktoken.get_encoding("o200k_base")  # type: ignore
             except Exception:
                 self._instrumentor._logger.info("OpenAI skipping vision token calc, could not load o200k_base")
                 enc = None
-        
+
         # find each content..type="input_text" and count tokens
         # input=[{
         #     "role": "user",
@@ -699,17 +736,19 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
         #         },
         #         {
         #             "type": "input_image",
-        #             "image_url": ... 
+        #             "image_url": ...
         #         },
         #     ],
         # }]
         if enc:
-            for item in input: # type: ignore
+            for item in input:  # type: ignore
                 if isinstance(item, dict):
-                    for key, value in item.items(): # type: ignore
+                    for key, value in item.items():  # type: ignore
                         if key == "content":
                             if isinstance(value, list):
-                                msg_has_image, msg_prompt_tokens = self.has_image_and_get_texts(enc, value, image_type="input_image", text_type="input_text") # type: ignore 
+                                msg_has_image, msg_prompt_tokens = self.has_image_and_get_texts(
+                                    enc, value, image_type="input_image", text_type="input_text"  # type: ignore[reportUnknownArgumentType]
+                                )
                                 if msg_has_image:
                                     has_image = True
                                     estimated_token_count += msg_prompt_tokens
@@ -720,28 +759,32 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
         return True
 
     @override
-    def remove_prompt_inline_data(self, prompt: 'dict[str, Any]') -> bool:
+    def remove_prompt_inline_data(self, prompt: "dict[str, Any]") -> bool:
         modified = False
         input = prompt.get("input", [])
         for item in input:
             if not isinstance(item, dict):
                 continue
 
-            for key, value in item.items(): # type: ignore
+            for key, value in item.items():  # type: ignore
                 if key == "content":
                     if isinstance(value, list):
-                        modified = self.post_process_request_prompt(value, image_type="input_image", url_subkey=False) | modified # type: ignore
+                        modified = (
+                            self.post_process_request_prompt(value, image_type="input_image", url_subkey=False)  # type: ignore[reportUnknownArgumentType]
+                            | modified
+                        )
 
         return modified
 
     @override
-    def remove_responses_inline_data(self, responses: 'list[dict[str, Any]]') -> bool:# noqa: ARG002
+    def remove_responses_inline_data(self, responses: "list[dict[str, Any]]") -> bool:  # noqa: ARG002
         modified = False
-        def remove_from_output_array(outputs: 'list[dict[str, Any]]') -> bool:
+
+        def remove_from_output_array(outputs: "list[dict[str, Any]]") -> bool:
             modified = False
             for output in outputs:
                 response_type = output.get("type", "")
-                if response_type == "image_generation_call" and 'result' in output:
+                if response_type == "image_generation_call" and "result" in output:
                     output["result"] = _PayiInstrumentor._not_instrumented
                     modified = True
             return modified
@@ -752,12 +795,12 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
                 modified |= remove_from_output_array(output)
 
             response_type = response.get("type", "")
-            if response_type == "response.image_generation_call.partial_image" and 'partial_image_b64' in response:
+            if response_type == "response.image_generation_call.partial_image" and "partial_image_b64" in response:
                 response["partial_image_b64"] = _PayiInstrumentor._not_instrumented
                 modified = True
             elif response_type == "response.output_item.done":
                 item = response.get("item", {})
-                if item and item.get("type", "") == "image_generation_call" and 'result' in item:
+                if item and item.get("type", "") == "image_generation_call" and "result" in item:
                     item["result"] = _PayiInstrumentor._not_instrumented
                     modified = True
             elif response_type == "response.completed":
@@ -768,11 +811,7 @@ class _OpenAiResponsesProviderRequest(_OpenAiProviderRequest):
         return modified
 
     @override
-    def process_synchronous_response(
-        self,
-        response: Any,
-        kwargs: Any) -> Any:
-
+    def process_synchronous_response(self, response: Any, kwargs: Any) -> Any:
         response_dict = _model_to_dict(response)
         output = response_dict.get("output", [])
         if output:

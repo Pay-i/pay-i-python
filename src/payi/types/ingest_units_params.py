@@ -71,6 +71,7 @@ class IngestUnitsParams(TypedDict, total=False):
 
     disable_logging: Optional[bool]
 
+
 class ProviderResponseFunctionCall(TypedDict, total=False):
     name: Required[str]
 

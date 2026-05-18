@@ -4,6 +4,7 @@ Handles inline retry with exponential backoff and a background retry queue
 for failed ingest calls.  Extracted from ``instrument.py`` so the
 ``_PayiInstrumentor`` class stays focused on instrumentation orchestration.
 """
+
 from __future__ import annotations
 
 import copy
@@ -49,27 +50,26 @@ _RETRYABLE_CONNECTION_EXCEPTIONS = (
     httpx.WriteError,
     httpx.RemoteProtocolError,
     httpx.ConnectError,
-
     httpcore.TimeoutException,
     httpcore.ReadError,
     httpcore.WriteError,
     httpcore.RemoteProtocolError,
     httpcore.ConnectError,
-
     ConnectionResetError,
 )
 
 # Retry-queue defaults for background re-delivery of failed ingest calls.
-_RETRY_QUEUE_MAX_SIZE_DEFAULT = 0          # 0 = unlimited (queue.Queue convention)
+_RETRY_QUEUE_MAX_SIZE_DEFAULT = 0  # 0 = unlimited (queue.Queue convention)
 _RETRY_QUEUE_WORKER_INTERVAL_DEFAULT = 5.0  # seconds between drain cycles
-_RETRY_QUEUE_WORKER_JITTER = 0.5           # +/- seconds applied to each sleep
-_RETRY_QUEUE_DRAIN_TIMEOUT = 10.0          # seconds to wait for final drain on shutdown
-_RETRY_QUEUE_BATCH_WINDOW = 2.0            # seconds to keep sending within a single drain cycle
+_RETRY_QUEUE_WORKER_JITTER = 0.5  # +/- seconds applied to each sleep
+_RETRY_QUEUE_DRAIN_TIMEOUT = 10.0  # seconds to wait for final drain on shutdown
+_RETRY_QUEUE_BATCH_WINDOW = 2.0  # seconds to keep sending within a single drain cycle
 
 
 # ---------------------------------------------------------------------------
 # Helper used by both the manager and callers in instrument.py
 # ---------------------------------------------------------------------------
+
 
 def _qualified_exception_name(exc: BaseException | None) -> str:
     if exc is None:
@@ -95,11 +95,15 @@ def is_retryable_connection_error(e: Union[APIConnectionError, APIStatusError]) 
 # Queue item
 # ---------------------------------------------------------------------------
 
+
 class _RetryQueueItem:
     """An ingest call that exhausted immediate retries and is awaiting background retry."""
-    __slots__ = ('ingest_units', 'extra_headers', 'retry_count', 'query')
 
-    def __init__(self, ingest_units: IngestUnitsParams, extra_headers: 'dict[str, str]', query: Optional[dict[str, str]]) -> None:
+    __slots__ = ("ingest_units", "extra_headers", "retry_count", "query")
+
+    def __init__(
+        self, ingest_units: IngestUnitsParams, extra_headers: "dict[str, str]", query: Optional[dict[str, str]]
+    ) -> None:
         self.ingest_units = ingest_units
         self.extra_headers = extra_headers
         self.retry_count = 0
@@ -120,6 +124,7 @@ OnApiStatusErrorFn = Callable[[APIStatusError], Any]
 # ---------------------------------------------------------------------------
 # IngestRetryManager
 # ---------------------------------------------------------------------------
+
 
 class IngestRetryManager:
     """Manages inline retry and background retry queue for failed ingest calls.
@@ -156,7 +161,9 @@ class IngestRetryManager:
             raise ValueError("ingest_max_retries must be a non-negative integer")
 
         ingest_initial_delay = config.get("inline_retry_initial_delay", None)
-        ingest_initial_delay = ingest_initial_delay if ingest_initial_delay is not None else _INGEST_RETRY_INITIAL_DELAY_DEFAULT
+        ingest_initial_delay = (
+            ingest_initial_delay if ingest_initial_delay is not None else _INGEST_RETRY_INITIAL_DELAY_DEFAULT
+        )
         self._ingest_retry_initial_delay: float = ingest_initial_delay
         if self._ingest_retry_initial_delay < 0:
             raise ValueError("ingest_retry_initial_delay must be a non-negative number")
@@ -167,12 +174,16 @@ class IngestRetryManager:
 
         if self._ingest_retry_queue_enabled:
             queue_max_size = config.get("queue_max_size", None)
-            self._retry_queue_max_size: int = queue_max_size if queue_max_size is not None else _RETRY_QUEUE_MAX_SIZE_DEFAULT
+            self._retry_queue_max_size: int = (
+                queue_max_size if queue_max_size is not None else _RETRY_QUEUE_MAX_SIZE_DEFAULT
+            )
             if self._retry_queue_max_size < 0:
                 raise ValueError("queue_max_size must be a non-negative integer")
 
             queue_interval = config.get("queue_interval", None)
-            self._retry_queue_interval: float = queue_interval if queue_interval is not None else _RETRY_QUEUE_WORKER_INTERVAL_DEFAULT
+            self._retry_queue_interval: float = (
+                queue_interval if queue_interval is not None else _RETRY_QUEUE_WORKER_INTERVAL_DEFAULT
+            )
             if self._retry_queue_interval <= 0:
                 raise ValueError("queue_interval must be a positive number")
 
@@ -189,7 +200,7 @@ class IngestRetryManager:
     def ingest_with_inline_retry(
         self,
         ingest_units: IngestUnitsParams,
-        extra_headers: 'dict[str, str]',
+        extra_headers: "dict[str, str]",
         query: Optional[dict[str, str]],
         no_retry: bool = False,
     ) -> IngestResponse:
@@ -214,7 +225,7 @@ class IngestRetryManager:
                     raise
                 last_error = e
                 if attempt < max_retries:
-                    delay = self._ingest_retry_initial_delay * (2 ** attempt)
+                    delay = self._ingest_retry_initial_delay * (2**attempt)
                     self._retry_logger.warning(
                         f"Pay-i ingest retryable error (attempt {attempt + 1}/{1 + max_retries}), "
                         f"retrying in {delay:.1f}s: {_qualified_exception_name(e.__cause__) if e.__cause__ else e}"
@@ -228,7 +239,7 @@ class IngestRetryManager:
     async def aingest_with_inline_retry(
         self,
         ingest_units: IngestUnitsParams,
-        extra_headers: 'dict[str, str]',
+        extra_headers: "dict[str, str]",
         query: Optional[dict[str, str]],
         no_retry: bool = False,
     ) -> IngestResponse:
@@ -244,7 +255,7 @@ class IngestRetryManager:
                     raise
                 last_error = e
                 if attempt < max_retries:
-                    delay = self._ingest_retry_initial_delay * (2 ** attempt)
+                    delay = self._ingest_retry_initial_delay * (2**attempt)
                     self._retry_logger.warning(
                         f"Pay-i ingest retryable error (attempt {attempt + 1}/{1 + max_retries}), "
                         f"retrying in {delay:.1f}s: {_qualified_exception_name(e.__cause__) if e.__cause__ else e}"
@@ -262,7 +273,7 @@ class IngestRetryManager:
     def enqueue_failed_ingest(
         self,
         ingest_units: IngestUnitsParams,
-        extra_headers: 'dict[str, str]',
+        extra_headers: "dict[str, str]",
         query: Optional[dict[str, str]],
         api_ex: Union[APIConnectionError, APIStatusError],
     ) -> bool:
@@ -289,7 +300,9 @@ class IngestRetryManager:
                 return False
             self._retry_queue.append(item)
 
-        self._retry_logger.error(f"Delayed retry of Pay-i ingest exception {api_ex}, cause {_qualified_exception_name(api_ex.__cause__)}, request {ingest_units}, query {query}")
+        self._retry_logger.error(
+            f"Delayed retry of Pay-i ingest exception {api_ex}, cause {_qualified_exception_name(api_ex.__cause__)}, request {ingest_units}, query {query}"
+        )
 
         self._retry_logger.debug(
             "Pay-i enqueued failed ingest for background retry (queue depth ~%d)",
@@ -370,7 +383,9 @@ class IngestRetryManager:
         """
         try:
             if self._sync_ingest_fn:
-                response = self.ingest_with_inline_retry(item.ingest_units, item.extra_headers, query=item.query, no_retry=True)
+                response = self.ingest_with_inline_retry(
+                    item.ingest_units, item.extra_headers, query=item.query, no_retry=True
+                )
             else:
                 response = self._run_async_ingest_from_thread(item.ingest_units, item.extra_headers, query=item.query)
 
@@ -406,14 +421,15 @@ class IngestRetryManager:
                     self._retry_queue.popleft()
             self._retry_logger.error(
                 "Pay-i retry queue: unexpected error retrying ingest (retry_count=%d): %s",
-                item.retry_count, e,
+                item.retry_count,
+                e,
             )
             return False
 
     def _run_async_ingest_from_thread(
         self,
         ingest_units: IngestUnitsParams,
-        extra_headers: 'dict[str, str]',
+        extra_headers: "dict[str, str]",
         query: Optional[dict[str, str]],
     ) -> IngestResponse:
         """Run async ingest-with-retry from the background worker thread."""
@@ -443,7 +459,9 @@ class IngestRetryManager:
         self._retry_queue_worker_thread.join(timeout=_RETRY_QUEUE_DRAIN_TIMEOUT)
 
         if self._retry_queue_worker_thread.is_alive():
-            self._logger.warning("Pay-i retry queue worker did not exit within %.1f seconds", _RETRY_QUEUE_DRAIN_TIMEOUT)
+            self._logger.warning(
+                "Pay-i retry queue worker did not exit within %.1f seconds", _RETRY_QUEUE_DRAIN_TIMEOUT
+            )
 
         # Final best-effort drain: send each item once without retry,
         # stop on the first APIConnectionError.
