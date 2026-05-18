@@ -24,21 +24,25 @@ from .PayiInstrumentModelMapping import PayiInstrumentModelMapping
 if TYPE_CHECKING:
     from .instrument import _PayiInstrumentor
 
+
 class _StreamingType(Enum):
     generator = 0
     iterator = 1
     stream_manager = 2
+
 
 @dataclass
 class _ChunkResult:
     send_chunk_to_caller: bool
     ingest: bool = False
 
+
 @dataclass
 class PriceAs:
     category: Optional[str]
     resource: Optional[str]
     resource_scope: Optional[str]
+
 
 class _ProviderRequest:
     excluded_headers = {
@@ -49,22 +53,22 @@ class _ProviderRequest:
     _xproxy_result_attr = "xproxy_result"
 
     def __init__(
-            self,
-            instrumentor: _PayiInstrumentor,
-            category: str,
-            streaming_type: _StreamingType,
-            module_name: str,
-            module_version: str,
-            is_aws_client: Optional[bool] = None,
-            is_google_vertex_or_genai_client: Optional[bool] = None,
-            ) -> None:
+        self,
+        instrumentor: _PayiInstrumentor,
+        category: str,
+        streaming_type: _StreamingType,
+        module_name: str,
+        module_version: str,
+        is_aws_client: Optional[bool] = None,
+        is_google_vertex_or_genai_client: Optional[bool] = None,
+    ) -> None:
         self._instrumentor: _PayiInstrumentor = instrumentor
         self._module_name: str = module_name
-        self._module_version: str = module_version  
+        self._module_version: str = module_version
         self._estimated_prompt_tokens: Optional[int] = None
         self._category: str = category
-        self._ingest: IngestUnitsParams = { "category": category, "units": {} } # type: ignore
-        self._streaming_type: '_StreamingType' = streaming_type
+        self._ingest: IngestUnitsParams = {"category": category, "units": {}}  # type: ignore
+        self._streaming_type: "_StreamingType" = streaming_type
         self._is_aws_client: Optional[bool] = is_aws_client
         self._is_google_vertex_or_genai_client: Optional[bool] = is_google_vertex_or_genai_client
         self._function_call_builder: Optional[dict[int, ProviderResponseFunctionCall]] = None
@@ -82,23 +86,23 @@ class _ProviderRequest:
 
     def process_synchronous_response(self, response: Any, kwargs: Any) -> Optional[object]:  # noqa: ARG002
         return None
-    
+
     @abstractmethod
-    def process_request(self, instance: Any, args: Sequence[Any], kwargs: Any) -> bool:
-        ...
-    
-    def process_request_prompt(self, prompt: 'dict[str, Any]', args: Sequence[Any], kwargs: 'dict[str, Any]') -> None:
-        ...
-    
+    def process_request(self, instance: Any, args: Sequence[Any], kwargs: Any) -> bool: ...
+
+    def process_request_prompt(
+        self, prompt: "dict[str, Any]", args: Sequence[Any], kwargs: "dict[str, Any]"
+    ) -> None: ...
+
     def process_initial_stream_response(self, response: Any) -> None:
         self.add_instrumented_response_headers(response)
 
-    def remove_prompt_inline_data(self, prompt: 'dict[str, Any]') -> bool:# noqa: ARG002
+    def remove_prompt_inline_data(self, prompt: "dict[str, Any]") -> bool:  # noqa: ARG002
         return False
 
-    def remove_responses_inline_data(self, responses: 'list[dict[str, Any]]') -> bool:# noqa: ARG002
+    def remove_responses_inline_data(self, responses: "list[dict[str, Any]]") -> bool:  # noqa: ARG002
         return False
-    
+
     def get_host(self, url: Union[str, httpx.URL, Any]) -> Optional[str]:
         try:
             if isinstance(url, str):
@@ -115,7 +119,7 @@ class _ProviderRequest:
     @property
     def provider_uri(self) -> Optional[str]:
         return self._ingest.get("provider_uri") if "provider_uri" in self._ingest else None
-    
+
     @provider_uri.setter
     def provider_uri(self, value: str) -> None:
         self._ingest["provider_uri"] = value
@@ -130,13 +134,13 @@ class _ProviderRequest:
         if host is None:
             return None
         if isinstance(host, str):
-            if not host.startswith(('http://', 'https://')):
-                host = f'https://{host}'
+            if not host.startswith(("http://", "https://")):
+                host = f"https://{host}"
             host = httpx.URL(host)
         return host.host or None
 
     @staticmethod
-    def _model_mappings_to_entries(model_mappings: 'Sequence[PayiInstrumentModelMapping]') -> list[_ModelMappingEntry]:
+    def _model_mappings_to_entries(model_mappings: "Sequence[PayiInstrumentModelMapping]") -> list[_ModelMappingEntry]:
         entries: list[_ModelMappingEntry] = []
         for mapping in model_mappings:
             model = mapping.get("model", "")
@@ -152,13 +156,15 @@ class _ProviderRequest:
 
             host = _ProviderRequest._normalize_host(mapping.get("host", None))
 
-            entries.append(_ModelMappingEntry(
-                model=model,
-                host=host,
-                price_as_category=price_as_category,
-                price_as_resource=price_as_resource,
-                resource_scope=resource_scope,
-            ))
+            entries.append(
+                _ModelMappingEntry(
+                    model=model,
+                    host=host,
+                    price_as_category=price_as_category,
+                    price_as_resource=price_as_resource,
+                    resource_scope=resource_scope,
+                )
+            )
         return entries
 
     def find_model_mapping(
@@ -190,16 +196,20 @@ class _ProviderRequest:
     def is_google_vertex_or_genai_client(self) -> bool:
         return self._is_google_vertex_or_genai_client if self._is_google_vertex_or_genai_client is not None else False
 
-    def process_exception(self, exception: Exception, kwargs: Any, ) -> bool: # noqa: ARG002
+    def process_exception(
+        self,
+        exception: Exception,
+        kwargs: Any,  # noqa: ARG002
+    ) -> bool:
         self.exception_to_semantic_failure(exception)
         return True
-    
+
     @property
     def supports_extra_headers(self) -> bool:
         return not self.is_aws_client and not self.is_google_vertex_or_genai_client
-    
+
     @property
-    def streaming_type(self) -> '_StreamingType':
+    def streaming_type(self) -> "_StreamingType":
         return self._streaming_type
 
     def add_internal_request_property(self, key: str, value: str) -> None:
@@ -207,9 +217,9 @@ class _ProviderRequest:
 
     def exception_to_semantic_failure(self, e: Exception) -> None:
         exception_str = f"{type(e).__name__}"
-    
+
         fields: list[str] = []
-    
+
         for attr in dir(e):
             if not attr.startswith("__"):
                 try:
@@ -218,7 +228,7 @@ class _ProviderRequest:
                         fields.append(f"{attr}={value}")
                 except Exception as _ex:
                     pass
- 
+
         self.add_internal_request_property(PayiPropertyNames.failure, exception_str)
         if fields:
             failure_description = ",".join(fields)
@@ -233,7 +243,9 @@ class _ProviderRequest:
             self._function_call_builder = {}
 
         if not index in self._function_call_builder:
-            self._function_call_builder[index] = ProviderResponseFunctionCall(name=name or "", arguments=arguments or "")
+            self._function_call_builder[index] = ProviderResponseFunctionCall(
+                name=name or "", arguments=arguments or ""
+            )
         else:
             function = self._function_call_builder[index]
             if name:
@@ -246,16 +258,16 @@ class _ProviderRequest:
             self._function_calls = []
             self._ingest["provider_response_function_calls"] = self._function_calls
         self._function_calls.append(ProviderResponseFunctionCall(name=name, arguments=arguments))
-    
+
     def add_instrumented_response_headers(self, response: Any) -> None:
-        response_headers  = getattr(response, _ProviderRequest._instrumented_response_headers_attr, {})
+        response_headers = getattr(response, _ProviderRequest._instrumented_response_headers_attr, {})
         if response_headers:
             self.add_response_headers(response_headers)
 
-    def add_response_headers(self, response_headers: 'dict[str, Any]') -> None:
+    def add_response_headers(self, response_headers: "dict[str, Any]") -> None:
         self._ingest["provider_response_headers"] = [
-            PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) 
-            for k, v in response_headers.items() 
+            PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v)
+            for k, v in response_headers.items()
             if (k_lower := k.lower()) not in _ProviderRequest.excluded_headers and not k_lower.startswith("content-")
         ]
 
@@ -271,25 +283,25 @@ class _ProviderRequest:
     def merge_internal_request_properties(self) -> None:
         if not self._internal_request_properties:
             return
-        
+
         properties = self._ingest.get("properties") or {}
         self._ingest["properties"] = properties
         for key, value in self._internal_request_properties.items():
             if key not in properties:
                 properties[key] = value
-                
+
     def update_for_vision(self, input: int) -> int:
         if self._estimated_prompt_tokens:
             vision = input - self._estimated_prompt_tokens
-            if (vision > 0):
+            if vision > 0:
                 key = "vision_large_context" if self._is_large_context else "vision"
                 self._ingest["units"][key] = IngestUnits(input=vision, output=0)
                 input = self._estimated_prompt_tokens
-        
+
         return input
 
     @staticmethod
-    def assign_xproxy_result(o: Any, xproxy_result: XproxyResult |  XproxyError| None) -> None:
+    def assign_xproxy_result(o: Any, xproxy_result: XproxyResult | XproxyError | None) -> None:
         if xproxy_result:
             _set_attr_safe(o, _ProviderRequest._xproxy_result_attr, xproxy_result)
 
@@ -297,7 +309,7 @@ class _ProviderRequest:
     def process_response_wrapper(wrapped: Any, _instance: Any, args: Any, kwargs: Any) -> Any:
         httpResponse = kwargs.get("response", None)
 
-        r =  wrapped(*args, **kwargs)
+        r = wrapped(*args, **kwargs)
 
         if httpResponse:
             headers = getattr(httpResponse, "headers", None)
@@ -316,4 +328,3 @@ class _ProviderRequest:
             _set_attr_safe(r, _ProviderRequest._instrumented_response_headers_attr, dict(headers) if headers else {})
 
         return r
-

@@ -44,6 +44,7 @@ class AnthropicInstrumentor:
 
         try:
             from anthropic import AnthropicBedrockMantle, AsyncAnthropicBedrockMantle  # type: ignore # noqa: I001
+
             return isinstance(anthropic_client, (AsyncAnthropicBedrockMantle, AnthropicBedrockMantle))
         except Exception:
             AnthropicInstrumentor._bedrock_mantle_clients_supported = False
@@ -56,6 +57,7 @@ class AnthropicInstrumentor:
 
         try:
             from anthropic import AnthropicFoundry, AsyncAnthropicFoundry  # type: ignore # noqa: I001
+
             return isinstance(anthropic_client, (AsyncAnthropicFoundry, AnthropicFoundry))
         except Exception:
             AnthropicInstrumentor._azure_foundry_clients_supported = False
@@ -82,13 +84,17 @@ class AnthropicInstrumentor:
             ("anthropic.resources.messages", "AsyncMessages.stream", astream_messages_wrapper(instrumentor)),
             ("anthropic.resources.beta.messages", "AsyncMessages.create", amessages_wrapper(instrumentor)),
             ("anthropic.resources.beta.messages", "AsyncMessages.stream", astream_messages_wrapper(instrumentor)),
-
             # Wrap MessageStream iteration to track state across chunks
             ("anthropic.lib.streaming._messages", "MessageStream.__iter__", message_stream_iter_wrapper(instrumentor)),
-            ("anthropic.lib.streaming._messages", "AsyncMessageStream.__aiter__", async_message_stream_aiter_wrapper(instrumentor)),
+            (
+                "anthropic.lib.streaming._messages",
+                "AsyncMessageStream.__aiter__",
+                async_message_stream_aiter_wrapper(instrumentor),
+            ),
         ]
 
         instrumentor._wrap_functions(wrappers)
+
 
 @_PayiInstrumentor.payi_wrapper
 def messages_wrapper(
@@ -108,6 +114,7 @@ def messages_wrapper(
         kwargs,
     )
 
+
 @_PayiInstrumentor.payi_wrapper
 def stream_messages_wrapper(
     instrumentor: _PayiInstrumentor,
@@ -118,13 +125,16 @@ def stream_messages_wrapper(
 ) -> Any:
     instrumentor._logger.debug("Anthropic stream wrapper")
     return instrumentor.invoke_wrapper(
-        _AnthropicProviderRequest(instrumentor=instrumentor, streaming_type=_StreamingType.stream_manager, instance=instance),
+        _AnthropicProviderRequest(
+            instrumentor=instrumentor, streaming_type=_StreamingType.stream_manager, instance=instance
+        ),
         _IsStreaming.true,
         wrapped,
         instance,
         args,
         kwargs,
     )
+
 
 @_PayiInstrumentor.payi_awrapper
 async def amessages_wrapper(
@@ -144,6 +154,7 @@ async def amessages_wrapper(
         kwargs,
     )
 
+
 @_PayiInstrumentor.payi_awrapper
 async def astream_messages_wrapper(
     instrumentor: _PayiInstrumentor,
@@ -154,13 +165,16 @@ async def astream_messages_wrapper(
 ) -> Any:
     instrumentor._logger.debug("aync Anthropic stream wrapper")
     return await instrumentor.async_invoke_wrapper(
-        _AnthropicProviderRequest(instrumentor=instrumentor, streaming_type=_StreamingType.stream_manager, instance=instance),
+        _AnthropicProviderRequest(
+            instrumentor=instrumentor, streaming_type=_StreamingType.stream_manager, instance=instance
+        ),
         _IsStreaming.true,
         wrapped,
         instance,
         args,
         kwargs,
     )
+
 
 @_PayiInstrumentor.payi_wrapper
 def message_stream_iter_wrapper(
@@ -171,19 +185,19 @@ def message_stream_iter_wrapper(
     **kwargs: Any,
 ) -> Any:
     instrumentor._logger.debug("MessageStream.__iter__ wrapper")
-    
+
     # Messages.stream wrapper is expected to set attr _payi_request so that context is propagated and tracked
 
     # Get the stored request and tracking info
-    request = getattr(instance, '_payi_request', None)
-    
+    request = getattr(instance, "_payi_request", None)
+
     if not request:
         instrumentor._logger.debug("MessageStream.__iter__ - missing request, returning original")
         return wrapped(*args, **kwargs)
-    
+
     # Call the original __iter__ to get the iterator
     original_iterator = wrapped(*args, **kwargs)
-    
+
     # Wrap it with GeneratorWrapper to track state across chunks
     return _GeneratorWrapper(
         generator=original_iterator,
@@ -191,6 +205,7 @@ def message_stream_iter_wrapper(
         instrumentor=instrumentor,
         request=request,
     )
+
 
 @_PayiInstrumentor.payi_awrapper
 async def async_message_stream_aiter_wrapper(
@@ -201,19 +216,19 @@ async def async_message_stream_aiter_wrapper(
     **kwargs: Any,
 ) -> Any:
     instrumentor._logger.debug("AsyncMessageStream.__aiter__ wrapper")
-    
+
     # AsyncMessages.stream wrapper is expected to set attr _payi_request so that context is propagated and tracked
 
     # Get the stored request and tracking info
-    request = getattr(instance, '_payi_request', None)
-    
+    request = getattr(instance, "_payi_request", None)
+
     if not request:
         instrumentor._logger.debug("AsyncMessageStream.__aiter__ - missing request, returning original")
         return wrapped(*args, **kwargs)
-    
+
     # Call the original __aiter__ to get the async iterator
     original_iterator = wrapped(*args, **kwargs)
-    
+
     # Wrap it with GeneratorWrapper to track state across chunks
     return _GeneratorWrapper(
         generator=original_iterator,
@@ -221,6 +236,7 @@ async def async_message_stream_aiter_wrapper(
         instrumentor=instrumentor,
         request=request,
     )
+
 
 class _AnthropicProviderRequest(_ProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, streaming_type: _StreamingType, instance: Any = None) -> None:
@@ -250,13 +266,13 @@ class _AnthropicProviderRequest(_ProviderRequest):
             streaming_type=streaming_type,
             module_name=AnthropicInstrumentor._module_name,
             module_version=AnthropicInstrumentor._module_version,
-            )
+        )
 
         if hasattr(self._anthropic_client, "base_url"):
-           try:
-               self.provider_uri = str(self._anthropic_client.base_url) # type: ignore
-           except Exception:
-               pass
+            try:
+                self.provider_uri = str(self._anthropic_client.base_url)  # type: ignore
+            except Exception:
+                pass
 
     @override
     def process_chunk(self, chunk: Any) -> _ChunkResult:
@@ -268,7 +284,8 @@ class _AnthropicProviderRequest(_ProviderRequest):
             request=self,
             response=response.to_dict(),
             log_prompt_and_response=self._log_prompt_and_response,
-            assign_id=True)
+            assign_id=True,
+        )
 
         return None
 
@@ -288,19 +305,25 @@ class _AnthropicProviderRequest(_ProviderRequest):
                 self._price_as.resource_scope = entry.resource_scope
 
         if self._is_azure and not self._price_as.resource and not self._price_as.category:
-            self._instrumentor._logger.debug(f"Azure Anthropic model {model}, available mappings: {[(e.model, e.host) for e in AnthropicInstrumentor._model_mappings]}")
-            self._instrumentor._logger.warning("Azure Anthropic requires price as resource and/or category to be specified unless mapped in the Pay-i service")
+            self._instrumentor._logger.debug(
+                f"Azure Anthropic model {model}, available mappings: {[(e.model, e.host) for e in AnthropicInstrumentor._model_mappings]}"
+            )
+            self._instrumentor._logger.warning(
+                "Azure Anthropic requires price as resource and/or category to be specified unless mapped in the Pay-i service"
+            )
 
         if self._price_as.resource_scope:
             self._ingest["resource_scope"] = self._price_as.resource_scope
-        
+
         # override defaults
         if self._price_as.category:
             self._ingest["category"] = self._price_as.category
         if self._price_as.resource:
             self._ingest["resource"] = self._update_resource_name(self._price_as.resource)
 
-        self._instrumentor._logger.debug(f"Processing anthropic request: model {self._ingest['resource']}, category {self._category}")
+        self._instrumentor._logger.debug(
+            f"Processing anthropic request: model {self._ingest['resource']}, category {self._category}"
+        )
 
         messages = kwargs.get("messages")
         if messages:
@@ -309,11 +332,15 @@ class _AnthropicProviderRequest(_ProviderRequest):
         return True
 
     @override
-    def remove_prompt_inline_data(self, prompt: 'dict[str, Any]') -> bool:
+    def remove_prompt_inline_data(self, prompt: "dict[str, Any]") -> bool:
         return anthropic_remove_inline_data(prompt)
 
     @override
-    def process_exception(self, exception: Exception, kwargs: Any, ) -> bool:
+    def process_exception(
+        self,
+        exception: Exception,
+        kwargs: Any,
+    ) -> bool:
         try:
             status_code: Optional[int] = None
 
@@ -323,7 +350,9 @@ class _AnthropicProviderRequest(_ProviderRequest):
                     self._ingest["http_status_code"] = status_code
 
             if not status_code:
-                self.exception_to_semantic_failure(exception,)
+                self.exception_to_semantic_failure(
+                    exception,
+                )
                 return True
 
             if hasattr(exception, "request_id"):
@@ -344,8 +373,9 @@ class _AnthropicProviderRequest(_ProviderRequest):
 
         return True
 
-def anthropic_process_compute_input_cost(request: _ProviderRequest, usage: 'dict[str, Any]') -> int:
-    input = usage.get('input_tokens', 0)
+
+def anthropic_process_compute_input_cost(request: _ProviderRequest, usage: "dict[str, Any]") -> int:
+    input = usage.get("input_tokens", 0)
     units: dict[str, IngestUnits] = request._ingest["units"]
 
     cache_creation_input_tokens = usage.get("cache_creation_input_tokens", 0)
@@ -365,21 +395,22 @@ def anthropic_process_compute_input_cost(request: _ProviderRequest, usage: 'dict
         ephemeral_5m_input_tokens = cache_creation.get("ephemeral_5m_input_tokens", 0)
         if ephemeral_5m_input_tokens > 0:
             textCacheWriteAdded = True
-            units["text_cache_write"+large_context] = IngestUnits(input=ephemeral_5m_input_tokens, output=0)
+            units["text_cache_write" + large_context] = IngestUnits(input=ephemeral_5m_input_tokens, output=0)
 
         ephemeral_1h_input_tokens = cache_creation.get("ephemeral_1h_input_tokens", 0)
         if ephemeral_1h_input_tokens > 0:
             textCacheWriteAdded = True
-            units["text_cache_write_1h"+large_context] = IngestUnits(input=ephemeral_1h_input_tokens, output=0)
+            units["text_cache_write_1h" + large_context] = IngestUnits(input=ephemeral_1h_input_tokens, output=0)
 
     if textCacheWriteAdded is False and cache_creation_input_tokens > 0:
-        units["text_cache_write"+large_context] = IngestUnits(input=cache_creation_input_tokens, output=0)
+        units["text_cache_write" + large_context] = IngestUnits(input=cache_creation_input_tokens, output=0)
 
     cache_read_input_tokens = usage.get("cache_read_input_tokens", 0)
     if cache_read_input_tokens > 0:
-        units["text_cache_read"+large_context] = IngestUnits(input=cache_read_input_tokens, output=0)
+        units["text_cache_read" + large_context] = IngestUnits(input=cache_read_input_tokens, output=0)
 
     return request.update_for_vision(input)
+
 
 def process_inference_geo(request: _ProviderRequest, inference_geo: Optional[str]) -> None:
     if not isinstance(request, _AnthropicProviderRequest):
@@ -389,22 +420,25 @@ def process_inference_geo(request: _ProviderRequest, inference_geo: Optional[str
     if not anthropic_request._is_anthropic_saas:
         return
 
-    if inference_geo and inference_geo not in ('global', 'not_available'):
-        request._ingest["resource_scope"] = f'{PayiResourceScopes.datazone_scope}.{inference_geo}'
+    if inference_geo and inference_geo not in ("global", "not_available"):
+        request._ingest["resource_scope"] = f"{PayiResourceScopes.datazone_scope}.{inference_geo}"
 
-def anthropic_process_synchronous_response(request: _ProviderRequest, response: 'dict[str, Any]', log_prompt_and_response: bool, assign_id: bool) -> Any:
-    usage = response.get('usage', {})
+
+def anthropic_process_synchronous_response(
+    request: _ProviderRequest, response: "dict[str, Any]", log_prompt_and_response: bool, assign_id: bool
+) -> Any:
+    usage = response.get("usage", {})
     units: dict[str, IngestUnits] = request._ingest["units"]
 
     input_tokens = anthropic_process_compute_input_cost(request, usage)
-    output = usage.get('output_tokens', 0)
+    output = usage.get("output_tokens", 0)
 
     large_context = "_large_context" if request._is_large_context else ""
-    units["text"+large_context] = IngestUnits(input=input_tokens, output=output)
+    units["text" + large_context] = IngestUnits(input=input_tokens, output=output)
 
-    process_inference_geo(request, usage.get("inference_geo", ''))
+    process_inference_geo(request, usage.get("inference_geo", ""))
 
-    content = response.get('content', [])
+    content = response.get("content", [])
     if content:
         for c in content:
             if c.get("type", "") != "tool_use":
@@ -414,74 +448,79 @@ def anthropic_process_synchronous_response(request: _ProviderRequest, response: 
             arguments: Optional[str] = None
             if input and isinstance(input, dict):
                 arguments = json.dumps(input, ensure_ascii=False)
-            
+
             if name and arguments:
                 request.add_synchronous_function_call(name=name, arguments=arguments)
 
     if log_prompt_and_response:
         request._ingest["provider_response_json"] = json.dumps(response)
-    
+
     if assign_id:
-        request._ingest["provider_response_id"] = response.get('id', None)
-    
+        request._ingest["provider_response_id"] = response.get("id", None)
+
     web_search_requests = usage.get("server_tool_use", {}).get("web_search_requests", 0)
     if web_search_requests > 0:
         units["web_search_request"] = IngestUnits(output=web_search_requests)
 
     return None
 
-def anthropic_process_chunk(request: _ProviderRequest, chunk: 'dict[str, Any]', assign_id: bool) -> _ChunkResult:    
+
+def anthropic_process_chunk(request: _ProviderRequest, chunk: "dict[str, Any]", assign_id: bool) -> _ChunkResult:
     ingest = False
-    type = chunk.get('type', "")
+    type = chunk.get("type", "")
 
     if type == "message_start":
-        message = chunk['message']
+        message = chunk["message"]
 
         if assign_id:
-            request._ingest["provider_response_id"] = message.get('id', None)
+            request._ingest["provider_response_id"] = message.get("id", None)
 
-        model = message.get('model', None)
-        if model and 'resource' in request._ingest:
-            request._instrumentor._logger.debug(f"Anthropic streaming, reported model: {model}, instrumented model {request._ingest['resource']}")
+        model = message.get("model", None)
+        if model and "resource" in request._ingest:
+            request._instrumentor._logger.debug(
+                f"Anthropic streaming, reported model: {model}, instrumented model {request._ingest['resource']}"
+            )
 
-        usage = message.get('usage', {})
+        usage = message.get("usage", {})
         units = request._ingest["units"]
 
         input = anthropic_process_compute_input_cost(request, usage)
 
         large_context = "_large_context" if request._is_large_context else ""
-        units["text"+large_context] = IngestUnits(input=input, output=0)
+        units["text" + large_context] = IngestUnits(input=input, output=0)
 
-        process_inference_geo(request, usage.get("inference_geo", ''))
+        process_inference_geo(request, usage.get("inference_geo", ""))
 
         request._instrumentor._logger.debug(f"Anthropic streaming captured {input} input tokens, ")
 
     elif type == "message_delta":
-        usage = chunk.get('usage', {})
+        usage = chunk.get("usage", {})
         ingest = True
         large_context = "_large_context" if request._is_large_context else ""
 
         # Web search will return an updated input tokens value at the end of streaming
-        input_tokens = usage.get('input_tokens', None)
+        input_tokens = usage.get("input_tokens", None)
         if input_tokens is not None:
             request._instrumentor._logger.debug(f"Anthropic streaming finished, updated input tokens: {input_tokens}")
-            request._ingest["units"]["text"+large_context]["input"] = input_tokens
+            request._ingest["units"]["text" + large_context]["input"] = input_tokens
 
-        request._ingest["units"]["text"+large_context]["output"] = usage.get('output_tokens', 0)
-        
+        request._ingest["units"]["text" + large_context]["output"] = usage.get("output_tokens", 0)
+
         web_search_requests = usage.get("server_tool_use", {}).get("web_search_requests", 0)
         if web_search_requests > 0:
             request._ingest["units"]["web_search_request"] = IngestUnits(output=web_search_requests)
 
-        request._instrumentor._logger.debug(f"Anthropic streaming finished: output tokens {usage.get('output_tokens', 0)} ")
+        request._instrumentor._logger.debug(
+            f"Anthropic streaming finished: output tokens {usage.get('output_tokens', 0)} "
+        )
 
     elif type == "content_block_start":
         request._building_function_response = False
 
-        content_block = chunk.get('content_block', {})
-        if content_block and content_block.get('type', "") == "tool_use":
-            index = chunk.get('index', None)
-            name = content_block.get('name', "")
+        content_block = chunk.get("content_block", {})
+        if content_block and content_block.get("type", "") == "tool_use":
+            index = chunk.get("index", None)
+            name = content_block.get("name", "")
 
             if index and isinstance(index, int) and name:
                 request._building_function_response = True
@@ -492,7 +531,7 @@ def anthropic_process_chunk(request: _ProviderRequest, chunk: 'dict[str, Any]', 
             delta = chunk.get("delta", {})
             type = delta.get("type", "")
             partial_json = delta.get("partial_json", "")
-            index = chunk.get('index', None)
+            index = chunk.get("index", None)
 
             if index and isinstance(index, int) and type == "input_json_delta" and partial_json:
                 request.add_streaming_function_call(index=index, name=None, arguments=partial_json)
@@ -502,59 +541,62 @@ def anthropic_process_chunk(request: _ProviderRequest, chunk: 'dict[str, Any]', 
 
     else:
         request._instrumentor._logger.debug(f"Anthropic streaming chunk: {type}")
-        
+
     return _ChunkResult(send_chunk_to_caller=True, ingest=ingest)
 
+
 def anthropic_has_image_and_get_texts(request: _ProviderRequest, messages: Any) -> None:
-    estimated_token_count = 0 
+    estimated_token_count = 0
     has_image = False
 
     try:
         enc = tiktoken.get_encoding("cl100k_base")
         for message in messages:
-            msg_has_image, msg_prompt_tokens = has_image_and_get_texts(enc, message.get('content', ''))
+            msg_has_image, msg_prompt_tokens = has_image_and_get_texts(enc, message.get("content", ""))
             if msg_has_image:
                 has_image = True
                 estimated_token_count += msg_prompt_tokens
-        
+
         if has_image and estimated_token_count > 0:
             request._estimated_prompt_tokens = estimated_token_count
 
     except Exception:
         request._instrumentor._logger.info("Anthropic skipping vision token calc, could not load cl100k_base")
 
-def has_image_and_get_texts(encoding: tiktoken.Encoding, content: Union[str, 'list[Any]']) -> 'tuple[bool, int]':
-    if isinstance(content, list): # type: ignore
+
+def has_image_and_get_texts(encoding: tiktoken.Encoding, content: Union[str, "list[Any]"]) -> "tuple[bool, int]":
+    if isinstance(content, list):  # type: ignore
         has_image = any(item.get("type") == "image" for item in content)
         if has_image is False:
             return has_image, 0
-        
+
         token_count = sum(len(encoding.encode(item.get("text", ""))) for item in content if item.get("type") == "text")
         return has_image, token_count
-    
+
     return False, 0
 
-def anthropic_remove_inline_data(prompt: 'dict[str, Any]') -> bool:# noqa: ARG002
+
+def anthropic_remove_inline_data(prompt: "dict[str, Any]") -> bool:  # noqa: ARG002
     messages = prompt.get("messages", [])
     if not messages:
         return False
 
     modified = False
     for message in messages:
-        content = message.get('content', Any)
+        content = message.get("content", Any)
         if not content or not isinstance(content, list):
             continue
 
-        for item in content: # type: ignore
+        for item in content:  # type: ignore
             if not isinstance(item, dict):
                 continue
             # item: dict[str, Any]
-            type = item.get("type", "") # type: ignore
+            type = item.get("type", "")  # type: ignore
             if type != "image":
                 continue
 
-            source = item.get("source", {}) # type: ignore
-            if source.get("type", "") == "base64": # type: ignore
+            source = item.get("source", {})  # type: ignore
+            if source.get("type", "") == "base64":  # type: ignore
                 source["data"] = _PayiInstrumentor._not_instrumented
                 modified = True
 

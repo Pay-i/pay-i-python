@@ -37,11 +37,13 @@ from .ProviderRequest import PriceAs, _StreamingType, _ProviderRequest
 global _g_logger
 _g_logger: logging.Logger = logging.getLogger("payi.instrument")
 
+
 def _qualified_exception_name(exc: BaseException | None) -> str:
     if exc is None:
         return "None"
     exc_type = type(exc)
     return f"{exc_type.__module__}.{exc_type.__qualname__}"
+
 
 def _model_to_dict(model: Any) -> Any:
     if hasattr(model, "model_dump"):
@@ -55,6 +57,7 @@ def _model_to_dict(model: Any) -> Any:
     else:
         return model
 
+
 from .PayiInstrumentOpenAiConfig import PayiInstrumentOpenAiConfig
 from .PayiInstrumentAnthropicConfig import PayiInstrumentAnthropicConfig
 from .PayiInstrumentAwsBedrockConfig import PayiInstrumentAwsBedrockConfig
@@ -64,8 +67,10 @@ from .PayiInstrumentOpenAiAzureConfig import PayiInstrumentOpenAiAzureConfig
 class PayiInstrumentOfflineInstrumentationConfig(TypedDict, total=False):
     file_name: str
 
+
 class PayiInstrumentHostMappingConfig(TypedDict, total=False):
     price_as_category: Optional[str]
+
 
 class PayiInstrumentIngestRetryConfig(TypedDict, total=False):
     max_inline_retries: Optional[int]
@@ -73,6 +78,7 @@ class PayiInstrumentIngestRetryConfig(TypedDict, total=False):
     queue_enabled: Optional[bool]
     queue_max_size: Optional[int]
     queue_interval: Optional[float]
+
 
 class PayiInstrumentConfig(TypedDict, total=False):
     proxy: bool
@@ -95,13 +101,14 @@ class PayiInstrumentConfig(TypedDict, total=False):
     offline_instrumentation: Optional[PayiInstrumentOfflineInstrumentationConfig]
     ingest_retry: Optional[PayiInstrumentIngestRetryConfig]
 
+
 class PayiContext(TypedDict, total=False):
     use_case_name: Optional[str]
     use_case_id: Optional[str]
     use_case_version: Optional[int]
     use_case_step: Optional[str]
     use_case_properties: Optional["dict[str, Optional[str]]"]
-    limit_ids: Optional['list[str]']
+    limit_ids: Optional["list[str]"]
     user_id: Optional[str]
     account_name: Optional[str]
     request_properties: Optional["dict[str, Optional[str]]"]
@@ -111,18 +118,20 @@ class PayiContext(TypedDict, total=False):
     log_prompt_and_response: Optional[bool]
     last_result: Optional[Union[XproxyResult, XproxyError]]
 
+
 class PayiInstanceDefaultContext(TypedDict, total=False):
     use_case_name: Optional[str]
     use_case_id: Optional[str]
     use_case_version: Optional[int]
     use_case_properties: Optional["dict[str, str]"]
-    limit_ids: Optional['list[str]']
+    limit_ids: Optional["list[str]"]
     user_id: Optional[str]
     account_name: Optional[str]
     request_properties: Optional["dict[str, str]"]
     price_as_category: Optional[str]
     price_as_resource: Optional[str]
     resource_scope: Optional[str]
+
 
 class _Context(TypedDict, total=False):
     proxy: Optional[bool]
@@ -131,7 +140,7 @@ class _Context(TypedDict, total=False):
     use_case_version: Optional[int]
     use_case_step: Optional[str]
     use_case_properties: Optional["dict[str, Optional[str]]"]
-    limit_ids: Optional['list[str]']
+    limit_ids: Optional["list[str]"]
     user_id: Optional[str]
     account_name: Optional[str]
     request_properties: Optional["dict[str, Optional[str]]"]
@@ -140,19 +149,23 @@ class _Context(TypedDict, total=False):
     resource_scope: Optional[str]
     log_prompt_and_response: Optional[bool]
 
+
 class _IsStreaming(Enum):
     false = 0
     true = 1
     kwargs = 2
 
+
 class _ThreadLocalContextStorage(threading.local):
     """
     Thread-local storage for context stacks. Each thread gets its own context stack.
-    
+
     Note: We don't use __init__ because threading.local's __init__ semantics are tricky.
     Instead, we lazily initialize the context_stack attribute in the property accessor.
     """
+
     context_stack: "list[_Context]"
+
 
 class _InternalTrackContext:
     def __init__(
@@ -164,7 +177,7 @@ class _InternalTrackContext:
     def __enter__(self) -> Any:
         if not _instrumentor:
             return self
-        
+
         _instrumentor.__enter__()
         _instrumentor._init_current_context(**self._context)
         return self
@@ -172,6 +185,7 @@ class _InternalTrackContext:
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         if _instrumentor:
             _instrumentor.__exit__(exc_type, exc_val, exc_tb)
+
 
 class _PayiInstrumentor:
     _not_instrumented: str = "<not_instrumented>"
@@ -185,7 +199,7 @@ class _PayiInstrumentor:
         log_prompt_and_response: bool = True,
         logger: Optional[logging.Logger] = None,
         global_config: PayiInstrumentConfig = {},
-        caller_filename: str = ""
+        caller_filename: str = "",
     ):
         global _g_logger
         self._logger: logging.Logger = logger if logger else _g_logger
@@ -197,11 +211,11 @@ class _PayiInstrumentor:
         if self._payi:
             _g_logger.debug(f"Pay-i instrumentor initialized with Payi instance: {self._payi}")
         if self._apayi:
-            _g_logger.debug(f"Pay-i instrumentor initialized with AsyncPayi instance: {self._apayi}")            
+            _g_logger.debug(f"Pay-i instrumentor initialized with AsyncPayi instance: {self._apayi}")
 
         # Thread-local storage for context stacks - each thread gets its own stack
         self._thread_local_storage = _ThreadLocalContextStorage()
-        
+
         self._log_prompt_and_response: bool = log_prompt_and_response
 
         self._blocked_limits: set[str] = set()
@@ -224,11 +238,13 @@ class _PayiInstrumentor:
         self._offline_instrumentation = global_config.pop("offline_instrumentation", None)
         self._offline_ingest_packets: list[IngestUnitsParams] = []
         self._offline_instrumentation_file_name: Optional[str] = None
-        
+
         if self._offline_instrumentation is not None:
             timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-            self._offline_instrumentation_file_name = self._offline_instrumentation.get("file_name", f"payi_instrumentation_{timestamp}.json")
-            
+            self._offline_instrumentation_file_name = self._offline_instrumentation.get(
+                "file_name", f"payi_instrumentation_{timestamp}.json"
+            )
+
             # Register exit handler to write packets when process exits
             atexit.register(lambda: self._write_offline_ingest_packets())
 
@@ -238,11 +254,11 @@ class _PayiInstrumentor:
 
         host_mappings = global_config.get("host_mappings", None)
         if host_mappings is not None and len(host_mappings) > 0:
-            for (host, mapping_config) in host_mappings.items():
+            for host, mapping_config in host_mappings.items():
                 if isinstance(host, str):
                     # Add scheme if missing to ensure proper URL parsing
-                    if not host.startswith(('http://', 'https://')):
-                        host = f'https://{host}'
+                    if not host.startswith(("http://", "https://")):
+                        host = f"https://{host}"
                     host = httpx.URL(host)
                 host_name = host.host
 
@@ -257,17 +273,20 @@ class _PayiInstrumentor:
         aws_config = global_config.get("aws_config", None)
         if aws_config:
             from .BedrockInstrumentor import BedrockInstrumentor
+
             BedrockInstrumentor.configure(aws_config=aws_config)
 
         openai_config = global_config.get("openai_config", None) or {}
         azure_openai_config = global_config.get("azure_openai_config", None)
         if openai_config or azure_openai_config:
             from .OpenAIInstrumentor import OpenAiInstrumentor
+
             OpenAiInstrumentor.configure(openai_config=openai_config, azure_openai_config=azure_openai_config)
 
         anthropic_config = global_config.get("anthropic_config", None)
         if anthropic_config:
             from .AnthropicInstrumentor import AnthropicInstrumentor
+
             AnthropicInstrumentor.configure(anthropic_config=anthropic_config)
 
         if instruments is None or "*" in instruments:
@@ -294,10 +313,10 @@ class _PayiInstrumentor:
 
             # Copy allowed keys from global_config into context
             # Dynamically use keys from _Context TypedDict
-            context_keys = list(_Context.__annotations__.keys()) if hasattr(_Context, '__annotations__') else []
+            context_keys = list(_Context.__annotations__.keys()) if hasattr(_Context, "__annotations__") else []
             for key in context_keys:
                 if key in global_config:
-                    context[key] = global_config[key] # type: ignore[literal-required]
+                    context[key] = global_config[key]  # type: ignore[literal-required]
 
             self._init_current_context(**context)
             self._logger.debug(f"Pay-i global instrumented context: {self._create_logged_context(self._context_safe)}")
@@ -326,6 +345,7 @@ class _PayiInstrumentor:
 
     def _instrument_futures(self) -> None:
         """Install hooks for all common concurrent execution patterns."""
+
         def _thread_submit_wrapper(wrapped: Any, instance: Any, args: Any, kwargs: Any) -> Any:
             return self._thread_submit_wrapper(wrapped, instance, args, kwargs)
 
@@ -359,15 +379,13 @@ class _PayiInstrumentor:
         self._instrument_databricks()
 
     def _instrument_specific(self, instruments: Set[str]) -> None:
-        if any(category in instruments for category in (
-            PayiCategories.openai,
-            PayiCategories.azure_openai,
-            PayiCategories.azure)):
+        if any(
+            category in instruments
+            for category in (PayiCategories.openai, PayiCategories.azure_openai, PayiCategories.azure)
+        ):
             self._instrument_openai()
 
-        if any(category in instruments for category in (
-            PayiCategories.anthropic,
-            PayiCategories.azure)):
+        if any(category in instruments for category in (PayiCategories.anthropic, PayiCategories.azure)):
             self._instrument_anthropic()
 
         if PayiCategories.aws_bedrock in instruments:
@@ -377,12 +395,15 @@ class _PayiInstrumentor:
             self._instrument_google_vertex()
             self._instrument_google_genai()
 
-        if any(category in instruments for category in (
-            "system.databricks",
-            PayiCategories.databricks_azure,
-            PayiCategories.databricks_aws,
-            PayiCategories.databricks_google,
-            )):
+        if any(
+            category in instruments
+            for category in (
+                "system.databricks",
+                PayiCategories.databricks_azure,
+                PayiCategories.databricks_aws,
+                PayiCategories.databricks_google,
+            )
+        ):
             self._instrument_databricks()
 
     def _instrument_openai(self) -> None:
@@ -477,10 +498,10 @@ class _PayiInstrumentor:
         # Handle different create_task signatures across Python versions:
         # Python 3.7-3.10: create_task(coro, *, name=None)
         # Python 3.11+: create_task(coro, *, name=None, context=None)
-        
+
         if len(args) > 0:
             coro = args[0]
-            
+
             # Only wrap if it's actually a coroutine object
             if inspect.iscoroutine(coro):
                 # Capture the current context before the task is created
@@ -492,18 +513,18 @@ class _PayiInstrumentor:
                         self._init_current_context(**captured_context)
                         # Await the original coroutine
                         return await coro
-                
+
                 # Create a new coroutine with context preservation
                 wrapped_coro = context_preserving_wrapper()
-                
+
                 # Replace the first argument with our wrapped coroutine
                 new_args = (wrapped_coro,) + args[1:]
-                
+
                 # Call the original create_task with the wrapped coroutine
                 # This works for both Python 3.7-3.10 and 3.11+ because we're
                 # passing through all other args and kwargs unchanged
                 return wrapped(*new_args, **kwargs)
-        
+
         # If not a coroutine or no args, pass through unchanged
         return wrapped(*args, **kwargs)
 
@@ -519,64 +540,70 @@ class _PayiInstrumentor:
         # Python 3.7-3.9: gather(*coros_or_futures, loop=None, return_exceptions=False)
         # Python 3.10+: gather(*coros_or_futures, return_exceptions=False) - loop deprecated
         # Python 3.12+: gather(*coros_or_futures, return_exceptions=False) - loop removed
-        
+
         if not args:
             # No coroutines/futures passed, call original
             return wrapped(*args, **kwargs)
-        
+
         # Capture the current context before wrapping
         captured_context = copy.deepcopy(self._context_safe)
-        
+
         # Wrap each coroutine with context preservation
         wrapped_coros: list[Any] = []
-        
+
         for coro_or_future in args:
             if inspect.iscoroutine(coro_or_future):
                 # Create a wrapper coroutine that preserves context
                 # We need to capture coro_or_future in a closure properly
-                async def context_preserving_wrapper(coro: Any = coro_or_future, ctx: _Context = captured_context) -> Any:
+                async def context_preserving_wrapper(
+                    coro: Any = coro_or_future, ctx: _Context = captured_context
+                ) -> Any:
                     with self:
                         self._init_current_context(**ctx)
                         return await coro
-                
+
                 wrapped_coros.append(context_preserving_wrapper())
             else:
                 # Futures, Tasks, or other awaitables - pass through unchanged
                 # They already have their execution context bound
                 wrapped_coros.append(coro_or_future)
-        
+
         # Call the original gather with wrapped coroutines
         # Pass through all kwargs (return_exceptions, and loop for older Python versions)
         return wrapped(*wrapped_coros, **kwargs)
-        
+
     def _write_offline_ingest_packets(self) -> None:
         if not self._offline_instrumentation_file_name or not self._offline_ingest_packets:
             return
-            
+
         try:
             # Convert datetime objects to ISO strings for JSON serialization
             serializable_packets: list[IngestUnitsParams] = []
             for packet in self._offline_ingest_packets:
                 serializable_packet = packet.copy()
-                
+
                 # Convert datetime fields to ISO format strings
-                if 'event_timestamp' in serializable_packet and isinstance(serializable_packet['event_timestamp'], datetime):
-                    serializable_packet['event_timestamp'] = serializable_packet['event_timestamp'].isoformat()
-                    
+                if "event_timestamp" in serializable_packet and isinstance(
+                    serializable_packet["event_timestamp"], datetime
+                ):
+                    serializable_packet["event_timestamp"] = serializable_packet["event_timestamp"].isoformat()
+
                 serializable_packets.append(serializable_packet)
-            
-            with open(self._offline_instrumentation_file_name, 'w', encoding='utf-8') as f:
+
+            with open(self._offline_instrumentation_file_name, "w", encoding="utf-8") as f:
                 json.dump(serializable_packets, f)
-                
-            self._logger.debug(f"Written {len(self._offline_ingest_packets)} ingest packets to {self._offline_instrumentation_file_name}")
-            
+
+            self._logger.debug(
+                f"Written {len(self._offline_ingest_packets)} ingest packets to {self._offline_instrumentation_file_name}"
+            )
+
         except Exception as e:
-            self._logger.error(f"Error writing offline ingest packets to {self._offline_instrumentation_file_name}: {e}")
+            self._logger.error(
+                f"Error writing offline ingest packets to {self._offline_instrumentation_file_name}: {e}"
+            )
 
     @staticmethod
-    def _create_logged_context(
-            context: _Context
-    ) -> dict[str, Any]:
+    def _create_logged_context(context: _Context) -> dict[str, Any]:
         return {k: v for k, v in context.items() if v is not None}
 
     @staticmethod
@@ -585,26 +612,30 @@ class _PayiInstrumentor:
     ) -> IngestUnitsParams:
         # remove large and potentially sensitive data from the log
         log_ingest_units: IngestUnitsParams = ingest_units.copy()
-        
-        log_ingest_units.pop('provider_request_json', None)
-        log_ingest_units.pop('provider_response_json', None)
+
+        log_ingest_units.pop("provider_request_json", None)
+        log_ingest_units.pop("provider_response_json", None)
 
         # Pop system.stack_trace from properties if it exists
-        if 'properties' in log_ingest_units and isinstance(log_ingest_units['properties'], dict) and 'system.stack_trace' in log_ingest_units['properties']:
-            properties = log_ingest_units['properties'].copy()
-            properties.pop('system.stack_trace')
-            log_ingest_units['properties'] = properties
+        if (
+            "properties" in log_ingest_units
+            and isinstance(log_ingest_units["properties"], dict)
+            and "system.stack_trace" in log_ingest_units["properties"]
+        ):
+            properties = log_ingest_units["properties"].copy()
+            properties.pop("system.stack_trace")
+            log_ingest_units["properties"] = properties
 
         return log_ingest_units
-        
-    def _after_invoke_update_request(
-        self,
-        request: _ProviderRequest) -> 'dict[str, str]':
+
+    def _after_invoke_update_request(self, request: _ProviderRequest) -> "dict[str, str]":
         ingest_units = request._ingest
 
-        extra_headers: 'dict[str, str]' = {}
+        extra_headers: "dict[str, str]" = {}
         if request._module_version:
-            extra_headers[_PayiInstrumentor._instrumented_module_header_name] = f'{request._module_name}/{request._module_version}'
+            extra_headers[_PayiInstrumentor._instrumented_module_header_name] = (
+                f"{request._module_name}/{request._module_version}"
+            )
 
         if request._function_call_builder:
             # convert the function call builder to a list of function calls
@@ -613,13 +644,13 @@ class _PayiInstrumentor:
         if "provider_response_id" not in ingest_units or not ingest_units["provider_response_id"]:
             ingest_units["provider_response_id"] = f"payi_{uuid.uuid4()}"
 
-        if 'resource' not in ingest_units or ingest_units['resource'] == '':
-            ingest_units['resource'] = "system.unknown_model"
+        if "resource" not in ingest_units or ingest_units["resource"] == "":
+            ingest_units["resource"] = "system.unknown_model"
 
         request.merge_internal_request_properties()
 
         if self._instrument_inline_data is False:
-            request_json = ingest_units.get('provider_request_json', "")
+            request_json = ingest_units.get("provider_request_json", "")
             if request_json:
                 try:
                     prompt_dict: dict[str, Any] = json.loads(request_json) if request_json else {}
@@ -627,12 +658,12 @@ class _PayiInstrumentor:
                     if request.remove_prompt_inline_data(prompt_dict):
                         self._logger.debug(f"Removed inline data from provider_request_json")
                         # store the modified dict back as JSON string
-                        ingest_units['provider_request_json'] = _compact_json(prompt_dict)
+                        ingest_units["provider_request_json"] = _compact_json(prompt_dict)
 
                 except Exception as e:
                     self._logger.error(f"Error serializing provider_request_json: {e}")
 
-            response_json: Union[str, SequenceNotStr[str], None] = ingest_units.get('provider_response_json', None)
+            response_json: Union[str, SequenceNotStr[str], None] = ingest_units.get("provider_response_json", None)
             if response_json:
                 try:
                     responses: list[dict[str, Any]] = []
@@ -644,7 +675,11 @@ class _PayiInstrumentor:
                     if request.remove_responses_inline_data(responses):
                         self._logger.debug(f"Removed inline data from provider_response_json")
                         # store the modified list back as JSON string
-                        ingest_units['provider_response_json'] = _compact_json(responses[0]) if len(responses) == 1 else [_compact_json(r) for r in responses]
+                        ingest_units["provider_response_json"] = (
+                            _compact_json(responses[0])
+                            if len(responses) == 1
+                            else [_compact_json(r) for r in responses]
+                        )
 
                 except Exception as e:
                     self._logger.error(f"Error serializing provider_request_json: {e}")
@@ -652,16 +687,20 @@ class _PayiInstrumentor:
         if int(ingest_units.get("http_status_code") or 0) < 400:
             units = ingest_units.get("units", {})
             if not units or all(unit.get("input", 0) == 0 and unit.get("output", 0) == 0 for unit in units.values()):
-                self._logger.info('ingesting with no token counts')
-        
+                self._logger.info("ingesting with no token counts")
+
         return extra_headers
 
     def _create_query_parms(self, request: _ProviderRequest) -> Optional[dict[str, str]]:
         provider_response_id = request._ingest.get("provider_response_id", None)
-        return { "id": provider_response_id } if provider_response_id else None
-    
+        return {"id": provider_response_id} if provider_response_id else None
+
     def _process_ingest_units_response(self, ingest_response: IngestResponse) -> None:
-        if ingest_response.xproxy_result and ingest_response.xproxy_result.warnings and self._logger.isEnabledFor(logging.WARNING):
+        if (
+            ingest_response.xproxy_result
+            and ingest_response.xproxy_result.warnings
+            and self._logger.isEnabledFor(logging.WARNING)
+        ):
             warning_message = "\n".join(ingest_response.xproxy_result.warnings)
             self._logger.warning(f"Pay-i ingest result warnings:\n{warning_message}")
 
@@ -691,7 +730,9 @@ class _PayiInstrumentor:
                 append = f", {self._api_connection_error_count} APIConnectionError exceptions in the last {self._api_connection_error_window} seconds"
 
             # Log the current error
-            self._logger.error(f"Error Pay-i ingesting: connection exception {e}, cause {_qualified_exception_name(e.__cause__)}, request {ingest_units}{append}")
+            self._logger.error(
+                f"Error Pay-i ingesting: connection exception {e}, cause {_qualified_exception_name(e.__cause__)}, request {ingest_units}{append}"
+            )
             self._api_connection_error_last_log_time = now
             self._api_connection_error_count = 0
         else:
@@ -714,24 +755,31 @@ class _PayiInstrumentor:
                 self._logger.debug(f"_aingest_units: sending ({self._create_logged_ingest_units(ingest_units)})")
 
             if self._apayi:
-                ingest_response = await self._retry_manager.aingest_with_inline_retry(ingest_units=ingest_units, extra_headers=extra_headers, query=query)
+                ingest_response = await self._retry_manager.aingest_with_inline_retry(
+                    ingest_units=ingest_units, extra_headers=extra_headers, query=query
+                )
             elif self._payi:
-                ingest_response = self._retry_manager.ingest_with_inline_retry(ingest_units=ingest_units, extra_headers=extra_headers, query=query)
+                ingest_response = self._retry_manager.ingest_with_inline_retry(
+                    ingest_units=ingest_units, extra_headers=extra_headers, query=query
+                )
             elif self._offline_instrumentation is not None:
                 self._offline_ingest_packets.append(ingest_units.copy())
 
                 # simulate a successful ingest for local instrumentation
-                now=datetime.now(timezone.utc)
+                now = datetime.now(timezone.utc)
                 ingest_response = IngestResponse(
                     event_timestamp=now,
                     ingest_timestamp=now,
                     request_id="local_instrumentation",
-                    xproxy_result=XproxyResult(request_id="local_instrumentation"))
+                    xproxy_result=XproxyResult(request_id="local_instrumentation"),
+                )
                 pass
 
             else:
                 self._logger.error("No payi instance to ingest units")
-                return XproxyError(code="configuration_error", message="No Payi or AsyncPayi instance configured for ingesting units")
+                return XproxyError(
+                    code="configuration_error", message="No Payi or AsyncPayi instance configured for ingesting units"
+                )
 
             self._logger.debug(f"_aingest_units: success ({ingest_response})")
 
@@ -742,14 +790,21 @@ class _PayiInstrumentor:
 
         except (APIConnectionError, APIStatusError) as api_ex:
             if is_retryable_connection_error(api_ex):
-                if self._retry_manager.enqueue_failed_ingest(ingest_units=ingest_units, extra_headers=extra_headers, query=query, api_ex=api_ex):
-                    return XproxyError(code="ingest_retry_enqueued", message="Ingest request enqueued for retry due to connection error")
+                if self._retry_manager.enqueue_failed_ingest(
+                    ingest_units=ingest_units, extra_headers=extra_headers, query=query, api_ex=api_ex
+                ):
+                    return XproxyError(
+                        code="ingest_retry_enqueued",
+                        message="Ingest request enqueued for retry due to connection error",
+                    )
             if isinstance(api_ex, APIConnectionError):
                 return self._process_ingest_connection_error(api_ex, ingest_units)
             return self._process_api_status_error(api_ex)
 
         except Exception as ex:
-            self._logger.error(f"Error Pay-i async ingesting: exception {ex}, cause {_qualified_exception_name(ex.__cause__)}, request {ingest_units}")
+            self._logger.error(
+                f"Error Pay-i async ingesting: exception {ex}, cause {_qualified_exception_name(ex.__cause__)}, request {ingest_units}"
+            )
             return XproxyError(code="unknown_error", message=str(ex))
 
     async def _aingest_units(self, request: _ProviderRequest) -> Optional[Union[XproxyResult, XproxyError]]:
@@ -763,14 +818,18 @@ class _PayiInstrumentor:
             loop = asyncio.get_running_loop()
         except RuntimeError:
             loop = None
-        
+
         try:
             if loop and loop.is_running():
-                nest_asyncio.apply(loop) # type: ignore
-                asyncio.run(self._apayi.use_cases.definitions.create(name=use_case_name, description=use_case_description))                
+                nest_asyncio.apply(loop)  # type: ignore
+                asyncio.run(
+                    self._apayi.use_cases.definitions.create(name=use_case_name, description=use_case_description)
+                )
             else:
                 # When there's no running loop, create a new one
-                asyncio.run(self._apayi.use_cases.definitions.create(name=use_case_name, description=use_case_description))
+                asyncio.run(
+                    self._apayi.use_cases.definitions.create(name=use_case_name, description=use_case_description)
+                )
         except Exception as e:
             self._logger.error(f"Error calling async use_cases.definitions.create synchronously: {e}")
 
@@ -779,10 +838,10 @@ class _PayiInstrumentor:
             loop = asyncio.get_running_loop()
         except RuntimeError:
             loop = None
-        
+
         try:
             if loop and loop.is_running():
-                nest_asyncio.apply(loop) # type: ignore
+                nest_asyncio.apply(loop)  # type: ignore
                 return asyncio.run(self._aingest_units(request))
             else:
                 # When there's no running loop, create a new one
@@ -790,7 +849,7 @@ class _PayiInstrumentor:
         except Exception as e:
             self._logger.error(f"Error calling aingest_units synchronously: {e}")
         return None
-        
+
     def _process_api_status_error(self, e: APIStatusError) -> Optional[XproxyError]:
         try:
             body_dict: dict[str, Any] = {}
@@ -805,7 +864,7 @@ class _PayiInstrumentor:
             if isinstance(body, bytes):
                 body = body.decode("utf-8")
             if isinstance(body, dict):
-                body_dict = body # type: ignore
+                body_dict = body  # type: ignore
             else:
                 body = str(body)
 
@@ -813,8 +872,10 @@ class _PayiInstrumentor:
                 try:
                     body_dict = json.loads(body)  # type: ignore
                 except Exception:
-                    body_type = type(body).__name__ # type: ignore
-                    self._logger.warning(f"Pay-i ingest exception {e}, status {e.status_code} cannot parse response JSON body for body type {body_type}")
+                    body_type = type(body).__name__  # type: ignore
+                    self._logger.warning(
+                        f"Pay-i ingest exception {e}, status {e.status_code} cannot parse response JSON body for body type {body_type}"
+                    )
                     return XproxyError(code="invalid_json", message=str(e))
 
             xproxy_error = body_dict.get("xproxy_error", {})
@@ -823,7 +884,9 @@ class _PayiInstrumentor:
             return XproxyError(code=code, message=message)
 
         except Exception as ex:
-            self._logger.warning(f"Pay-i ingest exception {e}, status {e.status_code} processing handled exception {ex}")
+            self._logger.warning(
+                f"Pay-i ingest exception {e}, status {e.status_code} processing handled exception {ex}"
+            )
             return XproxyError(code="exception", message=str(ex))
 
     def _ingest_units_worker(self, request: _ProviderRequest) -> Optional[Union[XproxyResult, XproxyError]]:
@@ -834,13 +897,15 @@ class _PayiInstrumentor:
 
         extra_headers = self._after_invoke_update_request(request)
         query = self._create_query_parms(request)
-        
+
         try:
             if self._payi:
                 if self._logger.isEnabledFor(logging.DEBUG):
                     self._logger.debug(f"_ingest_units: sending ({self._create_logged_ingest_units(ingest_units)})")
 
-                ingest_response = self._retry_manager.ingest_with_inline_retry(ingest_units=ingest_units, extra_headers=extra_headers, query=query)
+                ingest_response = self._retry_manager.ingest_with_inline_retry(
+                    ingest_units=ingest_units, extra_headers=extra_headers, query=query
+                )
                 self._logger.debug(f"_ingest_units: success ({ingest_response})")
 
                 self._process_ingest_units_response(ingest_response)
@@ -859,18 +924,27 @@ class _PayiInstrumentor:
 
             else:
                 self._logger.error("No payi instance to ingest units")
-                return XproxyError(code="configuration_error", message="No Payi or AsyncPayi instance configured for ingesting units")
+                return XproxyError(
+                    code="configuration_error", message="No Payi or AsyncPayi instance configured for ingesting units"
+                )
 
         except (APIConnectionError, APIStatusError) as api_ex:
             if is_retryable_connection_error(api_ex):
-                if self._retry_manager.enqueue_failed_ingest(ingest_units=ingest_units, extra_headers=extra_headers, query=query, api_ex=api_ex):
-                    return XproxyError(code="ingest_retry_enqueued", message="Ingest request enqueued for retry due to connection error")
+                if self._retry_manager.enqueue_failed_ingest(
+                    ingest_units=ingest_units, extra_headers=extra_headers, query=query, api_ex=api_ex
+                ):
+                    return XproxyError(
+                        code="ingest_retry_enqueued",
+                        message="Ingest request enqueued for retry due to connection error",
+                    )
             if isinstance(api_ex, APIConnectionError):
                 return self._process_ingest_connection_error(api_ex, ingest_units)
             return self._process_api_status_error(api_ex)
 
         except Exception as ex:
-            self._logger.error(f"Error Pay-i async ingesting: exception {ex}, cause {_qualified_exception_name(ex.__cause__)}, request {ingest_units}")
+            self._logger.error(
+                f"Error Pay-i async ingesting: exception {ex}, cause {_qualified_exception_name(ex.__cause__)}, request {ingest_units}"
+            )
             return XproxyError(code="unknown_error", message=str(ex))
 
     def _ingest_units(self, request: _ProviderRequest) -> Optional[Union[XproxyResult, XproxyError]]:
@@ -879,22 +953,18 @@ class _PayiInstrumentor:
     @property
     def _context_stack(self) -> "list[_Context]":
         """
-        Get the thread-local context stack. On first access per thread, 
+        Get the thread-local context stack. On first access per thread,
         initializes with the current state of the main thread's context stack.
         """
         # Lazy-initialize the context_stack for this thread if it doesn't exist
-        if not hasattr(self._thread_local_storage, 'context_stack'):
+        if not hasattr(self._thread_local_storage, "context_stack"):
             self._thread_local_storage.context_stack = []
-        
+
         stack = self._thread_local_storage.context_stack
 
-        
         return stack
 
-    def _setup_call_func(
-        self
-        ) -> _Context:
-
+    def _setup_call_func(self) -> _Context:
         if len(self._context_stack) > 0:
             # copy current context into the upcoming context
             return self._context_stack[-1].copy()
@@ -910,9 +980,11 @@ class _PayiInstrumentor:
             return None
         else:
             return value
-        
+
     @staticmethod
-    def _valid_properties_or_none(value: Optional["dict[str, Optional[str]]"], default: Optional["dict[str, Optional[str]]"] = None) -> Optional["dict[str, Optional[str]]"]:
+    def _valid_properties_or_none(
+        value: Optional["dict[str, Optional[str]]"], default: Optional["dict[str, Optional[str]]"] = None
+    ) -> Optional["dict[str, Optional[str]]"]:
         if value is None:
             return default.copy() if default else None
         elif len(value) == 0:
@@ -930,29 +1002,30 @@ class _PayiInstrumentor:
         self,
         proxy: Optional[bool] = None,
         limit_ids: Optional["list[str]"] = None,
-        use_case_name: Optional[str]= None,
-        use_case_id: Optional[str]= None,
-        use_case_version: Optional[int]= None,
-        use_case_step: Optional[str]= None,
-        user_id: Optional[str]= None,
-        account_name: Optional[str]= None,
+        use_case_name: Optional[str] = None,
+        use_case_id: Optional[str] = None,
+        use_case_version: Optional[int] = None,
+        use_case_step: Optional[str] = None,
+        user_id: Optional[str] = None,
+        account_name: Optional[str] = None,
         log_prompt_and_response: Optional[bool] = None,
         request_properties: Optional["dict[str, Optional[str]]"] = None,
         use_case_properties: Optional["dict[str, Optional[str]]"] = None,
         price_as_category: Optional[str] = None,
         price_as_resource: Optional[str] = None,
         resource_scope: Optional[str] = None,
-        ) -> None:
-
+    ) -> None:
         # there will always be a current context
-        context: _Context = self._context # type: ignore
+        context: _Context = self._context  # type: ignore
         parent_context: _Context = self._context_stack[-2] if len(self._context_stack) > 1 else {}
 
         parent_proxy = parent_context.get("proxy", self._proxy_default)
         context["proxy"] = proxy if proxy is not None else parent_proxy
 
         parent_log_prompt_and_response = parent_context.get("log_prompt_and_response", None)
-        context["log_prompt_and_response"] = log_prompt_and_response if log_prompt_and_response is not None else parent_log_prompt_and_response
+        context["log_prompt_and_response"] = (
+            log_prompt_and_response if log_prompt_and_response is not None else parent_log_prompt_and_response
+        )
 
         parent_use_case_name = parent_context.get("use_case_name", None)
         parent_use_case_id = parent_context.get("use_case_id", None)
@@ -980,9 +1053,9 @@ class _PayiInstrumentor:
             else:
                 context["use_case_name"] = use_case_name
 
-                # Different use case name, use specified ID or generate one. 
+                # Different use case name, use specified ID or generate one.
                 # By assigning to a new value to parent_use_case_id we keep the assignment logic below simple and consistent with
-                # assign the caller's use_case_id if specified or the newly generated one. 
+                # assign the caller's use_case_id if specified or the newly generated one.
                 # The use case id stored in the parent context is not mutated.
                 parent_use_case_id = str(uuid.uuid4())
 
@@ -990,11 +1063,13 @@ class _PayiInstrumentor:
 
         if assign_use_case_values:
             context["use_case_version"] = use_case_version if use_case_version is not None else parent_use_case_version
-            context["use_case_id"] =  self._valid_str_or_none(value=use_case_id, default=parent_use_case_id)
+            context["use_case_id"] = self._valid_str_or_none(value=use_case_id, default=parent_use_case_id)
             context["use_case_step"] = self._valid_str_or_none(value=use_case_step, default=parent_use_case_step)
 
             parent_use_case_properties = parent_context.get("use_case_properties", None)
-            context["use_case_properties"] = self._valid_properties_or_none(value=use_case_properties, default=parent_use_case_properties)
+            context["use_case_properties"] = self._valid_properties_or_none(
+                value=use_case_properties, default=parent_use_case_properties
+            )
 
         parent_limit_ids = parent_context.get("limit_ids", None)
         if limit_ids is None:
@@ -1005,7 +1080,9 @@ class _PayiInstrumentor:
             context["limit_ids"] = None
         else:
             # union of new and parent lists if the parent context contains limit ids
-            context["limit_ids"] = list(set(limit_ids) | set(parent_limit_ids)) if parent_limit_ids else limit_ids.copy()
+            context["limit_ids"] = (
+                list(set(limit_ids) | set(parent_limit_ids)) if parent_limit_ids else limit_ids.copy()
+            )
 
         parent_user_id = parent_context.get("user_id", None)
         context["user_id"] = self._valid_str_or_none(value=user_id, default=parent_user_id)
@@ -1014,17 +1091,23 @@ class _PayiInstrumentor:
         context["account_name"] = self._valid_str_or_none(value=account_name, default=parent_account_name)
 
         parent_request_properties = parent_context.get("request_properties", None)
-        context["request_properties"] = self._valid_properties_or_none(value=request_properties, default=parent_request_properties)
+        context["request_properties"] = self._valid_properties_or_none(
+            value=request_properties, default=parent_request_properties
+        )
 
         parent_price_as_category = parent_context.get("price_as_category", None)
-        context["price_as_category"] = self._valid_str_or_none(value=price_as_category, default=parent_price_as_category)
+        context["price_as_category"] = self._valid_str_or_none(
+            value=price_as_category, default=parent_price_as_category
+        )
 
         parent_price_as_resource = parent_context.get("price_as_resource", None)
-        context["price_as_resource"] = self._valid_str_or_none(value=price_as_resource, default=parent_price_as_resource)
+        context["price_as_resource"] = self._valid_str_or_none(
+            value=price_as_resource, default=parent_price_as_resource
+        )
 
         parent_resource_scope = parent_context.get("resource_scope", None)
         context["resource_scope"] = self._valid_str_or_none(value=resource_scope, default=parent_resource_scope)
-        
+
     async def _acall_func(
         self,
         func: Any,
@@ -1032,7 +1115,7 @@ class _PayiInstrumentor:
         limit_ids: Optional["list[str]"],
         use_case_name: Optional[str],
         use_case_id: Optional[str],
-        use_case_version: Optional[int],        
+        use_case_version: Optional[int],
         user_id: Optional[str],
         account_name: Optional[str],
         request_properties: Optional["dict[str, Optional[str]]"] = None,
@@ -1063,7 +1146,7 @@ class _PayiInstrumentor:
         limit_ids: Optional["list[str]"],
         use_case_name: Optional[str],
         use_case_id: Optional[str],
-        use_case_version: Optional[int],        
+        use_case_version: Optional[int],
         user_id: Optional[str],
         account_name: Optional[str],
         request_properties: Optional["dict[str, Optional[str]]"] = None,
@@ -1083,7 +1166,8 @@ class _PayiInstrumentor:
                 account_name=account_name,
                 request_properties=request_properties,
                 use_case_properties=use_case_properties,
-                log_prompt_and_response=log_prompt_and_response,)
+                log_prompt_and_response=log_prompt_and_response,
+            )
             return func(*args, **kwargs)
 
     def __enter__(self) -> Any:
@@ -1110,17 +1194,20 @@ class _PayiInstrumentor:
         context = self._context_safe
 
         return PriceAs(
-            category=extra_headers.pop(PayiHeaderNames.price_as_category, None) or context.get("price_as_category", None),
-            resource=extra_headers.pop(PayiHeaderNames.price_as_resource, None) or context.get("price_as_resource", None),
-            resource_scope=extra_headers.pop(PayiHeaderNames.resource_scope, None) or context.get("resource_scope", None),
+            category=extra_headers.pop(PayiHeaderNames.price_as_category, None)
+            or context.get("price_as_category", None),
+            resource=extra_headers.pop(PayiHeaderNames.price_as_resource, None)
+            or context.get("price_as_resource", None),
+            resource_scope=extra_headers.pop(PayiHeaderNames.resource_scope, None)
+            or context.get("resource_scope", None),
         )
 
     def _before_invoke_update_request(
         self,
         request: _ProviderRequest,
-        ingest_extra_headers: "dict[str, str]", # do not conflict with potential kwargs["extra_headers"]
+        ingest_extra_headers: "dict[str, str]",  # do not conflict with potential kwargs["extra_headers"]
         args: Sequence[Any],
-        kwargs: 'dict[str, Any]',
+        kwargs: "dict[str, Any]",
     ) -> None:
         limit_ids = ingest_extra_headers.pop(PayiHeaderNames.limit_ids, None)
 
@@ -1160,7 +1247,9 @@ class _PayiInstrumentor:
             request._ingest["use_case_properties"] = json.loads(use_case_properties)
 
         if len(ingest_extra_headers) > 0:
-            request._ingest["provider_request_headers"] = [PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) for k, v in ingest_extra_headers.items()]
+            request._ingest["provider_request_headers"] = [
+                PayICommonModelsAPIRouterHeaderInfoParam(name=k, value=v) for k, v in ingest_extra_headers.items()
+            ]
 
         provider_prompt: "dict[str, Any]" = {}
         for k, v in kwargs.items():
@@ -1192,7 +1281,7 @@ class _PayiInstrumentor:
         wrapped: Any,
         instance: Any,
         args: Sequence[Any],
-        kwargs: 'dict[str, Any]',
+        kwargs: "dict[str, Any]",
     ) -> Any:
         self._logger.debug(f"async_invoke_wrapper: instance {instance}, category {request._category}")
 
@@ -1200,7 +1289,7 @@ class _PayiInstrumentor:
 
         # Bedrock client does not have an async method
 
-        if not context:   
+        if not context:
             self._logger.debug(f"async_invoke_wrapper: no instrumentation context, exit early")
 
             # wrapped function invoked outside of decorator scope
@@ -1224,7 +1313,7 @@ class _PayiInstrumentor:
             self._logger.debug(f"async_invoke_wrapper: sending proxy request")
 
             return await wrapped(*args, **kwargs)
-        
+
         request._price_as = self._extract_price_as(extra_headers)
         if not request.supports_extra_headers and "extra_headers" in kwargs:
             kwargs.pop("extra_headers", None)
@@ -1233,14 +1322,14 @@ class _PayiInstrumentor:
         # f_back excludes the current frame, strip() cleans up whitespace and newlines
         stack = [frame.strip() for frame in traceback.format_stack(current_frame.f_back)]  # type: ignore
 
-        request.add_internal_request_property('system.stack_trace', _compact_json(stack))
+        request.add_internal_request_property("system.stack_trace", _compact_json(stack))
 
         if request.process_request(instance, args, kwargs) is False:
             self._logger.debug(f"async_invoke_wrapper: calling wrapped instance")
             return await wrapped(*args, **kwargs)
 
         stream: bool = False
-        
+
         if is_streaming == _IsStreaming.kwargs:
             stream = kwargs.get("stream", False)
         elif is_streaming == _IsStreaming.true:
@@ -1278,7 +1367,7 @@ class _PayiInstrumentor:
                     instance=instance,
                     instrumentor=self,
                     request=request,
-                    )
+                )
             elif request.streaming_type == _StreamingType.stream_manager:
                 return _StreamManagerWrapper(
                     stream_manager=response,
@@ -1320,7 +1409,7 @@ class _PayiInstrumentor:
         wrapped: Any,
         instance: Any,
         args: Sequence[Any],
-        kwargs: 'dict[str, Any]',
+        kwargs: "dict[str, Any]",
     ) -> Any:
         self._logger.debug(f"invoke_wrapper: instance {instance}, category {request._category}")
 
@@ -1357,19 +1446,19 @@ class _PayiInstrumentor:
         request._price_as = self._extract_price_as(extra_headers)
         if not request.supports_extra_headers and "extra_headers" in kwargs:
             kwargs.pop("extra_headers", None)
-        
+
         current_frame = inspect.currentframe()
         # f_back excludes the current frame, strip() cleans up whitespace and newlines
         stack = [frame.strip() for frame in traceback.format_stack(current_frame.f_back)]  # type: ignore
 
-        request.add_internal_request_property('system.stack_trace', _compact_json(stack))
+        request.add_internal_request_property("system.stack_trace", _compact_json(stack))
 
         if request.process_request(instance, args, kwargs) is False:
             self._logger.debug(f"invoke_wrapper: calling wrapped instance")
             return wrapped(*args, **kwargs)
 
         stream: bool = False
-        
+
         if is_streaming == _IsStreaming.kwargs:
             stream = kwargs.get("stream", False)
         elif is_streaming == _IsStreaming.true:
@@ -1387,7 +1476,7 @@ class _PayiInstrumentor:
 
             request.stopwatch.start()
             response = wrapped(*args, **kwargs)
-            
+
         except Exception as e:  # pylint: disable=broad-except
             request.stopwatch.stop()
             duration = request.stopwatch.elapsed_ms_int()
@@ -1430,7 +1519,7 @@ class _PayiInstrumentor:
                     else:
                         response["stream"] = stream_result
                     return response
-                
+
                 return stream_result
 
         request.stopwatch.stop()
@@ -1452,9 +1541,7 @@ class _PayiInstrumentor:
         self._logger.debug(f"invoke_wrapper: finished")
         return response
 
-    def _create_extra_headers(
-        self
-    ) -> 'dict[str, str]':
+    def _create_extra_headers(self) -> "dict[str, str]":
         extra_headers: dict[str, str] = {}
         context = self._context
         if context:
@@ -1462,7 +1549,9 @@ class _PayiInstrumentor:
 
         return extra_headers
 
-    def set_xproxy_result(self, response: Optional[Union[XproxyResult, XproxyError]]) -> Optional[Union[XproxyResult, XproxyError]]:
+    def set_xproxy_result(
+        self, response: Optional[Union[XproxyResult, XproxyError]]
+    ) -> Optional[Union[XproxyResult, XproxyError]]:
         self._last_result = response
         return response
 
@@ -1500,11 +1589,17 @@ class _PayiInstrumentor:
             else:
                 # leave the value in extra_headers
                 if proxy:
-                        # if proxy is enabled, base64 encode
-                    extra_headers[PayiHeaderNames.request_properties] = base64.b64encode(headers_request_properties.encode()).decode()
+                    # if proxy is enabled, base64 encode
+                    extra_headers[PayiHeaderNames.request_properties] = base64.b64encode(
+                        headers_request_properties.encode()
+                    ).decode()
         elif context_request_properties:
             context_request_properties_json = _compact_json(context_request_properties)
-            extra_headers[PayiHeaderNames.request_properties] = context_request_properties_json if not proxy else base64.b64encode(context_request_properties_json.encode()).decode()
+            extra_headers[PayiHeaderNames.request_properties] = (
+                context_request_properties_json
+                if not proxy
+                else base64.b64encode(context_request_properties_json.encode()).decode()
+            )
 
         if PayiHeaderNames.use_case_properties in extra_headers:
             headers_use_case_properties = extra_headers.get(PayiHeaderNames.use_case_properties, None)
@@ -1516,10 +1611,16 @@ class _PayiInstrumentor:
                 # leave the value in extra_headers
                 if proxy:
                     # if proxy is enabled, base64 encode
-                    extra_headers[PayiHeaderNames.use_case_properties] = base64.b64encode(headers_use_case_properties.encode()).decode()
+                    extra_headers[PayiHeaderNames.use_case_properties] = base64.b64encode(
+                        headers_use_case_properties.encode()
+                    ).decode()
         elif context_use_case_properties:
             context_use_case_properties_json = _compact_json(context_use_case_properties)
-            extra_headers[PayiHeaderNames.use_case_properties] = context_use_case_properties_json if not proxy else base64.b64encode(context_use_case_properties_json.encode()).decode()
+            extra_headers[PayiHeaderNames.use_case_properties] = (
+                context_use_case_properties_json
+                if not proxy
+                else base64.b64encode(context_use_case_properties_json.encode()).decode()
+            )
 
         # If the caller specifies limit_ids in extra_headers, it takes precedence over the decorator
         if PayiHeaderNames.limit_ids in extra_headers:
@@ -1528,7 +1629,7 @@ class _PayiInstrumentor:
             if not headers_limit_ids:
                 # headers_limit_ids is empty, remove it from extra_headers
                 extra_headers.pop(PayiHeaderNames.limit_ids, None)
-            else:   
+            else:
                 # leave the value in extra_headers
                 ...
         elif context_limit_ids:
@@ -1585,7 +1686,11 @@ class _PayiInstrumentor:
         if PayiHeaderNames.resource_scope not in extra_headers and context_resource_scope:
             extra_headers[PayiHeaderNames.resource_scope] = context_resource_scope
 
-        if PayiHeaderNames.logging_disable not in extra_headers and context_log_prompt_and_response is not None and context_log_prompt_and_response is False:
+        if (
+            PayiHeaderNames.logging_disable not in extra_headers
+            and context_log_prompt_and_response is not None
+            and context_log_prompt_and_response is False
+        ):
             extra_headers[PayiHeaderNames.logging_disable] = "True"
 
     @staticmethod
@@ -1620,12 +1725,14 @@ class _PayiInstrumentor:
 
         return _payi_awrapper
 
+
 global _instrumentor
 _instrumentor: Optional[_PayiInstrumentor] = None
 
+
 def payi_instrument(
     *,
-    payi: Optional[Union[Payi, AsyncPayi, 'list[Union[Payi, AsyncPayi]]']] = None,
+    payi: Optional[Union[Payi, AsyncPayi, "list[Union[Payi, AsyncPayi]]"]] = None,
     instruments: Optional[Set[str]] = None,
     log_prompt_and_response: bool = True,
     config: Optional[PayiInstrumentConfig] = None,
@@ -1636,14 +1743,14 @@ def payi_instrument(
     logger = logger or _g_logger
 
     frameinfo = inspect.stack()[1]
-    caller_filename = os.path.basename(frameinfo.filename).replace(' ', '_').lower()
-    if caller_filename.endswith('.py'):
+    caller_filename = os.path.basename(frameinfo.filename).replace(" ", "_").lower()
+    if caller_filename.endswith(".py"):
         caller_filename = caller_filename[:-3]
 
-    if (_instrumentor):
+    if _instrumentor:
         logger.debug(f"payi_instrument() previously called, (current caller {caller_filename}.py)")
         return
-    
+
     payi_param: Optional[Payi] = None
     apayi_param: Optional[AsyncPayi] = None
 
@@ -1655,7 +1762,7 @@ def payi_instrument(
         for p in payi:
             if isinstance(p, Payi):
                 payi_param = p
-            elif isinstance(p, AsyncPayi): # type: ignore
+            elif isinstance(p, AsyncPayi):  # type: ignore
                 apayi_param = p
 
     # allow for both payi and apayi to be None for the @proxy case
@@ -1666,8 +1773,9 @@ def payi_instrument(
         log_prompt_and_response=log_prompt_and_response,
         logger=logger,
         global_config=config if config else PayiInstrumentConfig(),
-        caller_filename=caller_filename
+        caller_filename=caller_filename,
     )
+
 
 def track(
     *,
@@ -1684,12 +1792,15 @@ def track(
 ) -> Any:
     def _track(func: Any) -> Any:
         if asyncio.iscoroutinefunction(func):
+
             async def awrapper(*args: Any, **kwargs: Any) -> Any:
                 if not _instrumentor:
                     _g_logger.debug(f"track: no instrumentor!")
                     return await func(*args, **kwargs)
 
-                _instrumentor._logger.debug(f"track: call async function (proxy={proxy}, limit_ids={limit_ids}, use_case_name={use_case_name}, use_case_id={use_case_id}, use_case_version={use_case_version}, user_id={user_id})")
+                _instrumentor._logger.debug(
+                    f"track: call async function (proxy={proxy}, limit_ids={limit_ids}, use_case_name={use_case_name}, use_case_id={use_case_id}, use_case_version={use_case_version}, user_id={user_id})"
+                )
                 # Call the instrumentor's _call_func for async functions
                 return await _instrumentor._acall_func(
                     func,
@@ -1700,20 +1811,24 @@ def track(
                     use_case_version,
                     user_id,
                     account_name,
-                    cast(Optional['dict[str, Optional[str]]'], request_properties),
-                    cast(Optional['dict[str, Optional[str]]'], use_case_properties),
+                    cast(Optional["dict[str, Optional[str]]"], request_properties),
+                    cast(Optional["dict[str, Optional[str]]"], use_case_properties),
                     log_prompt_and_response,
                     *args,
                     **kwargs,
                 )
+
             return awrapper
         else:
+
             def wrapper(*args: Any, **kwargs: Any) -> Any:
                 if not _instrumentor:
                     _g_logger.debug(f"track: no instrumentor!")
                     return func(*args, **kwargs)
 
-                _instrumentor._logger.debug(f"track: call sync function (proxy={proxy}, limit_ids={limit_ids}, use_case_name={use_case_name}, use_case_id={use_case_id}, use_case_version={use_case_version}, user_id={user_id}, account_name={account_name})")
+                _instrumentor._logger.debug(
+                    f"track: call sync function (proxy={proxy}, limit_ids={limit_ids}, use_case_name={use_case_name}, use_case_id={use_case_id}, use_case_version={use_case_version}, user_id={user_id}, account_name={account_name})"
+                )
 
                 return _instrumentor._call_func(
                     func,
@@ -1724,14 +1839,17 @@ def track(
                     use_case_version,
                     user_id,
                     account_name,
-                    cast(Optional['dict[str, Optional[str]]'], request_properties),
-                    cast(Optional['dict[str, Optional[str]]'], use_case_properties),
+                    cast(Optional["dict[str, Optional[str]]"], request_properties),
+                    cast(Optional["dict[str, Optional[str]]"], use_case_properties),
                     log_prompt_and_response,
                     *args,
                     **kwargs,
                 )
+
             return wrapper
+
     return _track
+
 
 def track_context(
     *,
@@ -1770,10 +1888,11 @@ def track_context(
     context["price_as_resource"] = price_as_resource
     context["resource_scope"] = resource_scope
 
-    context["request_properties"] = cast(Optional['dict[str, Optional[str]]'], request_properties)
-    context["use_case_properties"] = cast(Optional['dict[str, Optional[str]]'], use_case_properties)
+    context["request_properties"] = cast(Optional["dict[str, Optional[str]]"], request_properties)
+    context["use_case_properties"] = cast(Optional["dict[str, Optional[str]]"], use_case_properties)
 
     return _InternalTrackContext(context)
+
 
 def get_context() -> PayiContext:
     """

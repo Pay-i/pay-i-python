@@ -26,9 +26,10 @@ from .PayiInstrumentAwsBedrockConfig import PayiInstrumentAwsBedrockConfig
 if TYPE_CHECKING:
     from tokenizers import Tokenizer  # type: ignore
 else:
-    Tokenizer = None  
+    Tokenizer = None
 
 GUARDRAIL_SEMANTIC_FAILURE_DESCRIPTION = "Bedrock Guardrails intervened"
+
 
 class BedrockInstrumentor:
     _module_name: str = "boto3"
@@ -48,7 +49,7 @@ class BedrockInstrumentor:
     def configure(aws_config: Optional[PayiInstrumentAwsBedrockConfig]) -> None:
         if not aws_config:
             return
-        
+
         trace = aws_config.get("guardrail_trace", True)
         if trace is None:
             trace = True
@@ -79,8 +80,11 @@ class BedrockInstrumentor:
 
         instrumentor._wrap_functions(wrappers)
 
+
 @_PayiInstrumentor.payi_wrapper
-def create_client_wrapper(instrumentor: _PayiInstrumentor, wrapped: Any, instance: Any, *args: Any, **kwargs: Any) -> Any: #  noqa: ARG001
+def create_client_wrapper(
+    instrumentor: _PayiInstrumentor, wrapped: Any, instance: Any, *args: Any, **kwargs: Any  # noqa: ARG001
+) -> Any:
     if kwargs.get("service_name") != "bedrock-runtime":
         # instrumentor._logger.debug(f"skipping client wrapper creation for {kwargs.get('service_name', '')} service")
         return wrapped(*args, **kwargs)
@@ -88,7 +92,9 @@ def create_client_wrapper(instrumentor: _PayiInstrumentor, wrapped: Any, instanc
     try:
         client: Any = wrapped(*args, **kwargs)
         client.invoke_model = wrap_invoke(instrumentor, client.invoke_model, client)
-        client.invoke_model_with_response_stream = wrap_invoke_stream(instrumentor, client.invoke_model_with_response_stream, client)
+        client.invoke_model_with_response_stream = wrap_invoke_stream(
+            instrumentor, client.invoke_model_with_response_stream, client
+        )
         client.converse = wrap_converse(instrumentor, client.converse, client)
         client.converse_stream = wrap_converse_stream(instrumentor, client.converse_stream, client)
 
@@ -102,64 +108,67 @@ def create_client_wrapper(instrumentor: _PayiInstrumentor, wrapped: Any, instanc
         return client
     except Exception as e:
         instrumentor._logger.debug(f"Error instrumenting bedrock client: {e}")
-    
+
     return wrapped(*args, **kwargs)
 
+
 BEDROCK_REQUEST_NAMES = [
-    'request-created.bedrock-runtime.Converse',
-    'request-created.bedrock-runtime.ConverseStream',
-    'request-created.bedrock-runtime.InvokeModel',
-    'request-created.bedrock-runtime.InvokeModelWithResponseStream',
+    "request-created.bedrock-runtime.Converse",
+    "request-created.bedrock-runtime.ConverseStream",
+    "request-created.bedrock-runtime.InvokeModel",
+    "request-created.bedrock-runtime.InvokeModelWithResponseStream",
 ]
+
 
 def _register_bedrock_client_callbacks(client: Any) -> None:
     # Pass a unqiue_id to avoid registering the same callback multiple times in case this cell executed more than once
-    # Redirect the request to the Pay-i endpoint after the request has been signed. 
-    client.meta.events.register_last('request-created', _redirect_to_payi, unique_id=_redirect_to_payi)
+    # Redirect the request to the Pay-i endpoint after the request has been signed.
+    client.meta.events.register_last("request-created", _redirect_to_payi, unique_id=_redirect_to_payi)
 
-def _redirect_to_payi(request: Any, event_name: str, **_: 'dict[str, Any]') -> None:
+
+def _redirect_to_payi(request: Any, event_name: str, **_: "dict[str, Any]") -> None:
     if not event_name in BEDROCK_REQUEST_NAMES:
         return
-    
+
     parsed_url: httpx.URL = httpx.URL(request.url)
     route_path = parsed_url.path
     request.url = f"{payi_aws_bedrock_url()}{route_path}"
 
     request.headers[PayiHeaderNames.api_key] = os.environ.get("PAYI_API_KEY", "")
-    request.headers[PayiHeaderNames.provider_base_uri] = parsed_url.scheme + "://" + parsed_url.host # type: ignore
-    
+    request.headers[PayiHeaderNames.provider_base_uri] = parsed_url.scheme + "://" + parsed_url.host  # type: ignore
+
     extra_headers = BedrockInstrumentor._instrumentor._create_extra_headers()
 
     for key, value in extra_headers.items():
         request.headers[key] = value
 
-class InvokeResponseWrapper(ObjectProxy): # type: ignore
-    _cohere_embed_english_v3_tokenizer: Optional['Tokenizer'] = None
+
+class InvokeResponseWrapper(ObjectProxy):  # type: ignore
+    _cohere_embed_english_v3_tokenizer: Optional["Tokenizer"] = None
 
     def __init__(
         self,
-        response: 'dict[str, Any]',
+        response: "dict[str, Any]",
         body: Any,
-        request: '_BedrockInvokeProviderRequest',
-        ) -> None:
-
-        super().__init__(body) # type: ignore
+        request: "_BedrockInvokeProviderRequest",
+    ) -> None:
+        super().__init__(body)  # type: ignore
         self._response = response
         self._body = body
         self._request = request
         self._log_prompt_and_response = request._log_prompt_and_response
 
-    def read(self, amt: Any =None) -> Any: # type: ignore
+    def read(self, amt: Any = None) -> Any:  # type: ignore
         # data is array of bytes
-        data: bytes = self.__wrapped__.read(amt) # type: ignore
-        response = json.loads(data) # type: ignore
+        data: bytes = self.__wrapped__.read(amt)  # type: ignore
+        response = json.loads(data)  # type: ignore
 
         ingest = self._request._ingest
 
         # resource = ingest["resource"]
         # if not resource:
         #     return
-        
+
         input: int = 0
         output: int = 0
         units: dict[str, IngestUnits] = ingest["units"]
@@ -168,10 +177,11 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
             from .AnthropicInstrumentor import anthropic_process_synchronous_response
 
             anthropic_process_synchronous_response(
-                request=self._request, 
+                request=self._request,
                 response=response,
-                log_prompt_and_response=False, # will evaluate logging later
-                assign_id=False)
+                log_prompt_and_response=False,  # will evaluate logging later
+                assign_id=False,
+            )
 
         elif self._request._is_openai:
             from .OpenAIInstrumentor import _OpenAiChatProviderRequest
@@ -187,8 +197,8 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
             # ingest["provider_response_id"] = response.get("id", None)
 
         elif self._request._is_meta:
-            input = response.get('prompt_token_count', 0)
-            output = response.get('generation_token_count', 0)
+            input = response.get("prompt_token_count", 0)
+            output = response.get("generation_token_count", 0)
             units["text"] = IngestUnits(input=input, output=output)
 
         elif self._request._is_nova:
@@ -209,7 +219,7 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
             bedrock_converse_process_synchronous_function_call(self._request, response)
 
         elif self._request._is_amazon_titan_embed_text_v1:
-            input = response.get('inputTextTokenCount', 0)
+            input = response.get("inputTextTokenCount", 0)
             units["text"] = IngestUnits(input=input, output=0)
 
         elif self._request._is_cohere_embed_english_v3:
@@ -220,29 +230,41 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
                 cohere_config = BedrockInstrumentor._model_config.get("cohere.embed-english-v3", {})
                 tokenizer_path = cohere_config.get("tokenizer_path", None) if cohere_config else None
                 if not tokenizer_path:
-                    self._request._instrumentor._logger.warning("tokenizer_path not configured in aws_config.model_config['cohere.embed-english-v3']. Cannot record text tokens for Cohere embed english v3")
+                    self._request._instrumentor._logger.warning(
+                        "tokenizer_path not configured in aws_config.model_config['cohere.embed-english-v3']. Cannot record text tokens for Cohere embed english v3"
+                    )
                 else:
                     try:
                         from tokenizers import Tokenizer  # type: ignore
 
-                        if self._cohere_embed_english_v3_tokenizer is None: # type: ignore
-                            self._cohere_embed_english_v3_tokenizer = Tokenizer.from_file(tokenizer_path) # type: ignore
+                        if self._cohere_embed_english_v3_tokenizer is None:  # type: ignore
+                            self._cohere_embed_english_v3_tokenizer = Tokenizer.from_file(tokenizer_path)  # type: ignore
 
-                        if self._cohere_embed_english_v3_tokenizer is not None and isinstance(self._cohere_embed_english_v3_tokenizer, Tokenizer): # type: ignore
-                            tokens: list = self._cohere_embed_english_v3_tokenizer.encode(text, add_special_tokens=False).tokens # type: ignore
+                        if self._cohere_embed_english_v3_tokenizer is not None and isinstance(  # type: ignore[reportUnknownMemberType]
+                            self._cohere_embed_english_v3_tokenizer, Tokenizer  # type: ignore[reportUnknownMemberType]
+                        ):
+                            tokens: list[Any] = self._cohere_embed_english_v3_tokenizer.encode(  # type: ignore[reportUnknownMemberType]
+                                text, add_special_tokens=False
+                            ).tokens
 
                             if tokens and isinstance(tokens, list):
-                                units["text"] = IngestUnits(input=len(tokens), output=0) # type: ignore
+                                units["text"] = IngestUnits(input=len(tokens), output=0)  # type: ignore
 
                     except ImportError:
-                        self._request._instrumentor._logger.warning("tokenizers module not found, caller must install the tokenizers module and configure payi with the tokenizer file. Cannot count prompt tokens for Cohere embed english v3")
+                        self._request._instrumentor._logger.warning(
+                            "tokenizers module not found, caller must install the tokenizers module and configure payi with the tokenizer file. Cannot count prompt tokens for Cohere embed english v3"
+                        )
                     except (FileNotFoundError, OSError) as e:
-                        self._request._instrumentor._logger.warning(f"Not counting cohere prompt tokens due to failed to load tokenizer file '{tokenizer_path}': {e}")
+                        self._request._instrumentor._logger.warning(
+                            f"Not counting cohere prompt tokens due to failed to load tokenizer file '{tokenizer_path}': {e}"
+                        )
                     except Exception as e:
-                        self._request._instrumentor._logger.warning(f"Not counting cohere prompt tokens due to error processing Cohere embed english v3 response: {e}")
+                        self._request._instrumentor._logger.warning(
+                            f"Not counting cohere prompt tokens due to error processing Cohere embed english v3 response: {e}"
+                        )
 
         if self._log_prompt_and_response:
-            ingest["provider_response_json"] = data.decode('utf-8') # type: ignore
+            ingest["provider_response_json"] = data.decode("utf-8")  # type: ignore
 
         guardrails = response.get("amazon-bedrock-trace", {}).get("guardrail", {}).get("input", {})
         self._request.process_guardrails(guardrails)
@@ -252,12 +274,13 @@ class InvokeResponseWrapper(ObjectProxy): # type: ignore
         xproxy_result = self._request._instrumentor._ingest_units(self._request)
         self._request.assign_xproxy_result(self._response, xproxy_result)
 
-        return data # type: ignore
+        return data  # type: ignore
+
 
 def wrap_invoke(instrumentor: _PayiInstrumentor, wrapped: Any, instance: Any) -> Any:
     @wraps(wrapped)
-    def invoke_wrapper(*args: Any, **kwargs: 'dict[str, Any]') -> Any:
-        modelId:str = kwargs.get("modelId", "") # type: ignore
+    def invoke_wrapper(*args: Any, **kwargs: "dict[str, Any]") -> Any:
+        modelId: str = kwargs.get("modelId", "")  # type: ignore
 
         return instrumentor.invoke_wrapper(
             _BedrockInvokeProviderRequest(instrumentor=instrumentor, model_id=modelId),
@@ -266,14 +289,15 @@ def wrap_invoke(instrumentor: _PayiInstrumentor, wrapped: Any, instance: Any) ->
             instance,
             args,
             kwargs,
-        )   
-    
+        )
+
     return invoke_wrapper
+
 
 def wrap_invoke_stream(instrumentor: _PayiInstrumentor, wrapped: Any, instance: Any) -> Any:
     @wraps(wrapped)
     def invoke_wrapper(*args: Any, **kwargs: Any) -> Any:
-        modelId: str = kwargs.get("modelId", "") # type: ignore
+        modelId: str = kwargs.get("modelId", "")  # type: ignore
 
         instrumentor._logger.debug(f"bedrock invoke stream wrapper, modelId: {modelId}")
         return instrumentor.invoke_wrapper(
@@ -287,10 +311,11 @@ def wrap_invoke_stream(instrumentor: _PayiInstrumentor, wrapped: Any, instance: 
 
     return invoke_wrapper
 
+
 def wrap_converse(instrumentor: _PayiInstrumentor, wrapped: Any, instance: Any) -> Any:
     @wraps(wrapped)
-    def invoke_wrapper(*args: Any, **kwargs: 'dict[str, Any]') -> Any:
-        modelId:str = kwargs.get("modelId", "") # type: ignore
+    def invoke_wrapper(*args: Any, **kwargs: "dict[str, Any]") -> Any:
+        modelId: str = kwargs.get("modelId", "")  # type: ignore
 
         instrumentor._logger.debug(f"bedrock converse wrapper, modelId: {modelId}")
         return instrumentor.invoke_wrapper(
@@ -301,13 +326,14 @@ def wrap_converse(instrumentor: _PayiInstrumentor, wrapped: Any, instance: Any) 
             args,
             kwargs,
         )
-    
+
     return invoke_wrapper
+
 
 def wrap_converse_stream(instrumentor: _PayiInstrumentor, wrapped: Any, instance: Any) -> Any:
     @wraps(wrapped)
     def invoke_wrapper(*args: Any, **kwargs: Any) -> Any:
-        modelId: str = kwargs.get("modelId", "") # type: ignore
+        modelId: str = kwargs.get("modelId", "")  # type: ignore
 
         instrumentor._logger.debug(f"bedrock converse stream wrapper, modelId: {modelId}")
         return instrumentor.invoke_wrapper(
@@ -321,8 +347,8 @@ def wrap_converse_stream(instrumentor: _PayiInstrumentor, wrapped: Any, instance
 
     return invoke_wrapper
 
-class _BedrockProviderRequest(_ProviderRequest):
 
+class _BedrockProviderRequest(_ProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, instance: Any = None) -> None:
         super().__init__(
             instrumentor=instrumentor,
@@ -331,7 +357,7 @@ class _BedrockProviderRequest(_ProviderRequest):
             module_name=BedrockInstrumentor._module_name,
             module_version=BedrockInstrumentor._module_version,
             is_aws_client=True,
-            )
+        )
 
         try:
             self.provider_uri = instance._endpoint.host
@@ -340,7 +366,7 @@ class _BedrockProviderRequest(_ProviderRequest):
 
     @override
     def process_request(self, instance: Any, args: Sequence[Any], kwargs: Any) -> bool:
-        modelId =  kwargs.get("modelId", "")
+        modelId = kwargs.get("modelId", "")
         self._ingest["resource"] = modelId
 
         if not self._price_as.resource and not self._price_as.category:
@@ -352,7 +378,7 @@ class _BedrockProviderRequest(_ProviderRequest):
 
         if self._price_as.resource_scope:
             self._ingest["resource_scope"] = self._price_as.resource_scope
-        
+
         # override defaults
         if self._price_as.category:
             self._ingest["category"] = self._price_as.category
@@ -361,7 +387,7 @@ class _BedrockProviderRequest(_ProviderRequest):
 
         return True
 
-    def process_response_metadata(self, metadata: 'dict[str, Any]') -> None:
+    def process_response_metadata(self, metadata: "dict[str, Any]") -> None:
         request_id = metadata.get("RequestId", "")
         if request_id:
             self._ingest["provider_response_id"] = request_id
@@ -376,21 +402,25 @@ class _BedrockProviderRequest(_ProviderRequest):
         self.process_response_metadata(response.get("ResponseMetadata", {}))
 
     @override
-    def process_exception(self, exception: Exception, kwargs: Any, ) -> bool:
+    def process_exception(
+        self,
+        exception: Exception,
+        kwargs: Any,
+    ) -> bool:
         try:
             if hasattr(exception, "response"):
                 response: dict[str, Any] = getattr(exception, "response", {})
-                status_code: int = response.get('ResponseMetadata', {}).get('HTTPStatusCode', 0)
+                status_code: int = response.get("ResponseMetadata", {}).get("HTTPStatusCode", 0)
                 if status_code == 0:
                     return False
 
                 self._ingest["http_status_code"] = status_code
-                
-                request_id = response.get('ResponseMetadata', {}).get('RequestId', "")
+
+                request_id = response.get("ResponseMetadata", {}).get("RequestId", "")
                 if request_id:
                     self._ingest["provider_response_id"] = request_id
 
-                error = response.get('Error', "")
+                error = response.get("Error", "")
                 if error:
                     self._ingest["provider_response_json"] = json.dumps(error)
 
@@ -400,7 +430,7 @@ class _BedrockProviderRequest(_ProviderRequest):
             self._instrumentor._logger.debug(f"Error processing exception: {e}")
             return False
 
-    def process_guardrails(self, guardrails: 'dict[str, Any]') -> None:
+    def process_guardrails(self, guardrails: "dict[str, Any]") -> None:
         units = self._ingest["units"]
 
         # while we iterate over the entire dict, only one guardrail is expected and supported
@@ -409,41 +439,44 @@ class _BedrockProviderRequest(_ProviderRequest):
             if not isinstance(value, dict):
                 continue
 
-            usage: dict[str, int] = value.get("invocationMetrics", {}).get("usage", {}) # type: ignore
+            usage: dict[str, int] = value.get("invocationMetrics", {}).get("usage", {})  # type: ignore
             if not usage:
                 continue
 
-            topicPolicyUnits: int  = usage.get("topicPolicyUnits", 0) # type: ignore
+            topicPolicyUnits: int = usage.get("topicPolicyUnits", 0)  # type: ignore
             if topicPolicyUnits > 0:
-                units["guardrail_topic"] = IngestUnits(input=topicPolicyUnits, output=0) # type: ignore
+                units["guardrail_topic"] = IngestUnits(input=topicPolicyUnits, output=0)  # type: ignore
 
-            contentPolicyUnits = usage.get("contentPolicyUnits", 0) # type: ignore
+            contentPolicyUnits = usage.get("contentPolicyUnits", 0)  # type: ignore
             if contentPolicyUnits > 0:
-                units["guardrail_content"] = IngestUnits(input=contentPolicyUnits, output=0) # type: ignore
+                units["guardrail_content"] = IngestUnits(input=contentPolicyUnits, output=0)  # type: ignore
 
-            wordPolicyUnits = usage.get("wordPolicyUnits", 0) # type: ignore    
+            wordPolicyUnits = usage.get("wordPolicyUnits", 0)  # type: ignore
             if wordPolicyUnits > 0:
-                units["guardrail_word_free"] = IngestUnits(input=wordPolicyUnits, output=0) # type: ignore
+                units["guardrail_word_free"] = IngestUnits(input=wordPolicyUnits, output=0)  # type: ignore
 
-            automatedReasoningPolicyUnits = usage.get("automatedReasoningPolicyUnits", 0) # type: ignore
+            automatedReasoningPolicyUnits = usage.get("automatedReasoningPolicyUnits", 0)  # type: ignore
             if automatedReasoningPolicyUnits > 0:
-                units["guardrail_automated_reasoning"] = IngestUnits(input=automatedReasoningPolicyUnits, output=0) # type: ignore
+                units["guardrail_automated_reasoning"] = IngestUnits(input=automatedReasoningPolicyUnits, output=0)  # type: ignore
 
-            sensitiveInformationPolicyUnits = usage.get("sensitiveInformationPolicyUnits", 0) # type: ignore
+            sensitiveInformationPolicyUnits = usage.get("sensitiveInformationPolicyUnits", 0)  # type: ignore
             if sensitiveInformationPolicyUnits > 0:
-                units["guardrail_sensitive_information"] = IngestUnits(input=sensitiveInformationPolicyUnits, output=0) # type: ignore
+                units["guardrail_sensitive_information"] = IngestUnits(input=sensitiveInformationPolicyUnits, output=0)  # type: ignore
 
-            sensitiveInformationPolicyFreeUnits = usage.get("sensitiveInformationPolicyFreeUnits", 0) # type: ignore
+            sensitiveInformationPolicyFreeUnits = usage.get("sensitiveInformationPolicyFreeUnits", 0)  # type: ignore
             if sensitiveInformationPolicyFreeUnits > 0:
-                units["guardrail_sensitive_information_free"] = IngestUnits(input=sensitiveInformationPolicyFreeUnits, output=0) # type: ignore
+                units["guardrail_sensitive_information_free"] = IngestUnits(
+                    input=sensitiveInformationPolicyFreeUnits, output=0  # pyright: ignore[reportUnknownArgumentType]
+                )
 
-            contextualGroundingPolicyUnits = usage.get("contextualGroundingPolicyUnits", 0) # type: ignore
+            contextualGroundingPolicyUnits = usage.get("contextualGroundingPolicyUnits", 0)  # type: ignore
             if contextualGroundingPolicyUnits > 0:
-                units["guardrail_contextual_grounding"] = IngestUnits(input=contextualGroundingPolicyUnits, output=0) # type: ignore
+                units["guardrail_contextual_grounding"] = IngestUnits(input=contextualGroundingPolicyUnits, output=0)  # type: ignore
 
-            contentPolicyImageUnits = usage.get("contentPolicyImageUnits", 0) # type: ignore
+            contentPolicyImageUnits = usage.get("contentPolicyImageUnits", 0)  # type: ignore
             if contentPolicyImageUnits > 0:
-                units["guardrail_content_image"] = IngestUnits(input=contentPolicyImageUnits, output=0) # type: ignore
+                units["guardrail_content_image"] = IngestUnits(input=contentPolicyImageUnits, output=0)  # type: ignore
+
 
 class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
     def __init__(self, instrumentor: _PayiInstrumentor, model_id: str):
@@ -463,19 +496,19 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
         self._assign_model_state(model_id=model_id)
 
     def _assign_model_state(self, model_id: str) -> None:
-        self._is_anthropic = 'anthropic' in model_id
+        self._is_anthropic = "anthropic" in model_id
         self._is_openai = model_id.startswith("openai.")
-        self._is_nova = 'nova' in model_id
-        self._is_meta = 'meta' in model_id
-        self._is_amazon_titan_embed_text_v1 = 'amazon.titan-embed-text-v1' == model_id
-        self._is_cohere_embed_english_v3 = 'cohere.embed-english-v3' == model_id
+        self._is_nova = "nova" in model_id
+        self._is_meta = "meta" in model_id
+        self._is_amazon_titan_embed_text_v1 = "amazon.titan-embed-text-v1" == model_id
+        self._is_cohere_embed_english_v3 = "cohere.embed-english-v3" == model_id
 
     @override
     def process_request(self, instance: Any, args: Sequence[Any], kwargs: Any) -> bool:
         from .AnthropicInstrumentor import anthropic_has_image_and_get_texts
 
         super().process_request(instance, args, kwargs)
-    
+
         # super().process_request will assign price_as mapping from global state, so evaluate afterwards
         if self._price_as.resource:
             self._assign_model_state(model_id=self._price_as.resource)
@@ -505,9 +538,9 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
             try:
                 body = json.loads(kwargs.get("body", ""))
                 input_type = body.get("input_type", "")
-                if input_type == 'image':
+                if input_type == "image":
                     images = body.get("images", [])
-                    if (len(images) > 0):
+                    if len(images) > 0:
                         # only supports one image according to docs
                         self._ingest["units"]["vision"] = IngestUnits(input=1, output=0)
             except Exception as e:
@@ -521,13 +554,14 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
         guardrails = chunk_dict.get("amazon-bedrock-trace", {}).get("guardrail", {}).get("input", {})
         if guardrails:
             self.process_guardrails(guardrails)
-    
+
         self.process_stop_action(chunk_dict.get("amazon-bedrock-guardrailAction", ""))
 
         if self._is_anthropic:
             from .AnthropicInstrumentor import anthropic_process_chunk
+
             return anthropic_process_chunk(self, chunk_dict, assign_id=False)
-        
+
         if self._is_openai:
             from .OpenAIInstrumentor import _OpenAiChatProviderRequest
 
@@ -543,7 +577,7 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
         # meta and nova and openai
         return self.process_invoke_other_provider_chunk(chunk_dict)
 
-    def process_invoke_other_provider_chunk(self, chunk_dict: 'dict[str, Any]') -> _ChunkResult:
+    def process_invoke_other_provider_chunk(self, chunk_dict: "dict[str, Any]") -> _ChunkResult:
         ingest = False
 
         metrics = chunk_dict.get("amazon-bedrock-invocationMetrics", {})
@@ -562,20 +596,13 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
 
             ingest = True
 
-        return _ChunkResult(send_chunk_to_caller=True, ingest=ingest)    
+        return _ChunkResult(send_chunk_to_caller=True, ingest=ingest)
 
     @override
-    def process_synchronous_response(
-        self,
-        response: Any,
-        kwargs: Any) -> Any:
-
+    def process_synchronous_response(self, response: Any, kwargs: Any) -> Any:
         self.process_response_metadata(response.get("ResponseMetadata", {}))
 
-        response["body"] = InvokeResponseWrapper(
-            response=response,
-            body=response["body"],
-            request=self)
+        response["body"] = InvokeResponseWrapper(response=response, body=response["body"], request=self)
 
         return response
 
@@ -583,26 +610,30 @@ class _BedrockInvokeProviderRequest(_BedrockProviderRequest):
         # record both as a semantic failure and guardrail action so it is discoverable through both properties
         if action == "INTERVENED":
             self.add_internal_request_property(PayiPropertyNames.failure, action)
-            self.add_internal_request_property(PayiPropertyNames.failure_description, GUARDRAIL_SEMANTIC_FAILURE_DESCRIPTION)
+            self.add_internal_request_property(
+                PayiPropertyNames.failure_description, GUARDRAIL_SEMANTIC_FAILURE_DESCRIPTION
+            )
             self.add_internal_request_property(PayiPropertyNames.aws_bedrock_guardrail_action, action)
 
     @override
-    def remove_prompt_inline_data(self, prompt: 'dict[str, Any]') -> bool:# noqa: ARG002
+    def remove_prompt_inline_data(self, prompt: "dict[str, Any]") -> bool:  # noqa: ARG002
         if not self._is_anthropic:
             return False
 
         from .AnthropicInstrumentor import anthropic_remove_inline_data
+
         body = prompt.get("body", "")
         if not body:
             return False
-        
+
         body_json = json.loads(body)
-        
+
         if anthropic_remove_inline_data(body_json):
             prompt["body"] = json.dumps(body_json)
             return True
 
         return False
+
 
 class _BedrockConverseProviderRequest(_BedrockProviderRequest):
     @override
@@ -627,11 +658,7 @@ class _BedrockConverseProviderRequest(_BedrockProviderRequest):
         return True
 
     @override
-    def process_synchronous_response(
-        self,
-        response: 'dict[str, Any]',
-        kwargs: Any) -> Any:
-
+    def process_synchronous_response(self, response: "dict[str, Any]", kwargs: Any) -> Any:
         usage = response.get("usage", {})
         input = usage.get("inputTokens", 0)
         output = usage.get("outputTokens", 0)
@@ -657,12 +684,12 @@ class _BedrockConverseProviderRequest(_BedrockProviderRequest):
         return None
 
     @override
-    def process_chunk(self, chunk: 'dict[str, Any]') -> _ChunkResult:
+    def process_chunk(self, chunk: "dict[str, Any]") -> _ChunkResult:
         ingest = False
         metadata = chunk.get("metadata", {})
 
         if metadata:
-            usage = metadata.get('usage', {})
+            usage = metadata.get("usage", {})
             input = usage.get("inputTokens", 0)
             output = usage.get("outputTokens", 0)
             self._ingest["units"]["text"] = IngestUnits(input=input, output=output)
@@ -683,10 +710,13 @@ class _BedrockConverseProviderRequest(_BedrockProviderRequest):
         if reason == "guardrail_intervened":
             # record both as a semantic failure and guardrail action so it is discoverable through both properties
             self.add_internal_request_property(PayiPropertyNames.failure, reason)
-            self.add_internal_request_property(PayiPropertyNames.failure_description, GUARDRAIL_SEMANTIC_FAILURE_DESCRIPTION)
+            self.add_internal_request_property(
+                PayiPropertyNames.failure_description, GUARDRAIL_SEMANTIC_FAILURE_DESCRIPTION
+            )
             self.add_internal_request_property(PayiPropertyNames.aws_bedrock_guardrail_action, reason)
 
-def bedrock_converse_process_streaming_for_function_call(request: _ProviderRequest, chunk: 'dict[str, Any]') -> None:  
+
+def bedrock_converse_process_streaming_for_function_call(request: _ProviderRequest, chunk: "dict[str, Any]") -> None:
     contentBlockStart = chunk.get("contentBlockStart", {})
     tool_use = contentBlockStart.get("start", {}).get("toolUse", {})
     if tool_use:
@@ -695,7 +725,7 @@ def bedrock_converse_process_streaming_for_function_call(request: _ProviderReque
 
         if name and index is not None:
             request.add_streaming_function_call(index=index, name=name, arguments=None)
-        
+
         return
 
     contentBlockDelta = chunk.get("contentBlockDelta", {})
@@ -709,7 +739,8 @@ def bedrock_converse_process_streaming_for_function_call(request: _ProviderReque
 
         return
 
-def bedrock_converse_process_synchronous_function_call(request: _ProviderRequest, response: 'dict[str, Any]') -> None:
+
+def bedrock_converse_process_synchronous_function_call(request: _ProviderRequest, response: "dict[str, Any]") -> None:
     content = response.get("output", {}).get("message", {}).get("content", [])
     if content:
         for item in content:
@@ -721,7 +752,6 @@ def bedrock_converse_process_synchronous_function_call(request: _ProviderRequest
 
                 if input and isinstance(input, dict):
                     arguments = json.dumps(input)
-                
+
                 if name:
                     request.add_synchronous_function_call(name=name, arguments=arguments)
-

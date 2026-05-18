@@ -29,6 +29,7 @@ from ..types.pay_i_common_models_api_router_header_info_param import PayICommonM
 
 __all__ = ["IngestResource", "AsyncIngestResource"]
 
+
 def convert_property_values_to_str(properties: Dict[str, Optional[str]]) -> Dict[str, Optional[str]]:
     converted_properties: Dict[str, Optional[str]] = {}
     for k, v in properties.items():
@@ -41,6 +42,7 @@ def convert_property_values_to_str(properties: Dict[str, Optional[str]]) -> Dict
                 pass  # Skip this key-value pair if str() fails
 
     return converted_properties
+
 
 class IngestResource(SyncAPIResource):
     """Ingest Requests"""
@@ -168,7 +170,7 @@ class IngestResource(SyncAPIResource):
           use_case_properties (Dict[str, Optional[str]], optional): The use case properties
 
           user_id (str, optional): The user id
-          
+
           resource_scope(str, optional): The scope of the resource
 
           account_name (str, optional): The account name
@@ -222,7 +224,7 @@ class IngestResource(SyncAPIResource):
 
         if properties and is_given(properties):
             properties = convert_property_values_to_str(properties)
-        
+
         extra_headers = {
             **strip_not_given(
                 {
@@ -231,15 +233,11 @@ class IngestResource(SyncAPIResource):
                     "xProxy-UseCase-ID": use_case_id,
                     "xProxy-UseCase-Name": use_case_name,
                     "xProxy-UseCase-Step": use_case_step,
-                    "xProxy-UseCase-Version": use_case_version_str
-                    if is_given(use_case_version)
-                    else not_given,
+                    "xProxy-UseCase-Version": use_case_version_str if is_given(use_case_version) else not_given,
                     "xProxy-User-ID": user_id,
                     "xProxy-Resource-Scope": resource_scope,
                     "xProxy-Account-Name": account_name,
-                    "xProxy-Logging-Disable": str(disable_logging)
-                    if is_given(disable_logging)
-                    else not_given,
+                    "xProxy-Logging-Disable": str(disable_logging) if is_given(disable_logging) else not_given,
                 }
             ),
             **(extra_headers or {}),
@@ -384,8 +382,8 @@ class AsyncIngestResource(AsyncAPIResource):
           event_timestamp: (datetime, None): The timestamp of the event
 
           disable_logging: (bool, optional): Disable logging for the request
-          
-          limit_ids (list[str], optional): The limit IDs to associate with the request 
+
+          limit_ids (list[str], optional): The limit IDs to associate with the request
 
           properties (Dict[str, Optional[str]], optional): Properties to associate with the request
 
@@ -402,7 +400,7 @@ class AsyncIngestResource(AsyncAPIResource):
           use_case_properties (Dict[str, Optional[str]], optional): The use case properties
 
           user_id (str, optional): The user id
-          
+
           resource_scope (str, optional): The scope of the resource
 
           account_name (str, optional): The account name
@@ -456,7 +454,7 @@ class AsyncIngestResource(AsyncAPIResource):
 
         if properties and is_given(properties):
             properties = convert_property_values_to_str(properties)
-        
+
         extra_headers = {
             **strip_not_given(
                 {
@@ -466,14 +464,10 @@ class AsyncIngestResource(AsyncAPIResource):
                     "xProxy-UseCase-ID": use_case_id,
                     "xProxy-UseCase-Name": use_case_name,
                     "xProxy-UseCase-Step": use_case_step,
-                    "xProxy-UseCase-Version": use_case_version_str
-                    if is_given(use_case_version)
-                    else not_given,
+                    "xProxy-UseCase-Version": use_case_version_str if is_given(use_case_version) else not_given,
                     "xProxy-User-ID": user_id,
                     "xProxy-Resource-Scope": resource_scope,
-                    "xProxy-Logging-Disable": str(disable_logging)
-                    if is_given(disable_logging)
-                    else not_given,
+                    "xProxy-Logging-Disable": str(disable_logging) if is_given(disable_logging) else not_given,
                 }
             ),
             **(extra_headers or {}),

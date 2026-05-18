@@ -19,15 +19,15 @@ __all__ = [
     "_GeneratorWrapper",
 ]
 
+
 class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
     def __init__(
         self,
         response: Any,
         instance: Any,
-        instrumentor: '_PayiInstrumentor',
+        instrumentor: "_PayiInstrumentor",
         request: _ProviderRequest,
     ) -> None:
-
         instrumentor._logger.debug(f"StreamIteratorWrapper: instance {instance}, category {request._category}")
 
         request.process_initial_stream_response(response)
@@ -63,7 +63,7 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
         self._instrumentor._logger.debug(f"StreamIteratorWrapper: __enter__")
         return self
 
-    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None: 
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         self._instrumentor._logger.debug(f"StreamIteratorWrapper: __exit__")
         self.__wrapped__.__exit__(exc_type, exc_val, exc_tb)  # type: ignore
 
@@ -75,7 +75,7 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
         self._instrumentor._logger.debug(f"StreamIteratorWrapper: __aexit__")
         await self.__wrapped__.__aexit__(exc_type, exc_val, exc_tb)  # type: ignore
 
-    def __iter__(self) -> Any:  
+    def __iter__(self) -> Any:
         self._iter_started = True
         if self._request.is_aws_client:
             # MUST reside in a separate function so that the yield statement (e.g. the generator) doesn't implicitly return its own iterator and overriding self
@@ -87,15 +87,15 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
 
     def _iter_bedrock(self) -> Any:
         # botocore EventStream doesn't have a __next__ method so iterate over the wrapped object in place
-        for event in self.__wrapped__: # type: ignore
+        for event in self.__wrapped__:  # type: ignore
             result: Optional[_ChunkResult] = None
 
-            if (self._bedrock_from_stream):
+            if self._bedrock_from_stream:
                 result = self._evaluate_chunk(event)
             else:
-                chunk = event.get('chunk') # type: ignore
+                chunk = event.get("chunk")  # type: ignore
                 if chunk:
-                    decode = chunk.get('bytes').decode() # type: ignore
+                    decode = chunk.get("bytes").decode()  # type: ignore
                     result = self._evaluate_chunk(decode)
 
             if result and result.ingest:
@@ -122,8 +122,10 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
             chunk: object = self.__wrapped__.__next__()  # type: ignore
 
             if self._ingested:
-                self._instrumentor._logger.debug(f"StreamIteratorWrapper: __next__ already ingested, not processing chunk {chunk}")
-                return chunk # type: ignore
+                self._instrumentor._logger.debug(
+                    f"StreamIteratorWrapper: __next__ already ingested, not processing chunk {chunk}"
+                )
+                return chunk  # type: ignore
 
             result = self._evaluate_chunk(chunk)
 
@@ -132,7 +134,7 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
                 self._request.assign_xproxy_result(chunk, xproxy_result)
 
             if result.send_chunk_to_caller:
-                return chunk # type: ignore
+                return chunk  # type: ignore
             else:
                 return self.__next__()
         except Exception as e:
@@ -147,8 +149,10 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
             chunk: object = await self.__wrapped__.__anext__()  # type: ignore
 
             if self._ingested:
-                self._instrumentor._logger.debug(f"StreamIteratorWrapper: __next__ already ingested, not processing chunk {chunk}")
-                return chunk # type: ignore
+                self._instrumentor._logger.debug(
+                    f"StreamIteratorWrapper: __next__ already ingested, not processing chunk {chunk}"
+                )
+                return chunk  # type: ignore
 
             result = self._evaluate_chunk(chunk)
 
@@ -156,8 +160,8 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
                 xproxy_result = await self._astop_iteration()
                 self._request.assign_xproxy_result(chunk, xproxy_result)
 
-            if  result.send_chunk_to_caller:
-                return chunk # type: ignore
+            if result.send_chunk_to_caller:
+                return chunk  # type: ignore
             else:
                 return await self.__anext__()
 
@@ -222,19 +226,20 @@ class _StreamIteratorWrapper(ObjectProxy):  # type: ignore
             # assume dict
             return _compact_json(chunk)
 
+
 class _StreamManagerWrapper(ObjectProxy):  # type: ignore
     def __init__(
         self,
         stream_manager: Any,  # type: ignore
         instance: Any,
-        instrumentor: _PayiInstrumentor, 
+        instrumentor: _PayiInstrumentor,
         request: _ProviderRequest,
     ) -> None:
         instrumentor._logger.debug(f"StreamManagerWrapper: instance {instance}, category {request._category}")
 
         super().__init__(stream_manager)  # type: ignore
 
-        self._stream_manager = stream_manager  
+        self._stream_manager = stream_manager
         self._instance = instance
         self._instrumentor = instrumentor
         self._responses: list[str] = []
@@ -246,32 +251,33 @@ class _StreamManagerWrapper(ObjectProxy):  # type: ignore
 
         # Underlying iterator is wrapped separately, expects attr _payi_request to be set
         stream = self.__wrapped__.__enter__()  # type: ignore
-        
+
         # Attach tracking info
-        _set_attr_safe(stream, '_payi_request', self._request)
-        return stream # type: ignore
+        _set_attr_safe(stream, "_payi_request", self._request)
+        return stream  # type: ignore
 
     async def __aenter__(self) -> Any:
         self._instrumentor._logger.debug(f"_StreamManagerWrapper: __aenter__")
 
         stream = await self.__wrapped__.__aenter__()  # type: ignore
-        
+
         # Attach tracking info
-        _set_attr_safe(stream, '_payi_request', self._request)
-        return stream # type: ignore
+        _set_attr_safe(stream, "_payi_request", self._request)
+        return stream  # type: ignore
+
 
 class _GeneratorWrapper:  # type: ignore
     def __init__(
         self,
         generator: Any,
         instance: Any,
-        instrumentor: _PayiInstrumentor, 
+        instrumentor: _PayiInstrumentor,
         request: _ProviderRequest,
     ) -> None:
         instrumentor._logger.debug(f"GeneratorWrapper: instance {instance}, category {request._category}")
 
         super().__init__()  # type: ignore
-        
+
         self._generator = generator
         self._instance = instance
         self._instrumentor = instrumentor
@@ -286,7 +292,7 @@ class _GeneratorWrapper:  # type: ignore
         self._iter_started = True
         self._instrumentor._logger.debug(f"GeneratorWrapper: __iter__")
         return self
-        
+
     def __aiter__(self) -> Any:
         self._instrumentor._logger.debug(f"GeneratorWrapper: __aiter__")
         return self
@@ -295,13 +301,13 @@ class _GeneratorWrapper:  # type: ignore
         if self._first_token:
             self._request._ingest["time_to_first_token_ms"] = self._request.stopwatch.elapsed_ms_int()
             self._first_token = False
-            
+
         if self._log_prompt_and_response:
-            dict = self._chunk_to_dict(chunk) 
+            dict = self._chunk_to_dict(chunk)
             self._responses.append(_compact_json(dict))
-                
+
         return self._request.process_chunk(chunk)
-    
+
     def __next__(self) -> Any:
         try:
             chunk = next(self._generator)
@@ -318,12 +324,12 @@ class _GeneratorWrapper:  # type: ignore
             if isinstance(e, StopIteration):
                 self._stop_iteration()
             else:
-                self._instrumentor._logger.debug(f"GeneratorWrapper: __next__ exception {e}")            
+                self._instrumentor._logger.debug(f"GeneratorWrapper: __next__ exception {e}")
             raise e
 
     async def __anext__(self) -> Any:
         try:
-            chunk = await anext(self._generator) # type: ignore
+            chunk = await anext(self._generator)  # type: ignore
             result = self._process_chunk(chunk)
 
             if result.ingest:
@@ -331,7 +337,7 @@ class _GeneratorWrapper:  # type: ignore
                 self._request.assign_xproxy_result(chunk, xproxy_result)
 
             # ignore result.send_chunk_to_caller:
-            return chunk # type: ignore
+            return chunk  # type: ignore
 
         except Exception as e:
             if isinstance(e, StopAsyncIteration):
@@ -341,11 +347,11 @@ class _GeneratorWrapper:  # type: ignore
             raise e
 
     @staticmethod
-    def _chunk_to_dict(chunk: Any) -> 'dict[str, object]':
+    def _chunk_to_dict(chunk: Any) -> "dict[str, object]":
         if hasattr(chunk, "to_dict"):
-            return chunk.to_dict() # type: ignore
-        elif hasattr(chunk, "to_json_dict"):  
-            return chunk.to_json_dict() # type: ignore
+            return chunk.to_dict()  # type: ignore
+        elif hasattr(chunk, "to_json_dict"):
+            return chunk.to_json_dict()  # type: ignore
         else:
             return {}
 
@@ -375,7 +381,6 @@ class _GeneratorWrapper:  # type: ignore
         self._request.stopwatch.stop()
         self._request._ingest["end_to_end_latency_ms"] = self._request.stopwatch.elapsed_ms_int()
         self._request._ingest["http_status_code"] = 200
-            
+
         if self._log_prompt_and_response:
             self._request._ingest["provider_response_json"] = self._responses
-
