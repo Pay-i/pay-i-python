@@ -208,11 +208,6 @@ class _PayiInstrumentor:
         self._payi: Optional[Payi] = payi
         self._apayi: Optional[AsyncPayi] = apayi
 
-        if self._payi:
-            _g_logger.debug(f"Pay-i instrumentor initialized with Payi instance: {self._payi}")
-        if self._apayi:
-            _g_logger.debug(f"Pay-i instrumentor initialized with AsyncPayi instance: {self._apayi}")
-
         # Thread-local storage for context stacks - each thread gets its own stack
         self._thread_local_storage = _ThreadLocalContextStorage()
 
@@ -247,6 +242,14 @@ class _PayiInstrumentor:
 
             # Register exit handler to write packets when process exits
             atexit.register(lambda: self._write_offline_ingest_packets())
+
+        # Use default clients if not provided for global instrumentation and offline instrumentation is not enabled
+        self._ensure_payi_clients()
+
+        if self._payi:
+            _g_logger.debug(f"Pay-i instrumentor initialized with Payi instance: {self._payi}")
+        if self._apayi:
+            _g_logger.debug(f"Pay-i instrumentor initialized with AsyncPayi instance: {self._apayi}")
 
         global_instrumentation = global_config.pop("global_instrumentation", True)
 
@@ -302,9 +305,6 @@ class _PayiInstrumentor:
 
             if "use_case_name" not in global_config and caller_filename:
                 global_config["use_case_name"] = caller_filename
-
-            # Use default clients if not provided for global instrumentation
-            self._ensure_payi_clients()
 
             self.__enter__()
 
