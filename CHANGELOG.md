@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.180 (2026-05-19)
+
+Full Changelog: [v0.1.0-alpha.179...v0.1.0-alpha.180](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.179...v0.1.0-alpha.180)
+
+### Features
+
+* create payi clients if unspecified ([a12e01d](https://github.com/Pay-i/pay-i-python/commit/a12e01d4dc62e3bc2ef2d040bbdf79db7426ada7))
+
 ## 0.1.0-alpha.179 (2026-05-18)
 
 Full Changelog: [v0.1.0-alpha.178...v0.1.0-alpha.179](https://github.com/Pay-i/pay-i-python/compare/v0.1.0-alpha.178...v0.1.0-alpha.179)
