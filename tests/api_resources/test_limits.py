@@ -120,7 +120,7 @@ class TestLimits:
         limit = client.limits.update(
             limit_id="limit_id",
             limit_name="limit_name",
-            max=1,
+            max=0,
         )
         assert_matches_type(LimitResponse, limit, path=["response"])
 
@@ -376,7 +376,7 @@ class TestAsyncLimits:
         limit = await async_client.limits.update(
             limit_id="limit_id",
             limit_name="limit_name",
-            max=1,
+            max=0,
         )
         assert_matches_type(LimitResponse, limit, path=["response"])
 

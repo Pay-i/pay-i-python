@@ -51,25 +51,21 @@ class IngestUnitsParams(TypedDict, total=False):
 
     use_case_properties: Optional[Dict[str, Optional[str]]]
 
-    limit_ids: Annotated[Union[list[str], None], PropertyInfo(alias="xProxy-Limit-IDs")]
+    x_proxy_account_name: Annotated[str, PropertyInfo(alias="xProxy-Account-Name")]
 
-    request_tags: Annotated[Union[list[str], None], PropertyInfo(alias="xProxy-Request-Tags")]
+    x_proxy_limit_ids: Annotated[str, PropertyInfo(alias="xProxy-Limit-IDs")]
 
-    use_case_name: Annotated[Union[str, None], PropertyInfo(alias="xProxy-UseCase-Name")]
+    x_proxy_logging_disable: Annotated[str, PropertyInfo(alias="xProxy-Logging-Disable")]
 
-    use_case_id: Annotated[Union[str, None], PropertyInfo(alias="xProxy-UseCase-ID")]
+    x_proxy_use_case_id: Annotated[str, PropertyInfo(alias="xProxy-UseCase-ID")]
 
-    use_case_version: Annotated[Union[int, None], PropertyInfo(alias="xProxy-UseCase-Version")]
+    x_proxy_use_case_name: Annotated[str, PropertyInfo(alias="xProxy-UseCase-Name")]
 
-    resource_scope: Annotated[Union[str, None], PropertyInfo(alias="xProxy-Resource-Scope")]
+    x_proxy_use_case_step: Annotated[str, PropertyInfo(alias="xProxy-UseCase-Step")]
 
-    use_case_step: Annotated[Union[str, None], PropertyInfo(alias="xProxy-UseCase-Step")]
+    x_proxy_use_case_version: Annotated[int, PropertyInfo(alias="xProxy-UseCase-Version")]
 
-    user_id: Annotated[Union[str, None], PropertyInfo(alias="xProxy-User-ID")]
-
-    account_name: Annotated[str, PropertyInfo(alias="xProxy-Account-Name")]
-
-    disable_logging: Optional[bool]
+    x_proxy_user_id: Annotated[str, PropertyInfo(alias="xProxy-User-ID")]
 
 
 class ProviderResponseFunctionCall(TypedDict, total=False):
