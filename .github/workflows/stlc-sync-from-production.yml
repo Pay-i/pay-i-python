@@ -18,9 +18,9 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    if: github.repository == 'my-org/my-api-python-staging'
+    if: github.repository == 'Pay-i/pay-i-python-staging'
     env:
-      PRODUCTION_REPO: my-org/my-api-python
+      PRODUCTION_REPO: Pay-i/pay-i-python
       PRODUCTION_REPO_TOKEN: ${{ secrets.PRODUCTION_REPO_TOKEN }}
       # The built-in token writes the branch + PR on this (staging) repo.
       GH_TOKEN: ${{ github.token }}
