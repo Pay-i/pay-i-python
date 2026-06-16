@@ -21,6 +21,7 @@ from ...pagination import SyncCursorPage, AsyncCursorPage
 from ..._base_client import AsyncPaginator, make_request_options
 from ...types.categories import resource_list_params, resource_create_params
 from ...types.category_resource_response import CategoryResourceResponse
+from ...types.category_resource_price_units_param import CategoryResourcePriceUnitsParam
 
 __all__ = ["ResourcesResource", "AsyncResourcesResource"]
 
@@ -52,7 +53,7 @@ class ResourcesResource(SyncAPIResource):
         resource: str,
         *,
         category: str,
-        units: Dict[str, resource_create_params.Units],
+        units: Dict[str, CategoryResourcePriceUnitsParam],
         max_input_units: Optional[int] | Omit = omit,
         max_output_units: Optional[int] | Omit = omit,
         max_total_units: Optional[int] | Omit = omit,
@@ -267,7 +268,7 @@ class AsyncResourcesResource(AsyncAPIResource):
         resource: str,
         *,
         category: str,
-        units: Dict[str, resource_create_params.Units],
+        units: Dict[str, CategoryResourcePriceUnitsParam],
         max_input_units: Optional[int] | Omit = omit,
         max_output_units: Optional[int] | Omit = omit,
         max_total_units: Optional[int] | Omit = omit,
