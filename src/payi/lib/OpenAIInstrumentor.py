@@ -26,12 +26,26 @@ class OpenAiInstrumentor:
     _module_version: str = ""
 
     _model_mappings: list[_ModelMappingEntry] = []
+    _bedrock_clients_supported: bool = True
 
     @staticmethod
     def is_azure(openai_client: Any) -> bool:
         from openai import AzureOpenAI, AsyncAzureOpenAI  # type: ignore # noqa: I001
 
         return isinstance(openai_client, (AsyncAzureOpenAI, AzureOpenAI))
+
+    @staticmethod
+    def is_aws_bedrock(openai_client: Any) -> bool:
+        if not OpenAiInstrumentor._bedrock_clients_supported:
+            return False
+
+        try:
+            from openai import BedrockOpenAI, AsyncBedrockOpenAI  # type: ignore # noqa: I001
+
+            return isinstance(openai_client, (AsyncBedrockOpenAI, BedrockOpenAI))
+        except Exception:
+            OpenAiInstrumentor._bedrock_clients_supported = False
+            return False
 
     @staticmethod
     def configure(
@@ -260,8 +274,14 @@ class _OpenAiProviderRequest(_ProviderRequest):
     ) -> None:
         self._openai_client = instance._client if instance and hasattr(instance, "_client") else None
         self._is_azure = self._openai_client and OpenAiInstrumentor.is_azure(self._openai_client)
+        self._is_aws_bedrock = self._openai_client and OpenAiInstrumentor.is_aws_bedrock(self._openai_client)
 
-        category = PayiCategories.azure_openai if self._is_azure else PayiCategories.openai
+        if self._is_aws_bedrock:
+            category = PayiCategories.aws_bedrock
+        elif self._is_azure:
+            category = PayiCategories.azure_openai
+        else:
+            category = PayiCategories.openai
 
         super().__init__(
             instrumentor=instrumentor,
