@@ -41,7 +41,6 @@ class OpenAiInstrumentor:
 
         try:
             from openai import BedrockOpenAI, AsyncBedrockOpenAI  # type: ignore # noqa: I001
-
             return isinstance(openai_client, (AsyncBedrockOpenAI, BedrockOpenAI))
         except Exception:
             OpenAiInstrumentor._bedrock_clients_supported = False
