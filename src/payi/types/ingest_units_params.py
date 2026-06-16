@@ -8,10 +8,11 @@ from typing_extensions import Required, Annotated, TypedDict
 
 from .._types import SequenceNotStr
 from .._utils import PropertyInfo
+from .function_call_info_param import FunctionCallInfoParam
 from .shared_params.ingest_units import IngestUnits
 from .pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
 
-__all__ = ["IngestUnitsParams", "ProviderResponseFunctionCall"]
+__all__ = ["IngestUnitsParams"]
 
 
 class IngestUnitsParams(TypedDict, total=False):
@@ -33,7 +34,7 @@ class IngestUnitsParams(TypedDict, total=False):
 
     provider_request_reasoning_json: Optional[str]
 
-    provider_response_function_calls: Optional[Iterable[ProviderResponseFunctionCall]]
+    provider_response_function_calls: Optional[Iterable[FunctionCallInfoParam]]
 
     provider_response_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]]
 

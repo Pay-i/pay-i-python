@@ -23,6 +23,7 @@ from .._response import (
 from .._base_client import make_request_options
 from ..types.ingest_response import IngestResponse
 from ..types.bulk_ingest_response import BulkIngestResponse
+from ..types.function_call_info_param import FunctionCallInfoParam
 from ..types.bulk_ingest_request_param import BulkIngestRequestParam
 from ..types.shared_params.ingest_units import IngestUnits
 from ..types.pay_i_common_models_api_router_header_info_param import PayICommonModelsAPIRouterHeaderInfoParam
@@ -110,8 +111,7 @@ class IngestResource(SyncAPIResource):
         provider_request_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | Omit = omit,
         provider_request_json: Optional[str] | Omit = omit,
         provider_request_reasoning_json: Optional[str] | Omit = omit,
-        provider_response_function_calls: Optional[Iterable[ingest_units_params.ProviderResponseFunctionCall]]
-        | Omit = omit,
+        provider_response_function_calls: Optional[Iterable[FunctionCallInfoParam]] | Omit = omit,
         provider_response_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | Omit = omit,
         provider_response_id: Optional[str] | Omit = omit,
         provider_response_json: Union[str, SequenceNotStr[str], None] | Omit = omit,
@@ -341,8 +341,7 @@ class AsyncIngestResource(AsyncAPIResource):
         provider_request_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | Omit = omit,
         provider_request_json: Optional[str] | Omit = omit,
         provider_request_reasoning_json: Optional[str] | Omit = omit,
-        provider_response_function_calls: Optional[Iterable[ingest_units_params.ProviderResponseFunctionCall]]
-        | Omit = omit,
+        provider_response_function_calls: Optional[Iterable[FunctionCallInfoParam]] | Omit = omit,
         provider_response_headers: Optional[Iterable[PayICommonModelsAPIRouterHeaderInfoParam]] | Omit = omit,
         provider_response_id: Optional[str] | Omit = omit,
         provider_response_json: Union[str, SequenceNotStr[str], None] | Omit = omit,
