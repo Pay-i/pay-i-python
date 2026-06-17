@@ -1,5 +1,7 @@
 .prism.log
 .stdy.log
+.prism.*.log
+
 _dev
 
 __pycache__
@@ -14,3 +16,7 @@ dist
 .envrc
 codegen.log
 Brewfile.lock.json
+
+.vscode/
+
+.claude/settings.local.json

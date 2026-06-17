@@ -7,15 +7,14 @@ from datetime import datetime
 from typing_extensions import Required, Annotated, TypedDict
 
 from ..._utils import PropertyInfo
-from ..category_resource_price_units_param import CategoryResourcePriceUnitsParam
 
-__all__ = ["ResourceCreateParams"]
+__all__ = ["ResourceCreateParams", "Units"]
 
 
 class ResourceCreateParams(TypedDict, total=False):
     category: Required[str]
 
-    units: Required[Dict[str, CategoryResourcePriceUnitsParam]]
+    units: Required[Dict[str, Units]]
 
     max_input_units: Optional[int]
 
@@ -24,3 +23,9 @@ class ResourceCreateParams(TypedDict, total=False):
     max_total_units: Optional[int]
 
     start_timestamp: Annotated[Union[str, datetime, None], PropertyInfo(format="iso8601")]
+
+
+class Units(TypedDict, total=False):
+    input_price: float
+
+    output_price: float

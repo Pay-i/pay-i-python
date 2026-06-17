@@ -28,10 +28,10 @@ from ..._response import (
     async_to_streamed_response_wrapper,
 )
 from ...pagination import SyncCursorPage, AsyncCursorPage
-from ...types.limit import Limit
 from ..._base_client import AsyncPaginator, make_request_options
 from ...types.limit_response import LimitResponse
 from ...types.default_response import DefaultResponse
+from ...types.limit_list_response import LimitListResponse
 from ...types.limit_history_response import LimitHistoryResponse
 
 __all__ = ["LimitsResource", "AsyncLimitsResource"]
@@ -199,7 +199,7 @@ class LimitsResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
-    ) -> SyncCursorPage[Limit]:
+    ) -> SyncCursorPage[LimitListResponse]:
         """
         Get all Limits
 
@@ -214,7 +214,7 @@ class LimitsResource(SyncAPIResource):
         """
         return self._get_api_list(
             "/api/v1/limits",
-            page=SyncCursorPage[Limit],
+            page=SyncCursorPage[LimitListResponse],
             options=make_request_options(
                 extra_headers=extra_headers,
                 extra_query=extra_query,
@@ -230,7 +230,7 @@ class LimitsResource(SyncAPIResource):
                     limit_list_params.LimitListParams,
                 ),
             ),
-            model=Limit,
+            model=LimitListResponse,
         )
 
     def delete(
@@ -469,7 +469,7 @@ class AsyncLimitsResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
-    ) -> AsyncPaginator[Limit, AsyncCursorPage[Limit]]:
+    ) -> AsyncPaginator[LimitListResponse, AsyncCursorPage[LimitListResponse]]:
         """
         Get all Limits
 
@@ -484,7 +484,7 @@ class AsyncLimitsResource(AsyncAPIResource):
         """
         return self._get_api_list(
             "/api/v1/limits",
-            page=AsyncCursorPage[Limit],
+            page=AsyncCursorPage[LimitListResponse],
             options=make_request_options(
                 extra_headers=extra_headers,
                 extra_query=extra_query,
@@ -500,7 +500,7 @@ class AsyncLimitsResource(AsyncAPIResource):
                     limit_list_params.LimitListParams,
                 ),
             ),
-            model=Limit,
+            model=LimitListResponse,
         )
 
     async def delete(

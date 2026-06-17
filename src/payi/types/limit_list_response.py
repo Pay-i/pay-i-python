@@ -7,10 +7,10 @@ from typing_extensions import Literal
 from .._models import BaseModel
 from .total_cost_data import TotalCostData
 
-__all__ = ["Limit"]
+__all__ = ["LimitListResponse"]
 
 
-class Limit(BaseModel):
+class LimitListResponse(BaseModel):
     limit_creation_timestamp: datetime
 
     limit_id: str
