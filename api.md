@@ -22,11 +22,11 @@ from payi.types import (
     CostData,
     CostDetails,
     DefaultResponse,
+    Limit,
     LimitHistoryResponse,
     LimitResponse,
     RequestsData,
     TotalCostData,
-    LimitListResponse,
 )
 ```
 
@@ -35,7 +35,7 @@ Methods:
 - <code title="post /api/v1/limits">client.limits.<a href="./src/payi/resources/limits/limits.py">create</a>(\*\*<a href="src/payi/types/limit_create_params.py">params</a>) -> <a href="./src/payi/types/limit_response.py">LimitResponse</a></code>
 - <code title="get /api/v1/limits/{limit_id}">client.limits.<a href="./src/payi/resources/limits/limits.py">retrieve</a>(limit_id) -> <a href="./src/payi/types/limit_response.py">LimitResponse</a></code>
 - <code title="put /api/v1/limits/{limit_id}">client.limits.<a href="./src/payi/resources/limits/limits.py">update</a>(limit_id, \*\*<a href="src/payi/types/limit_update_params.py">params</a>) -> <a href="./src/payi/types/limit_response.py">LimitResponse</a></code>
-- <code title="get /api/v1/limits">client.limits.<a href="./src/payi/resources/limits/limits.py">list</a>(\*\*<a href="src/payi/types/limit_list_params.py">params</a>) -> <a href="./src/payi/types/limit_list_response.py">SyncCursorPage[LimitListResponse]</a></code>
+- <code title="get /api/v1/limits">client.limits.<a href="./src/payi/resources/limits/limits.py">list</a>(\*\*<a href="src/payi/types/limit_list_params.py">params</a>) -> <a href="./src/payi/types/limit.py">SyncCursorPage[Limit]</a></code>
 - <code title="delete /api/v1/limits/{limit_id}">client.limits.<a href="./src/payi/resources/limits/limits.py">delete</a>(limit_id) -> <a href="./src/payi/types/default_response.py">DefaultResponse</a></code>
 - <code title="post /api/v1/limits/{limit_id}/reset">client.limits.<a href="./src/payi/resources/limits/limits.py">reset</a>(limit_id, \*\*<a href="src/payi/types/limit_reset_params.py">params</a>) -> <a href="./src/payi/types/limit_history_response.py">LimitHistoryResponse</a></code>
 
@@ -59,6 +59,7 @@ Types:
 from payi.types import (
     BulkIngestRequest,
     BulkIngestResponse,
+    FunctionCallInfo,
     IngestRequest,
     IngestResponse,
     PayICommonModelsAPIRouterHeaderInfo,
@@ -76,6 +77,8 @@ Types:
 
 ```python
 from payi.types import (
+    CategoryResourceMappedResource,
+    CategoryResourcePriceUnits,
     CategoryResourceResponse,
     CategoryResponse,
     CategoryDeleteResponse,

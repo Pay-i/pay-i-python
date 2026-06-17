@@ -2,26 +2,14 @@
 
 from typing import Dict, Optional
 from datetime import datetime
-from typing_extensions import Literal
 
 from pydantic import Field as FieldInfo
 
 from .._models import BaseModel
+from .category_resource_price_units import CategoryResourcePriceUnits
+from .category_resource_mapped_resource import CategoryResourceMappedResource
 
-__all__ = [
-    "CategoryResourceResponse",
-    "Units",
-    "AwsBedrockResource",
-    "AzureResource",
-    "GoogleVertexResource",
-    "MappedResource",
-]
-
-
-class Units(BaseModel):
-    input_price: Optional[float] = None
-
-    output_price: Optional[float] = None
+__all__ = ["CategoryResourceResponse", "AwsBedrockResource", "AzureResource", "GoogleVertexResource"]
 
 
 class AwsBedrockResource(BaseModel):
@@ -34,16 +22,6 @@ class AzureResource(BaseModel):
 
 class GoogleVertexResource(BaseModel):
     gsus: int
-
-
-class MappedResource(BaseModel):
-    category: Optional[str] = None
-
-    resource: Optional[str] = None
-
-    scope: Optional[Literal["global", "datazone", "region"]] = None
-
-    sub_scope: Optional[str] = None
 
 
 class CategoryResourceResponse(BaseModel):
@@ -59,7 +37,7 @@ class CategoryResourceResponse(BaseModel):
 
     start_timestamp: datetime
 
-    units: Dict[str, Units]
+    units: Dict[str, CategoryResourcePriceUnits]
 
     aliased_resource: Optional[str] = None
 
@@ -81,7 +59,7 @@ class CategoryResourceResponse(BaseModel):
 
     large_context_threshold: Optional[int] = None
 
-    mapped_resource: Optional[MappedResource] = None
+    mapped_resource: Optional[CategoryResourceMappedResource] = None
 
     max_input_units: Optional[int] = None
 
