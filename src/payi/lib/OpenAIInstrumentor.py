@@ -438,6 +438,10 @@ class _OpenAiProviderRequest(_ProviderRequest):
             if input_cache != 0:
                 units["text_cache_read"] = IngestUnits(input=input_cache, output=0)
 
+            cached_write_tokens = prompt_tokens_details.get("cached_write_tokens", 0)
+            if cached_write_tokens != 0:
+                units["text_cache_write"] = IngestUnits(input=cached_write_tokens, output=0)
+
         output_tokens_details = usage.get(self._output_tokens_details_key, {})
         if output_tokens_details:
             reasoning_tokens = output_tokens_details.get("reasoning_tokens", 0)
